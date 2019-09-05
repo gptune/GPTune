@@ -27,3 +27,8 @@ class Problem(object):
 
         return self.OS.n_dim
 
+    def check_constraints(self, points, inputs_only = True : bool):
+
+        # points can be either a dict or a list of dicts on which to iterate
+
+        pass

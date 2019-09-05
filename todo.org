@@ -1,0 +1,2 @@
+
+_ implement the allreduce_best(self.M.param_array[:], resopt) routine in common.py

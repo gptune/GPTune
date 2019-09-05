@@ -12,7 +12,7 @@ class Model(abc.ABC):
         raise Exception("Abstract method")
 
     @abstractmethod
-    def update(self, newdata = None : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train = False: bool, **kwargs):
 
         raise Exception("Abstract method")
 
@@ -24,51 +24,52 @@ class Model(abc.ABC):
 
 class Model_GPy_LCM(Model):
 
-    def __init__(self, problem : Problem, **kwargs):
-
-        super()__init__(problem)
+#model_threads=1
+#model_processes=1
+#model_groups=1
+#model_restarts=1
+#model_max_iters=15000
+#model_latent=0
+#model_sparse=False
+#model_inducing=None
+#model_layers=2
 
     def train(self, data : Data, **kwargs):
 
-        #model_n_latent
-        #model_sparse=False
-        #model_n_inducing=None
-        #model_n_restarts=1
-        #model_n_threads=1
-        #model_n_processes=1
-        #model_max_iters=15000
-
         multitask = len(data.T) > 1
 
-        if (model_sparse and model_num_inducing is None):
+        if (model_sparse and model_inducing is None):
             if (multitask):
                 lenx = sum([len(X) for X in data.X])
             else:
                 lenx = len(data.X)
-            model_num_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         if (multitask):
-            kernels_list = [GPy.kern.RBF(input_dim = self.problem.DP, ARD=True) for k in range(model_n_latent)]
+            kernels_list = [GPy.kern.RBF(input_dim = self.problem.DP, ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = self.problem.DP, num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
             if (model_sparse):
-                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K, num_inducing = model_n_inducing)
+                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K)
         else:
-            K = GPy.kern.RBF(input_dim = self.problem.DI, ARD=True, name='GPy_GP')
+            K = GPy.kern.RBF(input_dim = self.problem.DP, ARD=True, name='GPy_GP')
             if (model_sparse):
-                self.M = GPy.models.SparseGPRegression(data.X[0], data.Y[0], kernel = K, num_inducing = model_n_inducing)
+                self.M = GPy.models.SparseGPRegression(data.X[0], data.Y[0], kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPRegression(data.X[0], data.Y[0], kernel = K)
-        
-        resopt = self.M.optimize_restarts(num_restarts = model_n_restarts, robust = True, verbose = verbose, parallel = (model_n_threads is not None), num_processes = model_n_threads, messages = "True", optimizer = 'lbfgs', start = None, max_iters = model_max_iters, ipython_notebook = False, clear_after_finish = True)
+            
+        np.random.seed(mpi_rank)
+        num_restarts = max(1, model_n_restarts // mpi_size)
 
-        self.M.param_array[:] = self.scatter_gather_best_params(self.M.param_array[:], resopt)[:]
+        resopt = self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = verbose, parallel = (model_n_threads > 1), num_processes = model_n_threads, messages = "True", optimizer = 'lbfgs', start = None, max_iters = model_max_iters, ipython_notebook = False, clear_after_finish = True)
+
+        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
 
         return
 
-    def update(self, newdata = None : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train = False: bool, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
@@ -87,20 +88,12 @@ class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        #Q, num_restarts=16, max_iters=None, num_subgroups=8):
-        #model_n_latent
-        #model_sparse=False
-        #model_n_inducing=None
-        #model_n_restarts=1
-        #model_n_threads=1
-        #model_n_processes=1
-        #model_max_iters=15000
-
-#        print(MPI.COMM_WORLD.Get_rank(), MPI.Get_processor_name())
+        
         self.M = None
         if (num_restarts is None):
             num_restarts = num_subgroups
 
+        num_subgroups = mpi_size / model_num_processes
         color = self.mpi_rank // (self.mpi_size // num_subgroups)
         key   = self.mpi_rank %  (self.mpi_size // num_subgroups)
         subcomm = mpi_comm.Split(color, key)
@@ -114,22 +107,22 @@ class Model_LCM(Model):
             (bestxopt, bestfopt) = (None, float('Inf'))
         for i in range(color, num_restarts, num_subgroups):
             ker = LMC(input_dim=self.DI, num_outputs=self.NT, Q=Q)
-            (xopt, fopt) = ker.train_kernel(self.X, self.Y, mpi_comm=subcomm, verbose=self.verbose)
+            (xopt, fopt) = ker.train_kernel(data.X, data.Y, mpi_comm=subcomm, verbose=verbose)
             if (fopt < bestfopt):
                 bestxopt = xopt
                 bestfopt = fopt
 
-        mpi4py.MPI.COMM_WORLD.Barrier()
+        mpi_comm.Barrier()
         K = LMC(input_dim=self.DI, num_outputs=self.NT, Q=Q)
-        bestxopt = self.scatter_gather_best_params(bestxopt, bestfopt)
+        bestxopt = allreduce_best(bestxopt, bestfopt)
         K.set_param_array(bestxopt)
 
-        likelihoods_list = [GPy.likelihoods.Gaussian(variance = K.sigma[i], name="Gaussian_noise_%s" %i) for i in range(self.NT)]
-        self.M = GPy.models.GPCoregionalizedRegression(self.X, self.Y, K, likelihoods_list=likelihoods_list)
+        likelihoods_list = [GPy.likelihoods.Gaussian(variance = K.sigma[i], name="Gaussian_noise_%s" %i) for i in range(data.NT)]
+        self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, K, likelihoods_list=likelihoods_list)
 
         return
 
-    def update(self, newdata = None : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train = False: bool, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
@@ -148,15 +141,6 @@ class Model_DGP(Model):
 
     def train(self, data : Data, **kwargs):
 
-        #Q, num_inducing=None, num_restarts=1, num_processes=None, max_iters=1000):
-        #model_n_latent
-        #model_sparse=False
-        #model_n_inducing=None
-        #model_n_restarts=1
-        #model_n_threads=1
-        #model_n_processes=1
-        #model_max_iters=15000
-
         multitask = len(self.T) > 1
 
         if (multitask):
@@ -166,9 +150,9 @@ class Model_DGP(Model):
         Y = np.array(list(itertools.chain.from_iterable(self.Y)))
 
         #--------- Model Construction ----------#
-        nlevels = 2
+        model_n_layers = 2
         # Define what kernels to use per layer
-        kerns = [GPy.kern.RBF(input_dim=Q, ARD=True) + GPy.kern.Bias(input_dim=Q) for lev in range(nlevels)]
+        kerns = [GPy.kern.RBF(input_dim=Q, ARD=True) + GPy.kern.Bias(input_dim=Q) for lev in range(model_n_layers)]
         kerns.append(GPy.kern.RBF(input_dim=X.shape[1], ARD=True) + GPy.kern.Bias(input_dim=X.shape[1]))
         # Number of inducing points to use
         if (num_inducing is None):
@@ -183,7 +167,7 @@ class Model_DGP(Model):
         # Dimensions of the MLP back-constraint if set to true
         encoder_dims=[[X.shape[0]],[X.shape[0]],[X.shape[0]]]
 
-        nDims = [Y.shape[1]] + nlevels * [Q] + [X.shape[1]]
+        nDims = [Y.shape[1]] + model_n_layers * [Q] + [X.shape[1]]
 #        self.M = deepgp.DeepGP(nDims, Y, X=X, num_inducing=num_inducing, likelihood = None, inits='PCA', name='deepgp', kernels=kerns, obs_data='cont', back_constraint=True, encoder_dims=encoder_dims, mpi_comm=mpi_comm, self.mpi_root=0, repeatX=False, inference_method=None)#, **kwargs):
         self.M = deepgp.DeepGP(nDims, Y, X=X, num_inducing=num_inducing, likelihood = None, inits='PCA', name='deepgp', kernels=kerns, obs_data='cont', back_constraint=False, encoder_dims=None, mpi_comm=None, mpi_root=0, repeatX=False, inference_method=None)#, **kwargs):
 #        self.M = deepgp.DeepGP([Y.shape[1], Q, Q, X.shape[1]], Y, X=X, kernels=[kern1, kern2, kern3], num_inducing=num_inducing, back_constraint=back_constraint)
@@ -204,7 +188,7 @@ class Model_DGP(Model):
 
         self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
-    def update(self, newdata = None : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train = False: bool, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)

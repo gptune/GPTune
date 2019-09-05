@@ -60,14 +60,26 @@ class Data(object):
 
         return cond
 
-    def insert(T = None: np.ndarray, X = None : Collection[np.ndarray], Y = None : Collection[np.ndarray]):
+    def points2kwargs(self):
 
-        if (T is not None):
-            if (T.ndim == 1):
-                assert(T.shape[0] == self.problem.DI)
-            elif (T.ndim == 2):
-                assert(T.shape[1] == self.problem.DI)
-            else:
-                raise Exception("")
-            self.T.append(T)
+        # transform the self.T and self.X into a list of dictionaries
+
+        pass
+
+    def merge(self, newdata):
+
+        # merge the newdata with self, making sure that the Ts coincide
+
+        pass
+
+#    def insert(T = None: np.ndarray, X = None : Collection[np.ndarray], Y = None : Collection[np.ndarray]):
+#
+#        if (T is not None):
+#            if (T.ndim == 1):
+#                assert(T.shape[0] == self.problem.DI)
+#            elif (T.ndim == 2):
+#                assert(T.shape[1] == self.problem.DI)
+#            else:
+#                raise Exception("")
+#            self.T.append(T)
 

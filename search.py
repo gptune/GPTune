@@ -1,10 +1,9 @@
 class Search(abc.ABC):
 
-    def __init__(self, problem : Problem, computer : Computer, options : Option):
+    def __init__(self, problem : Problem, computer : Computer):
 
         self.problem = problem
         self.computer = computer
-        self.options = options
 
     @abstractmethod
     def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:
@@ -34,8 +33,8 @@ class SearchPyGMO(Search):
 
             self.tid = tid
 
-            self.t     = self.problem.IS.inverse_transform(self.data.T[tid])
-            self.XOrig = self.problem.PS.inverse_transform(self.data.X[tid])
+            self.t     = self.data.T[tid]
+            self.XOrig = self.data.X[tid]
 
         def get_bounds(self):
 
@@ -62,11 +61,11 @@ class SearchPyGMO(Search):
 
         def fitness(self, x):
 
-            x = self.problem.PS.inverse_transform(x)
-            if (any(np.array_equal(xx, x) for xx in self.XOrig)):
+            xi = self.problem.PS.inverse_transform(x)
+            if (any(np.array_equal(xx, xi) for xx in self.XOrig)):
                 cond = False
             else:
-                kwargs = tuner.point2kwargs(self.t, x) # XXX
+                kwargs = tuner.point2kwargs(self.t, xi) # XXX
                 cond = tuner.check_conditions(kwargs)  # XXX
             if (cond):
                 return (- self.ei(x),)
@@ -78,31 +77,31 @@ class SearchPyGMO(Search):
 #        search_n_threads
 #        search_n_processes = 1
 
-#        algo
-#        udi
+#        search_algo
+#        search_udi
 #        search_population_size = 100
 #        search_n_generations = 100
 #        search_n_evolve = 10
 #        search_n_max_iters = 100
 
-        #algo = 'pso'
-        #algo = 'cmaes'
+        #search_algo = 'pso'
+        #search_algo = 'cmaes'
 
-        #udi = 'thread_island'
-        #udi = 'mp_island' #XXX advise the user not to use this kind of udi as it lunches several processes and deadlock on some weird semaphores
-        #udi = 'ipyparallel_island' #XXX advise the user not to use this kind of udi as it is not tested
+        #search_udi = 'thread_island'
+        #search_udi = 'mp_island' #XXX advise the user not to use this kind of udi as it lunches several processes and deadlock on some weird semaphores
+        #search_udi = 'ipyparallel_island' #XXX advise the user not to use this kind of udi as it is not tested
 
         prob = SurrogateProblem(self.problem, self.computer, data, model, tid)
 
         try:
-            algo = eval(f'pg.{algo}(gen = gen)')
+            algo = eval(f'pg.{search_algo}(gen = search_n_generations)')
         except:
-            raise Exception(f'Unknown optimization algorithm "{algo}"')
+            raise Exception(f'Unknown optimization algorithm "{search_algo}"')
 
         try:
-            udi = eval(f'pg.{udi}()')
+            udi = eval(f'pg.{search_udi}()')
         except:
-            raise Exception('Unknown user-defined-island "{udi}"')
+            raise Exception('Unknown user-defined-island "{search_udi}"')
 
         bestX = []
         cond = False
@@ -118,7 +117,7 @@ class SearchPyGMO(Search):
             for idx in indexes:
                 if (champions_f[idx] < float('Inf')):
                     cond = True
-                    bestX.append(champions_x[idx].reshape(1, self.problem.DP))
+                    bestX.append(self.problem.PS.inverse_transform(champions_x[idx]).reshape(1, self.problem.DP))
                     break
             cpt += 1
 

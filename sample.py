@@ -26,12 +26,12 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 S2 = self.sample(n_samples, space)
-                for S in S2:
-                    s_orig = space.inverse_transform(np.array([s], ndim=2))
+                for s_norm in S2:
+                    s_orig = space.inverse_transform(np.array([s_norm], ndim=2))
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     kwargs2.update(check_constraints_kwargs)
                     if (check_constraints(kwargs2)):
-                        S.append(s)
+                        S.append(s_orig)
                         cpt += 1
                         if (cpt >= n_samples):
                             break
@@ -46,12 +46,10 @@ class Sample(abc.ABC):
 
         return S
 
-    @abstractmethod
     def sample_inputs(self, n_samples : int, IS : Space, check_constraints = None : Callable, check_constraints_kwargs = {} : Dict, **kwargs):
 
         return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
-    @abstractmethod
     def sample_parameters(self, n_samples : int, T : np.ndarray, IS : Space, PS : Space, check_constraints = None : Callable, check_constraints_kwargs = {} : Dict, **kwargs):
 
         X = []
