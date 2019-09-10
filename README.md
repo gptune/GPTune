@@ -1,11 +1,27 @@
-# ztune
+# GPTune
+GPTune Copyright (c) 2019, The Regents of the University of California, through 
+Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
+from the U.S.Dept. of Energy) and the University of California, Berkeley.
+All rights reserved.
 
-*ztune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
-ztune is part of the xSDK effort supported by the Exascale Computing Project (ECP).
+If you have questions about your rights to use or distribute this software,
+please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+
+NOTICE.  This Software was developed under funding from the U.S. Department
+of Energy and the U.S. Government consequently retains certain rights.  As
+such, the U.S. Government has been granted for itself and others acting on
+its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the
+Software to reproduce, distribute copies to the public, prepare derivative
+works, and perform publicly and display publicly, and to permit other to do so.
+
+# GPTune
+
+*GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
+GPTune is part of the xSDK effort supported by the Exascale Computing Project (ECP).
 
 ## Install
 
-ztune relies on external Python libraries as listed in the `requirements.txt` file.
+GPTune relies on external Python libraries as listed in the `requirements.txt` file.
 They can all be installed through the standard Python repository through the pip tool.
 
 ```
@@ -16,7 +32,7 @@ The library can be run either sequentially or in parallel.  In the latter case, 
 #XXX MPICC
 ## Examples
 
-The file `example.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke ztune.
+The file `example.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke GPTune.
 
 ```
 python examples/example.py
@@ -31,13 +47,13 @@ python examples/example.py
 In order to autotune a certain application, three spaces have to be defined through an instance of the **Space** class.
 1. Task Space (TS): this space defines the problems that the application targets.
 Every point in this space represents one instance of a problem.
-In the context of ztune, the word *task* means application *problem*.
+In the context of GPTune, the word *task* means application *problem*.
 2. Input Space (IS): this space defines the application parameters to be tuned.
 A point in this space represents a combination of the parameters.
 The goal of the tuner is to find the best possible combination that minimizes the objective function of the application.
 3. Output Space (OS): this space defines the result(s) of the application, i.e., the objective of the application to be optimized.
 For examples, this can be runtime, memory or energy consumption in HPC applications or prediction accuracy in machine learning applications.
-The current version of ztune supports only single dimensional output spaces.
+The current version of GPTune supports only single dimensional output spaces.
 However, future developments intend to support multi-dimensional output spaces, i.e. multi-objective tuning.
 
 #### Parameters
@@ -60,7 +76,7 @@ If the problems the application targets cannot be defined in a cartesian space, 
 
 Not all points in the task or input spaces correspond to valid problems or parameter configurations.
 Constraints might exist that define the validity of a given combination of input parameters and problem description parameters results.
-Two ways exist to define constraints in ztune:
+Two ways exist to define constraints in GPTune:
 1. Strings: the user can define a Python statement in a string.
 The evaluation of that statement should be a boolean.
 2. Functions: the user can define a Python function that returns a boolean.  The parameters of the function should have the same name as the parameters defining the problem.
@@ -72,9 +88,9 @@ The user having additional knowledge about the application can help speed up or 
 
 These models are defined through Python functions following similarly to the constraints definition.
 
-### ztune invocation
+### GPTune invocation
 
-Once the parameters and spaces (and optionally constraints and models) are defined, an object of the **ZTune** class has to be instantiated.
+Once the parameters and spaces (and optionally constraints and models) are defined, an object of the **GPTune** class has to be instantiated.
 Then, the different kinds of tuning techniques (*MLA, TLA1, TLA2*) can be called through it.
 
 ## REFERENCES
