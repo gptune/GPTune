@@ -1,4 +1,3 @@
-# GPTune
 GPTune Copyright (c) 2019, The Regents of the University of California, through 
 Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 from the U.S.Dept. of Energy) and the University of California, Berkeley.
@@ -26,6 +25,13 @@ They can all be installed through the standard Python repository through the pip
 
 ```
 pip install --upgrade --user -r requirements.txt
+```
+Besides the basic requirements, a common autotuning interface has to be installed manually as follows:
+
+```
+git clone https://github.com/ytopt-team/autotune.git
+cd autotune/
+pip install -e .
 ```
 
 The library can be run either sequentially or in parallel.  In the latter case, the MPI library should be installed.
