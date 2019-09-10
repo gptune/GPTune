@@ -1,5 +1,12 @@
 
 _ implement the allreduce_best(self.M.param_array[:], resopt) routine in common.py
+_ Add a user guide (in addition to the README), that will explain, among other things, the use of the common autotuning interface
+_ copy and adapt the ztune examples
+
+
+
+
+
 
 
         t1 = time.time()
