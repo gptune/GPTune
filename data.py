@@ -60,12 +60,14 @@ class Data(object):
 
         return cond
 
+    # TODO
     def points2kwargs(self):
 
         # transform the self.T and self.X into a list of dictionaries
 
         pass
 
+    # TODO
     def merge(self, newdata):
 
         # merge the newdata with self, making sure that the Ts coincide

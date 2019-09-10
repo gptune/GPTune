@@ -1,2 +1,8 @@
 
 _ implement the allreduce_best(self.M.param_array[:], resopt) routine in common.py
+
+
+        t1 = time.time()
+        t2 = time.time()
+        if (verbose and self.mpi_rank == 0):
+            print("Search time: %f s"%(t2 - t1))

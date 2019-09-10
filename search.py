@@ -74,23 +74,6 @@ class SearchPyGMO(Search):
 
     def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:
 
-#        search_n_threads
-#        search_n_processes = 1
-
-#        search_algo
-#        search_udi
-#        search_population_size = 100
-#        search_n_generations = 100
-#        search_n_evolve = 10
-#        search_n_max_iters = 100
-
-        #search_algo = 'pso'
-        #search_algo = 'cmaes'
-
-        #search_udi = 'thread_island'
-        #search_udi = 'mp_island' #XXX advise the user not to use this kind of udi as it lunches several processes and deadlock on some weird semaphores
-        #search_udi = 'ipyparallel_island' #XXX advise the user not to use this kind of udi as it is not tested
-
         prob = SurrogateProblem(self.problem, self.computer, data, model, tid)
 
         try:
@@ -126,21 +109,39 @@ class SearchPyGMO(Search):
 
         return (tid, bestX)
 
-    def search_multitask(self, data : Data, model : Model, tids = None : Collection[int], **kwargs) -> Collection[np.ndarray]:
+    def search_multitask(self, data : Data, model : Model, tids = None : Collection[int], i_am_manager = True : bool, **kwargs) -> Collection[np.ndarray]:
 
-        if (parallelism_method not in ["Sequential", "Thread", "Process", "MPI"]):
+#        if (kwargs['search_processes'] == 1):
+#        if (kwargs['search_threads'] == 1):
+#        if (parallelism_method == "MPI"):
+#        if (parallelism_method == "Sequential"):
+#        if (parallelism_method == "Thread"):
+#        if (parallelism_method == "Process"):
 
-            raise Exception("Unknown parallelism method")
+        if (tids is None):
 
-        t1 = time.time()
-
-        if (parallelism_method == "MPI"):
-
-            if (tids is None):
+            if (kwargs['distributed_memory_parallelism']):
                 tids = list(range(self.mpi_rank, self.NT, self.mpi_size))
-                print(self.mpi_rank, tids)
+            else:
+                tids = list(range(self.NT))
 
-            res = self.search(tids=tids, parallelism_method="Process")
+        if (not kwargs['shared_memory_parallelism']):
+
+            res = list(map(self.search_optima, tids))
+
+        else:
+
+            kwargs = {"max_workers":kwargs['search_threads']}
+            Executor = concurrent.futures.ThreadPoolExecutor
+            #Executor = concurrent.futures.ProcessPoolExecutor
+
+            with Executor(**kwargs) as executor:
+                fun = function.partial(self.search, data = data, model = model, kwargs = kwargs)
+                res = list(executor.map(fun, tids, timeout=None, chunksize=1))
+
+            res.sort(key = lambda x : x[0])
+
+        if (kwargs['distributed_memory_parallelism']):
 
             res = mpi_comm.gather(res, root=0)
             if (self.mpi_rank == 0):
@@ -150,38 +151,12 @@ class SearchPyGMO(Search):
                 res = None
             res = mpi_comm.bcast(res, root=0)
 
-        else:
-
-            if (tids is None):
-                tids = list(range(self.NT))
-
-            if (parallelism_method == "Sequential"):
-
-                res = list(map(self.search_optima, tids))
-
-            else:
-
-                if (parallelism_method == "Thread"):
-
-                    nth = 32 #XXX set to number of threads per (MPI) process or number of available cores per node
-                    kwargs = {"max_workers":nth}
-                    Executor = concurrent.futures.ThreadPoolExecutor
-
-                elif (parallelism_method == "Process"):
-
-                    nproc = 1 #XXX set to number of threads per (MPI) process or number of available cores per node
-                    kwargs = {"max_workers":nproc}
-                    Executor = concurrent.futures.ProcessPoolExecutor
-
-                with Executor(**kwargs) as executor:
-                    res = list(executor.map(self.search_optima, tids, timeout=None, chunksize=1))
-
-            res.sort(key = lambda x : x[0])
-
-
-        t2 = time.time()
-        if (verbose and self.mpi_rank == 0):
-            print("Search time: %f s"%(t2 - t1))
-
         return res
+
+if __name__ == '__main__':
+
+    comm = MPI.Comm.Get_parent().Merge()
+    (searcher, data, model, tids, kwargs) = comm.bcast(None, root=0)
+    searcher.search_multitask(data, model, tids, i_am_manager = False, **kwargs)
+    comm.Disconnect()
 
