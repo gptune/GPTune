@@ -1,1 +1,81 @@
-# GPTune
+# ztune
+
+*ztune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
+ztune is part of the xSDK effort supported by the Exascale Computing Project (ECP).
+
+## Install
+
+ztune relies on external Python libraries as listed in the `requirements.txt` file.
+They can all be installed through the standard Python repository through the pip tool.
+
+```
+pip install --upgrade --user -r requirements.txt
+```
+
+The library can be run either sequentially or in parallel.  In the latter case, the MPI library should be installed.
+#XXX MPICC
+## Examples
+
+The file `example.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke ztune.
+
+```
+python examples/example.py
+```
+
+## Usage
+
+### Problem description
+
+#### Spaces
+
+In order to autotune a certain application, three spaces have to be defined through an instance of the **Space** class.
+1. Task Space (TS): this space defines the problems that the application targets.
+Every point in this space represents one instance of a problem.
+In the context of ztune, the word *task* means application *problem*.
+2. Input Space (IS): this space defines the application parameters to be tuned.
+A point in this space represents a combination of the parameters.
+The goal of the tuner is to find the best possible combination that minimizes the objective function of the application.
+3. Output Space (OS): this space defines the result(s) of the application, i.e., the objective of the application to be optimized.
+For examples, this can be runtime, memory or energy consumption in HPC applications or prediction accuracy in machine learning applications.
+The current version of ztune supports only single dimensional output spaces.
+However, future developments intend to support multi-dimensional output spaces, i.e. multi-objective tuning.
+
+#### Parameters
+
+Every dimension of the above mentioned spaces is defined by a **Parameter** object.
+Every parameter i defined by its name, type and range or set of values.
+Three types of parameters can be defined:
+1. Real: defines floating point parameters.
+The range of values that the parameter spans should be defined in the *range* argument.
+2. Integer: defines integer parameters.
+The range of values that the parameter spans should be defined in the *range* argument.
+3. Categorical: defines parameters that take their values in a set or list of values.
+The list of valid values defining the parameter should be defined in the *values* argument.
+
+**_Note_**
+```
+If the problems the application targets cannot be defined in a cartesian space, the user can simply give a list of problems (as a Categorical parameter) in the definition of the task space.
+```
+#### Constraints
+
+Not all points in the task or input spaces correspond to valid problems or parameter configurations.
+Constraints might exist that define the validity of a given combination of input parameters and problem description parameters results.
+Two ways exist to define constraints in ztune:
+1. Strings: the user can define a Python statement in a string.
+The evaluation of that statement should be a boolean.
+2. Functions: the user can define a Python function that returns a boolean.  The parameters of the function should have the same name as the parameters defining the problem.
+*TODO*: Extra parameters can be passed as a \*\*kwargs argument.
+
+#### Models
+
+The user having additional knowledge about the application can help speed up or improve the result of the tuning process by passing a model(s) of the objective function to be optimized.
+
+These models are defined through Python functions following similarly to the constraints definition.
+
+### ztune invocation
+
+Once the parameters and spaces (and optionally constraints and models) are defined, an object of the **ZTune** class has to be instantiated.
+Then, the different kinds of tuning techniques (*MLA, TLA1, TLA2*) can be called through it.
+
+## REFERENCES
+
