@@ -15,6 +15,8 @@
 # other to do so.
 #
 
+from typing import Mapping
+
 class Options(Mapping):
 
     def __init__(self, **kwargs):
@@ -26,6 +28,8 @@ class Options(Mapping):
 
         constraints_evaluation_parallelism = False
         objective_evaluation_parallelism   = False
+
+        verbose = False
 
         # Sample
 
@@ -54,6 +58,8 @@ class Options(Mapping):
 
         search_threads = 1
         search_processes = 1
+        search_multitask_threads = 1
+        search_multitask_processes = 1
 
         search_algo = 'pso' # ['pso', 'cmaes']
         search_udi = 'thread_island' # ['thread_island', 'mp_island', 'ipyparallel_island']

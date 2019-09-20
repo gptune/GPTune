@@ -15,9 +15,13 @@
 # other to do so.
 #
 
+import numpy as np
+from problem import Problem
+from typing import Collection
+
 class Data(object):
 
-    def __init__(self, problem : Problem, T = None : np.ndarray, X = None : Collection[np.ndarray], Y = None : Collection[np.ndarray]):
+    def __init__(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, Y : Collection[np.ndarray] = None):
 
         self.problem = problem
 
@@ -71,7 +75,7 @@ class Data(object):
         if (Y is not None):
             for y in Y:
                 if (y is not None and len(y) > 0):
-                    if not (y.ndim == 2 and y.shape[1] == problem.DO)
+                    if not (y.ndim == 2 and y.shape[1] == problem.DO):
                         cond = False
                         break
 

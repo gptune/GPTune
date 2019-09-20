@@ -1,0 +1,301 @@
+ROOTDIR = os.path.abspath(__file__ + "/../")
+cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
+
+####################################################################################################
+
+class LCM(GPy.kern.Kern):
+
+    """
+    LCM kernel:
+
+    .. math::
+
+    """
+
+    def __init__(self, input_dim, num_outputs, Q, name='LCM'):
+
+        super(LCM, self).__init__(input_dim + 1, active_dims=None, name=name)
+
+        self.num_outputs = num_outputs
+        self.Q = Q
+
+#        self.theta =       np.ones(Q * input_dim)
+#        self.var   =       np.ones(Q)
+#        self.kappa =  .5 * np.ones(Q * num_outputs)
+#        self.sigma =       np.ones(num_outputs)
+#        self.WS    =  .5 * np.random.randn(Q * num_outputs)
+
+        self.theta =  0.54132485 * np.ones(Q * input_dim)
+        self.var   =  0.54132485 * np.ones(Q)
+        self.kappa = -0.43275213 * np.ones(Q * num_outputs)
+        self.sigma =  0.54132485 * np.ones(num_outputs)
+#        np.random.seed(0)
+        self.WS    =   .5 * np.random.randn(Q * num_outputs)
+ 
+        self.BS    = np.empty(Q * self.num_outputs ** 2)
+
+    def get_param_array(self):
+
+        x = np.concatenate([self.theta, self.var, self.kappa, self.sigma, self.WS])
+
+        return x
+
+    def set_param_array(self, x):
+
+        cpt = 0
+        for i in range(len(self.theta)):
+            self.theta[i] = x[cpt]
+            cpt += 1
+        for i in range(len(self.var)):
+            self.var[i] = x[cpt]
+            cpt += 1
+        for i in range(len(self.kappa)):
+            self.kappa[i] = x[cpt]
+            cpt += 1
+        for i in range(len(self.sigma)):
+            self.sigma[i] = x[cpt]
+            cpt += 1
+        for i in range(len(self.WS)):
+            self.WS[i] = x[cpt]
+            cpt += 1
+
+        self.parameters_changed()
+
+    def parameters_changed(self):
+
+        for q in range(self.Q):
+
+            ws = self.WS[q * self.num_outputs : (q + 1) * self.num_outputs].reshape(1, self.num_outputs)
+            a = np.dot(ws.T, ws) + np.diag(self.kappa[q * self.num_outputs : (q + 1) * self.num_outputs])
+            self.BS[q * self.num_outputs ** 2 : (q + 1) * self.num_outputs ** 2] = a.flatten()
+
+    def K(self, X1, X2=None):
+
+        if X2 is None: X2 = X1
+
+        K = np.empty((X1.shape[0], X2.shape[0]))
+
+        try:
+            cliblcm.K(ctypes.c_int(self.input_dim - 1),\
+                    ctypes.c_int(self.num_outputs),\
+                    ctypes.c_int(self.Q),\
+                    ctypes.c_int(X1.shape[0]),\
+                    ctypes.c_int(X2.shape[0]),\
+                    self.theta.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),\
+                    self.var.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),\
+                    self.BS.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),\
+                    X1.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),\
+                    X2.ctypes.data_as(ctypes.POINTER(ctypes.c_double)),\
+                    K.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
+        except Exception as inst:
+            print(inst)
+
+        return K
+
+    def Kdiag(self, X):
+
+        return np.diag(self.K(X, X2=X))
+
+    def update_gradients_full(self, dL_dK, X1, X2=None):
+
+        pass
+
+    def update_gradients_diag(self, dL_dKdiag, X):
+
+        pass
+
+    def gradients_X(self, dL_dK, X1, X2):
+
+        raise("Not implemented")
+
+    def gradients_X_diag(self,dL_dKdiag,X):
+
+        raise("Not implemented")
+
+    def train_kernel(self, X, Y, computer, **kwargs):
+
+        mpi_comm = computer.spawn(__file__, kwargs['model_processes'], kwargs['model_threads'])
+
+        X = np.concatenate([np.concatenate([X[i], np.ones((len(X[i]), 1)) * i], axis=1) for i in range(len(X))])
+        Y = np.array(list(itertools.chain.from_iterable(Y)))
+
+        _ = mpi_comm.bcast(("init", (self, X, Y)), root=0)
+
+        _log_lim_val = np.log(np.finfo(np.float64).max)
+        _exp_lim_val = np.finfo(np.float64).max
+        _lim_val = 36.0
+        epsilon = np.finfo(np.float64).resolution
+
+        def transform_x(x):
+            
+            x2 = x.copy()
+            for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
+                x2[i] = np.where(x[i]>_lim_val, x[i], np.log1p(np.exp(np.clip(x[i], -_log_lim_val, _lim_val)))) #+ epsilon
+                #x2[i] = np.where(x[i]>_lim_val, x[i], np.log(np.expm1(x[i]))) #+ epsilon
+
+            return x2
+
+        def transform_gradient(x, grad):
+
+            grad2 = grad.copy()
+            x2 = transform_x(x)
+            for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
+                grad2[i] = grad[i]*np.where(x2[i]>_lim_val, 1., - np.expm1(-x2[i]))
+
+            return grad2
+
+        # Gradient-based optimization
+
+        gradients = np.zeros(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma) + len(self.WS))
+
+        history_xs = [None]
+        history_fs = [float('Inf')]
+
+        def fun(x, *args):
+
+            x2 = transform_x(x)
+            _ = mpi_comm.bcast(("fun_jac", x2), root=0)
+#            gradients[:] = 0.
+            (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
+            gradients[:] = g[:]
+            if (kwargs['verbose']):
+                print("negloglike ", neg_log_marginal_likelihood)
+                sys.stdout.flush()
+            if (neg_log_marginal_likelihood < min(history_fs)):
+                history_xs.append(x2)
+                history_fs.append(neg_log_marginal_likelihood)
+
+            return (neg_log_marginal_likelihood)
+
+        def grad(x, *args):
+
+            grad = - gradients
+            grad = transform_gradient(x, grad)
+
+            return (grad)
+
+        x0 = self.get_param_array()
+        sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
+#            bounds = [(None, None)] * len(x0)
+#            sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad, bounds=None, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1, 'maxiter': 1, 'iprint': -1, 'maxls': 100})
+
+        if (kwargs['verbose']):
+            print('fun      : ', sol.fun)
+            #print('hess_inv : ', sol.hess_inv)
+            #print('jac      : ', jac)
+            print('message  : ', sol.message)
+            print('nfev     : ', sol.nfev)
+            print('nit      : ', sol.nit)
+            print('status   : ', sol.status)
+            print('success  : ', sol.success)
+            #print('x        : ', x)
+#            xopt = transform_x(sol.x)
+#            fopt = sol.fun
+        xopt = history_xs[history_fs.index(min(history_fs))]
+        fopt = min(history_fs)
+
+#        # Particle Swarm Optimization
+#
+#        import pyswarms as ps
+#        min_bound = np.array([self.bounds[i][0] for i in range(len(self.bounds))], dtype='float64')
+#        max_bound = np.array([self.bounds[i][1] for i in range(len(self.bounds))], dtype='float64')
+#        bounds = (min_bound, max_bound)
+#        optimizer = ps.single.GlobalBestPSO(n_particles=100, dimensions=len(self.bounds), options={'c1': 0.5, 'c2': 0.3, 'w': 0.9}, bounds=bounds)
+#        fopt, xopt = optimizer.optimize(fun, iters=100)
+#        xopt = transform_x(xopt)
+#
+#        import pyswarm
+#        min_bound = np.array([-20 for i in range(len(self.bounds))], dtype='float64')
+#        max_bound = np.array([ 20 for i in range(len(self.bounds))], dtype='float64')
+#        xopt, fopt = pyswarm.pso(fun, min_bound, max_bound, ieqcons=[], f_ieqcons=None, args=(), kwargs={}, swarmsize=100, omega=0.5, phip=0.5, phig=0.5, maxiter=100, minstep=1e-8, minfunc=1e-8, debug=False)
+#        xopt = transform_x(xopt)
+
+        self.set_param_array(xopt)
+
+        (_, _) = mpi_comm.bcast(("end", None), root=0)
+
+        return (xopt, fopt)
+
+if __name__ == "__main__":
+
+    from ctypes import Structure, c_int, c_double, c_void_p, POINTER
+
+    if mpi4py.MPI._sizeof(mpi4py.MPI.Comm) == ctypes.sizeof(ctypes.c_int):
+        c_mpi_comm_t = c_int
+    else:
+        c_mpi_comm_t = c_void_p
+
+    class fun_jac_struct(Structure):
+        _fields_ = [("DI", c_int),\
+                    ("NT", c_int),\
+                    ("NL", c_int),\
+                    ("nparam", c_int),\
+                    ("m" , c_int),\
+                    ("X", POINTER(c_double)),\
+                    ("Y", POINTER(c_double)),\
+                    ("dists", POINTER(c_double)),\
+                    ("exps", POINTER(c_double)),\
+                    ("alpha", POINTER(c_double)),\
+                    ("K", POINTER(c_double)),\
+                    ("gradients_TPS", POINTER(POINTER(c_double))),\
+                    ("mb", c_int),\
+                    ("lr", c_int),\
+                    ("lc", c_int),\
+                    ("nprow", c_int),\
+                    ("npcol", c_int),\
+                    ("pid", c_int),\
+                    ("prowid", c_int),\
+                    ("pcolid", c_int),\
+                    ("context", c_int),\
+                    ("Kdesc", POINTER(c_int)),\
+                    ("alphadesc", POINTER(c_int)),\
+                    ("distY", POINTER(c_double)),\
+                    ("buffer", POINTER(c_double)),\
+                    ("mpi_comm", POINTER(c_mpi_comm_t))]
+
+    mpi_comm = MPI.Comm.Get_parent()
+#    mpi_comm.Merge()
+
+#    color = self.mpi_rank // (self.mpi_size // num_subgroups)
+#    key   = self.mpi_rank %  (self.mpi_size // num_subgroups)
+#
+    mpi_size = mpi_comm.Get_size()
+    mpi_rank = mpi_comm.Get_rank()
+    nprow = int(np.sqrt(mpi_size))
+    npcol = mpi_size // nprow 
+#    assert(nprow * npcol == mpi_size)
+    mb = min(32, min(X.shape[0]//nprow, X.shape[0]//npcol))
+
+    cond = True
+    while (cond):
+
+        res = mpi_comm.bcast(None, root=0)
+
+        if (res[0] == "init"):
+
+            (X, Y, params_init) = res[1]
+            cliblcm.initialize.restype = POINTER(fun_jac_struct)
+            z = cliblcm.initialize (\
+                    c_int(self.input_dim - 1),\
+                    c_int(self.num_outputs),\
+                    c_int(self.Q),\
+                    c_int(X.shape[0]),\
+                    X.ctypes.data_as(POINTER(c_double)),\
+                    Y.ctypes.data_as(POINTER(c_double)),\
+                    c_int(mb),\
+                    c_int(nprow),\
+                    c_int(npcol),\
+                    c_mpi_comm_t.from_address(mpi4py.MPI._addressof(mpi_comm)))
+
+        elif (res[0] == "fun_jac"):
+
+            x2 = res[1]
+            cliblcm.fun_jac.restype = c_double
+            neg_log_marginal_likelihood = cliblcm.fun_jac ( x2.ctypes.data_as(POINTER(c_double)), z, gradients.ctypes.data_as(POINTER(c_double)) )
+
+        elif (res[0] == "end"):
+
+            cond = False
+            cliblcm.finalize(z)
+            mpi_comm.Disconnect()
+

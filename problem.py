@@ -15,6 +15,8 @@
 # other to do so.
 #
 
+from autotune.problem import TuningProblem
+
 class Problem(object):
 
     def __init__(self, tp : TuningProblem):
@@ -37,7 +39,7 @@ class Problem(object):
     @property
     def DP(self):
 
-        return self.PS.n_dim)
+        return self.PS.n_dim
 
     @property
     def DO(self):

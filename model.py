@@ -18,9 +18,10 @@
 class Model(abc.ABC):
 
     @abstractmethod
-    def __init__(self, problem : Problem, **kwargs):
+    def __init__(self, problem : Problem, computer : Computer, **kwargs):
 
         self.problem = problem
+        self.computer = computer
         self.M = None
 
     @abstractmethod
@@ -105,37 +106,51 @@ class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        
-        self.M = None
-        if (num_restarts is None):
-            num_restarts = num_subgroups
+        self.train(data, i_am_manager = True, **kwargs):
 
-        num_subgroups = mpi_size / model_num_processes
-        color = self.mpi_rank // (self.mpi_size // num_subgroups)
-        key   = self.mpi_rank %  (self.mpi_size // num_subgroups)
-        subcomm = mpi_comm.Split(color, key)
+    def train(self, data : Data, i_am_manager = True, **kwargs):
 
-        np.random.seed(color)
-        if ((self.M is not None) and (color == 0)):
-            ker = self.M.kern
-            (bestxopt, bestfopt) = ker.train_kernel(self.X, self.Y, mpi_comm=subcomm, verbose=self.verbose)
-            color += num_subgroups
+        if (kwargs['model_latent'] == 0):
+            Q = data.NT
         else:
-            (bestxopt, bestfopt) = (None, float('Inf'))
-        for i in range(color, num_restarts, num_subgroups):
-            ker = LMC(input_dim=self.DI, num_outputs=self.NT, Q=Q)
-            (xopt, fopt) = ker.train_kernel(data.X, data.Y, mpi_comm=subcomm, verbose=verbose)
-            if (fopt < bestfopt):
-                bestxopt = xopt
-                bestfopt = fopt
+            Q = kwargs['model_latent']
 
-        mpi_comm.Barrier()
-        K = LMC(input_dim=self.DI, num_outputs=self.NT, Q=Q)
-        bestxopt = allreduce_best(bestxopt, bestfopt)
-        K.set_param_array(bestxopt)
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager):
 
-        likelihoods_list = [GPy.likelihoods.Gaussian(variance = K.sigma[i], name="Gaussian_noise_%s" %i) for i in range(data.NT)]
-        self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, K, likelihoods_list=likelihoods_list)
+            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_restart_processes']) as executor:
+                def fun(restart_iter):
+                    return self.train(data = data, i_am_manager = False, kwargs = copy.deepcopy(kwargs).update({'seed':restart_iter}))
+                res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_restart_threads']))
+
+        elif (kwargs['shared_memory_parallelism']):
+
+            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
+                def fun(restart_iter):
+                    if ('seed' in kwargs):
+                        seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
+                    else:
+                        seed = restart_iter
+                    np.seed(seed)
+                    kern = LCM(input_dim = self.problem.DP, num_outputs = data.NT, Q = Q)
+                    if (restart_iter == 0 and self.M is not None):
+                        kern.set_param_array(self.M.kern.get_param_array())
+                    return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+                res = list(executor.map(fun, list(range(kwargs['model_restart_threads'])), timeout=None, chunksize=1))
+
+        else:
+
+            def fun(restart_iter):
+                np.seed(restart_iter)
+                kern = LCM(input_dim = self.problem.DP, num_outputs = data.NT, Q = Q)
+                return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+            res = list(map(fun, list(range(model_restarts))))
+
+        kern = LCM(input_dim = self.problem.DI, num_outputs = data.NT, Q = Q)
+        bestxopt = min(res, key = lambda x: x[1])[0]
+        kern.set_param_array(bestxopt)
+        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NT)]
+        self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, kern, likelihoods_list = likelihoods_list)
 
         return
 

@@ -28,7 +28,7 @@ class Search(abc.ABC):
         raise Exception("Abstract method")
 
     @abstractmethod
-    def search_multitask(self, data : Data, model : Model, tids = None : Collection[int], **kwargs) -> Collection[np.ndarray]:
+    def search_multitask(self, data : Data, model : Model, tids = None : Collection[int], i_am_manager = True : bool, **kwargs) -> Collection[np.ndarray]:
 
         raise Exception("Abstract method")
 
@@ -128,52 +128,52 @@ class SearchPyGMO(Search):
 
     def search_multitask(self, data : Data, model : Model, tids = None : Collection[int], i_am_manager = True : bool, **kwargs) -> Collection[np.ndarray]:
 
-#        if (kwargs['search_processes'] == 1):
-#        if (kwargs['search_threads'] == 1):
-#        if (parallelism_method == "MPI"):
-#        if (parallelism_method == "Sequential"):
-#        if (parallelism_method == "Thread"):
-#        if (parallelism_method == "Process"):
+#        if (kwargs['distributed_memory_parallelism']):
+#
+#            if (i_am_manager):
+#
+#                mpi_comm = self.computer.spawn(__file__, kwargs['search_processes'], kwargs['search_threads'], args=self, kwargs=) # XXX add args and kwargs
+#                res = mpi_comm.gather(None, root=0)
+#
+#            else:
+#
+#                mpi_comm = kwargs['mpi_comm']
+#                mpi_rank = mpi_comm.Get_rank()
+#                mpi_size = mpi_comm.Get_size()
+#
+#        if (tids is None):
+#
+#            if (kwargs['distributed_memory_parallelism']):
+#                tids = list(range(self.mpi_rank, self.NT, self.mpi_size))
+#            else:
+#                tids = list(range(self.NT))
 
-        if (tids is None):
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager):
 
-            if (kwargs['distributed_memory_parallelism']):
-                tids = list(range(self.mpi_rank, self.NT, self.mpi_size))
-            else:
-                tids = list(range(self.NT))
+            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['search_multitask_processes']) as executor:
+                fun = function.partial(self.search_multitask, data = data, model = model, i_am_manager = False, kwargs = kwargs)
+                res = list(executor.map(fun, tids, timeout=None, chunksize = kwargs['search_multitask_threads']))
 
-        if (not kwargs['shared_memory_parallelism']):
-
-            res = list(map(self.search_optima, tids))
-
-        else:
-
-            kwargs = {"max_workers":kwargs['search_threads']}
-            Executor = concurrent.futures.ThreadPoolExecutor
-            #Executor = concurrent.futures.ProcessPoolExecutor
-
-            with Executor(**kwargs) as executor:
+        elif (kwargs['shared_memory_parallelism']):
+            
+            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
                 fun = function.partial(self.search, data = data, model = model, kwargs = kwargs)
                 res = list(executor.map(fun, tids, timeout=None, chunksize=1))
 
-            res.sort(key = lambda x : x[0])
+        else:
 
-        if (kwargs['distributed_memory_parallelism']):
+            fun = function.partial(self.search, data = data, model = model, kwargs = kwargs)
+            res = list(map(self.search, tids))
 
-            res = mpi_comm.gather(res, root=0)
-            if (self.mpi_rank == 0):
-                res = list(itertools.chain(*res))
-                res.sort(key = lambda x : x[0])
-            else:
-                res = None
-            res = mpi_comm.bcast(res, root=0)
+        res.sort(key = lambda x : x[0])
 
         return res
 
-if __name__ == '__main__':
-
-    comm = MPI.Comm.Get_parent().Merge()
-    (searcher, data, model, tids, kwargs) = comm.bcast(None, root=0)
-    searcher.search_multitask(data, model, tids, i_am_manager = False, **kwargs)
-    comm.Disconnect()
+#if __name__ == '__main__':
+#
+#    comm = MPI.Comm.Get_parent().Merge()
+#    (searcher, data, model, tids, kwargs) = comm.bcast(None, root=0)
+#    searcher.search_multitask(data, model, tids, i_am_manager = False, **kwargs)
+#    comm.Disconnect()
 
