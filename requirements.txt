@@ -1,0 +1,10 @@
+numpy
+scipy
+GPy
+openturns
+lhsmdu
+pygmo
+ipyparallel
+mpi4py
+opentuner
+hpbandster

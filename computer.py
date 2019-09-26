@@ -27,7 +27,7 @@ class Computer(object):
         self.nodes = nodes
         self.cores = cores
         self.hosts = hosts
-        if (nodes != len(hosts)):
+        if (hosts != None and nodes != len(hosts)):
             raise Exception('The number of elements in "hosts" does not match with the number of "nodes"')
 
         if (number_of_processes_and_threads is not None):
@@ -35,23 +35,22 @@ class Computer(object):
         else:
             self.number_of_processes_and_threads = lambda point: (1, 1) # Fall back to sequential evaluation by default
 
-    # TODO
-    def evaluate_constraints(pb : Problem, points : Collection, inputs_only : bool = False, **kwargs):
+    def evaluate_constraints(self, problem : Problem, point : Collection, inputs_only : bool = False, **kwargs):
 
 #       kwargs['constraints_evaluation_parallelism']
 
         # points can be either a dict or a list of dicts on which to iterate
 
         cond = True
-        for (cstname, cst) in pb.constraints.items():
+        for (cstname, cst) in problem.constraints.items():
             if (isinstance(cst, str)):
                 try:
                     # {} has to be the global argument to eval
-                    # and kwargs the local one, otherwise,
-                    # kwargs will be corrupted / updated by eval
-                    cond = eval(cst, {}, kwargs)
+                    # and point the local one, otherwise,
+                    # point will be corrupted / updated by eval
+                    cond = eval(cst, {}, point)
                 except Exception as inst:
-                    if (on_task_parameters_only and isinstance(inst, NameError)):
+                    if (inputs_only and isinstance(inst, NameError)):
                         pass
                     else:
                         raise Exception(f"Unexpected exception '{inst}' was raised while evaluating constraint '{cstname}'. Correct this constraint before calling the tuner again.")
@@ -59,9 +58,9 @@ class Computer(object):
                 try:
                     kwargs2 = {}
                     sig = inspect.signature(cst)
-                    for varname in kwargs:
+                    for varname in point:
                         if (varname in sig.parameters):
-                            kwargs2[varname] = kwargs[varname]
+                            kwargs2[varname] = point[varname]
                     cond = cst(**kwargs2)
                 except Exception as inst:
                     if (isinstance(inst, TypeError)):
@@ -78,39 +77,38 @@ class Computer(object):
         return cond
 
 
-    # TODO
-    def evaluate_objective(pb : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, **kwargs):
+    def evaluate_objective(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, **kwargs):
 
 #        kwargs['objective_evaluation_parallelism'])
 
         Y = []
         for i in range(len(T)):
             t = T[i]
-            kwargst = {self.TSorig[k].name: t[k] for k in range(self.DT)}
+            kwargst = {problem.IS[k].name: t[k] for k in range(problem.DI)}
             X2 = X[i]
             Y2 = []
             for j in range(len(X2)):
                 x = X2[j]
-                kwargs = {self.ISorig[k].name: x[k] for k in range(self.DI)}
+                kwargs = {problem.PS[k].name: x[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
-                y = self.objfun(**kwargs)
+                y = problem.objective(kwargs)
                 Y2.append(y)
-            Y.append(np.array(Y2).reshape((len(Y2), self.DO)))
+            Y.append(np.array(Y2).reshape((len(Y2), problem.DO)))
 
         return Y
 
-    def spawn(executable, nproc, nth,  args, kwargs):
+    def spawn(executable, nproc, nth, args=None, kwargs=None):
 
         # XXX
-           check_mpi()
-           mpi_info = MPI.Info.Create()
-           mpi_info.Set("add-hostfile", "slurm.hosts")
-           mpi_info.Set("host", "slurm.hosts")
-            
-           #print("about to spawn")
-           comm = MPI.COMM_SELF.Spawn(executable, args=['testworker.py'], maxprocs=nproc, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-           process_count = comm.Get_size()
-           process_host = MPI.Get_processor_name()
-           print('manager',process_rank, process_count, process_host)
+#        check_mpi()
+#        mpi_info = MPI.Info.Create()
+#        mpi_info.Set("add-hostfile", "slurm.hosts")
+#        mpi_info.Set("host", "slurm.hosts")
+         
+        comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+#        process_count = comm.Get_size()
+#        process_host = MPI.Get_processor_name()
+#        print('manager',process_rank, process_count, process_host)
+        return comm
 
 #print(MPI.COMM_WORLD.Get_rank(), MPI.Get_processor_name())

@@ -34,15 +34,15 @@ class Problem(object):
     @property
     def DI(self):
 
-        return self.IS.n_dim
+        return len(self.IS)
 
     @property
     def DP(self):
 
-        return self.PS.n_dim
+        return len(self.PS)
 
     @property
     def DO(self):
 
-        return self.OS.n_dim
+        return len(self.OS)
 

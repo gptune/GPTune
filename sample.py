@@ -15,14 +15,20 @@
 # other to do so.
 #
 
+import abc
+from typing import Callable
+import numpy as np
+
+from autotune.space import Space
+
 class Sample(abc.ABC):
 
-    @abstractmethod
+    @abc.abstractmethod
     def sample(self, n_samples : int, space : Space, **kwargs):
 
         raise Exception("Abstract method")
 
-    def sample_constrained(self, n_samples : int, space : Space, check_constraints = None : Callable, check_constraints_kwargs = {} : Dict, **kwargs):
+    def sample_constrained(self, n_samples : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
 
@@ -42,9 +48,9 @@ class Sample(abc.ABC):
             cpt = 0
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
-                S2 = self.sample(n_samples, space)
+                S2 = self.sample(n_samples, space, kwargs=kwargs)
                 for s_norm in S2:
-                    s_orig = space.inverse_transform(np.array([s_norm], ndim=2))
+                    s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     kwargs2.update(check_constraints_kwargs)
                     if (check_constraints(kwargs2)):
@@ -59,25 +65,66 @@ class Sample(abc.ABC):
                         The constraints might be too hard to satisfy.\
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
 
-        S = np.array(S[0:n_samples]).reshape((n_samples, space.n_dim))
+        S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
 
         return S
 
-    def sample_inputs(self, n_samples : int, IS : Space, check_constraints = None : Callable, check_constraints_kwargs = {} : Dict, **kwargs):
+    def sample_inputs(self, n_samples : int, IS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
-    def sample_parameters(self, n_samples : int, T : np.ndarray, IS : Space, PS : Space, check_constraints = None : Callable, check_constraints_kwargs = {} : Dict, **kwargs):
+    def sample_parameters(self, n_samples : int, T : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         X = []
         for t in T:
-            t_orig = IS.inverse_transform(np.array([t], ndim=2))
+            t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
             kwargs2 = {d.name: t_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
             X.append(xs)
 
         return X
+
+
+import lhsmdu
+
+class SampleLHSMDU(Sample):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.cached_n_samples = None
+        self.cached_space     = None
+        self.cached_algo      = None
+
+    def sample(self, n_samples : int, space : Space, **kwargs):
+
+        kwargs = kwargs['kwargs']
+
+        if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
+
+            lhs = lhsmdu.resample()
+
+        else:
+
+            self.cached_n_samples = n_samples
+            self.cached_space     = space
+            self.cached_algo      = kwargs['sample_algo']
+
+            if (kwargs['sample_algo'] == 'LHS-MDU'):
+                lhs = lhsmdu.sample(len(space), n_samples)
+            elif (kwargs['sample_algo'] == 'MCS'):
+                lhs = lhsmdu.createRandomStandardUniformMatrix(space.dimensions, n_samples)
+            else:
+                raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
+
+        lhs = np.array(list(zip(*[np.array(lhs[k])[0] for k in range(len(lhs))])))
+
+        return lhs
+
+
+import openturns as ot
 
 class SampleOpenTURNS(Sample):
 
@@ -86,14 +133,19 @@ class SampleOpenTURNS(Sample):
     The reason is that OpenTURNS requires the Intel 'Thread Building Block' library to compile and execute.
     """
 
-    import openturns as ot
+    def __init__(self):
+
+        super().__init__()
+
+        self.cached_space        = None
+        self.cached_distribution = None
 
     def sample(self, n_samples : int, space : Space, **kwargs):
 
-        if (space == self.cached_space):
+        if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution
         else:
-            distributions = [ot.Uniform(*d.transformed_bounds) for d in space)]
+            distributions = [ot.Uniform(*d.transformed_bounds) for d in space.dimensions]
             distribution  = ot.ComposedDistribution(distributions)
             # Caching space and distribution to speed-up future samplings, especially if invoked by the sample_constrained method.
             self.cached_space = space
@@ -103,7 +155,8 @@ class SampleOpenTURNS(Sample):
         lhs.setAlwaysShuffle(True) # randomized
 
         S = lhs.generate()
-        S.reshape((n_samples, space.n_dim))
+        S = np.array(S)
+        S.reshape((n_samples, len(space)))
 
         return S
 

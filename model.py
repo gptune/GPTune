@@ -15,30 +15,39 @@
 # other to do so.
 #
 
+import abc
+from typing import Collection, Tuple
+import numpy as np
+
+from problem import Problem
+from computer import Computer
+from data import Data
+
 class Model(abc.ABC):
 
-    @abstractmethod
     def __init__(self, problem : Problem, computer : Computer, **kwargs):
 
         self.problem = problem
         self.computer = computer
         self.M = None
 
-    @abstractmethod
+    @abc.abstractmethod
     def train(self, data : Data, **kwargs):
 
         raise Exception("Abstract method")
 
-    @abstractmethod
-    def update(self, newdata : Data, do_train = False: bool, **kwargs):
+    @abc.abstractmethod
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         raise Exception("Abstract method")
 
-    @abstractmethod
-    def predict(self, points : Collection[np.ndarrays], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    @abc.abstractmethod
+    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         raise Exception("Abstract method")
 
+
+import GPy
 
 class Model_GPy_LCM(Model):
 
@@ -56,7 +65,12 @@ class Model_GPy_LCM(Model):
 
         multitask = len(data.T) > 1
 
-        if (model_sparse and model_inducing is None):
+        if (kwargs['model_latent'] is None):
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if (kwargs['model_sparse'] and kwargs['model_inducing'] is None):
             if (multitask):
                 lenx = sum([len(X) for X in data.X])
             else:
@@ -66,33 +80,33 @@ class Model_GPy_LCM(Model):
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = self.problem.DP, ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = self.problem.DP, num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
-            if (model_sparse):
+            if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K)
         else:
             K = GPy.kern.RBF(input_dim = self.problem.DP, ARD=True, name='GPy_GP')
-            if (model_sparse):
+            if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPRegression(data.X[0], data.Y[0], kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPRegression(data.X[0], data.Y[0], kernel = K)
             
-        np.random.seed(mpi_rank)
-        num_restarts = max(1, model_n_restarts // mpi_size)
+#        np.random.seed(mpi_rank)
+#        num_restarts = max(1, model_n_restarts // mpi_size)
 
-        resopt = self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = verbose, parallel = (model_n_threads > 1), num_processes = model_n_threads, messages = "True", optimizer = 'lbfgs', start = None, max_iters = model_max_iters, ipython_notebook = False, clear_after_finish = True)
+        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = "True", optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
-        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
+#        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
 
         return
 
-    def update(self, newdata : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarrays], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         x = np.empty((1, points.shape[0] + 1))
         x[0,:-1] = points
@@ -102,16 +116,18 @@ class Model_GPy_LCM(Model):
         return (mu, var)
 
 
+from lcm import LCM
+
 class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        self.train(data, i_am_manager = True, **kwargs):
+        self.train(data, i_am_manager = True, **kwargs)
 
     def train(self, data : Data, i_am_manager = True, **kwargs):
 
-        if (kwargs['model_latent'] == 0):
-            Q = data.NT
+        if (kwargs['model_latent'] is None):
+            Q = data.NI
         else:
             Q = kwargs['model_latent']
 
@@ -131,8 +147,8 @@ class Model_LCM(Model):
                         seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
                     else:
                         seed = restart_iter
-                    np.seed(seed)
-                    kern = LCM(input_dim = self.problem.DP, num_outputs = data.NT, Q = Q)
+                    np.random.seed(seed)
+                    kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
                     if (restart_iter == 0 and self.M is not None):
                         kern.set_param_array(self.M.kern.get_param_array())
                     return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
@@ -141,25 +157,25 @@ class Model_LCM(Model):
         else:
 
             def fun(restart_iter):
-                np.seed(restart_iter)
-                kern = LCM(input_dim = self.problem.DP, num_outputs = data.NT, Q = Q)
+                np.random.seed(restart_iter)
+                kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
                 return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-            res = list(map(fun, list(range(model_restarts))))
+            res = list(map(fun, list(range(kwargs['model_restarts']))))
 
-        kern = LCM(input_dim = self.problem.DI, num_outputs = data.NT, Q = Q)
+        kern = LCM(input_dim = self.problem.DI, num_outputs = data.NI, Q = Q)
         bestxopt = min(res, key = lambda x: x[1])[0]
         kern.set_param_array(bestxopt)
-        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NT)]
+        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, kern, likelihoods_list = likelihoods_list)
 
         return
 
-    def update(self, newdata : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarrays], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         x = np.empty((1, points.shape[0] + 1))
         x[0,:-1] = points
@@ -220,12 +236,12 @@ class Model_DGP(Model):
 
         self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
-    def update(self, newdata : Data, do_train = False: bool, **kwargs):
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarrays], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         (mu, var) = self.M.predict(np.concatenate((self.T[tid], x)).reshape((1, self.DT + self.DI)))
 

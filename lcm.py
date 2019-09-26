@@ -1,3 +1,23 @@
+# GPTune Copyright (c) 2019, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory (subject to receipt of any
+# required approvals from the U.S.Dept. of Energy) and the University of
+# California, Berkeley.  All rights reserved.
+#
+# If you have questions about your rights to use or distribute this software, 
+# please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+#
+# NOTICE. This Software was developed under funding from the U.S. Department 
+# of Energy and the U.S. Government consequently retains certain rights.
+# As such, the U.S. Government has been granted for itself and others acting
+# on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
+# the Software to reproduce, distribute copies to the public, prepare
+# derivative works, and perform publicly and display publicly, and to permit
+# other to do so.
+
+import os, ctypes
+import numpy as np
+import GPy
+
 ROOTDIR = os.path.abspath(__file__ + "/../")
 cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
 
@@ -112,14 +132,14 @@ class LCM(GPy.kern.Kern):
 
         raise("Not implemented")
 
-    def train_kernel(self, X, Y, computer, **kwargs):
+    def train_kernel(self, X, Y, computer, kwargs):
 
-        mpi_comm = computer.spawn(__file__, kwargs['model_processes'], kwargs['model_threads'])
+        mpi_comm = computer.spawn(__file__, kwargs['model_processes'], kwargs['model_threads'], kwargs = kwargs)
 
         X = np.concatenate([np.concatenate([X[i], np.ones((len(X[i]), 1)) * i], axis=1) for i in range(len(X))])
         Y = np.array(list(itertools.chain.from_iterable(Y)))
 
-        _ = mpi_comm.bcast(("init", (self, X, Y)), root=0)
+        _ = mpi_comm.bcast(("init", (self, X, Y)), root=mpi4py.MPI.ROOT)
 
         _log_lim_val = np.log(np.finfo(np.float64).max)
         _exp_lim_val = np.finfo(np.float64).max
@@ -154,7 +174,7 @@ class LCM(GPy.kern.Kern):
         def fun(x, *args):
 
             x2 = transform_x(x)
-            _ = mpi_comm.bcast(("fun_jac", x2), root=0)
+            _ = mpi_comm.bcast(("fun_jac", x2), root=mpi4py.MPI.ROOT)
 #            gradients[:] = 0.
             (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
             gradients[:] = g[:]
@@ -212,7 +232,9 @@ class LCM(GPy.kern.Kern):
 
         self.set_param_array(xopt)
 
-        (_, _) = mpi_comm.bcast(("end", None), root=0)
+        (_, _) = mpi_comm.bcast(("end", None), root=mpi4py.MPI.ROOT)
+
+        mpi_comm.Disconnect()
 
         return (xopt, fopt)
 
@@ -292,6 +314,8 @@ if __name__ == "__main__":
             x2 = res[1]
             cliblcm.fun_jac.restype = c_double
             neg_log_marginal_likelihood = cliblcm.fun_jac ( x2.ctypes.data_as(POINTER(c_double)), z, gradients.ctypes.data_as(POINTER(c_double)) )
+            if (mpi_rank == 0):
+                mpi_comm.send((neg_log_marginal_likelihood, gradients), dest=0)
 
         elif (res[0] == "end"):
 

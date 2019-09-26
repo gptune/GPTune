@@ -15,18 +15,32 @@
 # other to do so.
 #
 
+import copy
+import functools
+
+from autotune.problem import TuningProblem
+
 from problem import Problem
 from computer import Computer
 from data import Data
 from options import Options
+from sample import *
+from model import *
+from search import *
 
 class GPTune(object):
 
-    def __init__(self, problem : Problem, computer : Computer = Computer(), data : Data = Data(), options : Options = Options(), **kwargs):
+    def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, **kwargs):
 
-        self.problem  = problem
+        self.problem  = Problem(tuningproblem)
+        if (computer is None):
+            computer = Computer()
         self.computer = computer
+        if (data is None):
+            data = Data(self.problem)
         self.data     = data
+        if (options is None):
+            options = Options()
         self.options  = options
 
         if (self.options['distributed_memory_parallelism']\
@@ -45,27 +59,24 @@ class GPTune(object):
 #            self.mpi_rank = 0
 #            self.mpi_size = 1
 
-    def MLA(NS, NS1 = None, NI = None, **kwargs):
+    def MLA(self, NS, NS1 = None, NI = None, **kwargs):
 
-        kwargs = (copy.deepcopy(self.options).update(kwargs))
-        kwargs = kwargs.update({'mpi_comm' : self.mpi_comm})
+        kwargs = copy.deepcopy(self.options)
+        kwargs.update(kwargs)
+        kwargs.update({'mpi_comm' : self.mpi_comm})
 
         """ Multi-task Learning Autotuning """
 
 #        if (self.mpi_rank == 0):
 
-        sampler = eval(f'{kwargs["sample"]}()')
+        sampler = eval(f'{kwargs["sample_class"]}()')
 
         if (self.data.T is None):
 
             if (NI is None):
                 raise Exception("Number of problems to be generated (NI) is not defined")
 
-            check_constraints = functools.partial(\
-                    self.computer.evaluate_constraints,\
-                    constraints = self.problem,\
-                    inputs_only = True,\
-                    kwargs = kwargs)
+            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
             self.data.T = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
 
         if (self.data.X is None):
@@ -73,20 +84,11 @@ class GPTune(object):
             if (NS1 is None):
                 NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
 
-            check_constraints = functools.partial(\
-                    self.computer.evaluate_constraints,\
-                    constraints = self.problem,\
-                    inputs_only = False,\
-                    kwargs = kwargs)
+            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             self.data.X = sampler.sample_parameters(n_samples = NS1, T = self.data.T, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
 
         if (self.data.Y is None):
-            self.data.Y = self.computer.evaluate_objective(\
-                    fun = self.problem,\
-                    T = self.data.T,\
-                    X = self.data.X,\
-                    kwargs = kwargs)
-
+            self.data.Y = self.computer.evaluate_objective(self.problem, self.data.T, self.data.X, kwargs = kwargs) 
 #            if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 #                mpi_comm.bcast(self.data, root=0)
 #
@@ -94,25 +96,22 @@ class GPTune(object):
 #
 #            self.data = mpi_comm.bcast(None, root=0)
 
-        NS2 = NS - len(self.X[0])
+        NS2 = NS - len(self.data.X[0])
 
-        modeler  = eval(f'{kwargs["model"]} (problem = self.problem, computer = self.computer)')
-        searcher = eval(f'{kwargs["search"]}(problem = self.problem, computer = self.computer)')
+        modeler  = eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
 
         for optiter in range(NS2):
 
-            newdata = Data(T = self.data.T)
+            newdata = Data(problem = self.problem, T = self.data.T)
 
             modeler.train(data = self.data, **kwargs)
-            newdata.X = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
+            res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
+            newdata.X = [x[1][0] for x in res]
 
 #            if (self.mpi_rank == 0):
 
-            newdata.Y = self.computer.evaluate_objective(\
-                    fun = self.problem.objective,\
-                    T = newdata.T,\
-                    X = newdata.X,\
-                    kwargs = kwargs)
+            newdata.Y = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, T = newdata.T, X = newdata.X, kwargs = kwargs)
 
 #                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 #                    mpi_comm.bcast(newdata.Y, root=0)

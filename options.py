@@ -15,9 +15,7 @@
 # other to do so.
 #
 
-from typing import Mapping
-
-class Options(Mapping):
+class Options(dict):
 
     def __init__(self, **kwargs):
 
@@ -29,17 +27,23 @@ class Options(Mapping):
         constraints_evaluation_parallelism = False
         objective_evaluation_parallelism   = False
 
-        verbose = False
+        verbose = True
 
         # Sample
 
-        sample = 'SampleOpenTURNS' # Default sample class
+        sample_class = 'SampleLHSMDU' # Default sample class
+        #sample_class = 'SampleOpenTURNS'
 
-        sample_max_iters = 10**9
+        #sample_algo = None
+        sample_algo = 'LHS-MDU' #Latin hypercube sampling with multidimensional uniformity
+        #sample_algo = 'MCS'  #Monte Carlo Sampling
+
+        sample_max_iter = 10**9
 
         # Model
 
-        model = 'Model_LCM' # Default model class
+        model_class = 'Model_GPy_LCM' # Default model class
+        #model_class = 'Model_LCM'
 
         model_threads = 1
         model_processes = 1
@@ -47,14 +51,14 @@ class Options(Mapping):
 
         model_restarts = 1
         model_max_iters = 15000
-        model_latent = 0
+        model_latent = None
         model_sparse = False
         model_inducing = None
         model_layers = 2
 
         # Search
 
-        search = 'SearchPyGMO' # Default search class
+        search_class = 'SearchPyGMO' # Default search class
 
         search_threads = 1
         search_processes = 1
@@ -65,10 +69,12 @@ class Options(Mapping):
         search_udi = 'thread_island' # ['thread_island', 'mp_island', 'ipyparallel_island']
         #XXX 'mp_island' : advise the user not to use this kind of udi as it launches several processes and deadlock on some weird semaphores
         #XXX 'ipyparallel_island' : advise the user not to use this kind of udi as it is not tested
-        search_pop_size = 100
-        search_gen = 100
+        search_pop_size = 1000
+        search_gen = 1000
         search_evolve = 10
-        search_max_iters = 100
+        search_max_iters = 10
 
+        self.update(locals())
         self.update(kwargs)
+        self.pop('self')
 

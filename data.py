@@ -52,7 +52,7 @@ class Data(object):
 
         cond = True
         if (T is not None):
-            if (not (T.ndim == 2 and T.shape[1] == problem.DI)):
+            if (not (T.ndim == 2 and T.shape[1] == self.problem.DI)):
                 cond = False
 
         return cond
@@ -69,7 +69,7 @@ class Data(object):
 
         return cond
 
-    def check_outputs(self, T: Collection[np.ndarray]) -> bool:
+    def check_outputs(self, Y: Collection[np.ndarray]) -> bool:
 
         cond = True
         if (Y is not None):
@@ -93,7 +93,11 @@ class Data(object):
 
         # merge the newdata with self, making sure that the Ts coincide
 
-        pass
+        if (not np.array_equal(self.T, newdata.T)):
+            raise Exception("The tasks in the newdata should be the same as the current tasks")
+
+        self.X = [np.concatenate((self.X[i], newdata.X[i])) for i in range(len(self.X))]
+        self.Y = [np.concatenate((self.Y[i], newdata.Y[i])) for i in range(len(self.Y))]
 
 #    def insert(T = None: np.ndarray, X = None : Collection[np.ndarray], Y = None : Collection[np.ndarray]):
 #
