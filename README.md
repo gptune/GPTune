@@ -38,10 +38,10 @@ The library can be run either sequentially or in parallel.  In the latter case, 
 #XXX MPICC
 ## Examples
 
-The file `example.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke GPTune.
+The file `demo.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke GPTune.
 
 ```
-python examples/example.py
+python examples/demo.py
 ```
 
 ## Usage
@@ -51,10 +51,10 @@ python examples/example.py
 #### Spaces
 
 In order to autotune a certain application, three spaces have to be defined through an instance of the **Space** class.
-1. Task Space (TS): this space defines the problems that the application targets.
+1. Input Space (IS): this space defines the problems that the application targets.
 Every point in this space represents one instance of a problem.
 In the context of GPTune, the word *task* means application *problem*.
-2. Input Space (IS): this space defines the application parameters to be tuned.
+2. Parameter Space (PS): this space defines the application parameters to be tuned.
 A point in this space represents a combination of the parameters.
 The goal of the tuner is to find the best possible combination that minimizes the objective function of the application.
 3. Output Space (OS): this space defines the result(s) of the application, i.e., the objective of the application to be optimized.
@@ -97,7 +97,7 @@ These models are defined through Python functions following similarly to the con
 ### GPTune invocation
 
 Once the parameters and spaces (and optionally constraints and models) are defined, an object of the **GPTune** class has to be instantiated.
-Then, the different kinds of tuning techniques (*MLA, TLA1, TLA2*) can be called through it.
+Then, the different kinds of tuning techniques (*MLA, ...*) can be called through it.
 
 ## REFERENCES
 
