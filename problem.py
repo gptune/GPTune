@@ -23,14 +23,16 @@ class Problem(object):
 
         self.name = tp.name
 
-        self.IS = tp.input_space
-        self.PS = tp.parameter_space
+    #    self.IS = tp.input_space
+    #    self.PS = tp.parameter_space
+        self.IS = tp.task_space
+        self.PS = tp.input_space
         self.OS = tp.output_space
 
         self.objective   = tp.objective
         self.constraints = tp.constraints
-        self.models      = tp.models
-
+#       self.models      = tp.models
+#
     @property
     def DI(self):
 

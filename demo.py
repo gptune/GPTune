@@ -81,7 +81,7 @@ computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_
 options = Options()
 options['sample_algo'] = 'MCS'
 
-gt = GPTune(problem, computer = computer, data = data, options = options)
+gt = GPTune(problem, computer = computer, data = None, options = options)
 (data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 print(data.Y)
 print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])

@@ -19,22 +19,23 @@ import numpy as np
 from problem import Problem
 from typing import Collection
 
-class HistoricData(Data):
+#-class HistoricData(Data):
+#-
+#-    def __init__(self, data, computer, options):
+#-
+#-        self.data     = data
+#-        self.computer = computer
+#-        self.options  = options
+#-
+#-#   @staticmethod
+#-#   def load():
+#-#
+#-#    pass
+#-#
+#-#   def save(self):
+#-#
+#-#    pass
 
-    def __init__(self, data, computer, options):
-
-        self.data     = data
-        self.computer = computer
-        self.options  = options
-
-#   @staticmethod
-#   def load():
-#
-#    pass
-#
-#   def save(self):
-#
-#    pass
 
 class Data(object):
 
