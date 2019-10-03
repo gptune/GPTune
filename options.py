@@ -36,7 +36,7 @@ class Options(dict):
 
         #sample_algo = None
         sample_algo = 'LHS-MDU' #Latin hypercube sampling with multidimensional uniformity
-        #sample_algo = 'MCS'  #Monte Carlo Sampling
+        #sample_algo = 'MCS'     #Monte Carlo Sampling
 
         sample_max_iter = 10**9
 

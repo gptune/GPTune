@@ -22,10 +22,11 @@
 
 import sys
 import os
+import numpy as np
 sys.path.insert(0, os.path.abspath(__file__ + "/../../"))
-from gptune import *
 
-import collections
+
+from gptune import *
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
@@ -34,11 +35,17 @@ from autotune.search import *
 
 # Define Problem
 
+# Argmin{x} objective(t,x), for x in [0., 1.]
+
 input_space = Space([Real(0., 10., name="t")])
-parameter_space = Space([Real(0., 1., name="x"), Real(0., 1., name="y")])
+parameter_space = Space([Real(0., 1., name="x")])
 output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
 
 def objective(point):
+
+    """
+    f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
+    """
 
     t = point['t']
     x = point['x']
@@ -49,10 +56,9 @@ def objective(point):
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
     f = d * e
 
-    #return -0.5 * np.exp(-t1*(i1 - 2)**2) - 0.5 * np.exp(-t1 * (i1 + 2.1)**2 / 5) + 0.3
     return f
 
-constraints = {"cst1" : "x >= 0. and y <= 1."}
+constraints = {"cst1" : "x >= 0. and x <= 1."}
 
 problem = TuningProblem(input_space, parameter_space, output_space, objective, constraints, None)
 
@@ -64,7 +70,18 @@ problem = TuningProblem(input_space, parameter_space, output_space, objective, c
 #search = Search(problem, search_param_dict)
 
 #search.run()
-gt = GPTune(problem)
+def number_of_processes_and_threads(point):
+
+    nproc = 1
+    nth = 1
+
+    return (nproc, nth)
+
+computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_threads = number_of_processes_and_threads)
+options = Options()
+options['sample_algo'] = 'MCS'
+
+gt = GPTune(problem, computer = computer, data = data, options = options)
 (data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 print(data.Y)
 print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])

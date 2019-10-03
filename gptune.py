@@ -32,6 +32,13 @@ class GPTune(object):
 
     def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, **kwargs):
 
+        """
+        tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
+        computer     : object specifying the architectural characteristics of the computer to run on (See file 'GPTune/computer.py')
+        data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
+        options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
+        """
+
         self.problem  = Problem(tuningproblem)
         if (computer is None):
             computer = Computer()
@@ -86,6 +93,11 @@ class GPTune(object):
 
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             self.data.X = sampler.sample_parameters(n_samples = NS1, T = self.data.T, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            #XXX add the info of problem.models here
+            for X2 in X:
+                for x in X2:
+                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
+
 
         if (self.data.Y is None):
             self.data.Y = self.computer.evaluate_objective(self.problem, self.data.T, self.data.X, kwargs = kwargs) 
@@ -108,6 +120,7 @@ class GPTune(object):
             modeler.train(data = self.data, **kwargs)
             res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
             newdata.X = [x[1][0] for x in res]
+#XXX add the info of problem.models here
 
 #            if (self.mpi_rank == 0):
 
