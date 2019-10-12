@@ -20,8 +20,8 @@
 compiler_version = intel
 
 #mpi_version = sgimpt
-#mpi_version = openmpi
-mpi_version = intelmpi
+mpi_version = openmpi
+#mpi_version = intelmpi
 
 CFLAGS= -O3 -Wall -fpic
 #CFLAGS= -g -O0 -Wall -fpic

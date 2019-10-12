@@ -19,23 +19,6 @@ import numpy as np
 from problem import Problem
 from typing import Collection
 
-class HistoricData(Data):
-
-    def __init__(self, data, computer, options):
-
-        self.data     = data
-        self.computer = computer
-        self.options  = options
-
-#   @staticmethod
-#   def load():
-#
-#    pass
-#
-#   def save(self):
-#
-#    pass
-
 class Data(object):
 
     def __init__(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, Y : Collection[np.ndarray] = None):
@@ -126,4 +109,21 @@ class Data(object):
 #            else:
 #                raise Exception("")
 #            self.T.append(T)
+
+class HistoricData(Data):
+
+    def __init__(self, data, computer, options):
+
+        self.data     = data
+        self.computer = computer
+        self.options  = options
+
+#   @staticmethod
+#   def load():
+#
+#    pass
+#
+#   def save(self):
+#
+#    pass
 

@@ -184,7 +184,8 @@ printf("%s %d: %d %d\n", __FILE__, __LINE__, z->pid, comm_size); fflush(stdout);
 #ifdef DEBUG
 printf("%s %d: %d\n", __FILE__, __LINE__, z->context); fflush(stdout); MPI_Barrier( comm );
 #endif
-    Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
+//    Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
+    blacs_gridinit( &(z->context), &layout, &nprow, &npcol);
 #ifdef DEBUG
 printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_Barrier( comm );
 #endif
@@ -476,7 +477,12 @@ for (int p = 0; p < 8; p++)
     }
     W_logdet2 *= 2.;
 //printf("!!!!! %d %f\n", z->pid, W_logdet2); fflush(stdout);
+    int comm_size;
+    MPI_Comm_size (z->mpi_comm, &comm_size);    /* get number of processes */
+    printf("!!! %d\n", comm_size);
+    printf("!!! %d\n", comm_size);
     MPI_Allreduce( &W_logdet2, &W_logdet, 1, MPI_DOUBLE, MPI_SUM, z->mpi_comm);
+    printf("!!!\n");
 
     // Copy Y in alpha as dpotrs computes the solution of A x = b in place
     for (li = 0; li < z->lr; li++)

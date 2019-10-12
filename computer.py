@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # GPTune Copyright (c) 2019, The Regents of the University of California,
 # through Lawrence Berkeley National Laboratory (subject to receipt of any
 # required approvals from the U.S.Dept. of Energy) and the University of
@@ -19,6 +21,8 @@ import numpy as np
 from problem import Problem
 from data import Data
 from typing import Collection, Callable
+import mpi4py
+from mpi4py import MPI
 
 class Computer(object):
 
@@ -97,7 +101,7 @@ class Computer(object):
 
         return Y
 
-    def spawn(executable, nproc, nth, args=None, kwargs=None):
+    def spawn(self, executable, nproc, nth, args=None, kwargs=None):
 
         # XXX
 #        check_mpi()
@@ -105,7 +109,9 @@ class Computer(object):
 #        mpi_info.Set("add-hostfile", "slurm.hosts")
 #        mpi_info.Set("host", "slurm.hosts")
          
-        comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        print('exec', executable, 'args', args, 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        #comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
 #        process_count = comm.Get_size()
 #        process_host = MPI.Get_processor_name()
 #        print('manager',process_rank, process_count, process_host)

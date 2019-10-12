@@ -17,6 +17,10 @@
 import os, ctypes
 import numpy as np
 import GPy
+import mpi4py
+from mpi4py import MPI
+import itertools
+import scipy
 
 ROOTDIR = os.path.abspath(__file__ + "/../")
 cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
@@ -176,7 +180,9 @@ class LCM(GPy.kern.Kern):
             x2 = transform_x(x)
             _ = mpi_comm.bcast(("fun_jac", x2), root=mpi4py.MPI.ROOT)
 #            gradients[:] = 0.
+            print("~~~~")
             (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
+            print("@@@@")
             gradients[:] = g[:]
             if (kwargs['verbose']):
                 print("negloglike ", neg_log_marginal_likelihood)
@@ -196,6 +202,7 @@ class LCM(GPy.kern.Kern):
 
         x0 = self.get_param_array()
         sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
+        print("!!!!")
 #            bounds = [(None, None)] * len(x0)
 #            sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad, bounds=None, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1, 'maxiter': 1, 'iprint': -1, 'maxls': 100})
 
@@ -286,21 +293,23 @@ if __name__ == "__main__":
     nprow = int(np.sqrt(mpi_size))
     npcol = mpi_size // nprow 
 #    assert(nprow * npcol == mpi_size)
-    mb = min(32, min(X.shape[0]//nprow, X.shape[0]//npcol))
+    mb = 32
 
     cond = True
     while (cond):
 
         res = mpi_comm.bcast(None, root=0)
+        print(res)
 
         if (res[0] == "init"):
 
-            (X, Y, params_init) = res[1]
+            (ker_lcm, X, Y) = res[1]
+            mb = min(mb, min(X.shape[0]//nprow, X.shape[0]//npcol))
             cliblcm.initialize.restype = POINTER(fun_jac_struct)
             z = cliblcm.initialize (\
-                    c_int(self.input_dim - 1),\
-                    c_int(self.num_outputs),\
-                    c_int(self.Q),\
+                    c_int(ker_lcm.input_dim - 1),\
+                    c_int(ker_lcm.num_outputs),\
+                    c_int(ker_lcm.Q),\
                     c_int(X.shape[0]),\
                     X.ctypes.data_as(POINTER(c_double)),\
                     Y.ctypes.data_as(POINTER(c_double)),\
@@ -312,6 +321,7 @@ if __name__ == "__main__":
         elif (res[0] == "fun_jac"):
 
             x2 = res[1]
+            gradients = np.zeros(len(ker_lcm.theta) + len(ker_lcm.var) + len(ker_lcm.kappa) + len(ker_lcm.sigma) + len(ker_lcm.WS))
             cliblcm.fun_jac.restype = c_double
             neg_log_marginal_likelihood = cliblcm.fun_jac ( x2.ctypes.data_as(POINTER(c_double)), z, gradients.ctypes.data_as(POINTER(c_double)) )
             if (mpi_rank == 0):

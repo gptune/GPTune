@@ -42,8 +42,8 @@ class Options(dict):
 
         # Model
 
-        model_class = 'Model_GPy_LCM' # Default model class
-        #model_class = 'Model_LCM'
+        #model_class = 'Model_GPy_LCM' # Default model class
+        model_class = 'Model_LCM'
 
         model_threads = 1
         model_processes = 1

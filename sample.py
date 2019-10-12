@@ -115,7 +115,7 @@ class SampleLHSMDU(Sample):
             if (kwargs['sample_algo'] == 'LHS-MDU'):
                 lhs = lhsmdu.sample(len(space), n_samples)
             elif (kwargs['sample_algo'] == 'MCS'):
-                lhs = lhsmdu.createRandomStandardUniformMatrix(space.dimensions, n_samples)
+                lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)
             else:
                 raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
 

@@ -79,7 +79,9 @@ def number_of_processes_and_threads(point):
 
 computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_threads = number_of_processes_and_threads)
 options = Options()
-options['sample_algo'] = 'MCS'
+options['model_processes'] = 2
+options['model_class '] = 'Model_LCM'
+data = Data(problem)
 
 gt = GPTune(problem, computer = computer, data = data, options = options)
 (data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)

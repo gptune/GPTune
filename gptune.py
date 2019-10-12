@@ -93,11 +93,10 @@ class GPTune(object):
 
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             self.data.X = sampler.sample_parameters(n_samples = NS1, T = self.data.T, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-            #XXX add the info of problem.models here
-            for X2 in X:
-                for x in X2:
-                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
-
+#            #XXX add the info of problem.models here
+#            for X2 in X:
+#                for x in X2:
+#                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
 
         if (self.data.Y is None):
             self.data.Y = self.computer.evaluate_objective(self.problem, self.data.T, self.data.X, kwargs = kwargs) 
