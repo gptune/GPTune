@@ -64,7 +64,7 @@ before_install:
   - ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FC FC=$FC --enable-mpi1-compatibility 
   - make 
   - make install  
-  - cp ./lib/* /usr/lib/x86_64-linux-gnu/.
+  - sudo cp $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/lib/* /usr/lib/x86_64-linux-gnu/.
   - export MPICC="$PWD/bin/mpicc"
   - export MPIF90="$PWD/bin/mpif90"
   - export MPIRUN="$PWD/bin/mpirun"
@@ -101,7 +101,7 @@ before_install:
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB"
   - make
   - make install
-  - cp ./lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
+  - sudo cp $TRAVIS_BUILD_DIR/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
   - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
   
