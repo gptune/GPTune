@@ -100,7 +100,6 @@ before_install:
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB"
   - make
-  - make install
   - sudo cp $TRAVIS_BUILD_DIR/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
   - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
