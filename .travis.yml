@@ -64,7 +64,7 @@ before_install:
   - ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FC FC=$FC --enable-mpi1-compatibility 
   - make 
   - make install  
-  - sudo cp $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/lib/* /usr/lib/x86_64-linux-gnu/.
+  - sudo cp -r $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/lib/* /usr/lib/x86_64-linux-gnu/.
   - export MPICC="$PWD/bin/mpicc"
   - export MPIF90="$PWD/bin/mpif90"
   - export MPIRUN="$PWD/bin/mpirun"
