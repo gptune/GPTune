@@ -22,6 +22,8 @@
 
 import sys
 import os
+import mpi4py
+from mpi4py import MPI
 import numpy as np
 sys.path.insert(0, os.path.abspath(__file__ + "/../../"))
 
@@ -66,10 +68,12 @@ problem = TuningProblem(input_space, parameter_space, output_space, objective, c
 
 #search_param_dict = {}
 #search_param_dict['method'] = 'MLA'
-
+#
 #search = Search(problem, search_param_dict)
-
+#
 #search.run()
+
+
 def number_of_processes_and_threads(point):
 
     nproc = 1
@@ -79,10 +83,12 @@ def number_of_processes_and_threads(point):
 
 computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_threads = number_of_processes_and_threads)
 options = Options()
-options['model_processes'] = 2
+options['model_processes'] = 1
+options['distributed_memory_parallelism'] = False
+options['shared_memory_parallelism'] = False
+options['mpi_comm'] = None
 options['model_class '] = 'Model_LCM'
 data = Data(problem)
-
 gt = GPTune(problem, computer = computer, data = data, options = options)
 (data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 print(data.Y)

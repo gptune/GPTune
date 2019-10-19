@@ -1,0 +1,140 @@
+language: python
+python:
+  - 3.7
+compiler: gcc
+os: linux
+dist: bionic
+sudo: required
+
+branches:
+  only:
+  - master
+
+notifications:
+  email:
+    recipients:
+      - liuyangzhuan@lbl.gov
+    on_failure: always
+    on_success: always
+  slack:
+    rooms:
+      - ecpsparsesolvers:nBWC0jcAd7B1j9whHUYcaVJO
+    on_failure: never
+    on_success: never
+
+env:
+  matrix:
+  - TEST_NUMBER=1"
+git:
+  depth: 1
+
+before_install:
+  - export BLUE="\033[34;1m"
+  - mkdir -p installDir
+
+  - printf  "${BLUE} GC; Installing gcc-7 via apt\n"
+  - sudo apt-get update
+  - sudo apt-get install build-essential software-properties-common -y
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update
+  - sudo apt-get install gcc-7 g++-7 -y
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+  - export CXX="g++-7"
+  - export CC="gcc-7"
+  - printf "${BLUE} GC; Done installing gcc-7 via apt\n"
+
+  - printf "${BLUE} GC; Installing gfortran via apt\n"
+  - sudo apt-get install gfortran-7 -y
+  - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-7 60
+  - export FC="gfortran-7"
+  - printf "${BLUE} GC; Done installing gfortran via apt\n"
+
+  
+  - printf "${BLUE} GC; Installing bzip2 apt\n"
+  - sudo apt-get install bzip2
+  - printf "${BLUE} GC; Done installing bzip2 apt\n"
+  
+  
+  - printf "${BLUE} GC; Installing openmpi\n"
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.bz2
+  - bzip2 -d openmpi-4.0.2.tar.bz2
+  - tar -xvf openmpi-4.0.2.tar
+  - cd openmpi-4.0.2/
+  - ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FC FC=$FC --enable-mpi1-compatibility 
+  - make 
+  - make install  
+  - cp ./lib/* /usr/lib/x86_64-linux-gnu/.
+  - export MPICC="$PWD/bin/mpicc"
+  - export MPIF90="$PWD/bin/mpif90"
+  - export MPIRUN="$PWD/bin/mpirun"
+  - printf "${BLUE} GC; Done installing openmpi\n"
+  
+  - printf "${BLUE} GC; Installing BLASfrom apt\n"
+  - sudo apt-get install libblas-dev
+  - export BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
+  - printf "${BLUE} GC; Done installing BLASfrom apt\n"
+
+  - printf "${BLUE} GC; Installing LAPACKfrom apt\n"
+  - sudo apt-get install liblapack-dev
+  - export LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
+  - printf "${BLUE} GC; Done installing LAPACKfrom apt\n"
+  
+  - printf "${BLUE} GC; Installing ScaLAPACK from source\n"
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - wget http://www.netlib.org/scalapack/scalapack-2.0.2.tgz
+  - tar -xf scalapack-2.0.2.tgz
+  - cd scalapack-2.0.2
+  - rm -rf build
+  - mkdir -p build
+  - cd build
+  - |
+    cmake .. \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_INSTALL_PREFIX=. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DCMAKE_Fortran_FLAGS="-fopenmp" \
+    -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+    -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB"
+  - make
+  - make install
+  - cp ./lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
+  - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
+  - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
+  
+install:
+  - export BLUE="\033[34;1m"
+  - printf "${BLUE} GC; Installing GPtune from source\n"
+  - cd $TRAVIS_BUILD_DIR
+  - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
+  - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
+  - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
+  - rm -rf mpi4py
+  - git clone https://github.com/mpi4py/mpi4py.git
+  - cd mpi4py/
+  - python setup.py build --mpicc="$MPICC -shared"
+  - python setup.py install
+
+  - cd ../
+  - rm -rf scikit-optimize
+  - git clone https://github.com/scikit-optimize/scikit-optimize.git
+  - cd scikit-optimize/
+  - env CC=$MPICC pip install --user -e .
+
+  - cd ../
+  - rm -rf autotune
+  - git clone https://github.com/ytopt-team/autotune.git
+  - cd autotune/
+  - env CC=$MPICC pip install --user -e .
+
+  - env CC=$MPICC pip install --upgrade --user -r requirements.txt
+  - make CC=$MPICC
+ 
+  - printf "${BLUE} GC; Done installing GPtune from source\n"
+
+script:
+  - cd $TRAVIS_BUILD_DIR
+  - travis_wait 80 sudo sh ./.travis_tests.sh

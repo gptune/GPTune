@@ -171,47 +171,49 @@ fun_jac_struct* initialize
     z->Y      = Y;
 
     // MPI ScaLAPACK related parameters
-
     z->mpi_comm = comm;
     MPI_Comm_rank (z->mpi_comm, &(z->pid));  /* get current process id */
     int comm_size;
     MPI_Comm_size (z->mpi_comm, &comm_size);    /* get number of processes */
 #ifdef DEBUG
-printf("%s %d: %d %d\n", __FILE__, __LINE__, z->pid, comm_size); fflush(stdout); MPI_Barrier( comm );
+printf("%s %d: %d %d\n", __FILE__, __LINE__, z->pid, comm_size); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
 //    blacs_get( &i_zero, &i_zero, &(z->context) );
     z->context = Csys2blacs_handle(z->mpi_comm);
 #ifdef DEBUG
-printf("%s %d: %d\n", __FILE__, __LINE__, z->context); fflush(stdout); MPI_Barrier( comm );
+printf("%s %d: %d\n", __FILE__, __LINE__, z->context); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
-//    Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
-    blacs_gridinit( &(z->context), &layout, &nprow, &npcol);
+   Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
+    // blacs_gridinit( &(z->context), &layout, &nprow, &npcol);
 #ifdef DEBUG
-printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_Barrier( comm );
+printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
 //    int usermap[comm_size];
 //    MPI_Bcast( usermap, comm_size, MPI_DOUBLE, z->alphadesc[6]*z->npcol + z->alphadesc[7], z->mpi_comm );
-//    MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
+//    MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm z->mpi_comm)
 //    blacs_gridmap(&(z->context), usermap, &npcol, &nprow, &npcol);
 //printf("@@@@@ %d %d %d %d %d %d\n", z->pid, z->context, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout);
     Cblacs_gridinfo( (z->context), &(z->nprow), &(z->npcol), &(z->prowid), &(z->pcolid) );
 #ifdef DEBUG
-printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout); MPI_Barrier( comm );
+printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
 //printf("##### %d %d %d %d %d %d\n", z->pid, z->context, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout);
     
     z->mb = mb;
-    z->lr = numroc( &m, &mb, &(z->prowid), &i_zero, &nprow );
-    z->lc = numroc( &m, &mb, &(z->pcolid), &i_zero, &npcol );
+    // z->lr = numroc( &m, &mb, &(z->prowid), &i_zero, &nprow );
+    // z->lc = numroc( &m, &mb, &(z->pcolid), &i_zero, &npcol );
+	
+	z->lr = PB_Cnumroc( m, 0, mb, mb, (z->prowid), i_zero, nprow );
+	z->lc = PB_Cnumroc( m, 0, mb, mb, (z->pcolid), i_zero, npcol );
 #ifdef DEBUG
 printf("%s %d: %d %d\n", __FILE__, __LINE__, z->lr, z->lc); fflush(stdout); MPI_Barrier( comm );
 #endif
 
-    descinit (&(z->Kdesc), &m, &m, &mb, &mb, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
+    descinit_ (&(z->Kdesc), &m, &m, &mb, &mb, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
 #ifdef DEBUG
 printf("%s %d: Kdesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->Kdesc[0], z->Kdesc[1],z->Kdesc[2], z->Kdesc[3], z->Kdesc[4], z->Kdesc[5], z->Kdesc[6], z->Kdesc[7], z->Kdesc[8]); fflush(stdout); MPI_Barrier( comm );
 #endif
-    descinit (&(z->alphadesc), &m, &i_one, &mb, &i_one, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
+    descinit_ (&(z->alphadesc), &m, &i_one, &mb, &i_one, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
 #ifdef DEBUG
 printf("%s %d: alphadesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->alphadesc[0], z->alphadesc[1],z->alphadesc[2], z->alphadesc[3], z->alphadesc[4], z->alphadesc[5], z->alphadesc[6], z->alphadesc[7], z->alphadesc[8]); fflush(stdout); MPI_Barrier( comm );
 #endif
@@ -284,7 +286,8 @@ void finalize
     free(z->K);
     free(z->buffer);
 
-    blacs_gridexit( &(z->context) );
+    // blacs_gridexit( &(z->context) );
+    Cblacs_gridexit( z->context );
 //    int tmp = 1; // 1 instead of 0, as MPI might be called after blacs exits
 //    blacs_exit( &tmp );
 
@@ -431,7 +434,7 @@ for (int p = 0; p < 8; p++)
 
     // Compute dL_dK
 
-    pdpotrf( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+    pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 
 /*    if (info != 0)
     {
@@ -479,10 +482,10 @@ for (int p = 0; p < 8; p++)
 //printf("!!!!! %d %f\n", z->pid, W_logdet2); fflush(stdout);
     int comm_size;
     MPI_Comm_size (z->mpi_comm, &comm_size);    /* get number of processes */
-    printf("!!! %d\n", comm_size);
-    printf("!!! %d\n", comm_size);
+    // printf("!!! %d\n", comm_size);
+    // printf("!!! %d\n", comm_size);
     MPI_Allreduce( &W_logdet2, &W_logdet, 1, MPI_DOUBLE, MPI_SUM, z->mpi_comm);
-    printf("!!!\n");
+    // printf("!!!\n");
 
     // Copy Y in alpha as dpotrs computes the solution of A x = b in place
     for (li = 0; li < z->lr; li++)
@@ -490,9 +493,9 @@ for (int p = 0; p < 8; p++)
         z->alpha[li] = z->distY[li];
     }
 
-    pdpotrs( &uplo, &(z->m), &i_one, z->K, &i_one, &i_one, &(z->Kdesc), z->alpha, &i_one, &i_one, &(z->alphadesc), &info );
+    pdpotrs_( &uplo, &(z->m), &i_one, z->K, &i_one, &i_one, &(z->Kdesc), z->alpha, &i_one, &i_one, &(z->alphadesc), &info );
 
-    pdpotri( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+    pdpotri_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 
     double dot = 0.;
     pddot_ (&(z->m), &dot, z->alpha, &i_one, &i_one, z->alphadesc, &i_one, z->distY,  &i_one, &i_one, z->alphadesc, &i_one);

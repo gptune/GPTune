@@ -50,6 +50,9 @@ class Options(dict):
         model_groups = 1
 
         model_restarts = 1
+        
+        model_restart_processes = 1
+        model_restart_threads = 1
         model_max_iters = 15000
         model_latent = None
         model_sparse = False

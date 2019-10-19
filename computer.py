@@ -23,6 +23,9 @@ from data import Data
 from typing import Collection, Callable
 import mpi4py
 from mpi4py import MPI
+import os
+import sys
+
 
 class Computer(object):
 
@@ -109,12 +112,15 @@ class Computer(object):
 #        mpi_info.Set("add-hostfile", "slurm.hosts")
 #        mpi_info.Set("host", "slurm.hosts")
          
+
         print('exec', executable, 'args', args, 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-        #comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-#        process_count = comm.Get_size()
-#        process_host = MPI.Get_processor_name()
-#        print('manager',process_rank, process_count, process_host)
+#        comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+#        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        # process_rank = comm.Get_rank()
+        # process_count = comm.Get_size()
+        # process_host = MPI.Get_processor_name()
+        # print('manager',process_rank, process_count, process_host)
         return comm
 
 #print(MPI.COMM_WORLD.Get_rank(), MPI.Get_processor_name())

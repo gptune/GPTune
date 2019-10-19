@@ -23,6 +23,13 @@ from problem import Problem
 from computer import Computer
 from data import Data
 
+import mpi4py
+from mpi4py import MPI
+from mpi4py import futures
+
+
+import concurrent
+from concurrent import futures						  
 class Model(abc.ABC):
 
     def __init__(self, problem : Problem, computer : Computer, **kwargs):

@@ -28,6 +28,8 @@ from sample import *
 from model import *
 from search import *
 
+import mpi4py
+from mpi4py import MPI		  
 class GPTune(object):
 
     def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, **kwargs):

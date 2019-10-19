@@ -16,26 +16,28 @@
 #
 .PHONY: all lib demo clean
 
-#compiler_version = gcc
-compiler_version = intel
+compiler_version = gcc
+#compiler_version = intel
 
 #mpi_version = sgimpt
 mpi_version = openmpi
 #mpi_version = intelmpi
 
-CFLAGS= -O3 -Wall -fpic
+CFLAGS= -O3 -Wall -fPIC -std=c11
 #CFLAGS= -g -O0 -Wall -fpic
 LDFLAGSLIB= -shared
 LDFLAGSEXE=
 INCS = -I.
-LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_blacs_$(mpi_version)_lp64 -lmkl_scalapack_lp64 -lmkl_avx -lmkl_def -lpthread -lm
 
 ifeq ($(compiler_version),gcc)
+	LIBS = -L/usr/lib/x86_64-linux-gnu/ -lscalapack -llapack -lblas  	
+#	LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_scalapack_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core  -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_blacs_$(mpi_version)_lp64 -lmkl_avx -lmkl_def -lpthread -lm	
 	CFLAGS+= -fopenmp
 	LDFLAGSEXE+=
 	LIBS+= -lgomp
 endif
 ifeq ($(compiler_version),intel)
+	LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_blacs_$(mpi_version)_lp64 -lmkl_avx -lmkl_def -lpthread -lm
 	CFLAGS+= -qopenmp
 	LDFLAGSEXE+= -dynamic # -nofor_main
 	LIBS+= -liomp5
@@ -45,7 +47,7 @@ ifeq ($(mpi_version),sgimpt)
 	CC=cc
 endif
 ifeq ($(mpi_version),openmpi)
-	CC=$(OMPI_DIR)/bin/mpicc
+	CC=cc#$(OMPI_DIR)/bin/mpicc
 endif
 ifeq ($(mpi_version),intelmpi)
 	CC=cc#$(I_MPI_ROOT)/intel64/bin/mpicc
