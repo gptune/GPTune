@@ -121,15 +121,15 @@ install:
   - rm -rf scikit-optimize
   - git clone https://github.com/scikit-optimize/scikit-optimize.git
   - cd scikit-optimize/
-  - env CC=$MPICC pip install --user -e .
+  - env CC=$MPICC pip install -e .
 
   - cd ../
   - rm -rf autotune
   - git clone https://github.com/ytopt-team/autotune.git
   - cd autotune/
-  - env CC=$MPICC pip install --user -e .
+  - env CC=$MPICC pip install -e .
 
-  - env CC=$MPICC pip install --upgrade --user -r requirements.txt
+  - env CC=$MPICC pip install --upgrade -r requirements.txt
   - make CC=$MPICC
  
   - printf "${BLUE} GC; Done installing GPtune from source\n"
