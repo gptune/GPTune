@@ -7,6 +7,7 @@ printf "${BLUE} GC; Entered tests file:\n"
 export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
 export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
 export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
+export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/"
 export MPIRUN="$TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/bin/mpirun"
 
 export PATH="$PATH:$TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/bin"
