@@ -117,6 +117,7 @@ install:
   - cd mpi4py/
   - python setup.py build --mpicc="$MPICC -shared"
   - python setup.py install
+  - env CC=$MPICC pip install -e .
 
   - cd ../
   - rm -rf scikit-optimize
