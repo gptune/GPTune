@@ -14,7 +14,8 @@
 # derivative works, and perform publicly and display publicly, and to permit
 # other to do so.
 #
-.PHONY: all lib demo clean
+# .PHONY: all lib demo clean
+.PHONY: all lib clean
 
 compiler_version = gcc
 #compiler_version = intel
@@ -53,16 +54,18 @@ ifeq ($(mpi_version),intelmpi)
 	CC=cc#$(I_MPI_ROOT)/intel64/bin/mpicc
 endif
 
-all: clean lib demo
+# all: clean lib demo
+all: clean lib
 
 lib: lcm.c
 	$(CC) $(CFLAGS) $(INCS) -c lcm.c -o lcm.o;
 	$(CC) -o liblcm.so lcm.o $(LDFLAGSLIB) $(LIBS);
 
-demo: demo.c
-	$(CC) $(CFLAGS) $(INCS) -c demo.c -o demo.o;
-	$(CC) -o demo lcm.o demo.o $(LDFLAGSEXE) $(LIBS);
+# demo: demo.c
+	# $(CC) $(CFLAGS) $(INCS) -c demo.c -o demo.o;
+	# $(CC) -o demo lcm.o demo.o $(LDFLAGSEXE) $(LIBS);
 
 clean:
-	rm -f lcm.o liblcm.so demo.o demo
+	rm -f lcm.o liblcm.so 
+	# rm -f lcm.o liblcm.so demo.o demo
 
