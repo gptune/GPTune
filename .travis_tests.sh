@@ -14,6 +14,7 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/openmpi-4.
 
 case "${TEST_NUMBER}" in
 1) cd $TRAVIS_BUILD_DIR
+   echo $PYTHONPATH
    $MPIRUN --allow-run-as-root -n 1 python ./demo.py ;;# test the demo 
 *) printf "${RED} ###GC: Unknown test\n" ;;
 esac
