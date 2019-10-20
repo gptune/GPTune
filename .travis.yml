@@ -128,7 +128,8 @@ install:
   - git clone https://github.com/ytopt-team/autotune.git
   - cd autotune/
   - env CC=$MPICC pip install -e .
-
+  
+  - cd ../
   - env CC=$MPICC pip install --upgrade -r requirements.txt
   - make CC=$MPICC
  
