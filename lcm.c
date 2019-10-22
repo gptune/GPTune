@@ -46,19 +46,19 @@ double d_one   =  1.0;
 void K
 (
     // Dimensions / Sizes
-    const int DI,
-    const int NT,
-    const int NL,
-    const int m,
-    const int n,
+    const int DI,  // dimension of parameter space
+    const int NT,  // #of tasks
+    const int NL,  // #of latent functions in LCM
+    const int m,   // #row dimension of K
+    const int n,   // #column dimension of K 
     // Input arrays
-    const double* restrict const theta,
-    const double* restrict const var,
-    const double* restrict const BS,
-    const double*          const X1,
+    const double* restrict const theta, // size DI*NL, length scales for each Gaussian kernel k_q 
+    const double* restrict const var,  // size NL, variance for each Gaussian kernel k_q 
+    const double* restrict const BS,   // parameter matrices of size NT*NT of for each kernel k_q
+    const double*          const X1,   
     const double*          const X2,
     // Output array
-    double* restrict C
+    double* restrict C      // this is required by python, so C is row major
 )
 {
     int i, j, d, q, idxi, idxj;
@@ -73,14 +73,14 @@ void K
         {
             for (j = 0; j < n; j++)
             {
-                idxi = (int) X1[m * DI + i];
-                idxj = (int) X2[n * DI + j];
+                idxi = (int) X1[i * (DI+1) + DI];
+                idxj = (int) X2[j * (DI+1) + DI];
 
                 C[i*n + j] = 0.;
 
                 for (d = 0; d < DI; d++)
                 {
-                    dists[d] = fabs(X1[m * d + i] - X2[n * d + j]);
+                    dists[d] = fabs(X1[i * (DI+1) + d] - X2[j * (DI+1) + d]);
                     dists[d] = dists[d] * dists[d];
                 }
                 for (q = 0; q < NL; q++)
@@ -209,15 +209,21 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, (z->nprow), (z->npcol), (z->p
 printf("%s %d: %d %d\n", __FILE__, __LINE__, z->lr, z->lc); fflush(stdout); MPI_Barrier( comm );
 #endif
 
-    descinit_ (&(z->Kdesc), &m, &m, &mb, &mb, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
+	if(z->prowid!=-1 && z->pcolid!=-1){
+		int lr_tmp = MAX(z->lr,1);
+		descinit_ (&(z->Kdesc), &m, &m, &mb, &mb, &i_zero, &i_zero, &(z->context), &lr_tmp, &info);
 #ifdef DEBUG
-printf("%s %d: Kdesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->Kdesc[0], z->Kdesc[1],z->Kdesc[2], z->Kdesc[3], z->Kdesc[4], z->Kdesc[5], z->Kdesc[6], z->Kdesc[7], z->Kdesc[8]); fflush(stdout); MPI_Barrier( comm );
+printf("%s %d: Kdesc %d %d %d %d %d %d %d %d %d \n", __FILE__, __LINE__, z->Kdesc[0], z->Kdesc[1],z->Kdesc[2], z->Kdesc[3], z->Kdesc[4], z->Kdesc[5], z->Kdesc[6], z->Kdesc[7], z->Kdesc[8]); fflush(stdout); MPI_Barrier( comm );
 #endif
-    descinit_ (&(z->alphadesc), &m, &i_one, &mb, &i_one, &i_zero, &i_zero, &(z->context), &(z->lr), &info);
+		descinit_ (&(z->alphadesc), &m, &i_one, &mb, &i_one, &i_zero, &i_zero, &(z->context), &lr_tmp, &info);
 #ifdef DEBUG
 printf("%s %d: alphadesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->alphadesc[0], z->alphadesc[1],z->alphadesc[2], z->alphadesc[3], z->alphadesc[4], z->alphadesc[5], z->alphadesc[6], z->alphadesc[7], z->alphadesc[8]); fflush(stdout); MPI_Barrier( comm );
 #endif
-
+	}else{
+		z->Kdesc[1]=-1;
+		z->alphadesc[1]=-1;
+	} 
+	
     // Allocate shared arrays
  
     z->dists  = (double *) malloc(z->lr * z->lc * DI * sizeof(double));
@@ -287,7 +293,9 @@ void finalize
     free(z->buffer);
 
     // blacs_gridexit( &(z->context) );
+	if(z->context!=-1){
     Cblacs_gridexit( z->context );
+	}
 //    int tmp = 1; // 1 instead of 0, as MPI might be called after blacs exits
 //    blacs_exit( &tmp );
 
@@ -311,11 +319,11 @@ double fun_jac // negloglike_and_grads
 
     // Unpack hyper-parameters
 
-    double* theta = params;
-    double* var   = theta + z->NL * z->DI;
-    double* kappa = var   + z->NL;
-    double* sigma = kappa + z->NL * z->NT;
-    double* ws    = sigma + z->NT;
+    double* theta = params;                 // length scales of each kernel k_q
+    double* var   = theta + z->NL * z->DI;  // variance of each kernel k_q
+    double* kappa = var   + z->NL;          // diagonal regularizer in B_q ???   
+    double* sigma = kappa + z->NL * z->NT;  // diagonal matrix D of variances in LCM
+    double* ws    = sigma + z->NT;          // W_q used to form B_q
     
     // Initialize outputs
 
@@ -352,33 +360,17 @@ double fun_jac // negloglike_and_grads
 #ifdef DEBUG
 printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush(stdout);
 #endif
-            cg2l(z, gi, &ljstart, &tmppid);
-            if (z->pcolid != tmppid)
-            {
-                // XXX This is a simple way to compute ljstart. Must find a better one.
-                ljstart = z->lc;
-                double ljtmp = 0;
-                for (lj = 0; lj < z->lc; lj++)
-                {
-                    cl2g(z, lj, z->pcolid, &ljtmp);
-//printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, gi, lj, ljtmp); fflush(stdout);
-                    if (ljtmp > gi)
-                    {
-                        ljstart = lj;
-                        break;
-                    }
-                }
-            }
-            for (lj = ljstart; lj < z->lc; lj++)
+
+            for (lj = 0; lj < z->lc; lj++)
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
 
 #ifdef DEBUG
-printf("%s %d: %d %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj, ljstart); fflush(stdout);
+printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj); fflush(stdout);
 #endif
 //@                idxk =li * z->lc + lj;
-                idxk = lj * z->lr + li;
+                idxk = lj * z->lr + li;              //K is needed for ScaLAPACK, so column major
 
                 z->K[idxk] = 0.;
 
@@ -400,10 +392,12 @@ printf("%s %d: %d %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj, ljst
                     }
                 }
             }
+			
+            cg2l(z, gi, &ljstart, &tmppid);			
             if (z->pcolid == tmppid)
             {
 //@                z->K[li * z->lc + ljstart] += sigma[idxi] + 1e-8;
-                z->K[ljstart * z->lr + li] += sigma[idxi] + 1e-8;
+                z->K[ljstart * z->lr + li] += sigma[idxi] + 1e-8;     //YL: why is 1e-8 here?
             }
         }
     }
@@ -433,9 +427,9 @@ for (int p = 0; p < 8; p++)
     /**************************************************************************************************/
 
     // Compute dL_dK
-
-    pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
-
+	if(z->prowid!=-1 && z->pcolid!=-1){
+		pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+	}
 /*    if (info != 0)
     {
         return INFINITY;
@@ -492,22 +486,29 @@ for (int p = 0; p < 8; p++)
     {
         z->alpha[li] = z->distY[li];
     }
+	
+	if(z->prowid!=-1 && z->pcolid!=-1){
+		pdpotrs_( &uplo, &(z->m), &i_one, z->K, &i_one, &i_one, &(z->Kdesc), z->alpha, &i_one, &i_one, &(z->alphadesc), &info );
 
-    pdpotrs_( &uplo, &(z->m), &i_one, z->K, &i_one, &i_one, &(z->Kdesc), z->alpha, &i_one, &i_one, &(z->alphadesc), &info );
-
-    pdpotri_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
-
+		pdpotri_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+	}
+//YL: check https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html for the gradient computation	
+	
+	
+	
     double dot = 0.;
-    pddot_ (&(z->m), &dot, z->alpha, &i_one, &i_one, z->alphadesc, &i_one, z->distY,  &i_one, &i_one, z->alphadesc, &i_one);
+	if(z->prowid!=-1 && z->pcolid!=-1){	
+		pddot_ (&(z->m), &dot, z->alpha, &i_one, &i_one, z->alphadesc, &i_one, z->distY,  &i_one, &i_one, z->alphadesc, &i_one);
+	}	
     MPI_Bcast( &dot, 1, MPI_DOUBLE, z->alphadesc[6]*z->npcol + z->alphadesc[7], z->mpi_comm );
 //printf("@@@@@ %d %f\n", z->pid, dot); fflush(stdout);
 
     neg_log_marginal_likelihood = 0.5 * (z->m * LOG_2_PI + W_logdet + dot);
 
     dL_dK = z->K;
-
-    pdsyrk_( &uplo, &trans, &(z->m), &i_one, &d_half, z->alpha, &i_one, &i_one, z->alphadesc, &d_mhalf, dL_dK, &i_one, &i_one, z->Kdesc);
-
+	if(z->prowid!=-1 && z->pcolid!=-1){
+		pdsyrk_( &uplo, &trans, &(z->m), &i_one, &d_half, z->alpha, &i_one, &i_one, z->alphadesc, &d_mhalf, dL_dK, &i_one, &i_one, z->Kdesc);
+	}
     /**************************************************************************************************/
 
 # pragma omp parallel private ( k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, sum, ws2, a, dldk, info, tmppid ) shared ( z, theta, var, kappa, sigma, ws )

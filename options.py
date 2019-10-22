@@ -51,8 +51,8 @@ class Options(dict):
 
         model_restarts = 1
         
-        model_restart_processes = 1
-        model_restart_threads = 1
+        # model_restart_processes = 1 # YL: not used 
+        # model_restart_threads = 1 # YL: not used 
         model_max_iters = 15000
         model_latent = None
         model_sparse = False
@@ -63,10 +63,10 @@ class Options(dict):
 
         search_class = 'SearchPyGMO' # Default search class
 
-        search_threads = 1
-        search_processes = 1
-        search_multitask_threads = 1
-        search_multitask_processes = 1
+        search_threads = 1    
+        search_processes = 1  
+        # search_multitask_threads = 1 # YL: not used 
+        # search_multitask_processes = 1 # YL: not used 
 
         search_algo = 'pso' # ['pso', 'cmaes']
         search_udi = 'thread_island' # ['thread_island', 'mp_island', 'ipyparallel_island']

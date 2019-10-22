@@ -41,7 +41,7 @@ class LCM(GPy.kern.Kern):
 
     """
 
-    def __init__(self, input_dim, num_outputs, Q, name='LCM'):
+    def __init__(self, input_dim, num_outputs, Q, name='LCM'):  # self and input_dim are required for GPy
 
         super(LCM, self).__init__(input_dim + 1, active_dims=None, name=name)
 
@@ -98,7 +98,7 @@ class LCM(GPy.kern.Kern):
             a = np.dot(ws.T, ws) + np.diag(self.kappa[q * self.num_outputs : (q + 1) * self.num_outputs])
             self.BS[q * self.num_outputs ** 2 : (q + 1) * self.num_outputs ** 2] = a.flatten()
 
-    def K(self, X1, X2=None):
+    def K(self, X1, X2=None):   # Required for GPy, X1 and X2 are ndarray stored in row major 
 
         if X2 is None: X2 = X1
 
@@ -121,7 +121,7 @@ class LCM(GPy.kern.Kern):
 
         return K
 
-    def Kdiag(self, X):
+    def Kdiag(self, X):   # Required for GPy
 
         return np.diag(self.K(X, X2=X))
 
@@ -304,13 +304,14 @@ if __name__ == "__main__":
     while (cond):
 
         res = mpi_comm.bcast(None, root=0)
-        print(res)
+        if (mpi_rank == 0):
+            print(res)
 
         if (res[0] == "init"):
 
             (ker_lcm, X, Y) = res[1]
-            mb = min(mb, min(X.shape[0]//nprow, X.shape[0]//npcol))
-            # print('mb',mb,'nprow',nprow,'npcol',npcol)
+            mb = min(mb, min(X.shape[0]//nprow, X.shape[0]//npcol))   # YL: mb <=32 doesn't seem reasonable, comment this line out ?
+            # # print('mb',mb,'nprow',nprow,'npcol',npcol)
             cliblcm.initialize.restype = POINTER(fun_jac_struct)
             z = cliblcm.initialize (\
                     c_int(ker_lcm.input_dim - 1),\

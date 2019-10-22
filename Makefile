@@ -29,10 +29,15 @@ CFLAGS= -O3 -Wall -fPIC -std=c11
 LDFLAGSLIB= -shared
 LDFLAGSEXE=
 INCS = -I.
+MACHINE = $(shell hostname -s)
+
 
 ifeq ($(compiler_version),gcc)
+ifeq ($(MACHINE),cori)
+	LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_gf_lp64 -lmkl_core -lmkl_gnu_thread -lmkl_blacs_$(mpi_version)_lp64 -lmkl_scalapack_lp64 -lmkl_avx -lmkl_def -lpthread -lm
+else 
 	LIBS = -L/usr/lib/x86_64-linux-gnu/ -lscalapack -llapack -lblas  	
-#	LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_scalapack_lp64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core  -lmkl_blas95_lp64 -lmkl_lapack95_lp64 -lmkl_blacs_$(mpi_version)_lp64 -lmkl_avx -lmkl_def -lpthread -lm	
+endif	
 	CFLAGS+= -fopenmp
 	LDFLAGSEXE+=
 	LIBS+= -lgomp

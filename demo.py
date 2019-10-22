@@ -40,7 +40,9 @@ from autotune.search import *
 # Argmin{x} objective(t,x), for x in [0., 1.]
 
 input_space = Space([Real(0., 10., name="t")])
+# print('dimension of input_space',len(input_space));
 parameter_space = Space([Real(0., 1., name="x")])
+# print('dimension of parameter_space',len(parameter_space));
 output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
 
 def objective(point):
@@ -84,6 +86,7 @@ def number_of_processes_and_threads(point):
 computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_threads = number_of_processes_and_threads)
 options = Options()
 options['model_processes'] = 1
+options['model_threads'] = 1
 options['distributed_memory_parallelism'] = False
 options['shared_memory_parallelism'] = False
 options['mpi_comm'] = None
