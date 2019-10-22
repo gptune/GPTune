@@ -29,8 +29,8 @@ CFLAGS= -O3 -Wall -fPIC -std=c11
 LDFLAGSLIB= -shared
 LDFLAGSEXE=
 INCS = -I.
-MACHINE = $(shell hostname -s)
-
+#MACHINE = $(shell hostname -s)
+MACHINE = ${NERSC_HOST}
 
 ifeq ($(compiler_version),gcc)
 ifeq ($(MACHINE),cori)
