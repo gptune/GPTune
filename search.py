@@ -65,14 +65,14 @@ class Search(abc.ABC):
 
         if (kwargs['distributed_memory_parallelism'] and i_am_manager):
 
-            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['search_processes']) as executor:
+            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['search_multitask_processes']) as executor:
                 fun = functools.partial(self.search_multitask, data = data, model = model, i_am_manager = False, kwargs = kwargs)
-                res = list(executor.map(fun, tids, timeout=None, chunksize = kwargs['search_threads']))
+                res = list(executor.map(fun, tids, timeout=None, chunksize = kwargs['search_multitask_threads']))
 
         elif (kwargs['shared_memory_parallelism']):
             
-            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_threads']) as executor:
-            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_threads']) as executor:
+            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
                 fun = functools.partial(self.search, data = data, model = model, kwargs = kwargs)
                 res = list(executor.map(fun, tids, timeout=None, chunksize=1))
 

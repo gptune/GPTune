@@ -87,6 +87,7 @@ computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_
 options = Options()
 options['model_processes'] = 1
 options['model_threads'] = 1
+options['model_restarts'] = 1
 options['distributed_memory_parallelism'] = False
 options['shared_memory_parallelism'] = False
 options['mpi_comm'] = None

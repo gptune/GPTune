@@ -367,32 +367,33 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
+				if(gi<=gj){  //only store the upper triangular part 
+	#ifdef DEBUG
+	printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj); fflush(stdout);
+	#endif
+	//@                idxk =li * z->lc + lj;
+					idxk = lj * z->lr + li;              //K is needed for ScaLAPACK, so column major
 
-#ifdef DEBUG
-printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj); fflush(stdout);
-#endif
-//@                idxk =li * z->lc + lj;
-                idxk = lj * z->lr + li;              //K is needed for ScaLAPACK, so column major
+					z->K[idxk] = 0.;
 
-                z->K[idxk] = 0.;
-
-                for (q = 0; q < z->NL; q++)
-                {
-                    sum = 0.;
-                    for (d = 0; d < z->DI; d++)
-                    {
-                        sum += z->dists[(li * z->lc + lj) * z->DI + d] / theta[q * z->DI + d];
-                    }
-                    z->exps[(li * z->lc + lj) * z->NL + q] = exp( - sum );
-                    if (idxi == idxj)
-                    {
-                        z->K[idxk] += (ws[q * z->NT + idxi] * ws[q * z->NT + idxj] + kappa[q * z->NT + idxi]) * var[q] * z->exps[(li * z->lc + lj) * z->NL + q];
-                    }
-                    else
-                    {
-                        z->K[idxk] += ws[q * z->NT + idxi] * ws[q * z->NT + idxj] * var[q] * z->exps[(li * z->lc + lj) * z->NL + q]; //dsyrk and dgbmv
-                    }
-                }
+					for (q = 0; q < z->NL; q++)
+					{
+						sum = 0.;
+						for (d = 0; d < z->DI; d++)
+						{
+							sum += z->dists[(li * z->lc + lj) * z->DI + d] / theta[q * z->DI + d];
+						}
+						z->exps[(li * z->lc + lj) * z->NL + q] = exp( - sum );
+						if (idxi == idxj)
+						{
+							z->K[idxk] += (ws[q * z->NT + idxi] * ws[q * z->NT + idxj] + kappa[q * z->NT + idxi]) * var[q] * z->exps[(li * z->lc + lj) * z->NL + q];
+						}
+						else
+						{
+							z->K[idxk] += ws[q * z->NT + idxi] * ws[q * z->NT + idxj] * var[q] * z->exps[(li * z->lc + lj) * z->NL + q]; //dsyrk and dgbmv
+						}
+					}
+				}
             }
 			
             cg2l(z, gi, &ljstart, &tmppid);			
@@ -530,13 +531,12 @@ for (int p = 0; p < 8; p++)
 # pragma omp for
         for (li = 0; li < z->lr; li++)
         {
-            // Diagonal elements
 
             rl2g(z, li, z->prowid, &gi);
             idxi = (int) z->X[gi * (z->DI + 1) + z->DI];
 
             cg2l(z, gi, &ljstart, &tmppid);
-            if (z->pcolid == tmppid)
+            if (z->pcolid == tmppid) // Diagonal elements
             {
 //@                idxk = li * z->lc + ljstart;
                 idxk = ljstart * z->lr + li;
@@ -565,60 +565,43 @@ for (int p = 0; p < 8; p++)
                     ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxi] * a;
                     ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxi] * a;
                 }
-
-                ljstart += 1;
-            }
-            else
-            {
-                // XXX This is a simple way to compute ljstart. Must find a better one.
-                ljstart = z->lc;
-                double ljtmp = 0;
-                for (lj = 0; lj < z->lc; lj++)
-                {
-                    cl2g(z, lj, z->pcolid, &ljtmp);
-                    if (ljtmp > gi)
-                    {
-                        ljstart = lj;
-                        break;
-                    }
-                }
             }
 
-            // Off-diagonal elements
-
-            for (lj = ljstart; lj < z->lc; lj++)
+            for (lj = 0; lj < z->lc; lj++)
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
+				if (gi <= gj){		
+					
+	//@                idxk = li * z->lc + lj;
+					idxk = lj * z->lr + li;
+					dldk = dL_dK[idxk];
 
-//@                idxk = li * z->lc + lj;
-                idxk = lj * z->lr + li;
-                dldk = dL_dK[idxk];
+					if (idxi == idxj)
+					{
+						for (q = 0; q < z->NL; q++)
+						{
+							kappa_gradients_TPS[q * z->NT + idxi] += 2. * dldk;
+						}
+					}
 
-                if (idxi == idxj)
-                {
-                    for (q = 0; q < z->NL; q++)
-                    {
-                        kappa_gradients_TPS[q * z->NT + idxi] += 2. * dldk;
-                    }
-                }
-
-                for (q = 0; q < z->NL; q++)
-                {
-                    ws2 = ws[q * z->NT + idxi] * ws[q * z->NT + idxj];
-                    a = dldk * z->exps[(li * z->lc + lj) * z->NL + q];
-                    var_gradients_TPS[q] += 2. * ws2 * a;
-                    a *= var[q];
-                    for (d = 0; d < z->DI; d++)
-                    {
-                        theta_gradients_TPS[q * z->DI + d] += 2. * ws2 * a * (z->dists[(li * z->lc + lj) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
-                    }
-                    // If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
-                    // which is exacly what happens in the following two lines anyways
-                    // so no need for an if statement
-                    ws_gradients_TPS[q * z->NT + idxi] += 2. * ws[q * z->NT + idxj] * a;
-                    ws_gradients_TPS[q * z->NT + idxj] += 2. * ws[q * z->NT + idxi] * a;
-                }
+					for (q = 0; q < z->NL; q++)
+					{
+						ws2 = ws[q * z->NT + idxi] * ws[q * z->NT + idxj];
+						a = dldk * z->exps[(li * z->lc + lj) * z->NL + q];
+						var_gradients_TPS[q] += 2. * ws2 * a;
+						a *= var[q];
+						for (d = 0; d < z->DI; d++)
+						{
+							theta_gradients_TPS[q * z->DI + d] += 2. * ws2 * a * (z->dists[(li * z->lc + lj) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
+						}
+						// If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
+						// which is exacly what happens in the following two lines anyways
+						// so no need for an if statement
+						ws_gradients_TPS[q * z->NT + idxi] += 2. * ws[q * z->NT + idxj] * a;
+						ws_gradients_TPS[q * z->NT + idxj] += 2. * ws[q * z->NT + idxi] * a;
+					}
+				}	
             }
         }
 

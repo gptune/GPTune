@@ -138,20 +138,20 @@ class Model_LCM(Model):
         else:
             Q = kwargs['model_latent']
 
-        if (kwargs['distributed_memory_parallelism'] and i_am_manager):
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: not tested, model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count 
 
-            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_processes']) as executor:
+            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_restart_processes']) as executor:
                 def fun(restart_iter):
                     return self.train(data = data, i_am_manager = False, kwargs = copy.deepcopy(kwargs).update({'seed':restart_iter}))
-                res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_threads']))
+                res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_restart_threads']))
 
-        elif (kwargs['shared_memory_parallelism']):
+        elif (kwargs['shared_memory_parallelism']): #YL: not tested 
 
-            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_threads']) as executor:
-            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_threads']) as executor:
+            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
                 def fun(restart_iter):
                     if ('seed' in kwargs):
-                        seed = kwargs['seed'] * kwargs['model_threads'] + restart_iter
+                        seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
                     else:
                         seed = restart_iter
                     np.random.seed(seed)
@@ -159,7 +159,7 @@ class Model_LCM(Model):
                     if (restart_iter == 0 and self.M is not None):
                         kern.set_param_array(self.M.kern.get_param_array())
                     return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-                res = list(executor.map(fun, list(range(kwargs['model_threads'])), timeout=None, chunksize=1))
+                res = list(executor.map(fun, list(range(kwargs['model_restart_threads'])), timeout=None, chunksize=1))
 
         else:
 
