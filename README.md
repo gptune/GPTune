@@ -17,8 +17,15 @@ works, and perform publicly and display publicly, and to permit other to do so.
 
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
 GPTune is part of the xSDK effort supported by the Exascale Computing Project (ECP).
+## Depdency
+GPTune relies on OpenMPI/4.0, Python 3.7, BLAS/LAPACK/SCALAPCK (compiled with OpenMPI/4.0?), mpi4py (built with openmpi/4.0), scikit-optimize, autotune, intel-depdent lib, 
+
+external Python libraries as listed in the `requirements.txt` file.
+They can all be installed through the standard Python repository through the pip tool.
 
 ## Install
+
+(change makefile to cmake?)
 
 GPTune relies on external Python libraries as listed in the `requirements.txt` file.
 They can all be installed through the standard Python repository through the pip tool.
@@ -37,6 +44,9 @@ pip install -e .
 The library can be run either sequentially or in parallel.  In the latter case, the MPI library should be installed.
 #XXX MPICC
 ## Examples
+
+
+(how to tune compiler parameters, different libs,)
 
 The file `demo.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke GPTune.
 
