@@ -31,6 +31,21 @@ python setup.py build --mpicc="$CCC -shared"
 python setup.py install --user
 ```
 
+## Install scikit-optimize
+```
+git clone https://github.com/scikit-optimize/scikit-optimize.git
+cd scikit-optimize/
+env CC=$CCC pip install --user -e .
+```
+
+## Install autotune
+autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
+```
+git clone https://github.com/ytopt-team/autotune.git
+cd autotune/
+pip install -e .
+```
+
 ## Install GPTune
 
 (change makefile to cmake?)
@@ -40,13 +55,7 @@ GPTune also depends on several external Python libraries as listed in the `requi
 ```
 pip install --upgrade --user -r requirements.txt
 ```
-Besides the basic requirements, a common autotuning interface in "autotune" has to be installed manually as follows:
-
-```
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-pip install -e .
-```
+Besides the basic requirements, 
 
 The library can be run either sequentially or in parallel.  In the latter case, the MPI library should be installed.
 #XXX MPICC
