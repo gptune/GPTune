@@ -27,7 +27,8 @@ import scipy
 import sys
 
 ROOTDIR = os.path.abspath(__file__ + "/../")
-cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
+# cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
+cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.so')
 
 
 ####################################################################################################

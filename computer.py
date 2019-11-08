@@ -29,18 +29,13 @@ import sys
 
 class Computer(object):
 
-    def __init__(self, nodes : int = 1, cores : int = 1, hosts : Collection = None, number_of_processes_and_threads : Callable = None):
+    def __init__(self, nodes : int = 1, cores : int = 1, hosts : Collection = None):
 
         self.nodes = nodes
         self.cores = cores
         self.hosts = hosts
         if (hosts != None and nodes != len(hosts)):
             raise Exception('The number of elements in "hosts" does not match with the number of "nodes"')
-
-        if (number_of_processes_and_threads is not None):
-            self.number_of_processes_and_threads = number_of_processes_and_threads
-        else:
-            self.number_of_processes_and_threads = lambda point: (1, 1) # Fall back to sequential evaluation by default
 
     def evaluate_constraints(self, problem : Problem, point : Collection, inputs_only : bool = False, **kwargs):
 

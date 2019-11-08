@@ -55,8 +55,8 @@ class GPTune(object):
         if (self.options['distributed_memory_parallelism']\
             and\
             ('mpi4py' in sys.modules)): # make sure that the mpi4py has been loaded successfully
-            if ('mpi_comm' in kwargs):
-                self.mpi_comm = kwargs['mpi_comm']
+#            if ('mpi_comm' in kwargs):
+#                self.mpi_comm = kwargs['mpi_comm']
             if (options['mpi_comm'] is not None):
                 self.mpi_comm = options['mpi_comm']
             else:
@@ -117,8 +117,9 @@ class GPTune(object):
         for optiter in range(NS2):
 
             newdata = Data(problem = self.problem, T = self.data.T)
-
+            print("before train",optiter,NS2)
             modeler.train(data = self.data, **kwargs)
+            print("after train")
             res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
             newdata.X = [x[1][0] for x in res]
 #XXX add the info of problem.models here

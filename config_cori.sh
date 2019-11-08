@@ -15,10 +15,47 @@ export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 
 
 CCC=mpicc
+CCCPP=mpicxx
 
 #pip uninstall -r requirements.txt
 env CC=$CCC pip install --upgrade --user -r requirements.txt
-make CC=$CCC
+
+
+
+
+
+
+
+
+
+mkdir -p build
+cd build
+export CRAYPE_LINK_TYPE=dynamic
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="" \
+	-DCMAKE_C_FLAGS="" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"
+make
+cp lib_gptuneclcm.so ../.
+cd ..
+
+
+
+
+
+# make CC=$CCC
 
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git

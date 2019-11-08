@@ -129,45 +129,47 @@ class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        self.train(data, i_am_manager = True, **kwargs)
+        self.train_mpi(data, i_am_manager = True, **kwargs)
 
-    def train(self, data : Data, i_am_manager = True, **kwargs):
+    def train_mpi(self, data : Data, i_am_manager : bool, **kwargs):
 
         if (kwargs['model_latent'] is None):
             Q = data.NI
         else:
             Q = kwargs['model_latent']
 
-        if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: not tested, model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count 
+        # if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: not tested, model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count, and model_restart_threads*model_restart_processes should be less than model_restarts 
+            # print('I am here2',i_am_manager)
+            # with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_restart_processes']) as executor:
+                # def fun(restart_iter):
+                    # return self.train_mpi(data = data, i_am_manager = False, kwargs = copy.deepcopy(kwargs).update({'seed':restart_iter}))
+                # print('I am here1')
+                # res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_restart_threads']))  #YL: not tested, why chunksize is not one? Can MPIPoolExecutor parallelize over threads ???
 
-            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_restart_processes']) as executor:
-                def fun(restart_iter):
-                    return self.train(data = data, i_am_manager = False, kwargs = copy.deepcopy(kwargs).update({'seed':restart_iter}))
-                res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_restart_threads']))
+        # elif (kwargs['shared_memory_parallelism']): #YL: not tested 
 
-        elif (kwargs['shared_memory_parallelism']): #YL: not tested 
+            # #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+            # with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
+                # def fun(restart_iter):
+                    # if ('seed' in kwargs):
+                        # seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
+                    # else:
+                        # seed = restart_iter
+                    # np.random.seed(seed)
+                    # kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+                    # if (restart_iter == 0 and self.M is not None):
+                        # kern.set_param_array(self.M.kern.get_param_array())
+                    # return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+                # res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize=1))
 
-            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
-            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
-                def fun(restart_iter):
-                    if ('seed' in kwargs):
-                        seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
-                    else:
-                        seed = restart_iter
-                    np.random.seed(seed)
-                    kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
-                    if (restart_iter == 0 and self.M is not None):
-                        kern.set_param_array(self.M.kern.get_param_array())
-                    return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-                res = list(executor.map(fun, list(range(kwargs['model_restart_threads'])), timeout=None, chunksize=1))
+        # else:
 
-        else:
-
-            def fun(restart_iter):
-                np.random.seed(restart_iter)
-                kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
-                return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-            res = list(map(fun, list(range(kwargs['model_restarts']))))
+        def fun(restart_iter):
+            np.random.seed(restart_iter)
+            kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+            print('I am here')
+            return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+        res = list(map(fun, list(range(kwargs['model_restarts']))))
 
         kern = LCM(input_dim = self.problem.DI, num_outputs = data.NI, Q = Q)
         bestxopt = min(res, key = lambda x: x[1])[0]

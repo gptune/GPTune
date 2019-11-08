@@ -63,7 +63,7 @@ def objective(point):
     return f
 
 constraints = {"cst1" : "x >= 0. and x <= 1."}
-
+print('demo before TuningProblem')
 problem = TuningProblem(input_space, parameter_space, output_space, objective, constraints, None)
 
 # Run Autotuning
@@ -76,25 +76,24 @@ problem = TuningProblem(input_space, parameter_space, output_space, objective, c
 #search.run()
 
 
-def number_of_processes_and_threads(point):
 
-    nproc = 1
-    nth = 1
-
-    return (nproc, nth)
-
-computer = Computer(nodes = 1, cores = 1, hosts = None, number_of_processes_and_threads = number_of_processes_and_threads)
-options = Options()
-options['model_processes'] = 1
-options['model_threads'] = 1
-options['model_restarts'] = 1
-options['distributed_memory_parallelism'] = False
-options['shared_memory_parallelism'] = False
-options['mpi_comm'] = None
-options['model_class '] = 'Model_LCM'
-data = Data(problem)
-gt = GPTune(problem, computer = computer, data = data, options = options)
-(data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
-print(data.Y)
-print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])
+	
+if __name__ == '__main__':	
+	computer = Computer(nodes = 1, cores = 1, hosts = None)
+	options = Options()
+	options['model_processes'] = 1
+	options['model_threads'] = 1
+	options['model_restarts'] = 1
+	options['search_multitask_processes'] = 4
+	options['distributed_memory_parallelism'] = True
+	options['shared_memory_parallelism'] = False
+	options['mpi_comm'] = None
+	#options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
+	options['model_class '] = 'Model_LCM'
+	data = Data(problem)
+	gt = GPTune(problem, computer = computer, data = data, options = options)
+	print('demo before MLA')
+	(data, modeler) = gt.MLA(NS = 20, NI = 2, NS1 = 10)
+	print(data.Y)
+	print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])
 

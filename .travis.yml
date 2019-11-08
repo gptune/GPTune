@@ -134,7 +134,23 @@ install:
   - cd ../
   - env CC=$MPICC pip install --upgrade -r requirements.txt
   - make CC=$MPICC
- 
+  
+  - mkdir -p build
+  - cd build
+  - cmake .. \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_C_FLAGS="" \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+    -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
+    -DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
+  - make
+  - cp lib_gptuneclcm.so ../.
+  - cd ..
+  
   - printf "${BLUE} GC; Done installing GPtune from source\n"
 
 

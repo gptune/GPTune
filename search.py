@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # GPTune Copyright (c) 2019, The Regents of the University of California,
 # through Lawrence Berkeley National Laboratory (subject to receipt of any
 # required approvals from the U.S.Dept. of Energy) and the University of
@@ -22,6 +24,12 @@ from typing import Collection
 import numpy as np
 import scipy as sp
 import functools
+from joblib import *
+
+
+import mpi4py
+from mpi4py import MPI
+from mpi4py import futures
 
 from problem import Problem
 from computer import Computer
@@ -31,7 +39,6 @@ from model import Model
 class Search(abc.ABC):
 
     def __init__(self, problem : Problem, computer : Computer):
-
         self.problem = problem
         self.computer = computer
 
@@ -42,47 +49,37 @@ class Search(abc.ABC):
 
     def search_multitask(self, data : Data, model : Model, tids : Collection[int] = None, i_am_manager : bool = True, **kwargs) -> Collection[np.ndarray]:
 
-#        if (kwargs['distributed_memory_parallelism']):
-#
-#            if (i_am_manager):
-#
-#                mpi_comm = self.computer.spawn(__file__, kwargs['search_processes'], kwargs['search_threads'], args=self, kwargs=) # XXX add args and kwargs
-#                res = mpi_comm.gather(None, root=0)
-#
-#            else:
-#
-#                mpi_comm = kwargs['mpi_comm']
-#                mpi_rank = mpi_comm.Get_rank()
-#                mpi_size = mpi_comm.Get_size()
-#
         if (tids is None):
-
             tids = list(range(data.NI))
-#            if (kwargs['distributed_memory_parallelism']):
-#                tids = list(range(self.mpi_rank, self.NI, self.mpi_size))
-#            else:
-#                tids = list(range(self.NI))
 
         if (kwargs['distributed_memory_parallelism'] and i_am_manager):
+            mpi_comm = self.computer.spawn(__file__, kwargs['search_multitask_processes'], kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
+            kwargs_tmp = kwargs
+            if "mpi_comm" in kwargs_tmp:
+                del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
+            _ = mpi_comm.bcast((self, data, model, tids, kwargs_tmp), root=mpi4py.MPI.ROOT)
+            tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
+            mpi_comm.Disconnect()
+            res=[]
+            for p in range(int(kwargs['search_multitask_processes'])):
+                res = res + tmpdata[p]
 
-            with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['search_multitask_processes']) as executor:
-                fun = functools.partial(self.search_multitask, data = data, model = model, i_am_manager = False, kwargs = kwargs)
-                res = list(executor.map(fun, tids, timeout=None, chunksize = kwargs['search_multitask_threads']))
 
         elif (kwargs['shared_memory_parallelism']):
             
             #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
             with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
-                fun = functools.partial(self.search, data = data, model = model, kwargs = kwargs)
-                res = list(executor.map(fun, tids, timeout=None, chunksize=1))
+                # fun = functools.partial(self.search, data = data, model = model, kwargs = kwargs)
+                # res = list(executor.map(fun, tids, timeout=None, chunksize=1))
 
+                def fun(tid):
+                    return self.search(data=data,model = model, tid =tid, kwargs = kwargs)
+                res = list(executor.map(fun, tids, timeout=None, chunksize=1))								
         else:
-
             fun = functools.partial(self.search, data, model, kwargs = kwargs)
             res = list(map(fun, tids))
-
-        res.sort(key = lambda x : x[0])
-
+        # print(res)
+        res.sort(key = lambda x : x[0])		
         return res
 
 class SurrogateProblem(object):
@@ -185,10 +182,18 @@ class SearchPyGMO(Search):
 
         return (tid, bestX)
 
-#if __name__ == '__main__':
-#
-#    comm = MPI.Comm.Get_parent().Merge()
-#    (searcher, data, model, tids, kwargs) = comm.bcast(None, root=0)
-#    searcher.search_multitask(data, model, tids, i_am_manager = False, **kwargs)
-#    comm.Disconnect()
+if __name__ == '__main__':
 
+	def objective(point):
+		return point
+		
+	mpi_comm = MPI.Comm.Get_parent()
+	mpi_rank = mpi_comm.Get_rank()
+	mpi_size = mpi_comm.Get_size()
+	(searcher, data, model, tids, kwargs) = mpi_comm.bcast(None, root=0)
+	tids_loc = tids[mpi_rank:len(tids):mpi_size]
+	tmpdata = searcher.search_multitask(data, model, tids_loc, i_am_manager = False, **kwargs)
+	res = mpi_comm.gather(tmpdata, root=0) 
+	mpi_comm.Disconnect()	
+				
+	
