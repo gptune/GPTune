@@ -128,3 +128,4 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 ## REFERENCES
 
+W.M. Sid-Lakhdar, M.M. Aznaveh, X.S. Li, and J. Demmel, "Multitask and Transfer Learning for Autotuning Exascale Applications", arXiv:1908.05792, Aug. 2019.
