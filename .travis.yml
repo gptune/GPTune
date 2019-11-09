@@ -101,7 +101,7 @@ before_install:
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB"
   - make
   - sudo cp $TRAVIS_BUILD_DIR/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
-  - export SCALAPACK_LIB="$TRAVIS_BUILD_DIR/installDir/scalapack-2.0.2/build/lib/libscalapack.so"  
+  - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
   
 install:
@@ -141,6 +141,7 @@ install:
     -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_C_FLAGS="" \
     -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_INSTALL_PREFIX=. \
     -DCMAKE_C_COMPILER=$MPICC \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
