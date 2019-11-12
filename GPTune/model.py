@@ -127,73 +127,79 @@ from lcm import LCM
 
 class Model_LCM(Model):
 
-    def train(self, data : Data, **kwargs):
+	def train(self, data : Data, **kwargs):
 
-        self.train_mpi(data, i_am_manager = True, **kwargs)
+		self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
-    def train_mpi(self, data : Data, i_am_manager : bool, **kwargs):
+	def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
 
-        if (kwargs['model_latent'] is None):
-            Q = data.NI
-        else:
-            Q = kwargs['model_latent']
+		if (kwargs['model_latent'] is None):
+			Q = data.NI
+		else:
+			Q = kwargs['model_latent']
 
-        # if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: not tested, model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count, and model_restart_threads*model_restart_processes should be less than model_restarts 
-            # print('I am here2',i_am_manager)
-            # with mpi4py.futures.MPIPoolExecutor(max_workers = kwargs['model_restart_processes']) as executor:
-                # def fun(restart_iter):
-                    # return self.train_mpi(data = data, i_am_manager = False, kwargs = copy.deepcopy(kwargs).update({'seed':restart_iter}))
-                # print('I am here1')
-                # res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize = kwargs['model_restart_threads']))  #YL: not tested, why chunksize is not one? Can MPIPoolExecutor parallelize over threads ???
+		if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count, and model_restart_threads*model_restart_processes should be less than model_restarts 
+			mpi_comm = self.computer.spawn(__file__, kwargs['model_restart_processes'], kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
+			kwargs_tmp = kwargs
+			if "mpi_comm" in kwargs_tmp:
+				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
+			_ = mpi_comm.bcast((self, data, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
+			tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
+			mpi_comm.Disconnect()
+			res=[]
+			for p in range(int(kwargs['model_restart_processes'])):
+				res = res + tmpdata[p]
 
-        # elif (kwargs['shared_memory_parallelism']): #YL: not tested 
+		elif (kwargs['shared_memory_parallelism']): #YL: not tested 
 
-            # #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
-            # with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
-                # def fun(restart_iter):
-                    # if ('seed' in kwargs):
-                        # seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
-                    # else:
-                        # seed = restart_iter
-                    # np.random.seed(seed)
-                    # kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
-                    # if (restart_iter == 0 and self.M is not None):
-                        # kern.set_param_array(self.M.kern.get_param_array())
-                    # return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-                # res = list(executor.map(fun, list(range(kwargs['model_restarts'])), timeout=None, chunksize=1))
+			#with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+			with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['model_restart_threads']) as executor:
+				def fun(restart_iter):
+					if ('seed' in kwargs):
+						seed = kwargs['seed'] * kwargs['model_restart_threads'] + restart_iter
+					else:
+						seed = restart_iter
+					np.random.seed(seed)
+					kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+					if (restart_iter == 0 and self.M is not None):
+						kern.set_param_array(self.M.kern.get_param_array())
+					return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+				res = list(executor.map(fun, restart_iters, timeout=None, chunksize=1))
 
-        # else:
+		else:
+			def fun(restart_iter):
+				np.random.seed(restart_iter)
+				kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+				# print('I am here')
+				return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+			res = list(map(fun, restart_iters))
 
-        def fun(restart_iter):
-            np.random.seed(restart_iter)
-            kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
-            print('I am here')
-            return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
-        res = list(map(fun, list(range(kwargs['model_restarts']))))
+		if (kwargs['distributed_memory_parallelism'] and i_am_manager == False): 
+			return res
+			
+		kern = LCM(input_dim = self.problem.DI, num_outputs = data.NI, Q = Q)
+		bestxopt = min(res, key = lambda x: x[1])[0]
+		kern.set_param_array(bestxopt)
 
-        kern = LCM(input_dim = self.problem.DI, num_outputs = data.NI, Q = Q)
-        bestxopt = min(res, key = lambda x: x[1])[0]
-        kern.set_param_array(bestxopt)
-		
-# YL: why sigma is enough to compute the likelihood, see https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html 			
-        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
-        self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, kern, likelihoods_list = likelihoods_list)
+		# YL: why sigma is enough to compute the likelihood, see https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html 			
+		likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
+		self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, kern, likelihoods_list = likelihoods_list)
 
-        return
+		return
 
-    def update(self, newdata : Data, do_train: bool = False, **kwargs):
+	def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
-        #XXX TODO
-        self.train(newdata, **kwargs)
+		#XXX TODO
+		self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+	def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        x = np.empty((1, points.shape[0] + 1))
-        x[0,:-1] = points
-        x[0,-1] = tid
-        (mu, var) = self.M.predict_noiseless(x)
+		x = np.empty((1, points.shape[0] + 1))
+		x[0,:-1] = points
+		x[0,-1] = tid
+		(mu, var) = self.M.predict_noiseless(x)
 
-        return (mu, var)
+		return (mu, var)
 
 
 class Model_DGP(Model):
@@ -258,3 +264,16 @@ class Model_DGP(Model):
 
         return (mu, var)
 
+		
+if __name__ == '__main__':
+	def objective(point):
+		return point
+	mpi_comm = MPI.Comm.Get_parent()
+	mpi_rank = mpi_comm.Get_rank()
+	mpi_size = mpi_comm.Get_size()
+	(modeler, data, restart_iters, kwargs) = mpi_comm.bcast(None, root=0)
+	restart_iters_loc = restart_iters[mpi_rank:len(restart_iters):mpi_size]
+	tmpdata = modeler.train_mpi(data, i_am_manager = False, restart_iters = restart_iters_loc, **kwargs)
+	res = mpi_comm.gather(tmpdata, root=0) 
+	mpi_comm.Disconnect()			
+		

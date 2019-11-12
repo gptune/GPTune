@@ -87,6 +87,7 @@ class GPTune(object):
 
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
             self.data.T = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
+            # print("riji",self.data.T)
 
         if (self.data.X is None):
 
@@ -95,6 +96,7 @@ class GPTune(object):
 
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             self.data.X = sampler.sample_parameters(n_samples = NS1, T = self.data.T, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            # print("ridddji",self.data.X)
 #            #XXX add the info of problem.models here
 #            for X2 in X:
 #                for x in X2:
@@ -117,10 +119,11 @@ class GPTune(object):
         for optiter in range(NS2):
 
             newdata = Data(problem = self.problem, T = self.data.T)
-            print("before train",optiter,NS2)
+            # print("before train",optiter,NS2)
             modeler.train(data = self.data, **kwargs)
-            print("after train")
+            # print("after train")
             res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
+            # print(res,'ddd')
             newdata.X = [x[1][0] for x in res]
 #XXX add the info of problem.models here
 

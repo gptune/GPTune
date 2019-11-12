@@ -24,11 +24,14 @@ import sys
 import os
 import mpi4py
 from mpi4py import MPI
-import numpy as np
-sys.path.insert(0, os.path.abspath(__file__ + "/../../"))
+import numpy as nps
+sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
-
-from gptune import *
+from computer import Computer
+from options import Options
+from data import Data
+from gptune import GPTune
+# from GPTune import *
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
@@ -84,8 +87,8 @@ if __name__ == '__main__':
 	options['model_processes'] = 1
 	options['model_threads'] = 1
 	options['model_restarts'] = 1
-	options['search_multitask_processes'] = 4
-	options['distributed_memory_parallelism'] = True
+	options['search_multitask_processes'] = 1
+	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
 	options['mpi_comm'] = None
 	#options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
@@ -93,7 +96,7 @@ if __name__ == '__main__':
 	data = Data(problem)
 	gt = GPTune(problem, computer = computer, data = data, options = options)
 	print('demo before MLA')
-	(data, modeler) = gt.MLA(NS = 20, NI = 2, NS1 = 10)
+	(data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 	print(data.Y)
 	print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])
 

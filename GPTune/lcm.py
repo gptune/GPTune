@@ -26,7 +26,7 @@ import itertools
 import scipy
 import sys
 
-ROOTDIR = os.path.abspath(__file__ + "/../")
+ROOTDIR = os.path.abspath(__file__ + "/../../build")
 # cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
 cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.so')
 

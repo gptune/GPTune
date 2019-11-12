@@ -92,7 +92,9 @@ class Computer(object):
             for j in range(len(X2)):
                 x = X2[j]
                 kwargs = {problem.PS[k].name: x[k] for k in range(problem.DP)}
+                # print(kwargs)
                 kwargs.update(kwargst)
+                # print(kwargs)
                 y = problem.objective(kwargs)
                 Y2.append(y)
             Y.append(np.array(Y2).reshape((len(Y2), problem.DO)))

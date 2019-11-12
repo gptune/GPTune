@@ -31,9 +31,12 @@ class Sample(abc.ABC):
     def sample_constrained(self, n_samples : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
-
-            S = self.sample(n_samples, space)
-
+            S = []
+            S2 = self.sample(n_samples, space)
+            for s_norm in S2:
+                s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
+                S.append(s_orig)            
+            # print('qi',S)
         else:
         
             if ('sample_max_iter' in kwargs):
@@ -64,7 +67,7 @@ class Sample(abc.ABC):
                 raise Exception("Only %d valid samples were generated while %d were requested.\
                         The constraints might be too hard to satisfy.\
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
-
+        # print('reqi',S,'nsample',n_samples,sample_max_iter,space)
         S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
 
         return S
@@ -77,7 +80,9 @@ class Sample(abc.ABC):
 
         X = []
         for t in T:
-            t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+            # print('before inverse_transform:',np.array(t, ndmin=2))
+            # t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+            t_orig = t
             kwargs2 = {d.name: t_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
@@ -120,6 +125,7 @@ class SampleLHSMDU(Sample):
                 raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
 
         lhs = np.array(list(zip(*[np.array(lhs[k])[0] for k in range(len(lhs))])))
+        # print(lhs,'normalized',n_samples)
 
         return lhs
 

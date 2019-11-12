@@ -3,10 +3,10 @@ module unload cray-mpich/7.7.6
 
 module swap PrgEnv-intel PrgEnv-gnu
 export MKLROOT=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
-export LD_LIBRARY_PATH=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
 
-module use /global/common/software/m3169/cori/modulefiles
-module unload openmpi
+# module use /global/common/software/m3169/cori/modulefiles
+# module unload openmpi
 module load openmpi/4.0.1
 
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
@@ -16,6 +16,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 
 CCC=mpicc
 CCCPP=mpicxx
+FTN=mpif90
 
 #pip uninstall -r requirements.txt
 env CC=$CCC pip install --upgrade --user -r requirements.txt
@@ -42,6 +43,7 @@ cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$FTN \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
@@ -49,6 +51,7 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"
 make
 cp lib_gptuneclcm.so ../.
+cp pdqrdriver ../
 cd ..
 
 
