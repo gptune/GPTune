@@ -98,7 +98,7 @@ class SurrogateProblem(object):
         self.tOrig = self.problem.IS.inverse_transform(np.array(self.data.T[tid], ndmin=2))[0]
 		
         # self.XOrig = self.data.X[tid]
-        self.XOrig = self.problem.PS.inverse_transform(np.array(self.data.X[tid], ndmin=2))[0]
+        self.XOrig = self.problem.PS.inverse_transform(np.array(self.data.X[tid], ndmin=2))
 
     def get_bounds(self):
 

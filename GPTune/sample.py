@@ -59,12 +59,15 @@ class Sample(abc.ABC):
                         if (cpt >= n_samples):
                             break
                 n_itr += 1
+                if(n_itr%1000==0 and n_itr>=1000):
+                    print('n_itr',n_itr,'still trying generating constrained samples...')
+				
 
             if (cpt < n_samples):
                 raise Exception("Only %d valid samples were generated while %d were requested.\
                         The constraints might be too hard to satisfy.\
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
-        print('reqi',S,'nsample',n_samples,sample_max_iter,space)
+        # print('reqi',S,'nsample',n_samples,sample_max_iter,space)
         S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
 
         return S
@@ -77,10 +80,10 @@ class Sample(abc.ABC):
 
         X = []
         for t in T:
-            print('before inverse_transform:',np.array(t, ndmin=2))
+            # print('before inverse_transform:',np.array(t, ndmin=2))
             t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
             # t_orig = t
-            print('before inverse_transform t_orig:',t_orig)			
+            # print('before inverse_transform t_orig:',t_orig)			
             kwargs2 = {d.name: t_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)

@@ -95,7 +95,6 @@ class GPTune(object):
 #        if (self.mpi_rank == 0):
 
 		sampler = eval(f'{kwargs["sample_class"]}()')
-		print(self.data.X,self.data.Y)
 		if (self.data.T is None):
 
 			if (NI is None):
@@ -104,23 +103,21 @@ class GPTune(object):
 			check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
 			self.data.T = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
 			# print("riji",self.data.T)
-		print(self.data.X,self.data.Y)
 		if (self.data.X is None):
 
 			if (NS1 is None):
 				NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
 
 			check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-			print("gejiji",self.problem.PS)
 			self.data.X = sampler.sample_parameters(n_samples = NS1, T = self.data.T, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-			print("ridddji",self.data.X)
 #            #XXX add the info of problem.models here
 #            for X2 in X:
 #                for x in X2:
 #                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
-		print(self.data.X,self.data.Y)
+		# print("good?")
 		if (self.data.Y is None):
 			self.data.Y = self.computer.evaluate_objective(self.problem, self.data.T, self.data.X, kwargs = kwargs) 
+		# print("good!")	
 #            if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 #                mpi_comm.bcast(self.data, root=0)
 #
@@ -132,7 +129,6 @@ class GPTune(object):
 
 		modeler  = eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')
 		searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
-
 		for optiter in range(NS2): # YL: each iteration adds one sample until total #sample reaches NS
 
 			newdata = Data(problem = self.problem, T = self.data.T)
@@ -142,7 +138,6 @@ class GPTune(object):
 			# print("after train",self.data.Y,'d',newdata.Y) 
 			# print("after train",self.data.T,'d',newdata.T) 
 			res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
-			print(res,'ddd')
 			newdata.X = [x[1][0] for x in res]
 	#XXX add the info of problem.models here
 
@@ -158,8 +153,7 @@ class GPTune(object):
 	#                newdata.Y = mpi_comm.bcast(None, root=0)
 
 			self.data.merge(newdata)
-
-				
+			
 				
 ########## denormalize the data as the user always work in the original space
 		if self.data.T is not None:        
@@ -171,10 +165,10 @@ class GPTune(object):
 		if self.data.X is not None:        
 			tmp=[]
 			for x in self.data.X:		
-				xOrig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+				xOrig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
 				tmp.append(xOrig)		
-			self.data.X=tmp				
-
+			self.data.X=tmp		
+			
 			
 		return (copy.deepcopy(self.data), modeler)
 

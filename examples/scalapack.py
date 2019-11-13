@@ -115,8 +115,8 @@ def main_interactive():
     # except:
     #     pass
 
-    m     = Integer (1 , mmax, "normalize", name="m")
-    n     = Integer (1 , nmax, "normalize", name="n")
+    m     = Integer (128 , mmax, "normalize", name="m")
+    n     = Integer (128 , nmax, "normalize", name="n")
     mb    = Integer (1 , 128, "normalize", name="mb")
     nb    = Integer (1 , 128, "normalize", name="nb")
     nproc = Integer (nodes, nodes*cores, "normalize", name="nproc")
@@ -156,7 +156,7 @@ def main_interactive():
 #                print("Error in call to ScaLAPACK with parameters ", params)
 #                pass
 
-        print(params, elapsedtime)
+        print(params, ' scalapack time: ', elapsedtime)
 
         return elapsedtime 
 
@@ -185,6 +185,7 @@ def main_interactive():
     options['model_threads'] = 1
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1
+    options['model_restart_processes'] = 1
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     options['mpi_comm'] = None
@@ -197,13 +198,16 @@ def main_interactive():
     NI = ntask
     NS = nruns
 
-    (data, model) = gt.MLA(NS=NS, NI=NI)
+    (data, model) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
 
     for tid in range(NI):
-        print("m:%d n:%d"%(data.T[tid][0], data.T[tid][1]))
-        print("Xs ", data.X[tid])
-        print("Ys ", data.Y[tid])
-
+        print("tid: %d"%(tid))
+        print("    m:%d n:%d"%(data.T[tid][0], data.T[tid][1]))
+        print("    Xs ", data.X[tid])
+        print("    Ys ", data.Y[tid])
+        print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
+		
+		
 def parse_args():
 
     # Parse command line arguments
@@ -233,33 +237,33 @@ def parse_args():
 
     return (args.mmax, args.nmax, args.ntask, args.nodes, args.cores, args.machine, args.optimization, args.nruns, args.truns, args.jobid, args.stepid, args.phase)
 
-def define_problem(mmax, nmax, nodes, cores):
+# def define_problem(mmax, nmax, nodes, cores):
 
-    m     = Integer     (name="m",     range=(1 , mmax))
-    n     = Integer     (name="n",     range=(1 , nmax))
-    mb    = Integer     (name="mb",    range=(1 , mmax))
-    nb    = Integer     (name="nb",    range=(1 , nmax))
-#    nproc = Integer (name="nproc", range=(nodes , nodes*cores))
-#    p     = Integer (name="p",     range=(1 , nodes*cores))
-    nproc = Categorical (name="nproc", values=[nodes * x for x in factors(cores)])
-    p     = Categorical (name="p",     values=factors(nodes * cores))
-    r     = Real        (name="r",     range=(float("-Inf") , float("Inf")))
+    # m     = Integer     (name="m",     range=(1 , mmax))
+    # n     = Integer     (name="n",     range=(1 , nmax))
+    # mb    = Integer     (name="mb",    range=(1 , mmax))
+    # nb    = Integer     (name="nb",    range=(1 , nmax))
+# #    nproc = Integer (name="nproc", range=(nodes , nodes*cores))
+# #    p     = Integer (name="p",     range=(1 , nodes*cores))
+    # nproc = Categorical (name="nproc", values=[nodes * x for x in factors(cores)])
+    # p     = Categorical (name="p",     values=factors(nodes * cores))
+    # r     = Real        (name="r",     range=(float("-Inf") , float("Inf")))
 
-    TS = Space(params=[m, n])
-    IS = Space(params=[mb, nb, nproc, p])
-    OS = Space(params=[r])
+    # TS = Space(params=[m, n])
+    # IS = Space(params=[mb, nb, nproc, p])
+    # OS = Space(params=[r])
 
-    cst1 = "mb * p <= m"
-    cst2 = "nb * nproc <= n * p"
-    #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
-    cst3 = "%d * %d"%(nodes, cores) + "% nproc == 0"
-    cst4 = "nproc > p and nproc % p == 0" # intrinsically implies "p <= nproc"
+    # cst1 = "mb * p <= m"
+    # cst2 = "nb * nproc <= n * p"
+    # #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
+    # cst3 = "%d * %d"%(nodes, cores) + "% nproc == 0"
+    # cst4 = "nproc > p and nproc % p == 0" # intrinsically implies "p <= nproc"
 
-    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3, "cst4" : cst4}
+    # constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3, "cst4" : cst4}
 
-    models = {}
+    # models = {}
 
-    return (TS, IS, OS, constraints, models)
+    # return (TS, IS, OS, constraints, models)
 
 # def main_batch():
 
