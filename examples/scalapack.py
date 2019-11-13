@@ -50,13 +50,13 @@ def initialize(m, n, nodes, cores, nruns, truns, machine, JOBID=0):
         RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(os.getpid())))
 
     # try:
-    #     os.makedirs(EXPDIR)
+        # os.makedirs(EXPDIR)
     # except:
-    #     pass
+        # pass
     # try:
-    #     os.makedirs(RUNDIR)
+        # os.makedirs(RUNDIR)
     # except:
-    #     pass
+        # pass
 
     return RUNDIR
 
@@ -105,7 +105,7 @@ def main_interactive():
 
 
 
-    os.system("cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine))
+    os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
 
 
 #    RUNDIR = initialize(0, 0, nodes, cores, nruns, truns, "mogpo", machine, JOBID=JOBID)
@@ -117,8 +117,8 @@ def main_interactive():
 
     m     = Integer (1 , mmax, "normalize", name="m")
     n     = Integer (1 , nmax, "normalize", name="n")
-    mb    = Integer (1 , mmax, "normalize", name="mb")
-    nb    = Integer (1 , nmax, "normalize", name="nb")
+    mb    = Integer (1 , 128, "normalize", name="mb")
+    nb    = Integer (1 , 128, "normalize", name="nb")
     nproc = Integer (nodes, nodes*cores, "normalize", name="nproc")
     p     = Integer (1 , nodes*cores, "normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
@@ -197,12 +197,12 @@ def main_interactive():
     NI = ntask
     NS = nruns
 
-    (data, model) = gt.MLA(NS=NS, NI=NI, NS1=2)
+    (data, model) = gt.MLA(NS=NS, NI=NI)
 
-    for tid in range(NT):
+    for tid in range(NI):
         print("m:%d n:%d"%(data.T[tid][0], data.T[tid][1]))
-        print("Xopt ", data.X[tid])
-        print("Yopt ", data.Y[tid])
+        print("Xs ", data.X[tid])
+        print("Ys ", data.Y[tid])
 
 def parse_args():
 

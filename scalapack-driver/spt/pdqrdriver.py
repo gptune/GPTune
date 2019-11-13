@@ -4,18 +4,16 @@
 
 import numpy as np
 import os
-import mpi4py
-from mpi4py import MPI
-import sys
+
 ################################################################################
 
 # Paths
 
-MACHINE_NAME = 'tmp'
-TUNER_NAME = 'tmp'
+MACHINE_NAME = os.environ['NERSC_HOST']
+TUNER_NAME = os.environ['TUNER_NAME']
 ROOTDIR = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
-# SPTDIR = os.path.abspath(os.path.join(ROOTDIR, "spt"))
-# SRCDIR = os.path.abspath(os.path.join(ROOTDIR, "src"))
+SPTDIR = os.path.abspath(os.path.join(ROOTDIR, "spt"))
+SRCDIR = os.path.abspath(os.path.join(ROOTDIR, "src"))
 BINDIR = os.path.abspath(os.path.join(ROOTDIR, "bin", MACHINE_NAME))
 EXPDIR = os.path.abspath(os.path.join(ROOTDIR, "exp", MACHINE_NAME + '/' + TUNER_NAME))
 
@@ -42,7 +40,7 @@ def write_input(params, RUNDIR, niter=1):
     for param in params:
         for k in range(niter):
             # READ( NIN, FMT = 2222 ) FACTOR, MVAL, NVAL, MBVAL, NBVAL, PVAL, QVAL, THRESH
-            fin.write("%2s%6d%6d%6d%6d%6d%6d%20.13E\n"%(param[0], param[1], param[2], param[5], param[6], param[9], param[10],param[11]))
+            fin.write("%s, %d, %d, %d, %d, %d, %d, %f\n"%(param[0], param[1], param[2], param[5], param[6], param[9], param[10], param[11]))
     fin.close()
 
 def execute(nproc, nth, RUNDIR):
@@ -52,14 +50,7 @@ def execute(nproc, nth, RUNDIR):
         return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=1; %s/pdqrdriver 2> err;"%(RUNDIR, BINDIR))
 
     def v_parallel():
-        # os.system("cd %s;"%(RUNDIR)) 
-        # print('nimdda',RUNDIR)
-        comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc)
-        comm.Disconnect()
-        return 0
-
-
-        # return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=%d; mpirun -c %d -n %d %s/pdqrdriver 2>> QR.err &  wait;"%(RUNDIR, nth, 2*nth, nproc, BINDIR))
+        return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=%d; srun -c %d -n %d %s/pdqrdriver 2>> QR.err &  wait;"%(RUNDIR, nth, 2*nth, nproc, BINDIR))
 
 ##    err = v_sequential()
     err = v_parallel()
@@ -106,19 +97,10 @@ def read_output(params, RUNDIR, niter=1):
 
 def pdqrdriver(params, niter=10):
 
-    global EXPDIR 
-    global BINDIR
-    global ROOTDIR
-
-    MACHINE_NAME = os.environ['MACHINE_NAME']
-    TUNER_NAME = os.environ['TUNER_NAME']
-    BINDIR = os.path.abspath(os.path.join(ROOTDIR, "bin", MACHINE_NAME))
-    EXPDIR = os.path.abspath(os.path.join(ROOTDIR, "exp", MACHINE_NAME + '/' + TUNER_NAME))
-
+    global EXPDIR
 
     RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(os.getpid())))
     os.system("mkdir -p %s"%(RUNDIR))
-    # print('nima',RUNDIR)
 
     dtype = [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nth", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
     params = np.array(params, dtype=dtype)

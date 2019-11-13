@@ -31,12 +31,7 @@ class Sample(abc.ABC):
     def sample_constrained(self, n_samples : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
-            S = []
-            S2 = self.sample(n_samples, space)
-            for s_norm in S2:
-                s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
-                S.append(s_orig)            
-            # print('qi',S)
+            S = self.sample(n_samples, space)
         else:
         
             if ('sample_max_iter' in kwargs):
@@ -53,11 +48,13 @@ class Sample(abc.ABC):
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 S2 = self.sample(n_samples, space, kwargs=kwargs)
                 for s_norm in S2:
+                    # print("jiji",s_norm)							
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
+                    # print("jiji",s_orig)						
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     kwargs2.update(check_constraints_kwargs)
                     if (check_constraints(kwargs2)):
-                        S.append(s_orig)
+                        S.append(s_norm)
                         cpt += 1
                         if (cpt >= n_samples):
                             break
@@ -67,7 +64,7 @@ class Sample(abc.ABC):
                 raise Exception("Only %d valid samples were generated while %d were requested.\
                         The constraints might be too hard to satisfy.\
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
-        # print('reqi',S,'nsample',n_samples,sample_max_iter,space)
+        print('reqi',S,'nsample',n_samples,sample_max_iter,space)
         S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
 
         return S
@@ -80,9 +77,10 @@ class Sample(abc.ABC):
 
         X = []
         for t in T:
-            # print('before inverse_transform:',np.array(t, ndmin=2))
-            # t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
-            t_orig = t
+            print('before inverse_transform:',np.array(t, ndmin=2))
+            t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+            # t_orig = t
+            print('before inverse_transform t_orig:',t_orig)			
             kwargs2 = {d.name: t_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)

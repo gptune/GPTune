@@ -37,7 +37,7 @@ class Computer(object):
         if (hosts != None and nodes != len(hosts)):
             raise Exception('The number of elements in "hosts" does not match with the number of "nodes"')
 
-    def evaluate_constraints(self, problem : Problem, point : Collection, inputs_only : bool = False, **kwargs):
+    def evaluate_constraints(self, problem : Problem, point : Collection, inputs_only : bool = False, **kwargs):  # point is in the original spaces
 
 #       kwargs['constraints_evaluation_parallelism']
 
@@ -79,19 +79,21 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, **kwargs):
+    def evaluate_objective(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, **kwargs):  # X and T are in the normalized space
 
 #        kwargs['objective_evaluation_parallelism'])
 
         Y = []
         for i in range(len(T)):
             t = T[i]
-            kwargst = {problem.IS[k].name: t[k] for k in range(problem.DI)}
+            t_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
+            kwargst = {problem.IS[k].name: t_orig[k] for k in range(problem.DI)}
             X2 = X[i]
             Y2 = []
             for j in range(len(X2)):
                 x = X2[j]
-                kwargs = {problem.PS[k].name: x[k] for k in range(problem.DP)}
+                x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
+                kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 # print(kwargs)
                 kwargs.update(kwargst)
                 # print(kwargs)

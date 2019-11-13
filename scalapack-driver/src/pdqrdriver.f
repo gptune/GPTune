@@ -17,9 +17,6 @@
 *  The program must be driven by a short data file.  An annotated
 *  example of a data file can be obtained by deleting the first 3
 *  characters from the following 16 lines:
-
-*********** YL: The following example is not updated
-
 *  'ScaLAPACK QR factorizations input file'
 *  'PVM machine'
 *  'QR.out'                      output file name (if any)
@@ -85,8 +82,7 @@
       CHARACTER*6        PASSED
       CHARACTER*7        ROUT
       CHARACTER*8        ROUTCHK
-      CHARACTER*200       FILEDIR
-      CHARACTER*1000      STRING
+      CHARACTER*80       OUTFILE
       LOGICAL            CHECK
       INTEGER            I, IAM, IASEED, ICTXT, IMIDPAD, INFO, IPA,
      $                   IPOSTPAD, IPPIV, IPREPAD, IPTAU, IPW, J, K,
@@ -95,7 +91,7 @@
      $                   MYCOL, MYROW, N, NB, NFACT, NGRIDS, NMAT, NNB,
      $                   NIN, NOUT, NPCOL, NPROCS, NPROW, NQ, WORKFCT,
      $                   WORKSIZ, NBCONF
-      DOUBLE PRECISION               THRESH
+      REAL               THRESH
       DOUBLE PRECISION   ANORM, FRESID, NOPS, TMFLOPS
       PARAMETER          ( NIN = 1, NOUT = 2)
 *     ..
@@ -121,10 +117,6 @@
 *     .. External Functions ..
       LOGICAL            LSAMEN
       INTEGER            ICEIL, NUMROC
-	  
-	  
-	  INTEGER master
-	  
       DOUBLE PRECISION   PDLANGE
       EXTERNAL           ICEIL, LSAMEN, NUMROC, PDLANGE
 *     ..
@@ -138,12 +130,6 @@
 *
 *     Get starting information
 *
- 
-      CALL GETARG(1,FILEDIR)
-		
-	  call MPI_INIT(ierr)
-	  call MPI_COMM_GET_PARENT(master, ierr) ! YL: this is needed if this function is spawned by a master process	     
-
       CALL BLACS_PINFO( IAM, NPROCS )
 *
 *     Allocate MEM
@@ -161,15 +147,14 @@
 *
 *     Open input file
 *
-      OPEN( NIN, FILE=trim(FILEDIR)//'QR.in', STATUS='OLD' )
+      OPEN( NIN, FILE='QR.in', STATUS='OLD' )
       IF( IAM.EQ.0 ) THEN
-          OPEN( NOUT, FILE=trim(FILEDIR)//'QR.out', STATUS='UNKNOWN' )
+          OPEN( NOUT, FILE='QR.out', STATUS='UNKNOWN' )
       END IF
 *
 *     Read number of configurations
 *
       READ( NIN, FMT = 1111 ) NBCONF
-*      write(*,*)'nrep', NBCONF
 *
 *     Print headings
 *
@@ -188,17 +173,11 @@
 *    
 *     Read configurations
 *    
-      READ( NIN, '(A)') STRING
-*	  write(*,*) STRING
-	  
-      READ( STRING, * ) FACTOR, MVAL, NVAL,
+      READ( NIN, FMT = 2222 ) FACTOR, MVAL, NVAL,
      $                        MBVAL, NBVAL, PVAL, QVAL, THRESH
 !          WRITE( * , * ) FACTOR, MVAL, NVAL,
 !         $               MBVAL, NBVAL, PVAL, QVAL, THRESH
 *     
-
-*      write(*,*)FACTOR, MVAL, NVAL, MBVAL, NBVAL, PVAL, QVAL, THRESH
-
       IASEED = 100
       CHECK = ( THRESH.GE.0.0E+0 )
 *     
@@ -883,14 +862,10 @@
 *      
   100 CONTINUE
 *
-	  
-	  call MPI_COMM_DISCONNECT(master, ierr)  ! YL: this is needed if this function is spawned by a master process	
-	  
-	  CALL BLACS_EXIT( 0 )
-
-	  
+      CALL BLACS_EXIT( 0 )
 *
- 1111 FORMAT( I6 )
+ 1111 FORMAT( I )
+ 2222 FORMAT( A2,',',I,',',I,',',I,',',I,',',I,',',I,',',F)
  9999 FORMAT( 'ILLEGAL ', A6, ': ', A5, ' = ', I3,
      $        '; It should be at least 1' )
  9998 FORMAT( 'ILLEGAL GRID: nprow*npcol = ', I4, '. It can be at most',

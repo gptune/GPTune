@@ -42,10 +42,14 @@ from autotune.search import *
 
 # Argmin{x} objective(t,x), for x in [0., 1.]
 
-input_space = Space([Real(0., 10., name="t")])
-# print('dimension of input_space',len(input_space));
-parameter_space = Space([Real(0., 1., name="x")])
-# print('dimension of parameter_space',len(parameter_space));
+
+input_space = Space([Real(0., 10., "uniform", "normalize", name="t")])
+parameter_space = Space([Real(0., 1., "uniform", "normalize", name="x")])
+
+# input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
+# parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
+
+
 output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
 
 def objective(point):
@@ -62,6 +66,15 @@ def objective(point):
     d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
     f = d * e
+	
+	
+	
+    """
+    f(t,x) = x^2+t
+    """	
+    # t = point['t']
+    # x = point['x']	
+    # f = 20*x**2+t
 
     return f
 

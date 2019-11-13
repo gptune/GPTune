@@ -102,7 +102,7 @@ class LCM(GPy.kern.Kern):
     def K(self, X1, X2=None):   # Required for GPy, X1 and X2 are ndarray stored in row major 
 
         if X2 is None: X2 = X1
-
+        # print("cao",X1)
         K = np.empty((X1.shape[0], X2.shape[0]))
 
         try:
@@ -120,6 +120,7 @@ class LCM(GPy.kern.Kern):
         except Exception as inst:
             print(inst)
 
+        # print("cadfdfo",X1) 			
         return K
 
     def Kdiag(self, X):   # Required for GPy

@@ -84,7 +84,7 @@ class Search(abc.ABC):
 
 class SurrogateProblem(object):
 
-    def __init__(self, problem, computer, data, model, tid):
+    def __init__(self, problem, computer, data, model, tid):   # data is in the normalized space, tOrig and XOrig are then generated in the original space
 
         self.problem = problem
         self.computer = computer
@@ -93,8 +93,12 @@ class SurrogateProblem(object):
 
         self.tid = tid
 
-        self.t     = self.data.T[tid]
-        self.XOrig = self.data.X[tid]
+        # self.t     = self.data.T[tid]
+		
+        self.tOrig = self.problem.IS.inverse_transform(np.array(self.data.T[tid], ndmin=2))[0]
+		
+        # self.XOrig = self.data.X[tid]
+        self.XOrig = self.problem.PS.inverse_transform(np.array(self.data.X[tid], ndmin=2))[0]
 
     def get_bounds(self):
 
@@ -118,20 +122,23 @@ class SurrogateProblem(object):
         EI = (ymin - mu) * Phi + var * phi
 
         return EI
+ 
+    def fitness(self, x):   # x is the normalized space
 
-    def fitness(self, x):
-
-        xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+        xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
         if (any(np.array_equal(xx, xi) for xx in self.XOrig)):
             cond = False
         else:
-            point2 = {self.problem.IS[k].name: self.t[k] for k in range(self.problem.DI)}
-            point  = {self.problem.PS[k].name: x[k] for k in range(self.problem.DP)}
+            point2 = {self.problem.IS[k].name: self.tOrig[k] for k in range(self.problem.DI)}
+            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
             point.update(point2)
+            # print("point", point)
             cond = self.computer.evaluate_constraints(self.problem, point)
         if (cond):
+            # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
             return (- self.ei(x),)
         else:
+            # print("cond",cond,float("Inf"),'x',x,'xi',xi) 
             return (float("Inf"),)
 
 import pygmo as pg
@@ -142,8 +149,9 @@ class SearchPyGMO(Search):
     XXX: This class, together with the underlying PyGMO only works on Intel-based CPUs.
     The reason is that PyGMO requires the Intel 'Thread Building Block' library to compile and execute.
     """
+	# YL: the above seems outdated?
 
-    def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:
+    def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:  
 
         kwargs = kwargs['kwargs']
 
@@ -173,13 +181,14 @@ class SearchPyGMO(Search):
             for idx in indexes:
                 if (champions_f[idx] < float('Inf')):
                     cond = True
-                    bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
+                    # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
+                    bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
                     break
             cpt += 1
 
         if (kwargs['verbose']):
             print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
-
+        # print("bestX",bestX)
         return (tid, bestX)
 
 if __name__ == '__main__':
