@@ -40,6 +40,11 @@ from autotune.search import *
 
 # Define Problem
 
+# YL: for the spaces, the following datatypes are supported: Note: Categorical's onehot transform has not been tested
+# Real(lower, upper, "uniform", "normalize", name="yourname")
+# Integer(lower, upper, "normalize", name="yourname")
+# Categorical(categories, transform="onehot", name="yourname")  
+
 # Argmin{x} objective(t,x), for x in [0., 1.]
 
 
@@ -108,7 +113,7 @@ if __name__ == '__main__':
 	options['model_class '] = 'Model_LCM'
 	data = Data(problem)
 	gt = GPTune(problem, computer = computer, data = data, options = options)
-	print('demo before MLA')
+	# print('demo before MLA')
 	(data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 	print(data.Y)
 	print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])

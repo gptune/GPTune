@@ -115,6 +115,15 @@ def main_interactive():
     # except:
     #     pass
 
+
+	
+	
+# YL: for the spaces, the following datatypes are supported: Note: Categorical's onehot transform has not been tested
+# Real(lower, upper, "uniform", "normalize", name="yourname")
+# Integer(lower, upper, "normalize", name="yourname")
+# Categorical(categories, transform="onehot", name="yourname")  	
+	
+	
     m     = Integer (128 , mmax, "normalize", name="m")
     n     = Integer (128 , nmax, "normalize", name="n")
     mb    = Integer (1 , 128, "normalize", name="mb")
