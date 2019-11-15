@@ -54,8 +54,15 @@ def execute(nproc, nth, RUNDIR):
     def v_parallel():
         # os.system("cd %s;"%(RUNDIR)) 
         # print('nimdda',RUNDIR)
-        comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc)
+        
+        info = MPI.Info.Create()
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nth))
+        
+        print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Disconnect()
+        
+        
         return 0
 
 

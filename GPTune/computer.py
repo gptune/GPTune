@@ -103,7 +103,7 @@ class Computer(object):
 
         return Y
 
-    def spawn(self, executable, nproc, nth, args=None, kwargs=None):
+    def spawn(self, executable, nproc, nth, args=None, kwargs=None): 
 
         # XXX
 #        check_mpi()
@@ -115,7 +115,10 @@ class Computer(object):
         print('exec', executable, 'args', args, 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
 #        comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
 #        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        
+        info = MPI.Info.Create()
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nth))        
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc,info=info)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         # process_rank = comm.Get_rank()
         # process_count = comm.Get_size()
         # process_host = MPI.Get_processor_name()

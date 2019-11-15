@@ -40,6 +40,8 @@ from pdqrdriver import pdqrdriver
 
 ################################################################################
 
+
+
 def initialize(m, n, nodes, cores, nruns, truns, machine, JOBID=0):
 
     ROOTDIR = os.path.abspath(__file__ + "/../scalapack-driver/")
@@ -60,9 +62,48 @@ def initialize(m, n, nodes, cores, nruns, truns, machine, JOBID=0):
 
     return RUNDIR
 
+# def myobjfun(m, n, mb, nb, nproc, p):
+def objective(point):                  # should always use this name for user-defined objective function
+    m = point['m']
+    n = point['n']
+    mb = point['mb']
+    nb = point['nb']
+    nproc = point['nproc']
+    p = point['p']
+
+    
+#        return np.random.rand(1)
+    if(nproc==0):
+        return 1000.0
+    if(p==0):
+        return 1000.0
+    nth   = int((nodes * cores-2) / nproc) # YL: there are at least 2 cores working on other stuff
+    q     = int(nproc / p)
+
+
+# [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nth", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
+    params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
+    # print(params,' in myobjfun')
+
+    repeat = True
+#        while (repeat):
+#            try:
+    elapsedtime = pdqrdriver(params, niter = 3)
+    # elapsedtime = 1.0
+    repeat = False
+#            except:
+#                print("Error in call to ScaLAPACK with parameters ", params)
+#                pass
+
+    print(params, ' scalapack time: ', elapsedtime)
+
+    return elapsedtime 
+
 def main_interactive():
 
     global ROOTDIR
+    global nodes
+    global cores
 
     # Parse command line arguments
 
@@ -128,7 +169,7 @@ def main_interactive():
     n     = Integer (128 , nmax, "normalize", name="n")
     mb    = Integer (1 , 128, "normalize", name="mb")
     nb    = Integer (1 , 128, "normalize", name="nb")
-    nproc = Integer (nodes, nodes*cores, "normalize", name="nproc")
+    nproc = Integer (1, nodes*cores, "normalize", name="nproc")
     p     = Integer (1 , nodes*cores, "normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
 
@@ -136,38 +177,7 @@ def main_interactive():
     PS = Space([mb, nb, nproc, p])
     OS = Space([r])
 
-    # def myobjfun(m, n, mb, nb, nproc, p):
-    def myobjfun(point):
-        m = point['m']
-        n = point['n']
-        mb = point['mb']
-        nb = point['nb']
-        nproc = point['nproc']
-        p = point['p']
 
-#        return np.random.rand(1)
-        if(nproc==0):
-            return 1000.0
-        if(p==0):
-            return 1000.0
-        nth   = int(nodes * cores / nproc)
-        q     = int(nproc / p)
-
-# [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nth", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
-        params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
-
-        repeat = True
-#        while (repeat):
-#            try:
-        elapsedtime = pdqrdriver(params, niter = 3)
-        repeat = False
-#            except:
-#                print("Error in call to ScaLAPACK with parameters ", params)
-#                pass
-
-        print(params, ' scalapack time: ', elapsedtime)
-
-        return elapsedtime 
 
 #    cst1 = "mb <= int(m / p) if (m / p) >= 1 else False"
 #    cst2 = "nb <= int(n / int(nproc / p)) if (n / int(nproc / p)) >= 1 else False"
@@ -177,17 +187,18 @@ def main_interactive():
     cst1 = "mb * p <= m"
     cst2 = "nb * nproc <= n * p"
     #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
-    cst3 = "%d * %d"%(nodes, cores) + "% nproc == 0"
-    cst4 = "nproc % p == 0" # intrinsically implies "p <= nproc"
+    cst3 = "%d * %d"%(nodes, cores) + ">= nproc+2"  # YL: there are at least 2 cores working on other stuff
+    cst4 = "nproc >= p" # intrinsically implies "p <= nproc"
 
     constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3, "cst4" : cst4}
+    # constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
 
     models = {}
 
     print(IS, PS, OS, constraints, models)
 
-    problem = TuningProblem(IS, PS, OS, myobjfun, constraints, None)
-    computer = Computer(nodes = 1, cores = 1, hosts = None)  # YL: how to customize this?
+    problem = TuningProblem(IS, PS, OS, objective, constraints, None)
+    computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
     options = Options()
     options['model_processes'] = 1
@@ -195,7 +206,7 @@ def main_interactive():
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1
     options['model_restart_processes'] = 1
-    options['distributed_memory_parallelism'] = False
+    options['distributed_memory_parallelism'] = True
     options['shared_memory_parallelism'] = False
     options['mpi_comm'] = None
     options['model_class '] = 'Model_LCM'

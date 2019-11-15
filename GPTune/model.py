@@ -141,6 +141,9 @@ class Model_LCM(Model):
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count, and model_restart_threads*model_restart_processes should be less than model_restarts 
 			mpi_comm = self.computer.spawn(__file__, kwargs['model_restart_processes'], kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
+			# print("kwargs_tmp",kwargs_tmp)
+   
+   
 			if "mpi_comm" in kwargs_tmp:
 				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
 			_ = mpi_comm.bcast((self, data, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
