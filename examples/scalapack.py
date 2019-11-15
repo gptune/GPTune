@@ -169,7 +169,7 @@ def main_interactive():
     n     = Integer (128 , nmax, "normalize", name="n")
     mb    = Integer (1 , 128, "normalize", name="mb")
     nb    = Integer (1 , 128, "normalize", name="nb")
-    nproc = Integer (1, nodes*cores, "normalize", name="nproc")
+    nproc = Integer (nodes, nodes*cores, "normalize", name="nproc")
     p     = Integer (1 , nodes*cores, "normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
 
