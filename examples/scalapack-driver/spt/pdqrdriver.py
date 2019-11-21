@@ -58,6 +58,15 @@ def execute(nproc, nth, RUNDIR):
         info = MPI.Info.Create()
         info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nth))
         
+        
+        
+        # info.Set("add-hostfile", "myhostfile.txt")
+        # info.Set("host", "myhostfile.txt")
+         
+
+       
+        
+        
         print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Disconnect()

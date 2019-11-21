@@ -885,8 +885,9 @@
 *
 	  
 	  call MPI_COMM_DISCONNECT(master, ierr)  ! YL: this is needed if this function is spawned by a master process	
-	  
-	  CALL BLACS_EXIT( 0 )
+	  CALL BLACS_EXIT( 1 )
+	  call MPI_Finalize(ierr)
+
 
 	  
 *
