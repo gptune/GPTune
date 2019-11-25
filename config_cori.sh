@@ -19,7 +19,8 @@ CCCPP=mpicxx
 FTN=mpif90
 
 #pip uninstall -r requirements.txt
-env CC=$CCC pip install --upgrade --user -r requirements.txt
+#env CC=$CCC pip install --upgrade --user -r requirements.txt
+env CC=$CCC pip install --user -r requirements.txt
 
 
 

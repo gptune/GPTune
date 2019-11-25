@@ -18,6 +18,8 @@
 import abc
 from typing import Callable
 import numpy as np
+import skopt.space
+from skopt.space import *
 
 from autotune.space import Space
 
@@ -47,11 +49,18 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 S2 = self.sample(n_samples, space, kwargs=kwargs)
+                
+                print('input',S2,space[0],isinstance(space[0], Categorical))
+				
                 for s_norm in S2:
+                    for i in range(len(space.dimensions))
+						if(isinstance(space[i], Categorical))
+                            print("jiji",space[i],len(space[i]))		
                     # print("jiji",s_norm)							
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
                     # print("jiji",s_orig)						
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
+                    print("dfdfdfdfd",kwargs2)
                     kwargs2.update(check_constraints_kwargs)
                     if (check_constraints(kwargs2)):
                         S.append(s_norm)
