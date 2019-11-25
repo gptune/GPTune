@@ -84,8 +84,9 @@ cd autotune/
 env CC=$CCC pip install --user -e .
 
 
-cd ../examples
-mpirun -n 1  python ./demo.py
+#cd ../examples
+#mpirun -n 1  python ./demo.py
 
 cd ../examples
-mpirun -n 1  python ./scalapack.py -mmax 500 -nmax 500 -nodes 1 -cores 2 -ntask 2 -nrun 40 -machine cori -jobid 0
+mpirun -n 1  python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 32 -cores 2 -ntask 2 -nrun 40 -machine cori -jobid 0
+#mpirun -n 1  python ./scalapack.py -mmax 500 -nmax 500 -nodes 1 -cores 2 -ntask 2 -nrun 40 -machine cori -jobid 0
