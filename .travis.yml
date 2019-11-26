@@ -72,7 +72,7 @@ before_install:
   - printf "${BLUE} GC; Done installing openmpi\n"
   
   - printf "${BLUE} GC; Installing BLASfrom apt\n"
-  - sudo apt-get install libblas-dev
+  - sudo apt-get install libblas-dev 
   - export BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
   - printf "${BLUE} GC; Done installing BLASfrom apt\n"
 
@@ -125,14 +125,12 @@ install:
   - rm -rf cmake_install.cmake
   - rm -rf CMakeFiles
   - cmake .. \
-    -DCMAKE_CXX_FLAGS="-I/usr/include/python3.6m" \
-    -DCMAKE_C_FLAGS="-I/usr/include/python3.6m" \
-	  -DBUILD_SHARED_LIBS=ON \
-	  -DCMAKE_CXX_COMPILER=$MPICXX \
-	  -DCMAKE_C_COMPILER=$MPICC \
-	  -DCMAKE_Fortran_COMPILER=$MPIF90 \
-	  -DCMAKE_BUILD_TYPE=Release \
-	  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_CXX_COMPILER=$MPICXX \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
@@ -159,18 +157,18 @@ install:
   - mkdir -p build
   - cd build
   - cmake .. \
-	  -DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-	  -DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
-	  -DBUILD_SHARED_LIBS=OFF \
-	  -DCMAKE_CXX_COMPILER=$MPICXX \
-	  -DCMAKE_C_COMPILER=$MPICC \
-	  -DCMAKE_Fortran_COMPILER=$MPIF90 \
-	  -DCMAKE_BUILD_TYPE=Debug \
-	  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	  -DTPL_BLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libblas.so" \
-	  -DTPL_LAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so" \
-	  -DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-	  -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+    -DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+    -DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_CXX_COMPILER=$MPICXX \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DTPL_BLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libblas.so" \
+    -DTPL_LAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so" \
+    -DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+    -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
   - make pddrive_spawn
 
 
