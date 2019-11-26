@@ -7,10 +7,10 @@ python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -ntask 20 -nrun 800
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
-    -modes is the number of compute nodes
+    -nodes is the number of compute nodes
     -cores is the number of cores per node
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the total number of scalapack call.  The number of calls per task is thus nrun / ntask
+    -nrun is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
 """
@@ -165,12 +165,12 @@ def main_interactive():
 # Categorical(categories, transform="onehot", name="yourname")  	
 	
 	
-    m     = Integer (128 , mmax, "normalize", name="m")
-    n     = Integer (128 , nmax, "normalize", name="n")
-    mb    = Integer (1 , 128, "normalize", name="mb")
-    nb    = Integer (1 , 128, "normalize", name="nb")
-    nproc = Integer (nodes, nodes*cores, "normalize", name="nproc")
-    p     = Integer (1 , nodes*cores, "normalize", name="p")
+    m     = Integer (128 , mmax, transform="normalize", name="m")
+    n     = Integer (128 , nmax, transform="normalize", name="n")
+    mb    = Integer (1 , 128, transform="normalize", name="mb")
+    nb    = Integer (1 , 128, transform="normalize", name="nb")
+    nproc = Integer (nodes, nodes*cores, transform="normalize", name="nproc")
+    p     = Integer (1 , nodes*cores, transform="normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
 
     IS = Space([m, n])
@@ -201,7 +201,7 @@ def main_interactive():
     computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
     options = Options()
-    options['model_processes'] = 1
+    options['model_processes'] = 2
     options['model_threads'] = 1
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1

@@ -19,6 +19,38 @@ import numpy as np
 from problem import Problem
 from typing import Collection
 
+import skopt.space
+from skopt.space import *
+import math
+
+class Categoricalnorm(Categorical):
+    def transform(self, X):
+        lens=len(self.categories)
+        Xt = super(Categoricalnorm, self).transform(X)
+        tmp1=[]
+        for xt in Xt:
+            ii = next(i for i,v in enumerate(xt) if v > 0)
+            tmp = ii/lens+0.01
+            tmp1.append(tmp)
+        return tmp1
+        
+    def inverse_transform(self, Xt):        
+        lens=len(self.categories)
+        tmp1=[]
+        # print(Xt,'wideeeefd')
+        for xt in Xt:
+            # print(xt,'widfd')
+            tmp=[0 for ii in range(lens)]
+            tmp[math.floor(xt*lens)]=1
+            tmp1.append(tmp)
+        # print(tmp1,'before inverse_transform',Xt,xt*lens)
+        
+        return super(Categoricalnorm, self).inverse_transform(tmp1)
+
+    @property
+    def transformed_size(self):
+        return 1
+
 class Data(object):
 
     def __init__(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, Y : Collection[np.ndarray] = None):
