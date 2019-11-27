@@ -50,13 +50,18 @@ def objective(point):                  # should always use this name for user-de
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
-	NTH = point['NTH']
+	# NTH = point['NTH']
 	nprows = point['nprows']
-	npcols = point['npcols']
+	nproc = point['nproc']
+	# npcols = point['npcols']
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 
-	params = [matrix, COLPERM, LOOKAHEAD, NTH, nprows, npcols, NSUP, NREL]
+	NTH   = int((nodes * cores-2) / nproc) # YL: there are at least 2 cores working on other stuff
+	npcols     = int(nproc / nprows)
+
+
+	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'NTH', NTH, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
   
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
 	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
@@ -177,22 +182,24 @@ def main_interactive():
     # Input parameters
     COLPERM   = Categoricalnorm ([2, 4], transform="onehot", name="COLPERM")
     LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-    NTH       = Integer     (1, cores, transform="normalize", name="NTH")
     nprows    = Integer     (1, nodes*cores, transform="normalize", name="nprows")
-    npcols    = Integer     (1, nodes*cores, transform="normalize", name="npcols")
+    nproc     = Integer     (nodes, nodes*cores, transform="normalize", name="nproc")
     NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
     NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
     runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
 	
     IS = Space([matrix])
-    PS = Space([COLPERM, LOOKAHEAD, NTH, nprows, npcols, NSUP, NREL])
+    PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
     OS = Space([runtime])
 
 
-    cst1 = "NTH * nprows * npcols +2 <="+"%d * %d"%(nodes, cores) # YL: there are at least 2 cores working on other stuff
+    cst1 = "%d * %d"%(nodes, cores) + ">= nproc+2"  # YL: there are at least 2 cores working on other stuff
     cst2 = "NSUP >= NREL"
+    cst3 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 
-    constraints = {"cst1" : cst1, "cst2" : cst2}
+
+
+    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
     models = {}
 
     print(IS, PS, OS, constraints, models)
