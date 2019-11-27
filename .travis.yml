@@ -133,9 +133,8 @@ install:
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
-    -DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB" \
+    -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB \
     -DCMAKE_INSTALL_PREFIX=.
-	
   - make
   - cp lib_gptuneclcm.so ../.
   - cp pdqrdriver ../
