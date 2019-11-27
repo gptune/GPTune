@@ -49,7 +49,7 @@ make config shared=1 cc=$CCC cxx=$CCCPP prefix=$PWD/install
 make install > make_parmetis_install.log 2>&1
 
 cd ../
-PARMETIS_INCLUDE_DIRS=$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include
+PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
 PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
 mkdir -p build
 cd build
@@ -60,7 +60,7 @@ rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=1 -DPROFlevel=1 -DDEBUGlevel=0" \
+	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \

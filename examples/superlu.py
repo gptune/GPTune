@@ -67,17 +67,21 @@ def objective(point):                  # should always use this name for user-de
 	nproc     = int(nprows * npcols)
     
 	info = MPI.Info.Create()
-	info.Set('env', 'OMP_NUM_THREADS=%d\n' %(NTH))
-	info.Set('env', 'NTH=%d\n' %(NTH))
-	info.Set('env', 'NSUP=%d\n' %(NSUP))
-	info.Set('env', 'NREL=%d\n' %(NREL))
+	envstr= 'OMP_NUM_THREADS=%d\n' %(NTH)   
+	envstr+= 'NREL=%d\n' %(NREL)   
+	envstr+= 'NSUP=%d\n' %(NSUP)   
+	info.Set('env',envstr)
+
+	#info.Set('env', 'NTH=%d' %(NTH))
+	#info.Set('env', 'NSUP=%d' %(NSUP))
+	#info.Set('env', 'NREL=%d' %(NREL))
 	# info.Set('env', 'OMP_PLACES=threads\n')
 	# info.Set('env', 'OMP_PROC_BIND=OMP_PROC_BIND\n')
     
     # info.Set("add-hostfile", "myhostfile.txt")
     # info.Set("host", "myhostfile.txt")
     
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(NTH), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
 	# comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args="-c %s -r %s -l %s -p %s %s/%s"%(npcols,nprows,LOOKAHEAD,COLPERM,INPUTDIR,matrix), maxprocs=nproc,info=info)
 	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 	# (tmpdata) = comm.recv(source=0)	
@@ -185,7 +189,7 @@ def main_interactive():
     OS = Space([runtime])
 
 
-    cst1 = "NTH * nprows * npcols =="+"%d * %d"%(nodes, cores)
+    cst1 = "NTH * nprows * npcols +2 <="+"%d * %d"%(nodes, cores) # YL: there are at least 2 cores working on other stuff
     cst2 = "NSUP >= NREL"
 
     constraints = {"cst1" : cst1, "cst2" : cst2}

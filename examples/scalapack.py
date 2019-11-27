@@ -201,7 +201,7 @@ def main_interactive():
     computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
     options = Options()
-    options['model_processes'] = 2
+    options['model_processes'] = 1
     options['model_threads'] = 1
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1
