@@ -124,7 +124,8 @@ install:
   - rm -rf CTestTestfile.cmake
   - rm -rf cmake_install.cmake
   - rm -rf CMakeFiles
-  - cmake .. \
+  - |
+    cmake .. \
     -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_CXX_COMPILER=$MPICXX \
     -DCMAKE_C_COMPILER=$MPICC \
@@ -133,8 +134,7 @@ install:
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
-    -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB \
-    -DCMAKE_INSTALL_PREFIX=.
+    -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
   - make
   - cp lib_gptuneclcm.so ../.
   - cp pdqrdriver ../
@@ -157,7 +157,8 @@ install:
   - PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
   - mkdir -p build
   - cd build
-  - cmake .. \
+  - |
+    cmake .. \
     -DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
     -DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
     -DBUILD_SHARED_LIBS=OFF \
