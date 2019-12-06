@@ -56,7 +56,6 @@ class Sample(abc.ABC):
                 for s_norm in S2:  		
                     # print("jiji",s_norm)							
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
-                    # print("jiji",s_orig)						
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     # print("dfdfdfdfd",kwargs2)
                     kwargs2.update(check_constraints_kwargs)

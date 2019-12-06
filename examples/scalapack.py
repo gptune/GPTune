@@ -158,11 +158,11 @@ def main_interactive():
 
 
 	
-	
-# YL: for the spaces, the following datatypes are supported: Note: Categorical's onehot transform has not been tested
-# Real(lower, upper, "uniform", "normalize", name="yourname")
-# Integer(lower, upper, "normalize", name="yourname")
-# Categorical(categories, transform="onehot", name="yourname")  	
+# YL: for the spaces, the following datatypes are supported: 
+# Real(lower, upper, transform="normalize", name="yourname")
+# Integer(lower, upper, transform="normalize", name="yourname")
+# Categoricalnorm(categories, transform="onehot", name="yourname")  	
+		
 	
 	
     m     = Integer (128 , mmax, transform="normalize", name="m")

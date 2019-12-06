@@ -167,10 +167,10 @@ def main_interactive():
     # print(os.environ)
     os.system("mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp; mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp/%s;"%(TUNER_NAME))
 
-# YL: for the spaces, the following datatypes are supported: Note: Categorical's onehot transform has not been tested
-# Real(lower, upper, "uniform", "normalize", name="yourname")
-# Integer(lower, upper, "normalize", name="yourname")
-# Categorical(categories, transform="onehot", name="yourname")  	
+# YL: for the spaces, the following datatypes are supported: 
+# Real(lower, upper, transform="normalize", name="yourname")
+# Integer(lower, upper, transform="normalize", name="yourname")
+# Categoricalnorm(categories, transform="onehot", name="yourname")  	
 	
 	
     matrices = ["big.rua", "g4.rua", "g20.rua"]
