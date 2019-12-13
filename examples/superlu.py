@@ -96,11 +96,11 @@ def objective(point):                  # should always use this name for user-de
 	comm.Disconnect()	
 
 
-	retval = tmpdata[0]
-	print(params, ' superlu time: ', retval)
+	# retval = tmpdata[0]
+	# print(params, ' superlu time: ', retval)
  
-	# retval = tmpdata[1]
-	# print(params, ' superlu memory: ', retval)
+	retval = tmpdata[1]
+	print(params, ' superlu memory: ', retval)
 
 
 
@@ -180,7 +180,7 @@ def main_interactive():
     matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 
     # Input parameters
-    COLPERM   = Categoricalnorm ([2, 4], transform="onehot", name="COLPERM")
+    COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
     LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
     nprows    = Integer     (1, nodes*cores, transform="normalize", name="nprows")
     nproc     = Integer     (nodes, nodes*cores, transform="normalize", name="nproc")
@@ -220,7 +220,7 @@ def main_interactive():
     data = Data(problem)
     gt = GPTune(problem, computer = computer, data = data, options = options)
 
-
+ 
 
     NI = ntask
     NS = nruns
@@ -233,8 +233,20 @@ def main_interactive():
         print("    Xs ", data.X[tid])
         print("    Ys ", data.Y[tid])
         print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
+    
+    
+    
+    
+    newtask = ["big.rua","g4.rua"]
+    (aprxopts,objval) = gt.TLA1(newtask, nruns)
+    
+    for tid in range(len(newtask)):
+        print("new task: %s"%(newtask[tid]))
+        print('    predicted Xopt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
 		
-		
+
+  
+  
 def parse_args():
 
     # Parse command line arguments

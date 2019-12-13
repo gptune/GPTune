@@ -29,8 +29,11 @@ class Categoricalnorm(Categorical):
         Xt = super(Categoricalnorm, self).transform(X)
         tmp1=[]
         for xt in Xt:
-            ii = next(i for i,v in enumerate(xt) if v > 0)
-            tmp = ii/lens+0.01
+            if(len(xt)==1):
+                tmp = min(1. - 1e-12, xt[0]+1e-12)
+            else:
+                ii = next(i for i,v in enumerate(xt) if v > 0)
+                tmp = ii/lens+0.01
             tmp1.append(tmp)
         return tmp1
         

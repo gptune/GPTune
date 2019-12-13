@@ -226,6 +226,15 @@ def main_interactive():
         print("    Xs ", data.X[tid])
         print("    Ys ", data.Y[tid])
         print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
+
+    newtask = [[400,500],
+               [1000,1200]]
+    (aprxopts,objval) = gt.TLA1(newtask, nruns)
+    
+    for tid in range(len(newtask)):
+        print("new task: %s"%(newtask[tid]))
+        print('    predicted Xopt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+		
 		
 		
 def parse_args():

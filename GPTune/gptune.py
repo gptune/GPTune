@@ -70,6 +70,8 @@ class GPTune(object):
 
 	def MLA(self, NS, NS1 = None, NI = None, **kwargs):
 
+		print('\n\n\n------Starting MLA with %d tasks '%(self.problem.DI))	
+
 		kwargs = copy.deepcopy(self.options)
 		kwargs.update(kwargs)
 		kwargs.update({'mpi_comm' : self.mpi_comm})
@@ -172,9 +174,81 @@ class GPTune(object):
 			
 		return (copy.deepcopy(self.data), modeler)
 
-	def TLA1():
 
-		pass
+	def TLA1(self, Tnew, nruns):
+       
+		print('\n\n\n------Starting TLA1 for task: ',Tnew)
+		# Initialization
+		kwargs = copy.deepcopy(self.options)
+		ntso = len(self.data.T)
+		ntsn = len(Tnew)
+
+		XSopt =[]
+		for i in range(ntso):
+			XSopt.append(self.data.X[i][np.argmin(self.data.Y[i])])	
+		# YSopt = np.array([[self.data.Y[k].min()] for k in range(ntso)])
+		MSopt = []
+
+
+
+		# convert the task spaces to the normalized spaces
+		tNorms=[]
+		for t in self.data.T:		
+			tNorm = self.problem.IS.transform(np.array(t, ndmin=2))[0]
+			tNorms.append(tNorm.reshape((-1, self.problem.DI)))		
+		tNorms = np.vstack([tNorms[i] for i in range(ntso)]).reshape((ntso,self.problem.DI))
+  
+		tmp=[]
+		for t in Tnew:		
+			tNorm = self.problem.IS.transform(np.array(t, ndmin=2))[0]
+			tmp.append(tNorm.reshape((-1, self.problem.DI)))		
+		TnewNorms=np.vstack([tmp[i] for i in range(ntsn)]).reshape((ntsn,self.problem.DI))
+   
+  
+  
+		# convert the parameter spaces to the normalized spaces  
+		XSoptNorms = self.problem.PS.transform(XSopt)
+		columns = []
+		for j in range(self.problem.DP):
+			columns.append([])
+		for i in range(ntso):
+			for j in range(self.problem.DP):
+				columns[j].append(XSoptNorms[i][j])
+		XSoptNorms = []
+		for j in range(self.problem.DP):
+			XSoptNorms.append(np.asarray(columns[j]).reshape((ntso, -1))) 
+
+		
+
+		# Predict optimums of new tasks
+		for k in range(self.problem.DP):
+			K = GPy.kern.RBF(input_dim=self.problem.DI)
+			M = GPy.models.GPRegression(tNorms, XSoptNorms[k], K)
+			# M.optimize_restarts(num_restarts = 10, robust=True, verbose=False, parallel=False, num_processes=None, messages="False")
+			M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = "False", optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+			MSopt.append(M)
+
+		aprxoptsNorm=np.hstack([MSopt[k].predict_noiseless(TnewNorms)[0] for k in range(self.problem.DP)])  # the index [0] is the mean value, [1] is the variance
+		aprxoptsNorm=np.minimum(aprxoptsNorm,(1-1e-12)*np.ones((ntsn,self.problem.DP)))
+		aprxoptsNorm=np.maximum(aprxoptsNorm,(1e-12)*np.ones((ntsn,self.problem.DP)))
+		# print('aprxoptsNorm',aprxoptsNorm,type(aprxoptsNorm))
+		aprxopts = self.problem.PS.inverse_transform(aprxoptsNorm)
+		# print('aprxopts',aprxopts,type(aprxopts),type(aprxopts[0]))
+		
+  
+		aprxoptsNormList=[]
+		# TnewNormList=[]
+		for i in range(ntso):
+			aprxoptsNormList.append([aprxoptsNorm[i,:]])  # this makes sure for each task, there is only one sample parameter set
+			# TnewNormList.append(TnewNorms[i,:])
+
+		Y = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, T = TnewNorms, X =aprxoptsNormList, kwargs = kwargs)
+  
+
+		#        print(aprxopts)
+		#        pickle.dump(aprxopts, open('TLA1.pkl', 'w'))
+
+		return (aprxopts,Y)
 
 	def TLA2(): # co-Kriging
 
