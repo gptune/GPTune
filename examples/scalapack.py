@@ -210,6 +210,7 @@ def main_interactive():
     options['shared_memory_parallelism'] = False
     options['mpi_comm'] = None
     options['model_class '] = 'Model_LCM'
+    options['verbose'] = False
     data = Data(problem)
     gt = GPTune(problem, computer = computer, data = data, options = options)
 
@@ -228,7 +229,7 @@ def main_interactive():
         print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
 
     newtask = [[400,500],
-               [1000,1200]]
+               [800,600]]
     (aprxopts,objval) = gt.TLA1(newtask, nruns)
     
     for tid in range(len(newtask)):

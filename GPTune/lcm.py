@@ -306,8 +306,8 @@ if __name__ == "__main__":
     while (cond):
 
         res = mpi_comm.bcast(None, root=0)
-        if (mpi_rank == 0):
-            print(res)
+        # if (mpi_rank == 0 ):
+        #     print(res)
 
         if (res[0] == "init"):
 

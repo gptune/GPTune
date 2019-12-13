@@ -165,7 +165,7 @@ def main_interactive():
     os.environ['TUNER_NAME']='GPTune'
     TUNER_NAME = os.environ['TUNER_NAME']
     # print(os.environ)
-    os.system("mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp; mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp/%s;"%(TUNER_NAME))
+    # os.system("mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp; mkdir -p /global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp/%s;"%(TUNER_NAME))
 
 # YL: for the spaces, the following datatypes are supported: 
 # Real(lower, upper, transform="normalize", name="yourname")
@@ -217,6 +217,7 @@ def main_interactive():
     options['shared_memory_parallelism'] = False
     options['mpi_comm'] = None
     options['model_class '] = 'Model_LCM'
+    options['verbose'] = False
     data = Data(problem)
     gt = GPTune(problem, computer = computer, data = data, options = options)
 

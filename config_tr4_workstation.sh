@@ -102,7 +102,7 @@ cd ../examples
 $RUN --allow-run-as-root -n 1 python ./demo.py
 
 cd ../examples
-$RUN --allow-run-as-root -n 1 python ./scalapack.py -mmax 500 -nmax 500 -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine tr4 -jobid 0
+$RUN --allow-run-as-root -n 1 python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine tr4 -jobid 0
 
 
 cd ../examples
