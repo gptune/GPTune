@@ -238,7 +238,7 @@ class GPTune(object):
   
 		aprxoptsNormList=[]
 		# TnewNormList=[]
-		for i in range(ntso):
+		for i in range(ntsn):
 			aprxoptsNormList.append([aprxoptsNorm[i,:]])  # this makes sure for each task, there is only one sample parameter set
 			# TnewNormList.append(TnewNorms[i,:])
 
