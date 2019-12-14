@@ -103,7 +103,7 @@ problem = TuningProblem(input_space, parameter_space, output_space, objective, c
 if __name__ == '__main__':	
 	computer = Computer(nodes = 1, cores = 1, hosts = None)
 	options = Options()
-	options['model_processes'] = 1
+	options['model_processes'] = 2
 	options['model_threads'] = 1
 	options['model_restarts'] = 1
 	options['search_multitask_processes'] = 1

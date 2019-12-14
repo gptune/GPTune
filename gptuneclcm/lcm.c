@@ -183,8 +183,8 @@ printf("%s %d: %d %d\n", __FILE__, __LINE__, z->pid, comm_size); fflush(stdout);
 #ifdef DEBUG
 printf("%s %d: %d\n", __FILE__, __LINE__, z->context); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
-   // Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
-    blacs_gridinit_( &(z->context), &layout, &nprow, &npcol);
+   Cblacs_gridinit( &(z->context), &layout, nprow, npcol);
+    // blacs_gridinit_( &(z->context), &layout, &nprow, &npcol);
 #ifdef DEBUG
 printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
@@ -193,19 +193,19 @@ printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_
 //    MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm z->mpi_comm)
 //    blacs_gridmap(&(z->context), usermap, &npcol, &nprow, &npcol);
 //printf("@@@@@ %d %d %d %d %d %d\n", z->pid, z->context, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout);
-    // Cblacs_gridinfo( (z->context), &(z->nprow), &(z->npcol), &(z->prowid), &(z->pcolid) );
-	blacs_gridinfo_( &(z->context), &(z->nprow), &(z->npcol), &(z->prowid), &(z->pcolid) );
+    Cblacs_gridinfo( (z->context), &(z->nprow), &(z->npcol), &(z->prowid), &(z->pcolid) );
+	// blacs_gridinfo_( &(z->context), &(z->nprow), &(z->npcol), &(z->prowid), &(z->pcolid) );
 #ifdef DEBUG
 printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
 //printf("##### %d %d %d %d %d %d\n", z->pid, z->context, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout);
     
     z->mb = mb;
-    z->lr = numroc_( &m, &mb, &(z->prowid), &i_zero, &nprow );
-    z->lc = numroc_( &m, &mb, &(z->pcolid), &i_zero, &npcol );
+    // z->lr = numroc_( &m, &mb, &(z->prowid), &i_zero, &nprow );
+    // z->lc = numroc_( &m, &mb, &(z->pcolid), &i_zero, &npcol );
 	
-	// z->lr = PB_Cnumroc( m, 0, mb, mb, (z->prowid), i_zero, nprow );
-	// z->lc = PB_Cnumroc( m, 0, mb, mb, (z->pcolid), i_zero, npcol );
+	z->lr = PB_Cnumroc( m, 0, mb, mb, (z->prowid), i_zero, nprow );
+	z->lc = PB_Cnumroc( m, 0, mb, mb, (z->pcolid), i_zero, npcol );
 #ifdef DEBUG
 printf("%s %d: %d %d\n", __FILE__, __LINE__, z->lr, z->lc); fflush(stdout); MPI_Barrier( comm );
 #endif
@@ -295,8 +295,8 @@ void finalize
 
     
 	if(z->context!=-1){
-	blacs_gridexit_( &(z->context) );
-    // Cblacs_gridexit( z->context );
+	// blacs_gridexit_( &(z->context) );
+    Cblacs_gridexit( z->context );
 	}
 //    int tmp = 1; // 1 instead of 0, as MPI might be called after blacs exits
 //    blacs_exit( &tmp );
