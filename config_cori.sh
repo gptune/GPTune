@@ -12,7 +12,7 @@ module load openmpi/4.0.1
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
-
+export PYTHONWARNINGS=ignore
 
 CCC=mpicc
 CCCPP=mpicxx

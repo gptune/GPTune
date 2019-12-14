@@ -5,6 +5,7 @@
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+export PYTHONWARNINGS=ignore
 
 CCC=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpicc
 CCCPP=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpicxx

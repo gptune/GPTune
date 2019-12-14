@@ -113,6 +113,7 @@ install:
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
+  - export PYTHONWARNINGS=ignore
 
 
   - env CC=$MPICC pip install -r requirements.txt
