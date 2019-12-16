@@ -38,29 +38,31 @@ from autotune.search import *
 sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 from pdqrdriver import pdqrdriver
 
+
+
 ################################################################################
 
 
 
-def initialize(m, n, nodes, cores, nruns, truns, machine, JOBID=0):
+# def initialize(m, n, nodes, cores, nruns, truns, machine, JOBID=0):
 
-    ROOTDIR = os.path.abspath(__file__ + "/../scalapack-driver/")
-    EXPDIR = os.path.abspath(os.path.join(ROOTDIR, "exp/%s/"%(machine), JOBID))
-    if (JOBID != 0):
-        RUNDIR = os.path.abspath(os.path.join(EXPDIR, "m_%d_n_%d_nodes_%d_cores_%d_jobid_%d_nruns_%d"%(m, n, nodes, cores, JOBID, nruns)))
-    else:
-        RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(os.getpid())))
+#     ROOTDIR = os.path.abspath(__file__ + "/../scalapack-driver/")
+#     EXPDIR = os.path.abspath(os.path.join(ROOTDIR, "exp/%s/"%(machine), JOBID))
+#     if (JOBID != 0):
+#         RUNDIR = os.path.abspath(os.path.join(EXPDIR, "m_%d_n_%d_nodes_%d_cores_%d_jobid_%d_nruns_%d"%(m, n, nodes, cores, JOBID, nruns)))
+#     else:
+#         RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(os.getpid())))
 
-    # try:
-        # os.makedirs(EXPDIR)
-    # except:
-        # pass
-    # try:
-        # os.makedirs(RUNDIR)
-    # except:
-        # pass
+#     # try:
+#         # os.makedirs(EXPDIR)
+#     # except:
+#         # pass
+#     # try:
+#         # os.makedirs(RUNDIR)
+#     # except:
+#         # pass
 
-    return RUNDIR
+#     return RUNDIR
 
 # def myobjfun(m, n, mb, nb, nproc, p):
 def objective(point):                  # should always use this name for user-defined objective function
@@ -73,11 +75,11 @@ def objective(point):                  # should always use this name for user-de
 
     
 #        return np.random.rand(1)
-    if(nproc==0):
-        return 1000.0
-    if(p==0):
-        return 1000.0
-    nth   = int((nodes * cores-2) / nproc) # YL: there are at least 2 cores working on other stuff
+    if(nproc==0 or p==0 or nproc<p):
+        print('Warning: wrong parameters for objective function!!!')
+        return 1e12
+
+    nth   = int((nodes * cores-1) / nproc) # YL: there are is one proc doing spawning
     q     = int(nproc / p)
 
 
@@ -88,7 +90,7 @@ def objective(point):                  # should always use this name for user-de
     repeat = True
 #        while (repeat):
 #            try:
-    elapsedtime = pdqrdriver(params, niter = 3)
+    elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
     # elapsedtime = 1.0
     repeat = False
 #            except:
@@ -104,6 +106,7 @@ def main_interactive():
     global ROOTDIR
     global nodes
     global cores
+    global JOBID
 
     # Parse command line arguments
 
@@ -140,6 +143,7 @@ def main_interactive():
     JOBID = args.jobid
     
     
+    
     os.environ['MACHINE_NAME']=machine
     os.environ['TUNER_NAME']='GPTune'
     # print(os.environ)
@@ -169,7 +173,7 @@ def main_interactive():
     n     = Integer (128 , nmax, transform="normalize", name="n")
     mb    = Integer (1 , 128, transform="normalize", name="mb")
     nb    = Integer (1 , 128, transform="normalize", name="nb")
-    nproc = Integer (nodes, nodes*cores, transform="normalize", name="nproc")
+    nproc = Integer (nodes, nodes*cores-1, transform="normalize", name="nproc") # YL: there are is one proc doing spawning
     p     = Integer (1 , nodes*cores, transform="normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
 
@@ -187,10 +191,10 @@ def main_interactive():
     cst1 = "mb * p <= m"
     cst2 = "nb * nproc <= n * p"
     #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
-    cst3 = "%d * %d"%(nodes, cores) + ">= nproc+2"  # YL: there are at least 2 cores working on other stuff
-    cst4 = "nproc >= p" # intrinsically implies "p <= nproc"
+    # cst3 = "%d * %d"%(nodes, cores) + ">= nproc+2"  
+    cst3 = "nproc >= p" # intrinsically implies "p <= nproc"
 
-    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3, "cst4" : cst4}
+    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
     # constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
 
     models = {}
@@ -206,6 +210,7 @@ def main_interactive():
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1
     options['model_restart_processes'] = 1
+    options['model_restart_threads'] = 1
     options['distributed_memory_parallelism'] = True
     options['shared_memory_parallelism'] = False
     options['mpi_comm'] = None

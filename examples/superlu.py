@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-python superlu.py -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori -jobid 0
+python superlu.py -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori
 
 where:
     -nodes is the number of compute nodes
@@ -11,7 +11,6 @@ where:
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -machine is the name of the machine
-    -jobid is optional. You can always set it to 0.
 """
 
 ################################################################################
@@ -158,7 +157,7 @@ def main_interactive():
     optimization = args.optimization
     nruns = args.nruns
     truns = args.truns
-    JOBID = args.jobid
+    # JOBID = args.jobid
     
     
     os.environ['MACHINE_NAME']=machine

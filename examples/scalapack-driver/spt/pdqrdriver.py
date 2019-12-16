@@ -71,7 +71,6 @@ def execute(nproc, nth, RUNDIR):
         comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Disconnect()
         
-        
         return 0
 
 
@@ -120,7 +119,7 @@ def read_output(params, RUNDIR, niter=1):
 
     return times
 
-def pdqrdriver(params, niter=10):
+def pdqrdriver(params, niter=10,JOBID: int = None):
 
     global EXPDIR 
     global BINDIR
@@ -131,8 +130,9 @@ def pdqrdriver(params, niter=10):
     BINDIR = os.path.abspath(os.path.join(ROOTDIR, "bin", MACHINE_NAME))
     EXPDIR = os.path.abspath(os.path.join(ROOTDIR, "exp", MACHINE_NAME + '/' + TUNER_NAME))
 
-
-    RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(os.getpid())))
+    if (JOBID==-1):  # -1 is the default value if jobid is not set from command line
+        JOBID = os.getpid()
+    RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(JOBID)))
     os.system("mkdir -p %s"%(RUNDIR))
     # print('nima',RUNDIR)
 

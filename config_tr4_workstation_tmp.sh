@@ -22,8 +22,8 @@ rm -rf CTestTestfile.cmake
 rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
-	-DCMAKE_CXX_FLAGS="-I/usr/include/python3.6m" \
-	-DCMAKE_C_FLAGS="-I/usr/include/python3.6m" \
+	-DCMAKE_CXX_FLAGS="-I/usr/local/include/python3.8" \
+	-DCMAKE_C_FLAGS="-I/usr/local/include/python3.8" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
@@ -79,8 +79,8 @@ cd ../../../
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
-python setup.py build --mpicc="$CCC -shared"
-python setup.py install
+python3.8 setup.py build --mpicc="$CCC -shared"
+python3.8 setup.py install
 # env CC=mpicc pip install --user -e .
 
 
@@ -100,11 +100,11 @@ env CC=$CCC pip install --user -e .
  
 
 cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python3.8 ./demo.py
 
 cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine tr4 -jobid 0
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python3.8 ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine tr4 -jobid 0
 
 
 cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4 
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python3.8 ./superlu.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4 

@@ -1,6 +1,6 @@
 language: python
 python:
-  - 3.7
+  - 3.8
 compiler: gcc
 os: linux
 dist: bionic
@@ -109,7 +109,7 @@ install:
   - export BLUE="\033[34;1m"
   - printf "${BLUE} GC; Installing GPtune from source\n"
   - cd $TRAVIS_BUILD_DIR
-  - export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/"
+  - export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.8.0/lib/python3.8/site-packages/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
@@ -202,4 +202,4 @@ script:
   - cd $TRAVIS_BUILD_DIR/examples
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./demo.py
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./superlu.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./superlu.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 

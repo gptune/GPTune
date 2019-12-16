@@ -70,7 +70,7 @@ class GPTune(object):
 
 	def MLA(self, NS, NS1 = None, NI = None, **kwargs):
 
-		print('\n\n\n------Starting MLA with %d tasks '%(self.problem.DI))	
+		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
 
 		kwargs = copy.deepcopy(self.options)
 		kwargs.update(kwargs)
@@ -128,7 +128,7 @@ class GPTune(object):
 #            self.data = mpi_comm.bcast(None, root=0)
 
 		NS2 = NS - len(self.data.X[0])
-
+		# mpi4py.MPI.COMM_WORLD.Barrier()
 		modeler  = eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')
 		searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
 		for optiter in range(NS2): # YL: each iteration adds one sample until total #sample reaches NS
@@ -236,6 +236,12 @@ class GPTune(object):
 		# print('aprxopts',aprxopts,type(aprxopts),type(aprxopts[0]))
 		
   
+
+
+
+
+
+
 		aprxoptsNormList=[]
 		# TnewNormList=[]
 		for i in range(ntsn):
