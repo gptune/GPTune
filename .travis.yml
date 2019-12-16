@@ -1,6 +1,6 @@
 language: python
 python:
-  - 3.8
+  - 3.7
 compiler: gcc
 os: linux
 dist: bionic
@@ -57,14 +57,14 @@ before_install:
   
   - printf "${BLUE} GC; Installing openmpi\n"
   - cd $TRAVIS_BUILD_DIR/installDir
-  - wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.bz2
-  - bzip2 -d openmpi-4.0.2.tar.bz2
-  - tar -xvf openmpi-4.0.2.tar
-  - cd openmpi-4.0.2/
+  - wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
+  - bzip2 -d openmpi-4.0.1.tar.bz2
+  - tar -xvf openmpi-4.0.1.tar
+  - cd openmpi-4.0.1/
   - ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FC FC=$FC --enable-mpi1-compatibility 
   - make 
   - make install  
-  - sudo cp -r $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.2/lib/* /usr/lib/x86_64-linux-gnu/.
+  - sudo cp -r $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.1/lib/* /usr/lib/x86_64-linux-gnu/.
   - export MPICC="$PWD/bin/mpicc"
   - export MPICXX="$PWD/bin/mpicxx"
   - export MPIF90="$PWD/bin/mpif90"
@@ -109,7 +109,7 @@ install:
   - export BLUE="\033[34;1m"
   - printf "${BLUE} GC; Installing GPtune from source\n"
   - cd $TRAVIS_BUILD_DIR
-  - export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.8.0/lib/python3.8/site-packages/"
+  - export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
