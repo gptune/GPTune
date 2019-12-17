@@ -31,7 +31,9 @@ git:
 before_install:
   - export BLUE="\033[34;1m"
   - mkdir -p installDir
-
+  - gcc --version
+  - python --version
+  - python3.7 --version  
   - printf  "${BLUE} GC; Installing gcc-7 via apt\n"
   - sudo apt-get update
   - sudo apt-get install build-essential software-properties-common -y
@@ -203,5 +205,3 @@ script:
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./demo.py
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
-  - python --version
-  - python3.7 --version
