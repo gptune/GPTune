@@ -1,6 +1,4 @@
-language: python
-python:
-  - 3.7
+language: generic
 compiler: gcc
 os: linux
 dist: bionic
@@ -48,7 +46,20 @@ before_install:
   - export FC="gfortran-9"
   - printf "${BLUE} GC; Done installing gfortran via apt\n"
 
-  
+    
+  - printf "${BLUE} GC; Installing python3.7.1 with gcc-9\n"
+  - wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
+  - tar -xvf Python-3.7.1.tgz
+  - cd Python-3.7.1
+  - ./configure --prefix=$PWD --enable-optimizations CC=$CC
+  - make -j4
+  - make install
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/lib  
+  - export PATH=$PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/bin
+  - export PYTHONHOME=$PYTHONHOME:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/
+  - printf "${BLUE} GC; Done Installing python3.7.1 with gcc-9\n"
+
+
   - printf "${BLUE} GC; Installing bzip2 apt\n"
   - sudo apt-get install bzip2
   - printf "${BLUE} GC; Done installing bzip2 apt\n"
@@ -108,7 +119,6 @@ install:
   - export BLUE="\033[34;1m"
   - printf "${BLUE} GC; Installing GPtune from source\n"
   - cd $TRAVIS_BUILD_DIR
-  - export PYTHONPATH="$PYTHONPATH:/home/travis/virtualenv/python3.7.1/lib/python3.7/site-packages/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
