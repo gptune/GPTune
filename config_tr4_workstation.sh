@@ -1,18 +1,31 @@
+#!/bin/bash
 
-# export MKLROOT=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
-# export LD_LIBRARY_PATH=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
+module load gcc/9.1.0
+module load openmpi/4.0.1
+module load scalapack-netlib/2.0.2
+module load python/3.7.4
 
+shopt -s expand_aliases
+alias python='python3.7'
+alias pip='pip3.7'
+
+
+export PATH=$PATH:/home/administrator/.local/bin/
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONWARNINGS=ignore
 
-CCC=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpicc
-CCCPP=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpicxx
-FTN=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpif90
-RUN=/home/administrator/Desktop/software/openmpi-4.0.2/bin/mpirun
+CCC=$MPICC
+CCCPP=$MPICXX
+FTN=$MPIF90
+RUN=$MPIRUN
 
-env CC=$CCC pip install --upgrade --user -r requirements.txt
+python --version
+pip --version
+
+pip install --upgrade --user -r requirements.txt
+#env CC=$CCC pip install --upgrade --user -r requirements.txt
 
 mkdir -p build
 cd build
@@ -22,8 +35,8 @@ rm -rf CTestTestfile.cmake
 rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
-	-DCMAKE_CXX_FLAGS="-I/usr/include/python3.6m" \
-	-DCMAKE_C_FLAGS="-I/usr/include/python3.6m" \
+	-DCMAKE_CXX_FLAGS="" \
+	-DCMAKE_C_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
@@ -32,7 +45,7 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libblas.so" \
 	-DTPL_LAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so" \
-	-DTPL_SCALAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/libscalapack.so"
+	-DTPL_SCALAPACK_LIBRARIES="/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so"
 make
 cp lib_gptuneclcm.so ../.
 cp pdqrdriver ../
@@ -89,14 +102,14 @@ cd ../
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-env CC=$CCC pip install --user -e .
+pip install --user -e .
  
  
 cd ../
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-env CC=$CCC pip install --user -e .
+pip install --user -e .
  
 
 cd ../examples
