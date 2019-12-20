@@ -312,7 +312,7 @@ if __name__ == "__main__":
         if (res[0] == "init"):
 
             (ker_lcm, X, Y) = res[1]
-            mb = min(mb, min(X.shape[0]//nprow, X.shape[0]//npcol))   # YL: mb <=32 doesn't seem reasonable, comment this line out ?
+            mb = min(mb, max(1,min(X.shape[0]//nprow, X.shape[0]//npcol)))   # YL: mb <=32 doesn't seem reasonable, comment this line out ?
             # # print('mb',mb,'nprow',nprow,'npcol',npcol)
             cliblcm.initialize.restype = POINTER(fun_jac_struct)
             z = cliblcm.initialize (\

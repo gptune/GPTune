@@ -43,7 +43,6 @@ from pdqrdriver import pdqrdriver
 ################################################################################
 
 
-
 # def myobjfun(m, n, mb, nb, nproc, p):
 def objective(point):                  # should always use this name for user-defined objective function
     m = point['m']
@@ -100,7 +99,7 @@ def main_interactive():
     parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
     parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
     # Algorithm related arguments
-    parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+    # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
@@ -117,7 +116,7 @@ def main_interactive():
     nodes = args.nodes
     cores = args.cores
     machine = args.machine
-    optimization = args.optimization
+    # optimization = args.optimization
     nruns = args.nruns
     truns = args.truns
     JOBID = args.jobid
@@ -133,93 +132,8 @@ def main_interactive():
     os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
 
 
-	
-# YL: for the spaces, the following datatypes are supported: 
-# Real(lower, upper, transform="normalize", name="yourname")
-# Integer(lower, upper, transform="normalize", name="yourname")
-# Categoricalnorm(categories, transform="onehot", name="yourname")  	
-		
-	
-	
-    m     = Integer (128 , mmax, transform="normalize", name="m")
-    n     = Integer (128 , nmax, transform="normalize", name="n")
-    mb    = Integer (1 , 128, transform="normalize", name="mb")
-    nb    = Integer (1 , 128, transform="normalize", name="nb")
-    nproc = Integer (nodes, nodes*cores-1, transform="normalize", name="nproc") # YL: there are is one proc doing spawning
-    p     = Integer (1 , nodes*cores, transform="normalize", name="p")
-    r     = Real    (float("-Inf") , float("Inf"), name="r")
-
-    IS = Space([m, n])
-    PS = Space([mb, nb, nproc, p])
-    OS = Space([r])
-
-
-
-#    cst1 = "mb <= int(m / p) if (m / p) >= 1 else False"
-#    cst2 = "nb <= int(n / int(nproc / p)) if (n / int(nproc / p)) >= 1 else False"
-#    #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
-#    cst3 = "int(%d * %d / nproc) == (%d * %d / nproc)"%(nodes, cores, nodes, cores)
-#    cst4 = "int(nproc / p) == (nproc / p)" # intrinsically implies "p <= nproc"
-    cst1 = "mb * p <= m"
-    cst2 = "nb * nproc <= n * p"
-    #cst3 = "int(nodes * cores / nproc) == (nodes * cores / nproc)"
-    # cst3 = "%d * %d"%(nodes, cores) + ">= nproc+2"  
-    cst3 = "nproc >= p" # intrinsically implies "p <= nproc"
-
-    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
-    # constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
-
-    models = {}
-
-    print(IS, PS, OS, constraints, models)
-
-    problem = TuningProblem(IS, PS, OS, objective, constraints, None)
-    computer = Computer(nodes = nodes, cores = cores, hosts = None)  
-
-    options = Options()
-    # options['model_processes'] = 1
-    # options['model_threads'] = 1
-    options['model_restarts'] = 1
-    # options['search_multitask_processes'] = 1
-    # options['model_restart_processes'] = 1
-    # options['model_restart_threads'] = 1
-    options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = False
-    # options['mpi_comm'] = None
-    options['model_class '] = 'Model_LCM'
-    options['verbose'] = False
-	
-    options.validate(computer = computer)
-    data = Data(problem)
-    gt = GPTune(problem, computer = computer, data = data, options = options)
-
-
-    # """ Building MLA with NI random tasks """
-    # NI = ntask
-    # NS = nruns
-    # (data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
-    # print("stats: ",stats)
-	
-    """ Building MLA with the given list of tasks """	
-    giventask = [[460,500],[800,690]]	
-    NI = len(giventask)
-    NS = nruns
-    (data, model,stats) = gt.MLA(NS=NS, NI=NI, Tgiven =giventask, NS1 = max(NS//2,1))
-    print("stats: ",stats)
-    
-    pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'wb'))
-	
-	
-	
-	
-
-    for tid in range(NI):
-        print("tid: %d"%(tid))
-        print("    m:%d n:%d"%(data.T[tid][0], data.T[tid][1]))
-        print("    Xs ", data.X[tid])
-        print("    Ys ", data.Y[tid])
-        print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
-
+    gt = pickle.load(open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
+	 
     newtask = [[400,500],
                [800,600]]
     (aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
@@ -270,4 +184,4 @@ if __name__ == "__main__":
 
  
    main_interactive()
- 
+

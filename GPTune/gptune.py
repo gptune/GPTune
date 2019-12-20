@@ -17,6 +17,7 @@
 
 import copy
 import functools
+import time
 
 from autotune.problem import TuningProblem
 
@@ -27,6 +28,7 @@ from options import Options
 from sample import *
 from model import *
 from search import *
+import math
 
 import mpi4py
 from mpi4py import MPI		  
@@ -40,7 +42,6 @@ class GPTune(object):
 		data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
 		options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
 		"""
-
 		self.problem  = Problem(tuningproblem)
 		if (computer is None):
 			computer = Computer()
@@ -52,6 +53,7 @@ class GPTune(object):
 			options = Options()
 		self.options  = options
 
+		print(self.options['distributed_memory_parallelism'],self.options['shared_memory_parallelism'] )
 		if (self.options['distributed_memory_parallelism']\
 			and\
 			('mpi4py' in sys.modules)): # make sure that the mpi4py has been loaded successfully
@@ -68,24 +70,33 @@ class GPTune(object):
 		#            self.mpi_rank = 0
 		#            self.mpi_size = 1
 
-	def MLA(self, NS, NS1 = None, NI = None, **kwargs):
+	def MLA(self, NS, NS1 = None, NI = None, Tgiven = None, **kwargs):
 
 		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
-
-		kwargs = copy.deepcopy(self.options)
-		kwargs.update(kwargs)
+		stats = {
+		  "time_tunner": 0,
+		  "time_fun": 0
+		}
+		time_fun=0
+		
+		t3 = time.time_ns()
+		
+		options1 = copy.deepcopy(self.options)
+		kwargs.update(options1)
 		kwargs.update({'mpi_comm' : self.mpi_comm})
 
 		""" Multi-task Learning Autotuning """
 
+		
+		if(Tgiven is not None and self.data.T is None):  # building the MLA model for each of the given tasks
+			self.data.T = Tgiven 
+
 ########## normalize the data as the user always work in the original space
-		if self.data.T is not None:
-			tmp=[]
-			for t in self.data.T:		
-				tNorm = self.problem.IS.transform(np.array(t, ndmin=2))[0]
-				tmp.append(tNorm)		
-			self.data.T=tmp
-		if self.data.X is not None:			
+
+		if self.data.T is not None: # from a list of lists to a 2D numpy array
+			self.data.T = self.problem.IS.transform(np.array(self.data.T, ndmin=2))
+
+		if self.data.X is not None:	# from a list of (list of lists) to a list of 2D numpy arrays		
 			tmp=[]
 			for x in self.data.X:		
 				xNorm = self.problem.PS.transform(np.array(x, ndmin=2))[0]
@@ -104,7 +115,7 @@ class GPTune(object):
 
 			check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
 			self.data.T = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
-			# print("riji",self.data.T)
+			# print("riji",type(self.data.T),type(self.data.T[0]))
 		if (self.data.X is None):
 
 			if (NS1 is None):
@@ -117,8 +128,11 @@ class GPTune(object):
 #                for x in X2:
 #                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
 		# print("good?")
+		t1 = time.time_ns()
 		if (self.data.Y is None):
 			self.data.Y = self.computer.evaluate_objective(self.problem, self.data.T, self.data.X, kwargs = kwargs) 
+		t2 = time.time_ns()
+		time_fun = time_fun + (t2-t1)/1e9
 		# print("good!")	
 #            if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 #                mpi_comm.bcast(self.data, root=0)
@@ -132,7 +146,7 @@ class GPTune(object):
 		modeler  = eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')
 		searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
 		for optiter in range(NS2): # YL: each iteration adds one sample until total #sample reaches NS
-
+			# print("riji",type(self.data.T),type(self.data.T[0]))
 			newdata = Data(problem = self.problem, T = self.data.T)
 			# print("before train",optiter,NS2)
 			modeler.train(data = self.data, **kwargs)
@@ -145,7 +159,10 @@ class GPTune(object):
 
 	#            if (self.mpi_rank == 0):
 
+			t1 = time.time_ns()
 			newdata.Y = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, T = newdata.T, X = newdata.X, kwargs = kwargs)
+			t2 = time.time_ns()
+			time_fun = time_fun + (t2-t1)/1e9		
 
 	#                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 	#                    mpi_comm.bcast(newdata.Y, root=0)
@@ -158,26 +175,34 @@ class GPTune(object):
 			
 				
 ########## denormalize the data as the user always work in the original space
-		if self.data.T is not None:        
-			tmp=[]
-			for t in self.data.T:		
-				tOrig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-				tmp.append(tOrig)		
-			self.data.T=tmp
-		if self.data.X is not None:        
+		if self.data.T is not None:    # from 2D numpy array to a list of lists    
+			self.data.T = self.problem.IS.inverse_transform(np.array(self.data.T, ndmin=2))
+		if self.data.X is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)       
 			tmp=[]
 			for x in self.data.X:		
 				xOrig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
 				tmp.append(xOrig)		
 			self.data.X=tmp		
 			
-			
-		return (copy.deepcopy(self.data), modeler)
+		t4 = time.time_ns()
+		stats['time_tunner'] = (t4-t3)/1e9		
+		stats['time_fun'] = time_fun			
 
+		
+		return (copy.deepcopy(self.data), modeler,stats)
 
+		
 	def TLA1(self, Tnew, nruns):
        
 		print('\n\n\n------Starting TLA1 for task: ',Tnew)
+
+		stats = {
+		  "time_tunner": 0,
+		  "time_fun": 0
+		}
+		time_fun=0
+		
+		t3=time.time_ns()
 		# Initialization
 		kwargs = copy.deepcopy(self.options)
 		ntso = len(self.data.T)
@@ -247,14 +272,20 @@ class GPTune(object):
 		for i in range(ntsn):
 			aprxoptsNormList.append([aprxoptsNorm[i,:]])  # this makes sure for each task, there is only one sample parameter set
 			# TnewNormList.append(TnewNorms[i,:])
-
+		
+		t1 = time.time_ns()
 		Y = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, T = TnewNorms, X =aprxoptsNormList, kwargs = kwargs)
-  
+		t2 = time.time_ns()
+		time_fun = time_fun + (t2-t1)/1e9		
 
 		#        print(aprxopts)
 		#        pickle.dump(aprxopts, open('TLA1.pkl', 'w'))
 
-		return (aprxopts,Y)
+		t4 = time.time_ns()
+		stats['time_tunner'] = (t4-t3)/1e9		
+		stats['time_fun'] = time_fun		
+		
+		return (aprxopts,Y,stats)
 
 	def TLA2(): # co-Kriging
 

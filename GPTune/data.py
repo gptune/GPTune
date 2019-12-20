@@ -55,7 +55,9 @@ class Categoricalnorm(Categorical):
         return 1
 
 class Data(object):
-
+	# To GPTune T is 2D numpy array. To user T is a list of lists
+	# To GPTune X is is list/collection of 2D numpy array. To user X is a list of (list of lists)
+	# To GPTune and user Y is is list/collection of 2D numpy array with column dimension 1 for single-objective function. 
     def __init__(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, Y : Collection[np.ndarray] = None):
 
         self.problem = problem

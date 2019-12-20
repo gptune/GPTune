@@ -138,7 +138,7 @@ class Model_LCM(Model):
 		else:
 			Q = kwargs['model_latent']
 
-		if (kwargs['distributed_memory_parallelism'] and i_am_manager): #YL: model_processes, model_threads, model_restart_processes,model_restart_threads should multiply to the total core count, and model_restart_threads*model_restart_processes should be less than model_restarts 
+		if (kwargs['distributed_memory_parallelism'] and i_am_manager): 
 			mpi_comm = self.computer.spawn(__file__, kwargs['model_restart_processes'], kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
 			# print("kwargs_tmp",kwargs_tmp)

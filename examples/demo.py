@@ -101,21 +101,24 @@ problem = TuningProblem(input_space, parameter_space, output_space, objective, c
 
 	
 if __name__ == '__main__':	
-	computer = Computer(nodes = 1, cores = 1, hosts = None)
+	computer = Computer(nodes = 1, cores = 2, hosts = None)
 	options = Options()
-	options['model_processes'] = 2
-	options['model_threads'] = 1
+	# options['model_processes'] = 1
+	# options['model_threads'] = 1
 	options['model_restarts'] = 1
-	options['search_multitask_processes'] = 1
-	options['distributed_memory_parallelism'] = False
+	# options['search_multitask_processes'] = 1
+	options['distributed_memory_parallelism'] = True
 	options['shared_memory_parallelism'] = False
-	options['mpi_comm'] = None
+	# options['mpi_comm'] = None
 	#options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
 	options['model_class '] = 'Model_LCM'
+	
+	options.validate(computer = computer)
 	data = Data(problem)
 	gt = GPTune(problem, computer = computer, data = data, options = options)
 	# print('demo before MLA')
-	(data, modeler) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
+	(data, modeler,stats) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
+	print("stats: ",stats)
 	print(data.Y)
 	print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])
 
