@@ -1,13 +1,13 @@
 #!/bin/bash
 
 module load gcc/9.1.0
-module load openmpi/4.0.1
-module load scalapack-netlib/2.0.2
-module load python/3.7.4
+module load openmpi/gcc-9.1.0/4.0.1
+module load scalapack-netlib/gcc-9.1.0/2.0.2
+module load python/gcc-9.1.0/3.7.4
 
-shopt -s expand_aliases
-alias python='python3.7'
-alias pip='pip3.7'
+#shopt -s expand_aliases
+#alias python='python3.7'
+#alias pip='pip3.7'
 
 
 export PATH=$PATH:/home/administrator/.local/bin/
@@ -79,7 +79,7 @@ cmake .. \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
 	-DCMAKE_Fortran_COMPILER=$FTN \
-	-DCMAKE_BUILD_TYPE=Debug \
+	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="/usr/lib/x86_64-linux-gnu/libblas.so" \
 	-DTPL_LAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/liblapack.so" \

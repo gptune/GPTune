@@ -53,7 +53,6 @@ class GPTune(object):
 			options = Options()
 		self.options  = options
 
-		print(self.options['distributed_memory_parallelism'],self.options['shared_memory_parallelism'] )
 		if (self.options['distributed_memory_parallelism']\
 			and\
 			('mpi4py' in sys.modules)): # make sure that the mpi4py has been loaded successfully

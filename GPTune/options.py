@@ -75,11 +75,9 @@ class Options(dict):
 	def validate(self, computer, **kwargs):		
 		
 		"""  modify the options as needed """
-		print(self['distributed_memory_parallelism'],self['shared_memory_parallelism'] )
 		if (self['distributed_memory_parallelism'] and self['shared_memory_parallelism']):
 			self['shared_memory_parallelism']=False
 		
-		print(self['distributed_memory_parallelism'],self['shared_memory_parallelism'] )
 		if (self['distributed_memory_parallelism']):
 			if(self['search_multitask_processes'] is None):
 				self['search_multitask_processes'] = computer.cores*computer.nodes-1
