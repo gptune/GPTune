@@ -29,35 +29,80 @@ git:
 before_install:
   - export BLUE="\033[34;1m"
   - mkdir -p installDir
-  - printf  "${BLUE} GC; Installing gcc-9 via apt\n"
-  - sudo apt-get update
-  - sudo apt-get install build-essential software-properties-common -y
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update
-  - sudo apt-get install gcc-9 g++-9 -y
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
-  - export CXX="g++-9"
-  - export CC="gcc-9"
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - printf  "${BLUE} GC; Installing gcc-9 from source \n"
+env:
+  matrix:
+  - TEST_NUMBER=1"
+git:
+  depth: 1
+
+before_install:
+  - export BLUE="\033[34;1m"
+  - printf  "${BLUE} GC; Installing gcc-9 from source \n"
+  - sudo apt-get install libgmp-dev
+  - sudo apt-get install libmpc-dev
+  - sudo apt-get install libmpfr-dev
+  - mkdir -p installDir
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - wget https://ftpmirror.gnu.org/gcc/gcc-9.1.0/gcc-9.1.0.tar.gz
+  - tar -xvf gcc-9.1.0.tar.gz &>build_gcc.log
+  - cd gcc-9.1.0/
+  - mkdir build
+  - cd build
+  - cp $TRAVIS_BUILD_DIR/travis_build_gcc.sh .
+  - cp $TRAVIS_BUILD_DIR/log_monitor.sh .
+  - bash travis_build_gcc.sh 
+  # - make -j8 &>build_gcc.log
+    # - make -j8 
+  - make install-strip
+  - sudo update-alternatives --install /usr/bin/gcc gcc $TRAVIS_BUILD_DIR/installDir/gcc-9.1.0/bin/gcc 60 --slave /usr/bin/g++ g++ $TRAVIS_BUILD_DIR/installDir/gcc-9.1.0/bin/g++
+  - sudo update-alternatives --install /usr/bin/gfortran gfortran $TRAVIS_BUILD_DIR/installDir/gcc-9.1.0/bin/gfortran 60
+  - export CXX="g++"
+  - export CC="gcc"
+  - export FC="gfortran"
+  - export PATH=$PATH:$TRAVIS_BUILD_DIR/installDir/gcc-9.1.0/bin
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/gcc-9.1.0/lib64  
   - printf "${BLUE} GC; Done installing gcc-9 via apt\n"
-
-  - printf "${BLUE} GC; Installing gfortran via apt\n"
-  - sudo apt-get install gfortran-9 -y
-  - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 60
-  - export FC="gfortran-9"
-  - printf "${BLUE} GC; Done installing gfortran via apt\n"
-
     
-  - printf "${BLUE} GC; Installing python3.7.1 with gcc-9\n"
-  - wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
-  - tar -xvf Python-3.7.1.tgz
-  - cd Python-3.7.1
-  - ./configure --prefix=$PWD CC=$CC
-  - make -j8
-  - make install
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/lib  
-  - export PATH=$PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/bin
-  - export PYTHONHOME=$PYTHONHOME:$TRAVIS_BUILD_DIR/installDir/Python-3.7.1/
-  - printf "${BLUE} GC; Done Installing python3.7.1 with gcc-9\n"
+  - printf "${BLUE} GC; Installing python2.7.16 with gcc-9\n"
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - wget https://www.python.org/ftp/python/2.7.16/Python-2.7.16.tgz
+  - tar -xvf Python-2.7.16.tgz &>build_python2.log
+  - cd $TRAVIS_BUILD_DIR/installDir/Python-2.7.16 
+  - cp $TRAVIS_BUILD_DIR/travis_build_python2.sh .
+  - cp $TRAVIS_BUILD_DIR/log_monitor.sh .
+  - bash travis_build_python2.sh
+    #- make -j8   
+    #- make install
+  - sudo rm /opt/pyenv/shims/python*
+  - sudo cp ./bin/python2.7 /opt/pyenv/shims/python2.7.16
+  - sudo cp ./bin/python2.7 /opt/pyenv/shims/python2.7
+  - sudo cp ./bin/python2.7 /opt/pyenv/shims/python
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/Python-2.7.16/lib  
+  - export PATH=$PATH:$TRAVIS_BUILD_DIR/installDir/Python-2.7.16/bin
+  - export PYTHONHOME=$TRAVIS_BUILD_DIR/installDir/Python-2.7.16/
+  - printf "${BLUE} GC; Done Installing python2.7.16 with gcc-9\n"  
+  
+  
+  
+  - printf "${BLUE} GC; Installing python3.7.4 with gcc-9\n"
+  - cd $TRAVIS_BUILD_DIR/installDir
+  - wget https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
+  - tar -xvf Python-3.7.4.tgz &>build_python3.log
+  - cd $TRAVIS_BUILD_DIR/installDir/Python-3.7.4
+  - cp $TRAVIS_BUILD_DIR/travis_build_python3.sh .
+  - cp $TRAVIS_BUILD_DIR/log_monitor.sh .
+  - bash travis_build_python3.sh
+    #- make -j8
+    #- make altinstall
+  - sudo cp ./bin/python3.7 /opt/pyenv/shims/python
+  - sudo cp ./bin/python3.7 /opt/pyenv/shims/python3
+  - sudo cp ./bin/python3.7 /opt/pyenv/shims/python3.7
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.4/lib  
+  - export PATH=$PATH:$TRAVIS_BUILD_DIR/installDir/Python-3.7.4/bin
+  - export PYTHONHOME=$TRAVIS_BUILD_DIR/installDir/Python-3.7.4/
+  - printf "${BLUE} GC; Done Installing python3.7.4 with gcc-9\n"
 
 
   - printf "${BLUE} GC; Installing bzip2 apt\n"
@@ -69,11 +114,13 @@ before_install:
   - cd $TRAVIS_BUILD_DIR/installDir
   - wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
   - bzip2 -d openmpi-4.0.1.tar.bz2
-  - tar -xvf openmpi-4.0.1.tar
-  - cd openmpi-4.0.1/
-  - ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FC FC=$FC --enable-mpi1-compatibility 
-  - make -j8 
-  - make install  
+  - tar -xvf openmpi-4.0.1.tar &> build_mpi.log
+  - cd openmpi-4.0.1/ 
+  - cp $TRAVIS_BUILD_DIR/travis_build_openmpi.sh .
+  - cp $TRAVIS_BUILD_DIR/log_monitor.sh .
+  - bash travis_build_openmpi.sh  
+    #- make -j8 
+    #- make install  
   - sudo cp -r $TRAVIS_BUILD_DIR/installDir/openmpi-4.0.1/lib/* /usr/lib/x86_64-linux-gnu/.
   - export MPICC="$PWD/bin/mpicc"
   - export MPICXX="$PWD/bin/mpicxx"
@@ -110,7 +157,7 @@ before_install:
     -DCMAKE_Fortran_FLAGS="-fopenmp" \
     -DBLAS_LIBRARIES="$BLAS_LIB" \
     -DLAPACK_LIBRARIES="$LAPACK_LIB"
-  - make
+  - make -j8  &>build_scalapack.log
   - sudo cp $TRAVIS_BUILD_DIR/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
   - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
@@ -125,7 +172,7 @@ install:
   - export PYTHONWARNINGS=ignore
 
 
-  - env CC=$MPICC pip install -r requirements.txt
+  - env CC=$MPICC pip3.7 install -r requirements.txt &>build_gptune.log
 
   - mkdir -p build
   - cd build
@@ -145,7 +192,7 @@ install:
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
-  - make
+  - make &>>build_gptune.log
   - cp lib_gptuneclcm.so ../.
   - cp pdqrdriver ../
 
@@ -175,13 +222,13 @@ install:
     -DCMAKE_CXX_COMPILER=$MPICXX \
     -DCMAKE_C_COMPILER=$MPICC \
     -DCMAKE_Fortran_COMPILER=$MPIF90 \
-    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
     -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-  - make pddrive_spawn
+  - make pddrive_spawn &>>build_gptune.log
 
 
 
@@ -189,21 +236,20 @@ install:
   - rm -rf mpi4py
   - git clone https://github.com/mpi4py/mpi4py.git
   - cd mpi4py/
-  - python setup.py build --mpicc="$MPICC -shared"
-  - python setup.py install
-  - env CC=$MPICC pip install -e .
+  - python3.7 setup.py build --mpicc="$MPICC -shared" &>>build_gptune.log
+  - python3.7 setup.py install &>>build_gptune.log
 
   - cd ../
   - rm -rf scikit-optimize
   - git clone https://github.com/scikit-optimize/scikit-optimize.git
   - cd scikit-optimize/
-  - env CC=$MPICC pip install -e .
-
+  - env CC=$MPICC pip3.7 install -e .
+ 
   - cd ../
   - rm -rf autotune
   - git clone https://github.com/ytopt-team/autotune.git
   - cd autotune/
-  - env CC=$MPICC pip install -e .
+  - env CC=$MPICC pip3.7 install -e .
   - printf "${BLUE} GC; Done installing GPtune from source\n"
 
 
