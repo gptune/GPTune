@@ -240,15 +240,15 @@ def main_interactive():
     # giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
     # NI = len(giventask)
     # NS = nruns
-    # (data, model,stats) = gt.MLA(NS=NS, NI=NI, Tgiven =giventask, NS1 = max(NS//2,1))
+    # (data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
     # print("stats: ",stats)
 
     for tid in range(NI):
         print("tid: %d"%(tid))
-        print("    matrix:%s"%(data.T[tid][0]))
-        print("    Xs ", data.X[tid])
-        print("    Ys ", data.Y[tid])
-        print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
+        print("    matrix:%s"%(data.I[tid][0]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid])
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
     
     
     
@@ -260,7 +260,7 @@ def main_interactive():
 	
     for tid in range(len(newtask)):
         print("new task: %s"%(newtask[tid]))
-        print('    predicted Xopt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+        print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
 		
 
   

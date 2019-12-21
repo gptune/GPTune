@@ -55,50 +55,50 @@ class Categoricalnorm(Categorical):
         return 1
 
 class Data(object):
-	# To GPTune T is 2D numpy array. To user T is a list of lists
-	# To GPTune X is is list/collection of 2D numpy array. To user X is a list of (list of lists)
-	# To GPTune and user Y is is list/collection of 2D numpy array with column dimension 1 for single-objective function. 
-    def __init__(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, Y : Collection[np.ndarray] = None):
+	# To GPTune I is 2D numpy array. To user I is a list of lists
+	# To GPTune P is is list/collection of 2D numpy array. To user P is a list of (list of lists)
+	# To GPTune and user O is is list/collection of 2D numpy array with column dimension 1 for single-objective function. 
+    def __init__(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, O : Collection[np.ndarray] = None):
 
         self.problem = problem
 
-        if (not self.check_inputs(T)):
+        if (not self.check_inputs(I)):
             raise Exception("")
 
-        self.T = T
+        self.I = I
 
-        if (not self.check_parameters(X)):
+        if (not self.check_parameters(P)):
             raise Exception("")
 
-        self.X = X
+        self.P = P
 
-        if (not self.check_outputs(Y)):
+        if (not self.check_outputs(O)):
             raise Exception("")
 
-        self.Y = Y
+        self.O = O
 
     @property
     def NI(self):
 
-        if (self.T is None):
+        if (self.I is None):
             return 0
         else:
-            return len(self.T)
+            return len(self.I)
 
-    def check_inputs(self, T: np.ndarray) -> bool:
+    def check_inputs(self, I: np.ndarray) -> bool:
 
         cond = True
-        if (T is not None):
-            if (not (T.ndim == 2 and T.shape[1] == self.problem.DI)):
+        if (I is not None):
+            if (not (I.ndim == 2 and I.shape[1] == self.problem.DI)):
                 cond = False
 
         return cond
 
-    def check_parameters(self, X: Collection[np.ndarray]) -> bool:
+    def check_parameters(self, P: Collection[np.ndarray]) -> bool:
 
         cond = True
-        if (X is not None):
-            for x in X:
+        if (P is not None):
+            for x in P:
                 if (x is not None and len(x) > 0):
                     if not (x.ndim == 2 and x.shape[1] == problem.DP):
                         cond = False
@@ -106,13 +106,13 @@ class Data(object):
 
         return cond
 
-    def check_outputs(self, Y: Collection[np.ndarray]) -> bool:
+    def check_outputs(self, O: Collection[np.ndarray]) -> bool:
 
         cond = True
-        if (Y is not None):
-            for y in Y:
-                if (y is not None and len(y) > 0):
-                    if not (y.ndim == 2 and y.shape[1] == problem.DO):
+        if (O is not None):
+            for o in O:
+                if (o is not None and len(o) > 0):
+                    if not (o.ndim == 2 and o.shape[1] == problem.DO):
                         cond = False
                         break
 
@@ -121,7 +121,7 @@ class Data(object):
     # TODO
     def points2kwargs(self):
 
-        # transform the self.T and self.X into a list of dictionaries
+        # transform the self.I and self.P into a list of dictionaries
 
         pass
 
@@ -130,22 +130,22 @@ class Data(object):
 
         # merge the newdata with self, making sure that the Ts coincide
 
-        if (not np.array_equal(self.T, newdata.T)):
+        if (not np.array_equal(self.I, newdata.I)):
             raise Exception("The tasks in the newdata should be the same as the current tasks")
 
-        self.X = [np.concatenate((self.X[i], newdata.X[i])) for i in range(len(self.X))]
-        self.Y = [np.concatenate((self.Y[i], newdata.Y[i])) for i in range(len(self.Y))]
+        self.P = [np.concatenate((self.P[i], newdata.P[i])) for i in range(len(self.P))]
+        self.O = [np.concatenate((self.O[i], newdata.O[i])) for i in range(len(self.O))]
 
-#    def insert(T = None: np.ndarray, X = None : Collection[np.ndarray], Y = None : Collection[np.ndarray]):
+#    def insert(I = None: np.ndarray, P = None : Collection[np.ndarray], O = None : Collection[np.ndarray]):
 #
-#        if (T is not None):
-#            if (T.ndim == 1):
-#                assert(T.shape[0] == self.problem.DI)
-#            elif (T.ndim == 2):
-#                assert(T.shape[1] == self.problem.DI)
+#        if (I is not None):
+#            if (I.ndim == 1):
+#                assert(I.shape[0] == self.problem.DI)
+#            elif (I.ndim == 2):
+#                assert(I.shape[1] == self.problem.DI)
 #            else:
 #                raise Exception("")
-#            self.T.append(T)
+#            self.I.append(I)
 
 class HistoricData(Data):
 

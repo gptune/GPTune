@@ -83,20 +83,20 @@ class Sample(abc.ABC):
 
         return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
-    def sample_parameters(self, n_samples : int, T : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
+    def sample_parameters(self, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
-        X = []
-        for t in T:
+        P = []
+        for t in I:
             # print('before inverse_transform:',np.array(t, ndmin=2))
-            t_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
-            # t_orig = t
-            # print('before inverse_transform t_orig:',t_orig)			
-            kwargs2 = {d.name: t_orig[i] for (i, d) in enumerate(IS)}
+            I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+            # I_orig = t
+            # print('before inverse_transform I_orig:',I_orig)			
+            kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
-            X.append(xs)
+            P.append(xs)
 
-        return X
+        return P
 
 
 import lhsmdu

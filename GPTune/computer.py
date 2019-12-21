@@ -79,29 +79,29 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, T : np.ndarray = None, X : Collection[np.ndarray] = None, **kwargs):  # X and T are in the normalized space
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, **kwargs):  # P and I are in the normalized space
 
 #        kwargs['objective_evaluation_parallelism'])
 
-        Y = []
-        for i in range(len(T)):
-            t = T[i]
-            t_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
-            kwargst = {problem.IS[k].name: t_orig[k] for k in range(problem.DI)}
-            X2 = X[i]
-            Y2 = []
-            for j in range(len(X2)):
-                x = X2[j]
+        O = []
+        for i in range(len(I)):
+            t = I[i]
+            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
+            kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+            P2 = P[i]
+            O2 = []
+            for j in range(len(P2)):
+                x = P2[j]
                 x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 # print(kwargs)
                 kwargs.update(kwargst)
                 # print(kwargs)
-                y = problem.objective(kwargs)
-                Y2.append(y)
-            Y.append(np.array(Y2).reshape((len(Y2), problem.DO)))
+                o = problem.objective(kwargs)
+                O2.append(o)
+            O.append(np.array(O2).reshape((len(O2), problem.DO)))
 
-        return Y
+        return O
 
     def spawn(self, executable, nproc, nth, args=None, kwargs=None): 
 

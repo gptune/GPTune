@@ -70,7 +70,7 @@ class Model_GPy_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        multitask = len(data.T) > 1
+        multitask = len(data.I) > 1
 
         if (kwargs['model_latent'] is None):
             model_latent = data.NI
@@ -79,24 +79,24 @@ class Model_GPy_LCM(Model):
 
         if (kwargs['model_sparse'] and kwargs['model_inducing'] is None):
             if (multitask):
-                lenx = sum([len(X) for X in data.X])
+                lenx = sum([len(P) for P in data.P])
             else:
-                lenx = len(data.X)
+                lenx = len(data.P)
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = self.problem.DP, ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = self.problem.DP, num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
             if (kwargs['model_sparse']):
-                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K, num_inducing = model_inducing)
+                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
             else:
-                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.X, Y_list = data.Y, kernel = K)
+                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
         else:
             K = GPy.kern.RBF(input_dim = self.problem.DP, ARD=True, name='GPy_GP')
             if (kwargs['model_sparse']):
-                self.M = GPy.models.SparseGPRegression(data.X[0], data.Y[0], kernel = K, num_inducing = model_inducing)
+                self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
             else:
-                self.M = GPy.models.GPRegression(data.X[0], data.Y[0], kernel = K)
+                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
             
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
@@ -166,7 +166,7 @@ class Model_LCM(Model):
 					kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
 					if (restart_iter == 0 and self.M is not None):
 						kern.set_param_array(self.M.kern.get_param_array())
-					return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+					return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
 				res = list(executor.map(fun, restart_iters, timeout=None, chunksize=1))
 
 		else:
@@ -174,7 +174,7 @@ class Model_LCM(Model):
 				np.random.seed(restart_iter)
 				kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
 				# print('I am here')
-				return kern.train_kernel(X = data.X, Y = data.Y, computer = self.computer, kwargs = kwargs)
+				return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
 			res = list(map(fun, restart_iters))
 
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager == False): 
@@ -187,7 +187,7 @@ class Model_LCM(Model):
 
 		# YL: why sigma is enough to compute the likelihood, see https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html 			
 		likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
-		self.M = GPy.models.GPCoregionalizedRegression(data.X, data.Y, kern, likelihoods_list = likelihoods_list)
+		self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
 
 		return
 
@@ -210,13 +210,13 @@ class Model_DGP(Model):
 
     def train(self, data : Data, **kwargs):
 
-        multitask = len(self.T) > 1
+        multitask = len(self.I) > 1
 
         if (multitask):
-            X = np.array([np.concatenate((self.T[i], self.X[i][j])) for i in range(len(self.T)) for j in range(self.X[i].shape[0])])
+            X = np.array([np.concatenate((self.I[i], self.P[i][j])) for i in range(len(self.I)) for j in range(self.P[i].shape[0])])
         else:
-            X = self.X[0]
-        Y = np.array(list(itertools.chain.from_iterable(self.Y)))
+            X = self.P[0]
+        Y = np.array(list(itertools.chain.from_iterable(self.O)))
 
         #--------- Model Construction ----------#
         model_n_layers = 2
@@ -226,9 +226,9 @@ class Model_DGP(Model):
         # Number of inducing points to use
         if (num_inducing is None):
             if (multitask):
-                lenx = sum([len(X) for X in self.X])
+                lenx = sum([len(X) for X in self.P])
             else:
-                lenx = len(self.X)
+                lenx = len(self.P)
 #            num_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
             num_inducing = lenx
         # Whether to use back-constraint for variational posterior
@@ -264,7 +264,7 @@ class Model_DGP(Model):
 
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        (mu, var) = self.M.predict(np.concatenate((self.T[tid], x)).reshape((1, self.DT + self.DI)))
+        (mu, var) = self.M.predict(np.concatenate((self.I[tid], x)).reshape((1, self.DT + self.DI)))
 
         return (mu, var)
 

@@ -141,7 +141,7 @@ def main_interactive():
 		
     for tid in range(len(newtask)):
         print("new task: %s"%(newtask[tid]))
-        print('    predicted Xopt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+        print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
 		
 		
 		

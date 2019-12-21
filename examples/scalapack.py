@@ -204,7 +204,7 @@ def main_interactive():
     giventask = [[460,500],[800,690]]	
     NI = len(giventask)
     NS = nruns
-    (data, model,stats) = gt.MLA(NS=NS, NI=NI, Tgiven =giventask, NS1 = max(NS//2,1))
+    (data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
     print("stats: ",stats)
     
     pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'wb'))
@@ -215,10 +215,10 @@ def main_interactive():
 
     for tid in range(NI):
         print("tid: %d"%(tid))
-        print("    m:%d n:%d"%(data.T[tid][0], data.T[tid][1]))
-        print("    Xs ", data.X[tid])
-        print("    Ys ", data.Y[tid])
-        print('    Xopt ', data.X[tid][np.argmin(data.Y[tid])], 'Yopt ', min(data.Y[tid])[0])
+        print("    m:%d n:%d"%(data.I[tid][0], data.I[tid][1]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid])
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
 
     newtask = [[400,500],
                [800,600]]
@@ -227,7 +227,7 @@ def main_interactive():
 		
     for tid in range(len(newtask)):
         print("new task: %s"%(newtask[tid]))
-        print('    predicted Xopt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+        print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
 		
 		
 		

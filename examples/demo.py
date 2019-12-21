@@ -119,6 +119,6 @@ if __name__ == '__main__':
 	# print('demo before MLA')
 	(data, modeler,stats) = gt.MLA(NS = 20, NI = 1, NS1 = 10)
 	print("stats: ",stats)
-	print(data.Y)
-	print([(y[-1], min(y)[0], max(y)[0]) for y in data.Y])
+	print(data.O)
+	print([(y[-1], min(y)[0], max(y)[0]) for y in data.O])
 

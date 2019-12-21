@@ -84,7 +84,7 @@ class Search(abc.ABC):
 
 class SurrogateProblem(object):
 
-    def __init__(self, problem, computer, data, model, tid):   # data is in the normalized space, tOrig and XOrig are then generated in the original space
+    def __init__(self, problem, computer, data, model, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
 
         self.problem = problem
         self.computer = computer
@@ -93,12 +93,12 @@ class SurrogateProblem(object):
 
         self.tid = tid
 
-        # self.t     = self.data.T[tid]
+        # self.I     = self.data.I[tid]
 		
-        self.tOrig = self.problem.IS.inverse_transform(np.array(self.data.T[tid], ndmin=2))[0]
+        self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
 		
-        # self.XOrig = self.data.X[tid]
-        self.XOrig = self.problem.PS.inverse_transform(np.array(self.data.X[tid], ndmin=2))
+        # self.POrig = self.data.P[tid]
+        self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
 
     def get_bounds(self):
 
@@ -111,7 +111,7 @@ class SurrogateProblem(object):
 
         """ Expected Improvement """
 
-        ymin = self.data.Y[self.tid].min()
+        ymin = self.data.O[self.tid].min()
         (mu, var) = self.model.predict(x, tid=self.tid)
         mu = mu[0][0]
         var = max(1e-18, var[0][0])
@@ -126,10 +126,10 @@ class SurrogateProblem(object):
     def fitness(self, x):   # x is the normalized space
 
         xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
-        if (any(np.array_equal(xx, xi) for xx in self.XOrig)):
+        if (any(np.array_equal(xx, xi) for xx in self.POrig)):
             cond = False
         else:
-            point2 = {self.problem.IS[k].name: self.tOrig[k] for k in range(self.problem.DI)}
+            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
             point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
             point.update(point2)
             # print("point", point)
