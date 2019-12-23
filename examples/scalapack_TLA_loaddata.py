@@ -54,11 +54,11 @@ def objective(point):                  # should always use this name for user-de
 
     
 #        return np.random.rand(1)
-    if(nproc==0 or p==0 or nproc<p):
+    if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
         print('Warning: wrong parameters for objective function!!!')
         return 1e12
 
-    nth   = int((nodes * cores-1) / nproc) # YL: there are is one proc doing spawning
+    nth   = int(nprocmax / nproc) 
     q     = int(nproc / p)
 
 
@@ -86,7 +86,8 @@ def main_interactive():
     global nodes
     global cores
     global JOBID
-
+    global nprocmax
+    global nprocmin
     # Parse command line arguments
 
     parser = argparse.ArgumentParser()

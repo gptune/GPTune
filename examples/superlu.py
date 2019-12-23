@@ -55,7 +55,7 @@ def objective(point):                  # should always use this name for user-de
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 
-	NTH   = int((nodes * cores-2) / nproc) # YL: there are at least 2 cores working on other stuff
+	NTH   = int(nprocmax / nproc) 
 	npcols     = int(nproc / nprows)
 
 
@@ -125,6 +125,8 @@ def main_interactive():
     global nodes
     global cores
     global target
+    global nprocmax
+    global nprocmin
 
     # Parse command line arguments
 
@@ -171,7 +173,8 @@ def main_interactive():
 # Integer(lower, upper, transform="normalize", name="yourname")
 # Categoricalnorm(categories, transform="onehot", name="yourname")  	
 	
-	
+    nprocmax = nodes*cores-1
+    nprocmin = nodes
     matrices = ["big.rua", "g4.rua", "g20.rua"]
     # matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
     # matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
@@ -182,8 +185,8 @@ def main_interactive():
     # Input parameters
     COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
     LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-    nprows    = Integer     (1, nodes*cores, transform="normalize", name="nprows")
-    nproc     = Integer     (nodes, nodes*cores, transform="normalize", name="nproc")
+    nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
+    nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
     NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
     NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
     runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
@@ -193,13 +196,12 @@ def main_interactive():
     OS = Space([runtime])
 
 
-    cst1 = "%d * %d"%(nodes, cores) + ">= nproc+2"  # YL: there are at least 2 cores working on other stuff
-    cst2 = "NSUP >= NREL"
-    cst3 = "nproc >= nprows" # intrinsically implies "p <= nproc"
+    cst1 = "NSUP >= NREL"
+    cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 
 
 
-    constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
+    constraints = {"cst1" : cst1, "cst2" : cst2}
     models = {}
 
     print(IS, PS, OS, constraints, models)

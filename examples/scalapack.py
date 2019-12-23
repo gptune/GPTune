@@ -55,11 +55,11 @@ def objective(point):                  # should always use this name for user-de
 
     
 #        return np.random.rand(1)
-    if(nproc==0 or p==0 or nproc<p):
+    if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
         print('Warning: wrong parameters for objective function!!!')
         return 1e12
 
-    nth   = int((nodes * cores-1) / nproc) # YL: there are is one proc doing spawning
+    nth   = int(nprocmax / nproc) 
     q     = int(nproc / p)
 
 
@@ -87,7 +87,9 @@ def main_interactive():
     global nodes
     global cores
     global JOBID
-
+    global nprocmax
+    global nprocmin
+	
     # Parse command line arguments
 
     parser = argparse.ArgumentParser()
@@ -100,7 +102,7 @@ def main_interactive():
     parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
     parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
     # Algorithm related arguments
-    parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+    # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
@@ -117,7 +119,7 @@ def main_interactive():
     nodes = args.nodes
     cores = args.cores
     machine = args.machine
-    optimization = args.optimization
+    # optimization = args.optimization
     nruns = args.nruns
     truns = args.truns
     JOBID = args.jobid
@@ -139,14 +141,15 @@ def main_interactive():
 # Integer(lower, upper, transform="normalize", name="yourname")
 # Categoricalnorm(categories, transform="onehot", name="yourname")  	
 		
-	
+    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
+    nprocmin = nodes	
 	
     m     = Integer (128 , mmax, transform="normalize", name="m")
     n     = Integer (128 , nmax, transform="normalize", name="n")
     mb    = Integer (1 , 128, transform="normalize", name="mb")
     nb    = Integer (1 , 128, transform="normalize", name="nb")
-    nproc = Integer (nodes, nodes*cores-1, transform="normalize", name="nproc") # YL: there are is one proc doing spawning
-    p     = Integer (1 , nodes*cores, transform="normalize", name="p")
+    nproc = Integer (nprocmin, nprocmax, transform="normalize", name="nproc") 
+    p     = Integer (1 , nprocmax, transform="normalize", name="p")
     r     = Real    (float("-Inf") , float("Inf"), name="r")
 
     IS = Space([m, n])

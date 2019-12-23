@@ -77,6 +77,12 @@ class GPTune(object):
 		  "time_fun": 0
 		}
 		time_fun=0
+				
+		np.set_printoptions(suppress=False,precision=4)
+		
+		if (self.data.P is not None and len(self.data.P[0])>=NS):
+			print('self.data.P[0])>=NS, no need to run MLA. Returning...')
+			return (copy.deepcopy(self.data), None,stats)	
 		
 		t3 = time.time_ns()
 		
@@ -93,16 +99,14 @@ class GPTune(object):
 ########## normalize the data as the user always work in the original space
 
 		if self.data.I is not None: # from a list of lists to a 2D numpy array
-			self.data.I = self.problem.IS.transform(np.array(self.data.I, ndmin=2))
+			self.data.I = self.problem.IS.transform(self.data.I)
 
 		if self.data.P is not None:	# from a list of (list of lists) to a list of 2D numpy arrays		
 			tmp=[]
 			for x in self.data.P:		
-				xNorm = self.problem.PS.transform(np.array(x, ndmin=2))[0]
-				tmp.append(xNorm)		
-			self.data.P=tmp		
-
-		
+				xNorm = self.problem.PS.transform(x)
+				tmp.append(xNorm)
+			self.data.P=tmp				
 		
 #        if (self.mpi_rank == 0):
 
@@ -115,8 +119,14 @@ class GPTune(object):
 			check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
 			self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
 			# print("riji",type(self.data.I),type(self.data.I[0]))
+		
+		if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
+			raise Exception("len(self.data.P) !=len(self.data.I)")		
+		
 		if (self.data.P is None):
-
+			if (NS1 is not None and NS1>NS):
+				raise Exception("NS1>NS")
+				
 			if (NS1 is None):
 				NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
 
@@ -127,6 +137,10 @@ class GPTune(object):
 #                for x in P2:
 #                    x = np.concatenate(x, np.array([m(x) for m in self.problems.models]))
 		# print("good?")
+		
+		if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
+			raise Exception("len(self.data.O) !=len(self.data.I)")
+		
 		t1 = time.time_ns()
 		if (self.data.O is None):
 			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, kwargs = kwargs) 
@@ -148,6 +162,7 @@ class GPTune(object):
 			# print("riji",type(self.data.I),type(self.data.I[0]))
 			newdata = Data(problem = self.problem, I = self.data.I)
 			# print("before train",optiter,NS2)
+		
 			modeler.train(data = self.data, **kwargs)
 			# print("after train",self.data.P,'d',newdata.P) 
 			# print("after train",self.data.O,'d',newdata.O) 
@@ -171,22 +186,22 @@ class GPTune(object):
 	#                newdata.O = mpi_comm.bcast(None, root=0)
 
 			self.data.merge(newdata)
-			
-				
+		
+		
 ########## denormalize the data as the user always work in the original space
 		if self.data.I is not None:    # from 2D numpy array to a list of lists    
-			self.data.I = self.problem.IS.inverse_transform(np.array(self.data.I, ndmin=2))
+			self.data.I = self.problem.IS.inverse_transform(self.data.I)
 		if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)       
 			tmp=[]
 			for x in self.data.P:		
-				xOrig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+				xOrig = self.problem.PS.inverse_transform(x)
 				tmp.append(xOrig)		
 			self.data.P=tmp		
 			
 		t4 = time.time_ns()
 		stats['time_tunner'] = (t4-t3)/1e9		
 		stats['time_fun'] = time_fun			
-
+		
 		
 		return (copy.deepcopy(self.data), modeler,stats)
 
