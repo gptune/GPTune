@@ -21,7 +21,7 @@ FTN=mpif90
 cd examples
 mpirun -n 1  python ./demo.py
 
-mpirun -n 1  python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine cori -jobid 0
+mpirun -n 1  python ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine cori -jobid 0
 
 mpirun -n 1  python ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine cori -jobid 0
 

@@ -256,5 +256,8 @@ install:
 script:
   - cd $TRAVIS_BUILD_DIR/examples
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./demo.py
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 10 -nrun 20 -machine travis -jobid 0
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 

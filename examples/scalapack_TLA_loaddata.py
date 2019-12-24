@@ -43,146 +43,90 @@ from pdqrdriver import pdqrdriver
 ################################################################################
 
 
-# def myobjfun(m, n, mb, nb, nproc, p):
+''' The objective function required by GPTune. '''
 def objective(point):                  # should always use this name for user-defined objective function
-    m = point['m']
-    n = point['n']
-    mb = point['mb']
-    nb = point['nb']
-    nproc = point['nproc']
-    p = point['p']
+	m = point['m']
+	n = point['n']
+	mb = point['mb']
+	nb = point['nb']
+	nproc = point['nproc']
+	p = point['p']
+	if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
+		print('Warning: wrong parameters for objective function!!!')
+		return 1e12
 
-    
-#        return np.random.rand(1)
-    if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
-        print('Warning: wrong parameters for objective function!!!')
-        return 1e12
+	nth   = int(nprocmax / nproc) 
+	q     = int(nproc / p)
+	params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
+	elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
+	print(params, ' scalapack time: ', elapsedtime)
+	return elapsedtime 
 
-    nth   = int(nprocmax / nproc) 
-    q     = int(nproc / p)
+	
+def main():
 
+	global ROOTDIR
+	global nodes
+	global cores
+	global JOBID
+	global nprocmax
+	global nprocmin
 
-# [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nth", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
-    params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
-    # print(params,' in myobjfun')
+	# Parse command line arguments
+	args   = parse_args()
 
-    repeat = True
-#        while (repeat):
-#            try:
-    elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
-    # elapsedtime = 1.0
-    repeat = False
-#            except:
-#                print("Error in call to ScaLAPACK with parameters ", params)
-#                pass
+	mmax = args.mmax
+	nmax = args.nmax
+	ntask = args.ntask
+	nodes = args.nodes
+	cores = args.cores
+	machine = args.machine
+	# optimization = args.optimization
+	nruns = args.nruns
+	truns = args.truns
+	JOBID = args.jobid
+	os.environ['MACHINE_NAME']=machine
+	os.environ['TUNER_NAME']='GPTune'
+	os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
 
-    print(params, ' scalapack time: ', elapsedtime)
-
-    return elapsedtime 
-
-def main_interactive():
-
-    global ROOTDIR
-    global nodes
-    global cores
-    global JOBID
-    global nprocmax
-    global nprocmin
-    # Parse command line arguments
-
-    parser = argparse.ArgumentParser()
-
-    # Problem related arguments
-    parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-    parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
-    # Machine related arguments
-    parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-    parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
-    # Algorithm related arguments
-    # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
-    parser.add_argument('-truns', type=int, help='Time of runs')
-    # Experiment related arguments
-    parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
-
-    args   = parser.parse_args()
-
-    # Extract arguments
-
-    mmax = args.mmax
-    nmax = args.nmax
-    ntask = args.ntask
-    nodes = args.nodes
-    cores = args.cores
-    machine = args.machine
-    # optimization = args.optimization
-    nruns = args.nruns
-    truns = args.truns
-    JOBID = args.jobid
-    
-    
-    
-    os.environ['MACHINE_NAME']=machine
-    os.environ['TUNER_NAME']='GPTune'
-    # print(os.environ)
-
-
-
-    os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
-
-
-    gt = pickle.load(open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
+	""" Load the tuner and data from file """
+	gt = pickle.load(open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
 	 
-    newtask = [[400,500],
-               [800,600]]
-    (aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
-    print("stats: ",stats)
+	""" Call TLA for 2 new tasks using the loaded data and LCM model"""		 
+	newtask = [[400,500],[800,600]]
+	(aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
+	print("stats: ",stats)
 		
-    for tid in range(len(newtask)):
-        print("new task: %s"%(newtask[tid]))
-        print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
-		
+	""" Print the optimal parameters and function evaluations"""		
+	for tid in range(len(newtask)):
+		print("new task: %s"%(newtask[tid]))
+		print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
 		
 		
 def parse_args():
 
-    # Parse command line arguments
+	parser = argparse.ArgumentParser()
 
-    parser = argparse.ArgumentParser()
+	# Problem related arguments
+	parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
+	parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
+	# Machine related arguments
+	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
+	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
+	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
+	# Algorithm related arguments
+	parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
+	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-truns', type=int, help='Time of runs')
+	# Experiment related arguments
+	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
+	parser.add_argument('-stepid', type=int, default=-1, help='step ID')
+	parser.add_argument('-phase', type=int, default=0, help='phase')
 
-    # Problem related arguments
-    parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-    parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
-    # Machine related arguments
-    parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-    parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
-    # Algorithm related arguments
-    parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
-    parser.add_argument('-truns', type=int, help='Time of runs')
-    # Experiment related arguments
-    parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
-    parser.add_argument('-stepid', type=int, default=-1, help='step ID')
-    parser.add_argument('-phase', type=int, default=0, help='phase')
+	args   = parser.parse_args()
 
-    args   = parser.parse_args()
-
-    # Extract arguments
-
-    return (args.mmax, args.nmax, args.ntask, args.nodes, args.cores, args.machine, args.optimization, args.nruns, args.truns, args.jobid, args.stepid, args.phase)
+	return args
 
 if __name__ == "__main__":
-
-#    os.environ['MACHINE_NAME']='cori'
-#    os.environ['TUNER_NAME']='GPTune'
-#    print(os.environ)
-#    MACHINE_NAME = os.environ['MACHINE_NAME']
-#   TUNER_NAME = os.environ['TUNER_NAME']  
-
- 
-   main_interactive()
-
+	main()

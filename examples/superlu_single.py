@@ -38,8 +38,6 @@ from autotune.search import *
 
 
 ################################################################################
-
-
 def objective(point):                  # should always use this name for user-defined objective function
     
 	matrix = point['matrix']
@@ -49,21 +47,14 @@ def objective(point):                  # should always use this name for user-de
 	nproc = point['nproc']
 	NSUP = point['NSUP']
 	NREL = point['NREL']
-
 	NTH   = int(nprocmax / nproc) 
 	npcols     = int(nproc / nprows)
-
-
 	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'NTH', NTH, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
-  
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
 	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
-    
-	# outputfilename = os.path.abspath("/global/homes/l/liuyangz/Cori/my_research/github/superlu_dist_master_gptune_11_22_2019/exp/%s/superlu_%s_%s_%s_%s_%s_%s_%s_%s.out"%(TUNER_NAME,matrix,COLPERM,LOOKAHEAD,NTH,nprows,npcols,NSUP,NREL))
-    
 	nproc     = int(nprows * npcols)
-    
+
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
 	envstr= 'OMP_NUM_THREADS=%d\n' %(NTH)   
@@ -71,18 +62,10 @@ def objective(point):                  # should always use this name for user-de
 	envstr+= 'NSUP=%d\n' %(NSUP)   
 	info.Set('env',envstr)
 
-	# info.Set('env', 'OMP_PLACES=threads\n')
-	# info.Set('env', 'OMP_PROC_BIND=OMP_PROC_BIND\n')
-    
-    # info.Set("add-hostfile", "myhostfile.txt")
-    # info.Set("host", "myhostfile.txt")
-    
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	
 	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(NTH), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
-
 	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
-	# (tmpdata) = comm.recv(source=0)	
+
 	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
 	tmpdata = array('f', [0,0])
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
@@ -91,178 +74,170 @@ def objective(point):                  # should always use this name for user-de
 	if(target=='time'):	
 		retval = tmpdata[0]
 		print(params, ' superlu time: ', retval)
- 
+
 	if(target=='memory'):	
 		retval = tmpdata[1]
 		print(params, ' superlu memory: ', retval)
-	
-	
 
 	return retval 
-
 	
 	
 def main():
 
-    global ROOTDIR
-    global nodes
-    global cores
-    global target
-    global nprocmax
-    global nprocmin
+	global ROOTDIR
+	global nodes
+	global cores
+	global target
+	global nprocmax
+	global nprocmin
 
-    # Parse command line arguments
+	# Parse command line arguments
 
-    parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser()
 
-    # Problem related arguments
-    # parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-    # parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
-    # Machine related arguments
-    parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-    parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
-    # Algorithm related arguments
-    parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
-    parser.add_argument('-truns', type=int, help='Time of runs')
-    # Experiment related arguments
-    parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
+	# Problem related arguments
+	# parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
+	# parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
+	# Machine related arguments
+	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
+	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
+	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
+	# Algorithm related arguments
+	parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
+	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-truns', type=int, help='Time of runs')
+	# Experiment related arguments
+	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
 
-    args   = parser.parse_args()
+	args   = parser.parse_args()
 
-    # Extract arguments
+	# Extract arguments
 
-    # mmax = args.mmax
-    # nmax = args.nmax
-    ntask = args.ntask
-    nodes = args.nodes
-    cores = args.cores
-    machine = args.machine
-    optimization = args.optimization
-    nruns = args.nruns
-    truns = args.truns
-    # JOBID = args.jobid
-    
-    
-    os.environ['MACHINE_NAME']=machine
-    os.environ['TUNER_NAME']='GPTune'
-    TUNER_NAME = os.environ['TUNER_NAME']
- 
+	# mmax = args.mmax
+	# nmax = args.nmax
+	ntask = args.ntask
+	nodes = args.nodes
+	cores = args.cores
+	machine = args.machine
+	optimization = args.optimization
+	nruns = args.nruns
+	truns = args.truns
+	# JOBID = args.jobid
 
-    nprocmax = nodes*cores-1
-    nprocmin = nodes
-    # matrices = ["big.rua", "g4.rua", "g20.rua"]
-    matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
-    # matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
 
-    # Task parameters
-    matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
+	os.environ['MACHINE_NAME']=machine
+	os.environ['TUNER_NAME']='GPTune'
+	TUNER_NAME = os.environ['TUNER_NAME']
 
-    # Input parameters
-    COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
-    LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-    nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-    nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
-    NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
-    NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-    runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
-    IS = Space([matrix])
-    PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-    OS = Space([runtime])
-    cst1 = "NSUP >= NREL"
-    cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
-    constraints = {"cst1" : cst1, "cst2" : cst2}
-    models = {}
 
-    """ Print all input and parameter samples """	
-    print(IS, PS, OS, constraints, models)
+	nprocmax = nodes*cores-1
+	nprocmin = nodes
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
+	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
 
-	
-	
-    # target='memory'
-    target='time'
-	
-	
-    problem = TuningProblem(IS, PS, OS, objective, constraints, None)
-    computer = Computer(nodes = nodes, cores = cores, hosts = None)  
+	# Task parameters
+	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 
-    """ Set and validate options """	
-    options = Options()
-    # options['model_processes'] = 1
-    # options['model_threads'] = 1
-    options['model_restarts'] = 1
-    # options['search_multitask_processes'] = 1
-    # options['model_restart_processes'] = 1
-    options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = True
-    options['model_class '] = 'Model_LCM'
-    options['verbose'] = False
-	
-    options.validate(computer = computer)
-    
-	
-    """ Intialize the tuner with existing data"""		
-    data = Data(problem)
-    gt = GPTune(problem, computer = computer, data = data, options = options)
+	# Input parameters
+	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
+	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
+	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
+	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
+	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
+	runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
+	IS = Space([matrix])
+	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
+	OS = Space([runtime])
+	cst1 = "NSUP >= NREL"
+	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
+	constraints = {"cst1" : cst1, "cst2" : cst2}
+	models = {}
 
- 
+	""" Print all input and parameter samples """	
+	print(IS, PS, OS, constraints, models)
 
-    # """ Building MLA with NI random tasks """
-    # NI = ntask
-    # NS = nruns
-    # (data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
-    # print("stats: ",stats)
-	
-    """ Building MLA with the given list of tasks """	
-    giventask = [["Si2.rb"]]	
-    NI = len(giventask)
-    NS = nruns
-    (data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
-    print("stats: ",stats)
 
-	
-    """ Print all input and parameter samples """	
-    for tid in range(NI):
-        print("tid: %d"%(tid))
-        print("    matrix:%s"%(data.I[tid][0]))
-        print("    Ps ", data.P[tid])
-        print("    Os ", data.O[tid])
-        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
-    
+
+	# target='memory'
+	target='time'
+
+
+	problem = TuningProblem(IS, PS, OS, objective, constraints, None)
+	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
+
+	""" Set and validate options """	
+	options = Options()
+	# options['model_processes'] = 1
+	# options['model_threads'] = 1
+	options['model_restarts'] = 1
+	# options['search_multitask_processes'] = 1
+	# options['model_restart_processes'] = 1
+	options['distributed_memory_parallelism'] = False
+	options['shared_memory_parallelism'] = True
+	options['model_class '] = 'Model_LCM'
+	options['verbose'] = False
+
+	options.validate(computer = computer)
+
+
+	""" Intialize the tuner with existing data"""		
+	data = Data(problem)
+	gt = GPTune(problem, computer = computer, data = data, options = options)
+
+
+
+	# """ Building MLA with NI random tasks """
+	# NI = ntask
+	# NS = nruns
+	# (data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
+	# print("stats: ",stats)
+
+	""" Building MLA with the given list of tasks """	
+	giventask = [["Si2.rb"]]	
+	NI = len(giventask)
+	NS = nruns
+	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
+	print("stats: ",stats)
+
+
+	""" Print all input and parameter samples """	
+	for tid in range(NI):
+		print("tid: %d"%(tid))
+		print("    matrix:%s"%(data.I[tid][0]))
+		print("    Ps ", data.P[tid])
+		print("    Os ", data.O[tid])
+		print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
+
 
 
 def parse_args():
 
-    # Parse command line arguments
+	parser = argparse.ArgumentParser()
 
-    parser = argparse.ArgumentParser()
+	# Problem related arguments
+	parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
+	parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
+	# Machine related arguments
+	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
+	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
+	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
+	# Algorithm related arguments
+	parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
+	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-truns', type=int, help='Time of runs')
+	# Experiment related arguments
+	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
+	parser.add_argument('-stepid', type=int, default=-1, help='step ID')
+	parser.add_argument('-phase', type=int, default=0, help='phase')
 
-    # Problem related arguments
-    parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-    parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
-    # Machine related arguments
-    parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-    parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
-    # Algorithm related arguments
-    parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
-    parser.add_argument('-truns', type=int, help='Time of runs')
-    # Experiment related arguments
-    parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
-    parser.add_argument('-stepid', type=int, default=-1, help='step ID')
-    parser.add_argument('-phase', type=int, default=0, help='phase')
-
-    args   = parser.parse_args()
-
-    # Extract arguments
-
-    return (args.mmax, args.nmax, args.ntask, args.nodes, args.cores, args.machine, args.optimization, args.nruns, args.truns, args.jobid, args.stepid, args.phase)
+	args   = parser.parse_args()
+	return args
 
 
 if __name__ == "__main__":
  
-   main()
+	main()

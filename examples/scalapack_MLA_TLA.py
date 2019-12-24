@@ -41,9 +41,8 @@ from pdqrdriver import pdqrdriver
 
 
 ################################################################################
-
-''' The objective function required by GPTune. '''	
-def objective(point):                  
+''' The objective function required by GPTune. '''
+def objective(point):                  # should always use this name for user-defined objective function
 	m = point['m']
 	n = point['n']
 	mb = point['mb']
@@ -54,8 +53,10 @@ def objective(point):
 	if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
 		print('Warning: wrong parameters for objective function!!!')
 		return 1e12
+
 	nth   = int(nprocmax / nproc) 
 	q     = int(nproc / p)
+
 	params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
 	elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
 	print(params, ' scalapack time: ', elapsedtime)
@@ -108,10 +109,11 @@ def main():
 	constraints = {"cst1" : cst1, "cst2" : cst2, "cst3" : cst3}
 	print(IS, PS, OS, constraints)
 
+
+
 	problem = TuningProblem(IS, PS, OS, objective, constraints, None)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
-
-	""" Set and validate options """	
+	""" Set and validate options """
 	options = Options()
 	# options['model_processes'] = 1
 	# options['model_threads'] = 1
@@ -119,34 +121,32 @@ def main():
 	# options['search_multitask_processes'] = 1
 	# options['model_restart_processes'] = 1
 	# options['model_restart_threads'] = 1
-	options['distributed_memory_parallelism'] = False
+	options['distributed_memory_parallelism'] = True
 	options['shared_memory_parallelism'] = False
 	# options['mpi_comm'] = None
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
-	options.validate(computer = computer)
 
-	""" Intialize the tuner with existing data stored as last check point"""	
-	try:
-		data = pickle.load(open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
-	except (OSError, IOError) as e:
-		data = Data(problem)
+	options.validate(computer = computer)
+	data = Data(problem)
 	gt = GPTune(problem, computer = computer, data = data, options = options)
 
-	""" Building MLA with NI random tasks """
-	NI = ntask
+
+	# """ Building MLA with NI random tasks """
+	# NI = ntask
+	# NS = nruns
+	# (data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
+	# print("stats: ",stats)
+
+	""" Building MLA with the given list of tasks """	
+	giventask = [[460,500],[800,690]]	
+	NI = len(giventask)
 	NS = nruns
-	(data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
+	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
 	print("stats: ",stats)
+	pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'wb'))
 
-	""" Dump the data to file as a new check point """
-	pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'wb'))
-
-	""" Dump the tuner to file for TLA use """
-	pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'wb'))	
-	
-
-	""" Print all input and parameter samples """											  
+	""" Print all input and parameter samples """
 	for tid in range(NI):
 		print("tid: %d"%(tid))
 		print("    m:%d n:%d"%(data.I[tid][0], data.I[tid][1]))
@@ -154,7 +154,16 @@ def main():
 		print("    Os ", data.O[tid])
 		print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
 
-
+	""" Call TLA for 2 new tasks using the constructed LCM model"""								 
+	newtask = [[400,500],[800,600]]
+	(aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
+	print("stats: ",stats)
+		
+	""" Print the optimal parameters and function evaluations"""			
+	for tid in range(len(newtask)):
+		print("new task: %s"%(newtask[tid]))
+		print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+		
 def parse_args():
 
 	parser = argparse.ArgumentParser()
@@ -181,5 +190,5 @@ def parse_args():
 	return args
 
 if __name__ == "__main__":
-   main()
+	main()
  

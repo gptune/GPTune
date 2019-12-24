@@ -110,14 +110,3 @@ rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 pip install --user -e .
- 
-
-cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
-
-cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine tr4 -jobid 0
-
-
-cd ../examples
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4 

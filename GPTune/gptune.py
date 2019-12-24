@@ -53,22 +53,6 @@ class GPTune(object):
 			options = Options()
 		self.options  = options
 
-		if (self.options['distributed_memory_parallelism']\
-			and\
-			('mpi4py' in sys.modules)): # make sure that the mpi4py has been loaded successfully
-		#            if ('mpi_comm' in kwargs):
-		#                self.mpi_comm = kwargs['mpi_comm']
-			if (options['mpi_comm'] is not None):
-				self.mpi_comm = options['mpi_comm']
-			else:
-				self.mpi_comm = mpi4py.MPI.COMM_WORLD
-		#            self.mpi_rank = self.mpi_comm.Get_rank()
-		#            self.mpi_size = self.mpi_comm.Get_size()
-		else: # fall back to sequential tuning (MPI wise, but still multithreaded)
-			self.mpi_comm = None
-		#            self.mpi_rank = 0
-		#            self.mpi_size = 1
-
 	def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
 		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
@@ -88,7 +72,6 @@ class GPTune(object):
 		
 		options1 = copy.deepcopy(self.options)
 		kwargs.update(options1)
-		kwargs.update({'mpi_comm' : self.mpi_comm})
 
 		""" Multi-task Learning Autotuning """
 
