@@ -37,9 +37,6 @@ from autotune.space import *
 from autotune.search import *
 
 
-# sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
-# from pdqrdriver import pdqrdriver
-
 ################################################################################
 
 
@@ -48,10 +45,8 @@ def objective(point):                  # should always use this name for user-de
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
-	# NTH = point['NTH']
 	nprows = point['nprows']
 	nproc = point['nproc']
-	# npcols = point['npcols']
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 
@@ -69,28 +64,28 @@ def objective(point):                  # should always use this name for user-de
     
 	nproc     = int(nprows * npcols)
     
+	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
 	envstr= 'OMP_NUM_THREADS=%d\n' %(NTH)   
 	envstr+= 'NREL=%d\n' %(NREL)   
 	envstr+= 'NSUP=%d\n' %(NSUP)   
 	info.Set('env',envstr)
 
-	#info.Set('env', 'NTH=%d' %(NTH))
-	#info.Set('env', 'NSUP=%d' %(NSUP))
-	#info.Set('env', 'NREL=%d' %(NREL))
 	# info.Set('env', 'OMP_PLACES=threads\n')
 	# info.Set('env', 'OMP_PROC_BIND=OMP_PROC_BIND\n')
     
     # info.Set("add-hostfile", "myhostfile.txt")
     # info.Set("host", "myhostfile.txt")
     
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(NTH), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-	# comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args="-c %s -r %s -l %s -p %s %s/%s"%(npcols,nprows,LOOKAHEAD,COLPERM,INPUTDIR,matrix), maxprocs=nproc,info=info)
+	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
+	
+	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(NTH), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
+
 	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 	# (tmpdata) = comm.recv(source=0)	
+	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
 	tmpdata = array('f', [0,0])
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	# print(tmpdata,'got it')
 	comm.Disconnect()	
 
 	if(target=='time'):	
@@ -100,18 +95,6 @@ def objective(point):                  # should always use this name for user-de
 	if(target=='memory'):	
 		retval = tmpdata[1]
 		print(params, ' superlu memory: ', retval)
-
-
-
-	# retval = float(1e3)
-	# f = open(outputfilename, 'r')
-	# for line in f.readlines():
-	# 	s = line.split()
-	# 	if (len(s) >= 3 and s[0] == "FACTOR" and s[1] == "time"):
-	# 		retval = float(s[2])
-	# 		break
-
-	# print(matrix, COLPERM, LOOKAHEAD, NTH, nprows, npcols, NSUP, NREL, elapsedtime)
 	
 	
 
@@ -119,7 +102,7 @@ def objective(point):                  # should always use this name for user-de
 
 	
 	
-def main_interactive():
+def main():
 
     global ROOTDIR
     global nodes
@@ -167,12 +150,6 @@ def main_interactive():
     os.environ['TUNER_NAME']='GPTune'
     TUNER_NAME = os.environ['TUNER_NAME']
  
-
-# YL: for the spaces, the following datatypes are supported: 
-# Real(lower, upper, transform="normalize", name="yourname")
-# Integer(lower, upper, transform="normalize", name="yourname")
-# Categoricalnorm(categories, transform="onehot", name="yourname")  	
-	
     nprocmax = nodes*cores-1
     nprocmin = nodes
     matrices = ["big.rua", "g4.rua", "g20.rua"]
@@ -190,20 +167,15 @@ def main_interactive():
     NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
     NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
     runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
-	
     IS = Space([matrix])
     PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
     OS = Space([runtime])
-
-
     cst1 = "NSUP >= NREL"
     cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
-
-
-
     constraints = {"cst1" : cst1, "cst2" : cst2}
     models = {}
 
+    """ Print all input and parameter samples """	
     print(IS, PS, OS, constraints, models)
 
 	
@@ -215,6 +187,7 @@ def main_interactive():
     problem = TuningProblem(IS, PS, OS, objective, constraints, None)
     computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
+    """ Set and validate options """	
     options = Options()
     # options['model_processes'] = 1
     # options['model_threads'] = 1
@@ -227,6 +200,9 @@ def main_interactive():
     options['verbose'] = False
 	
     options.validate(computer = computer)
+    
+	
+    """ Intialize the tuner with existing data"""		
     data = Data(problem)
     gt = GPTune(problem, computer = computer, data = data, options = options)
 
@@ -245,6 +221,8 @@ def main_interactive():
     # (data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
     # print("stats: ",stats)
 
+	
+    """ Print all input and parameter samples """	
     for tid in range(NI):
         print("tid: %d"%(tid))
         print("    matrix:%s"%(data.I[tid][0]))
@@ -254,12 +232,13 @@ def main_interactive():
     
     
     
-    
+    """ Call TLA for a new task using the constructed LCM model"""    
     newtask = [["big.rua"],["g4.rua"]]
     # newtask = [["H2O.rb"]]
     (aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
     print("stats: ",stats)
 	
+    """ Print the optimal parameters and function evaluations"""	
     for tid in range(len(newtask)):
         print("new task: %s"%(newtask[tid]))
         print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
@@ -299,4 +278,4 @@ def parse_args():
 
 if __name__ == "__main__":
  
-   main_interactive()
+   main()
