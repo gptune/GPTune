@@ -88,7 +88,9 @@ def main():
 	os.environ['MACHINE_NAME']=machine
 	os.environ['TUNER_NAME']='GPTune'
 	os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
-
+	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
+	
+	
 	""" Load the tuner and data from file """
 	gt = pickle.load(open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
 	 
