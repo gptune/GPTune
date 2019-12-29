@@ -218,7 +218,7 @@ class GPTune(object):
 		ntso = len(self.data.I)
 		ntsn = len(Tnew)
 
-		if(self.data.O[0].shape[0]>1):
+		if(self.data.O[0].shape[1]>1):
 			raise Exception("TLA1 only works for single-objective tuning")
 		
 		PSopt =[]
