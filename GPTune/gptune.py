@@ -57,10 +57,14 @@ class GPTune(object):
 
 		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
 		stats = {
-		  "time_tunner": 0,
-		  "time_fun": 0
+		  "time_total": 0,
+		  "time_fun": 0,
+		  "time_search": 0,
+		  "time_model": 0
 		}
 		time_fun=0
+		time_search=0
+		time_model=0
 				
 		np.set_printoptions(suppress=False,precision=4)
 		
@@ -136,22 +140,29 @@ class GPTune(object):
 #        else:
 #
 #            self.data = mpi_comm.bcast(None, root=0)
-
-		NS2 = NS - len(self.data.P[0])
 		# mpi4py.MPI.COMM_WORLD.Barrier()
-		modeler  = eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')
+		modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 		searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
-		for optiter in range(NS2): # YL: each iteration adds one sample until total #sample reaches NS
+		optiter = 0
+		while len(self.data.P[0])<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_best_N"] (if multi-objective) sample until total #sample reaches NS
+		# for optiter in range(NS - len(self.data.P[0])): 
 			# print("riji",type(self.data.I),type(self.data.I[0]))
 			newdata = Data(problem = self.problem, I = self.data.I)
-			# print("before train",optiter,NS2)
+			print("MLA iteration: ",optiter)
+			optiter = optiter + 1
+			t1 = time.time_ns()
+			for o in range(self.problem.DO):
+				tmpdata = copy.deepcopy(self.data)
+				tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]	
+				modelers[o].train(data = tmpdata, **kwargs)
+			t2 = time.time_ns()
+			time_model = time_model + (t2-t1)/1e9
 		
-			modeler.train(data = self.data, **kwargs)
-			# print("after train",self.data.P,'d',newdata.P) 
-			# print("after train",self.data.O,'d',newdata.O) 
-			# print("after train",self.data.I,'d',newdata.I) 
-			res = searcher.search_multitask(data = self.data, model = modeler, **kwargs)
+			t1 = time.time_ns()
+			res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
 			newdata.P = [x[1][0] for x in res]
+			t2 = time.time_ns()
+			time_search = time_search + (t2-t1)/1e9			
 	#XXX add the info of problem.models here
 
 	#            if (self.mpi_rank == 0):
@@ -182,11 +193,13 @@ class GPTune(object):
 			self.data.P=tmp		
 			
 		t4 = time.time_ns()
-		stats['time_tunner'] = (t4-t3)/1e9		
+		stats['time_total'] = (t4-t3)/1e9		
 		stats['time_fun'] = time_fun			
+		stats['time_model'] = time_model			
+		stats['time_search'] = time_search			
 		
 		
-		return (copy.deepcopy(self.data), modeler,stats)
+		return (copy.deepcopy(self.data), modelers,stats)
 
 		
 	def TLA1(self, Tnew, nruns):
@@ -194,7 +207,7 @@ class GPTune(object):
 		print('\n\n\n------Starting TLA1 for task: ',Tnew)
 
 		stats = {
-		  "time_tunner": 0,
+		  "time_total": 0,
 		  "time_fun": 0
 		}
 		time_fun=0
@@ -205,6 +218,9 @@ class GPTune(object):
 		ntso = len(self.data.I)
 		ntsn = len(Tnew)
 
+		if(self.data.O[0].shape[0]>1):
+			raise Exception("TLA1 only works for single-objective tuning")
+		
 		PSopt =[]
 		for i in range(ntso):
 			PSopt.append(self.data.P[i][np.argmin(self.data.O[i])])	
@@ -258,12 +274,6 @@ class GPTune(object):
 		# print('aprxopts',aprxopts,type(aprxopts),type(aprxopts[0]))
 		
   
-
-
-
-
-
-
 		aprxoptsNormList=[]
 		# TnewNormList=[]
 		for i in range(ntsn):
@@ -279,7 +289,7 @@ class GPTune(object):
 		#        pickle.dump(aprxopts, open('TLA1.pkl', 'w'))
 
 		t4 = time.time_ns()
-		stats['time_tunner'] = (t4-t3)/1e9		
+		stats['time_total'] = (t4-t3)/1e9		
 		stats['time_fun'] = time_fun		
 		
 		return (aprxopts,O,stats)

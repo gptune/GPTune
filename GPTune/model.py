@@ -180,7 +180,6 @@ class Model_LCM(Model):
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager == False): 
 			return res
 		
-		# print("zenhui",self.problem.DP,data.NI,Q)
 		kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
 		bestxopt = min(res, key = lambda x: x[1])[0]
 		kern.set_param_array(bestxopt)

@@ -99,7 +99,8 @@ class Computer(object):
                 # print(kwargs)
                 o = problem.objective(kwargs)
                 O2.append(o)
-            O.append(np.array(O2).reshape((len(O2), problem.DO)))
+            tmp = np.array(O2).reshape((len(O2), problem.DO))
+            O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
         return O
 

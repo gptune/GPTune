@@ -44,7 +44,7 @@ class Categoricalnorm(Categorical):
         for xt in Xt:
             # print(xt,'widfd')
             tmp=[0 for ii in range(lens)]
-            tmp[math.floor(xt*lens)]=1
+            tmp[math.floor(min(xt,1-1e-12)*lens)]=1
             tmp1.append(tmp)
         # print(tmp1,'before inverse_transform',Xt,xt*lens)
         

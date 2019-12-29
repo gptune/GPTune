@@ -19,6 +19,7 @@ import os
 import numpy as np
 import argparse
 import pickle
+import copy
 
 import mpi4py
 from mpi4py import MPI
@@ -35,6 +36,7 @@ from gptune import GPTune
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
+import pygmo as pg
 
 
 ################################################################################
@@ -71,17 +73,14 @@ def objective(point):                  # should always use this name for user-de
 	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
 	tmpdata = array('f', [0,0])
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	comm.Disconnect()	
+	comm.Disconnect()
 
-	if(target=='time'):	
-		retval = tmpdata[0]
-		print(params, ' superlu time: ', retval)
-
-	if(target=='memory'):	
-		retval = tmpdata[1]
-		print(params, ' superlu memory: ', retval)
-
-	return retval 
+	print(params, ' superlu time: ', tmpdata[0], ' memory: ', tmpdata[1])
+	# tmpdata1 = copy.deepcopy(tmpdata)
+	# tmpdata1[0]=tmpdata[1]
+	# tmpdata1[1]=tmpdata[0]	
+	# return tmpdata1 
+	return tmpdata 
 
 	
 	
@@ -125,10 +124,11 @@ def main():
 	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
+	runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="runtime")
+	memory    = Real        (float("-Inf") , float("Inf"), transform="normalize", name="memory")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	OS = Space([runtime])
+	OS = Space([runtime, memory])
 	cst1 = "NSUP >= NREL"
 	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 	constraints = {"cst1" : cst1, "cst2" : cst2}
@@ -136,9 +136,6 @@ def main():
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
-
-	# target='memory'
-	target='time'
 
 	problem = TuningProblem(IS, PS, OS, objective, constraints, None)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
@@ -151,9 +148,13 @@ def main():
 	# options['search_multitask_processes'] = 1
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
-	options['shared_memory_parallelism'] = True
+	options['shared_memory_parallelism'] = False
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
+	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+	options['search_pop_size'] = 1000
+	options['search_gen'] = 10
+	options['search_best_N'] = 4
 	options.validate(computer = computer)
 
 	""" Intialize the tuner with existing data"""		
@@ -180,18 +181,13 @@ def main():
 		print("    matrix:%s"%(data.I[tid][0]))
 		print("    Ps ", data.P[tid])
 		print("    Os ", data.O[tid])
-		print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
-
-	""" Call TLA for a new task using the constructed LCM model"""    
-	newtask = [["big.rua"],["g4.rua"]]
-	# newtask = [["H2O.rb"]]
-	(aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
-	print("stats: ",stats)
-
-	""" Print the optimal parameters and function evaluations"""	
-	for tid in range(len(newtask)):
-		print("new task: %s"%(newtask[tid]))
-		print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+		ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
+		front = ndf[0]
+		# print('front id: ',front)
+		fopts = data.O[tid][front]
+		xopts = [data.P[tid][i] for i in front]
+		print('    Popts ', xopts)		
+		print('    Oopts ', fopts)		
 		
   
 def parse_args():

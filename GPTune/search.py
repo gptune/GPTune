@@ -38,158 +38,188 @@ from model import Model
 
 class Search(abc.ABC):
 
-    def __init__(self, problem : Problem, computer : Computer):
-        self.problem = problem
-        self.computer = computer
+	def __init__(self, problem : Problem, computer : Computer):
+		self.problem = problem
+		self.computer = computer
 
-    @abc.abstractmethod
-    def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:
+	@abc.abstractmethod
+	def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
 
-        raise Exception("Abstract method")
+		raise Exception("Abstract method")
 
-    def search_multitask(self, data : Data, model : Model, tids : Collection[int] = None, i_am_manager : bool = True, **kwargs) -> Collection[np.ndarray]:
+	def search_multitask(self, data : Data, models : Collection[Model], tids : Collection[int] = None, i_am_manager : bool = True, **kwargs) -> Collection[np.ndarray]:
 
-        if (tids is None):
-            tids = list(range(data.NI))
+		if (tids is None):
+			tids = list(range(data.NI))
 
-        if (kwargs['distributed_memory_parallelism'] and i_am_manager):
-            mpi_comm = self.computer.spawn(__file__, kwargs['search_multitask_processes'], kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
-            kwargs_tmp = kwargs
-            if "mpi_comm" in kwargs_tmp:
-                del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
-            _ = mpi_comm.bcast((self, data, model, tids, kwargs_tmp), root=mpi4py.MPI.ROOT)
-            tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
-            mpi_comm.Disconnect()
-            res=[]
-            for p in range(int(kwargs['search_multitask_processes'])):
-                res = res + tmpdata[p]
+		if (kwargs['distributed_memory_parallelism'] and i_am_manager):
+			mpi_comm = self.computer.spawn(__file__, kwargs['search_multitask_processes'], kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
+			kwargs_tmp = kwargs
+			if "mpi_comm" in kwargs_tmp:
+				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
+			_ = mpi_comm.bcast((self, data, models, tids, kwargs_tmp), root=mpi4py.MPI.ROOT)
+			tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
+			mpi_comm.Disconnect()
+			res=[]
+			for p in range(int(kwargs['search_multitask_processes'])):
+				res = res + tmpdata[p]
 
 
-        elif (kwargs['shared_memory_parallelism']):
-            
-            #with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
-            with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
-                # fun = functools.partial(self.search, data = data, model = model, kwargs = kwargs)
-                # res = list(executor.map(fun, tids, timeout=None, chunksize=1))
+		elif (kwargs['shared_memory_parallelism']):
+			
+			#with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+			with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
+				# fun = functools.partial(self.search, data = data, models = models, kwargs = kwargs)
+				# res = list(executor.map(fun, tids, timeout=None, chunksize=1))
 
-                def fun(tid):
-                    return self.search(data=data,model = model, tid =tid, kwargs = kwargs)
-                res = list(executor.map(fun, tids, timeout=None, chunksize=1))								
-        else:
-            fun = functools.partial(self.search, data, model, kwargs = kwargs)
-            res = list(map(fun, tids))
-        # print(res)
-        res.sort(key = lambda x : x[0])		
-        return res
+				def fun(tid):
+					return self.search(data=data,models = models, tid =tid, kwargs = kwargs)
+				res = list(executor.map(fun, tids, timeout=None, chunksize=1))								
+		else:
+			fun = functools.partial(self.search, data, models, kwargs = kwargs)
+			res = list(map(fun, tids))
+		# print(res)
+		res.sort(key = lambda x : x[0])		
+		return res
 
 class SurrogateProblem(object):
 
-    def __init__(self, problem, computer, data, model, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
+	def __init__(self, problem, computer, data, models, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
 
-        self.problem = problem
-        self.computer = computer
-        self.data = data
-        self.model = model
+		self.problem = problem
+		self.computer = computer
+		self.data = data
+		self.models = models
 
-        self.tid = tid
+		self.tid = tid
 
-        # self.I     = self.data.I[tid]
+		# self.I     = self.data.I[tid]
 		
-        self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
+		self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
 		
-        # self.POrig = self.data.P[tid]
-        self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
+		# self.POrig = self.data.P[tid]
+		self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
 
-    def get_bounds(self):
+	def get_nobj(self):
+		return self.problem.DO		
+		
+	def get_bounds(self):
 
-        DP = self.problem.DP
+		DP = self.problem.DP
 
-        return ([0. for i in range(DP)], [1. for  i in range(DP)])
+		return ([0. for i in range(DP)], [1. for  i in range(DP)])
 
-    # Acquisition function
-    def ei(self, x):
+	# Acquisition function
+	def ei(self, x):
 
-        """ Expected Improvement """
+		""" Expected Improvement """
+		EI=[]
+		for o in range(self.problem.DO):
+			ymin = self.data.O[self.tid][:,o].min()
+			(mu, var) = self.models[o].predict(x, tid=self.tid)
+			mu = mu[0][0]
+			var = max(1e-18, var[0][0])
+			std = np.sqrt(var)
+			chi = (ymin - mu) / std
+			Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+			phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+			EI.append(-((ymin - mu) * Phi + var * phi))
+		return EI
 
-        ymin = self.data.O[self.tid].min()
-        (mu, var) = self.model.predict(x, tid=self.tid)
-        mu = mu[0][0]
-        var = max(1e-18, var[0][0])
-        std = np.sqrt(var)
-        chi = (ymin - mu) / std
-        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-        EI = (ymin - mu) * Phi + var * phi
-
-        return EI
- 
-    def fitness(self, x):   # x is the normalized space
-
-        xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
-        if (any(np.array_equal(xx, xi) for xx in self.POrig)):
-            cond = False
-        else:
-            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-            point.update(point2)
-            # print("point", point)
-            cond = self.computer.evaluate_constraints(self.problem, point)
-        if (cond):
-            # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
-            return (- self.ei(x),)
-        else:
-            # print("cond",cond,float("Inf"),'x',x,'xi',xi) 
-            return (float("Inf"),)
+	def fitness(self, x):   # x is the normalized space
+		xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+		if (any(np.array_equal(xx, xi) for xx in self.POrig)):
+			cond = False
+		else:
+			point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+			point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+			point.update(point2)
+			# print("point", point)
+			cond = self.computer.evaluate_constraints(self.problem, point)
+		if (cond):
+			# print("cond",cond,- self.ei(x),'x',x,'xi',xi)
+			return self.ei(x)
+		else:
+			# print("cond",cond,float("Inf"),'x',x,'xi',xi) 
+			return [float("Inf")]* self.problem.DO  
 
 import pygmo as pg
 
 class SearchPyGMO(Search):
 
-    """
-    XXX: This class, together with the underlying PyGMO only works on Intel-based CPUs.
-    The reason is that PyGMO requires the Intel 'Thread Building Block' library to compile and execute.
-    """
-	# YL: the above seems outdated?
+	"""
+	XXX: This class, together with the underlying PyGMO only works on Intel-based CPUs.
+	The reason is that PyGMO requires the Intel 'Thread Building Block' library to compile and execute.
+	"""
+	# YL: TBB works also on AMD processors
 
-    def search(self, data : Data, model : Model, tid : int, **kwargs) -> np.ndarray:  
+	def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:  
 
-        kwargs = kwargs['kwargs']
+		kwargs = kwargs['kwargs']
 
-        prob = SurrogateProblem(self.problem, self.computer, data, model, tid)
+		prob = SurrogateProblem(self.problem, self.computer, data, models, tid)
 
-        try:
-            algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
-        except:
-            raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
+		try:
+			udi = eval(f'pg.{kwargs["search_udi"]}()')
+		except:
+			raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-        try:
-            udi = eval(f'pg.{kwargs["search_udi"]}()')
-        except:
-            raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
-
-        bestX = []
-        cond = False
-        cpt = 0
-        while (not cond and cpt < kwargs['search_max_iters']):
-            archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
-            archi.evolve(n = kwargs['search_evolve'])
-            archi.wait()
-            champions_f = archi.get_champions_f()
-            champions_x = archi.get_champions_x()
-            indexes = list(range(len(champions_f)))
-            indexes.sort(key=champions_f.__getitem__)
-            for idx in indexes:
-                if (champions_f[idx] < float('Inf')):
-                    cond = True
-                    # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
-                    bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
-                    break
-            cpt += 1
-
-        if (kwargs['verbose']):
-            print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
-        # print("bestX",bestX)
-        return (tid, bestX)
+			
+		if(self.problem.DO==1): # single objective
+			try:
+				algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
+			except:
+				raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')		
+			bestX = []
+			cond = False
+			cpt = 0
+			while (not cond and cpt < kwargs['search_max_iters']):
+				archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
+				archi.evolve(n = kwargs['search_evolve'])
+				archi.wait()
+				champions_f = archi.get_champions_f()
+				champions_x = archi.get_champions_x()
+				indexes = list(range(len(champions_f)))
+				indexes.sort(key=champions_f.__getitem__)
+				for idx in indexes:
+					if (champions_f[idx] < float('Inf')):
+						cond = True
+						# bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
+						bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
+						break
+				cpt += 1
+		else:                   # multi objective  	
+			try:
+				algo = eval(f'pg.algorithm(pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"]))')
+			except:
+				raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
+			bestX = []
+			cond = False
+			cpt = 0
+			while (not cond and cpt < kwargs['search_max_iters']):
+				pop = pg.population(prob = prob, size = kwargs['search_pop_size'], seed = cpt+1)
+				pop = algo.evolve(pop)
+				
+				if(self.problem.DO==2):				
+					front = pg.non_dominated_front_2d(pop.get_f())
+				else:
+					ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(pop.get_f())
+					front = ndf[0]
+				fs = pop.get_f()[front]
+				xs = pop.get_x()[front]
+				bestidx = pg.select_best_N_mo(points = fs, N = kwargs['search_best_N'])
+				# print('bestidx',bestidx)
+				xss = xs[bestidx]
+				fss = fs[bestidx]
+				if(np.max(fss)< float('Inf')):
+					cond = True
+					bestX.append(xss)
+					break
+				cpt += 1
+		if (kwargs['verbose']):
+			print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
+		# print("bestX",bestX)
+		return (tid, bestX)
 
 if __name__ == '__main__':
 
@@ -199,9 +229,9 @@ if __name__ == '__main__':
 	mpi_comm = MPI.Comm.Get_parent()
 	mpi_rank = mpi_comm.Get_rank()
 	mpi_size = mpi_comm.Get_size()
-	(searcher, data, model, tids, kwargs) = mpi_comm.bcast(None, root=0)
+	(searcher, data, models, tids, kwargs) = mpi_comm.bcast(None, root=0)
 	tids_loc = tids[mpi_rank:len(tids):mpi_size]
-	tmpdata = searcher.search_multitask(data, model, tids_loc, i_am_manager = False, **kwargs)
+	tmpdata = searcher.search_multitask(data, models, tids_loc, i_am_manager = False, **kwargs)
 	res = mpi_comm.gather(tmpdata, root=0) 
 	mpi_comm.Disconnect()	
 				
