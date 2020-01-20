@@ -10,3 +10,4 @@ pygmo
 ipyparallel
 opentuner
 hpbandster
+scikit-optimize

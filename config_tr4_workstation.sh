@@ -98,11 +98,11 @@ python setup.py install
 
 
 
-cd ../
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-pip install --user -e .
+# cd ../
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# pip install --user -e .
  
  
 cd ../

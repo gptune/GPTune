@@ -61,11 +61,11 @@ class Options(dict):
 		search_multitask_processes = None # Number of MPIs each handling one task 
 		search_algo = 'pso' # Supported search algorithm in pygmo: single-objective: 'pso' -- particle swarm, 'cmaes' -- covariance matrix adaptation evolution. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'nspso' -- Non-dominated Sorting PSO, 'maco' -- Multi-objective Hypervolume-based ACO, 'moead' -- Multi-objective EA vith Decomposition 
 		search_udi = 'thread_island' # Supported UDI options for pgymo: 'thread_island' --Thread island, 'ipyparallel_island' --Ipyparallel island
-		search_pop_size = 1000 # Option in pgymo
-		search_gen = 1000  # Option in pgymo
-		search_evolve = 10  # Option in pgymo
-		search_max_iters = 10  # Option in pgymo
-		search_best_N = 1  # Option in pgymo
+		search_pop_size = 1000 # Population size in pgymo
+		search_gen = 1000  # Number of evolution generations in pgymo
+		search_evolve = 10  # Number of times migration in pgymo
+		search_max_iters = 10  # Max number of searches to get results respecting the constraints 
+		search_best_N = 1  # Maximum number of points selected using a multi-objective search algorithm 
 
 		
 		self.update(locals())

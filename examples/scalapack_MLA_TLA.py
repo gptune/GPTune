@@ -156,7 +156,7 @@ def main():
 
 	""" Call TLA for 2 new tasks using the constructed LCM model"""								 
 	newtask = [[400,500],[800,600]]
-	(aprxopts,objval,stats) = gt.TLA1(newtask, nruns)
+	(aprxopts,objval,stats) = gt.TLA1(newtask, NS=None)
 	print("stats: ",stats)
 		
 	""" Print the optimal parameters and function evaluations"""			
