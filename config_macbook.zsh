@@ -1,0 +1,121 @@
+#!/bin/zsh
+
+source /usr/local/Cellar/modules/4.3.0/init/zsh
+
+module load gcc/9.2.0
+module load openmpi/gcc-9.2.0/4.0.2
+module load scalapack/2.1.0
+module load python/3.7.6 
+
+export PATH=$PATH:/Users/liuyangzhuan/Library/Python/3.7/bin/
+export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
+export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
+export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
+export PYTHONWARNINGS=ignore
+
+#CCC=$MPICC
+CCC=/usr/local/Cellar/open-mpi/4.0.2/bin/mpicc
+CCCPP=$MPICXX
+FTN=$MPIF90
+RUN=$MPIRUN
+
+python --version
+pip --version
+
+pip install --upgrade --user -r requirements_mac.txt
+#env CC=$CCC pip install --upgrade --user -r requirements.txt
+
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="" \
+	-DCMAKE_C_FLAGS="" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="/usr/local/Cellar/openblas/0.3.7/lib/libblas.dylib" \
+	-DTPL_LAPACK_LIBRARIES="/usr/local/Cellar/openblas/0.3.7/lib/liblapack.dylib" \
+	-DTPL_SCALAPACK_LIBRARIES="/usr/local/Cellar/scalapack/2.1.0/lib/libscalapack.dylib"
+make
+cp lib_gptuneclcm.dylib ../.
+cp pdqrdriver ../
+
+
+cd ../examples/
+rm -rf superlu_dist
+git clone https://github.com/xiaoyeli/superlu_dist.git
+cd superlu_dist
+
+wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+tar -xf parmetis-4.0.3.tar.gz
+cd parmetis-4.0.3/
+mkdir -p install
+make config shared=1 cc=$CCC cxx=$CCCPP prefix=$PWD/install
+make install > make_parmetis_install.log 2>&1
+
+cd ../
+PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
+PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.dylib
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+	-DBUILD_SHARED_LIBS=OFF \
+	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="/usr/local/Cellar/openblas/0.3.7/lib/libblas.dylib" \
+	-DTPL_LAPACK_LIBRARIES="/usr/local/Cellar/openblas/0.3.7/lib/liblapack.dylib" \
+	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+make pddrive_spawn
+
+
+
+# # pip install pygmo doesn't work, build from source
+# brew install pagmo
+# brew install boost
+# brew install boost-python3
+# rm -rf pagmo2
+
+
+# install pygmo from conda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+zsh ~/miniconda.sh -b -p $HOME/miniconda
+source /Users/liuyangzhuan/miniconda/bin/activate
+conda init zsh
+conda config --add channels conda-forge
+conda install -y pygmo
+
+
+
+cd ../../../
+rm -rf mpi4py
+git clone https://github.com/mpi4py/mpi4py.git
+cd mpi4py/
+python setup.py build --mpicc="$CCC -shared"
+python setup.py install
+# env CC=mpicc pip install --user -e .
+
+cd ../
+rm -rf autotune
+git clone https://github.com/ytopt-team/autotune.git
+cd autotune/
+pip install --user -e .

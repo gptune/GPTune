@@ -142,8 +142,7 @@ class Model_LCM(Model):
 			mpi_comm = self.computer.spawn(__file__, kwargs['model_restart_processes'], kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
 			# print("kwargs_tmp",kwargs_tmp)
-   
-   
+
 			if "mpi_comm" in kwargs_tmp:
 				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
 			_ = mpi_comm.bcast((self, data, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)

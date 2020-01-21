@@ -57,10 +57,10 @@ class GPTune(object):
 
 		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
 		stats = {
-		  "time_total": 0,
-		  "time_fun": 0,
-		  "time_search": 0,
-		  "time_model": 0
+			"time_total": 0,
+			"time_fun": 0,
+			"time_search": 0,
+			"time_model": 0
 		}
 		time_fun=0
 		time_search=0
@@ -203,12 +203,12 @@ class GPTune(object):
 
 		
 	def TLA1(self, Tnew, NS):
-       
+
 		print('\n\n\n------Starting TLA1 for task: ',Tnew)
 
 		stats = {
-		  "time_total": 0,
-		  "time_fun": 0
+			"time_total": 0,
+			"time_fun": 0
 		}
 		time_fun=0
 		
@@ -235,15 +235,13 @@ class GPTune(object):
 			INorm = self.problem.IS.transform(np.array(t, ndmin=2))[0]
 			INorms.append(INorm.reshape((-1, self.problem.DI)))		
 		INorms = np.vstack([INorms[i] for i in range(ntso)]).reshape((ntso,self.problem.DI))
-  
+
 		tmp=[]
 		for t in Tnew:		
 			INorm = self.problem.IS.transform(np.array(t, ndmin=2))[0]
 			tmp.append(INorm.reshape((-1, self.problem.DI)))		
 		InewNorms=np.vstack([tmp[i] for i in range(ntsn)]).reshape((ntsn,self.problem.DI))
-   
-  
-  
+
 		# convert the parameter spaces to the normalized spaces  
 		PSoptNorms = self.problem.PS.transform(PSopt)
 		columns = []
@@ -273,7 +271,7 @@ class GPTune(object):
 		aprxopts = self.problem.PS.inverse_transform(aprxoptsNorm)
 		# print('aprxopts',aprxopts,type(aprxopts),type(aprxopts[0]))
 		
-  
+
 		aprxoptsNormList=[]
 		# TnewNormList=[]
 		for i in range(ntsn):
