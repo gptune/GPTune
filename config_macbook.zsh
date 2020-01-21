@@ -3,8 +3,8 @@
 source /usr/local/Cellar/modules/4.3.0/init/zsh
 
 module load gcc/9.2.0
-module load openmpi/gcc-9.2.0/4.0.2
-module load scalapack/2.1.0
+module load openmpi/gcc-9.2.0/4.0.1
+module load scalapack/2.0.2
 module load python/3.7.6 
 
 export PATH=$PATH:/Users/liuyangzhuan/Library/Python/3.7/bin/
@@ -14,8 +14,8 @@ export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
-#CCC=$MPICC
-CCC=/usr/local/Cellar/open-mpi/4.0.2/bin/mpicc
+CCC=$MPICC
+#CCC=/usr/local/Cellar/open-mpi/4.0.2/bin/mpicc
 CCCPP=$MPICXX
 FTN=$MPIF90
 RUN=$MPIRUN

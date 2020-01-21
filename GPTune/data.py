@@ -14,7 +14,6 @@
 # derivative works, and perform publicly and display publicly, and to permit
 # other to do so.
 #
-ß
 import numpy as np
 from problem import Problem
 from typing import Collection
