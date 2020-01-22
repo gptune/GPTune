@@ -30,7 +30,7 @@ from sys import platform
 ROOTDIR = os.path.abspath(__file__ + "/../../build")
 
 if platform == "linux" or platform == "linux2":
-	cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
+	cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.so')
 elif platform == "darwin":
 	cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.dylib')
 elif platform == "win32":
