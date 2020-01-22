@@ -121,7 +121,7 @@ def main():
     # options['search_multitask_processes'] = 1
     # options['model_restart_processes'] = 1
     # options['model_restart_threads'] = 1
-    options['distributed_memory_parallelism'] = True
+    options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
     options['model_class '] = 'Model_LCM'

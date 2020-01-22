@@ -105,7 +105,7 @@ if __name__ == '__main__':
     options['model_restarts'] = 1
     # options['search_multitask_processes'] = 1
     options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = True
+    options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class '] = 'Model_LCM'

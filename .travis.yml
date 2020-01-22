@@ -162,6 +162,7 @@ before_install:
   - export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   - printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
   
+
 install:
   - export BLUE="\033[34;1m"
   - printf "${BLUE} GC; Installing GPtune from source\n"
@@ -169,6 +170,8 @@ install:
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/autotune/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/scikit-optimize/"
   - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/mpi4py/"
+  - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/GPTune/"
+  - export PYTHONPATH="$PYTHONPATH:$TRAVIS_BUILD_DIR/examples/scalapack-driver/spt/"
   - export PYTHONWARNINGS=ignore
 
 

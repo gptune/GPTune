@@ -25,10 +25,19 @@ from mpi4py import MPI
 import itertools
 import scipy
 import sys
+from sys import platform
 
 ROOTDIR = os.path.abspath(__file__ + "/../../build")
-# cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
-cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.so')
+
+if platform == "linux" or platform == "linux2":
+	cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/liblcm.so')
+elif platform == "darwin":
+	cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.dylib')
+elif platform == "win32":
+    raise Exception(f"Windows is not yet supported")
+
+
+
 
 
 ####################################################################################################
