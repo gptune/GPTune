@@ -49,8 +49,8 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 # Argmin{x} objective(t,x), for x in [0., 1.]
 
 
-input_space = Space([Real(0., 10., "uniform", "normalize", name="t")])
-parameter_space = Space([Real(0., 1., "uniform", "normalize", name="x")])
+input_space = Space([Real(0., 10., transform="normalize", name="t")])
+parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
 
 # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
 # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
