@@ -147,10 +147,10 @@ def main():
 	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
+	result   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="r")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	OS = Space([runtime])
+	OS = Space([result])
 	cst1 = "NSUP >= NREL"
 	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 	constraints = {"cst1" : cst1, "cst2" : cst2}
@@ -170,13 +170,13 @@ def main():
 
 	""" Set and validate options """	
 	options = Options()
-	# options['model_processes'] = 1
+	options['model_processes'] = 1
 	# options['model_threads'] = 1
 	options['model_restarts'] = 1
 	# options['search_multitask_processes'] = 1
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
-	options['shared_memory_parallelism'] = True
+	options['shared_memory_parallelism'] = False
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
 

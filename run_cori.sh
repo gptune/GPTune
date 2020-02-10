@@ -12,6 +12,8 @@ module load openmpi/4.0.1
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
+export PYTHONPATH=$PYTHONPATH:$PWD/examples/scalapack-driver/spt/
 export PYTHONWARNINGS=ignore
 
 CCC=mpicc

@@ -127,18 +127,20 @@ class SurrogateProblem(object):
 		return EI
 
 	def fitness(self, x):   # x is the normalized space
-		xi = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
-		if (any(np.array_equal(xx, xi) for xx in self.POrig)):
-			cond = False
-		else:
-			point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-			point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-			point.update(point2)
-			# print("point", point)
-			cond = self.computer.evaluate_constraints(self.problem, point)
+		xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+		xi=xi0[0]
+		point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+		point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+		point.update(point2)
+		# print("point", point)		
+		cond = self.computer.evaluate_constraints(self.problem, point)
+
+		xNorm = self.problem.PS.transform(xi0)[0]
+		# print(x)
+		# print(xNorm)
 		if (cond):
 			# print("cond",cond,- self.ei(x),'x',x,'xi',xi)
-			return self.ei(x)
+			return self.ei(xNorm)
 		else:
 			# print("cond",cond,float("Inf"),'x',x,'xi',xi) 
 			return [float("Inf")]* self.problem.DO  
