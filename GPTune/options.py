@@ -22,7 +22,7 @@ class Options(dict):
 	def __init__(self, **kwargs):
 
 		""" Options for GPTune """ 
-		mpi_comm = None          # The mpi communiator that invokes gptune if mpi4py is installed
+		mpi_comm = None          # The mpi communicator that invokes gptune if mpi4py is installed
 		distributed_memory_parallelism = False   # Using distributed_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
 		shared_memory_parallelism      = False   # Using shared_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
 		constraints_evaluation_parallelism = False  # Reserved option 
@@ -32,9 +32,9 @@ class Options(dict):
 
 		
 		""" Options for the sampling phase """
-		sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
-		sample_algo = 'LHS-MDU' # Supported sample algorithms: 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
-		sample_max_iter = 10**9  # Maximum number of iterations for generating random sampeles and testing the constraints
+		sample_class = 'SampleOpenTURNS' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
+		sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
+		sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
 
 		
 		
@@ -81,11 +81,11 @@ class Options(dict):
 		
 		if (self['distributed_memory_parallelism']):
 			if(self['search_multitask_processes'] is None):
-				self['search_multitask_processes'] = computer.cores*computer.nodes-1
+				self['search_multitask_processes'] = max(1,computer.cores*computer.nodes-1) # computer.nodes
 			self['search_multitask_threads'] = 1
 			if(self['model_restart_processes'] is None):
-				self['model_restart_processes'] = 1
-			self['model_restart_processes'] = min(self['model_restarts'],self['model_restart_processes'])
+				self['model_restart_processes'] = self['model_restarts']
+			self['model_restart_processes'] = min(self['model_restart_processes'],max(1,computer.cores*computer.nodes-2))
 			self['model_restart_threads'] = 1		
 		elif(self['shared_memory_parallelism']): 
 			self['search_multitask_processes'] = 1
@@ -93,8 +93,8 @@ class Options(dict):
 				self['search_multitask_threads'] = computer.cores
 			self['model_restart_processes'] = 1	
 			if(self['model_restart_threads'] is None):
-				self['model_restart_threads'] = 1			
-			self['model_restart_threads'] = min(min(self['model_restarts'],self['model_restart_threads']),computer.cores)
+				self['model_restart_threads'] = self['model_restarts']		
+			self['model_restart_threads'] = min(self['model_restart_threads'],computer.cores)
 		else:
 			self['search_multitask_processes'] = 1
 			self['search_multitask_threads'] = 1
@@ -110,7 +110,11 @@ class Options(dict):
 			self['model_threads'] = 1  # YL: this requires more thoughts, maybe math.floor((computer.cores)/self['model_restart_threads'])
 		
 		if(self['search_threads'] is None):
-			self['search_threads'] = 1# YL: this requires more thoughts, maybe max(1,math.floor((computer.cores)/self['search_multitask_threads']))	
+			# if (self['distributed_memory_parallelism']):
+			# 	self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes-1)/self['search_multitask_processes'])))
+			# else:
+			# 	self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
+			self['search_threads'] =1
 		
 		
 		print('\n\n------Validating the options')			

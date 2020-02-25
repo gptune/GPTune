@@ -55,14 +55,16 @@ class GPTune(object):
 
 	def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
-		print('\n\n\n------Starting MLA with %d tasks '%(NI))	
+		print('\n\n\n------Starting MLA with %d tasks and %d samples each '%(NI,NS))	
 		stats = {
 			"time_total": 0,
+			"time_sample_init": 0,			
 			"time_fun": 0,
 			"time_search": 0,
 			"time_model": 0
 		}
 		time_fun=0
+		time_sample_init=0
 		time_search=0
 		time_model=0
 				
@@ -74,6 +76,8 @@ class GPTune(object):
 		
 		t3 = time.time_ns()
 		
+		t1 = time.time_ns()	
+
 		options1 = copy.deepcopy(self.options)
 		kwargs.update(options1)
 
@@ -128,6 +132,10 @@ class GPTune(object):
 		if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
 			raise Exception("len(self.data.O) !=len(self.data.I)")
 		
+		t2 = time.time_ns()	
+		time_sample_init = time_sample_init	+ (t2-t1)/1e9	
+
+
 		t1 = time.time_ns()
 		if (self.data.O is None):
 			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, kwargs = kwargs) 
@@ -162,7 +170,7 @@ class GPTune(object):
 			res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
 			newdata.P = [x[1][0] for x in res]
 			t2 = time.time_ns()
-			time_search = time_search + (t2-t1)/1e9			
+			time_search = time_search + (t2-t1)/1e9		
 	#XXX add the info of problem.models here
 
 	#            if (self.mpi_rank == 0):
@@ -171,16 +179,13 @@ class GPTune(object):
 			newdata.O = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, I = newdata.I, P = newdata.P, kwargs = kwargs)
 			t2 = time.time_ns()
 			time_fun = time_fun + (t2-t1)/1e9		
-
 	#                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 	#                    mpi_comm.bcast(newdata.O, root=0)
 	#
 	#            else:
 	#
-	#                newdata.O = mpi_comm.bcast(None, root=0)
-
+	#                newdata.O = mpi_comm.bcast(None, root=0)	
 			self.data.merge(newdata)
-		
 		
 ########## denormalize the data as the user always work in the original space
 		if self.data.I is not None:    # from 2D numpy array to a list of lists    
@@ -191,12 +196,13 @@ class GPTune(object):
 				xOrig = self.problem.PS.inverse_transform(x)
 				tmp.append(xOrig)		
 			self.data.P=tmp		
-			
+
 		t4 = time.time_ns()
 		stats['time_total'] = (t4-t3)/1e9		
 		stats['time_fun'] = time_fun			
 		stats['time_model'] = time_model			
 		stats['time_search'] = time_search			
+		stats['time_sample_init'] = time_sample_init			
 		
 		
 		return (copy.deepcopy(self.data), modelers,stats)

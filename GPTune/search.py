@@ -53,7 +53,8 @@ class Search(abc.ABC):
 			tids = list(range(data.NI))
 
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager):
-			mpi_comm = self.computer.spawn(__file__, kwargs['search_multitask_processes'], kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
+			nproc = min(kwargs['search_multitask_processes'],data.NI)
+			mpi_comm = self.computer.spawn(__file__, nproc, kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
 			if "mpi_comm" in kwargs_tmp:
 				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
@@ -61,12 +62,11 @@ class Search(abc.ABC):
 			tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
 			mpi_comm.Disconnect()
 			res=[]
-			for p in range(int(kwargs['search_multitask_processes'])):
+			for p in range(int(nproc)):
 				res = res + tmpdata[p]
 
 
 		elif (kwargs['shared_memory_parallelism']):
-			
 			#with concurrent.futures.ProcessPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
 			with concurrent.futures.ThreadPoolExecutor(max_workers = kwargs['search_multitask_threads']) as executor:
 				# fun = functools.partial(self.search, data = data, models = models, kwargs = kwargs)

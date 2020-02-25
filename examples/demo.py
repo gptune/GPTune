@@ -98,23 +98,45 @@ problem = TuningProblem(input_space, parameter_space,output_space, objective, co
 
 
 if __name__ == '__main__':
-    computer = Computer(nodes=1, cores=2, hosts=None)
+    computer = Computer(nodes=1, cores=16, hosts=None)
     options = Options()
-    # options['model_processes'] = 1
-    # options['model_threads'] = 1
     options['model_restarts'] = 1
-    # options['search_multitask_processes'] = 1
+
     options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = False
+    options['shared_memory_parallelism'] = True
+
+    options['model_processes'] = 1
+    # options['model_threads'] = 1
+    # options['model_restart_processes'] = 1
+
+    # options['search_multitask_processes'] = 1
+    # options['search_multitask_threads'] = 1
+    # options['search_threads'] = 1
+
+
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class '] = 'Model_LCM'
+    options['model_class'] = 'Model_LCM'
+    options['verbose'] = False
+    # options['sample_algo'] = 'MCS'
+    # options['sample_class'] = 'SampleOpenTURNS'
+        
 
     options.validate(computer=computer)
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options)
     # print('demo before MLA')
-    (data, modeler, stats) = gt.MLA(NS=20, NI=1, NS1=10)
+    NI=20
+    NS=10
+    (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=NS-1)
+
+
+    """ Print all input and parameter samples """
+    for tid in range(NI):
+        print("tid: %d" % (tid))
+        print("    t:%d " % (data.I[tid][0]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid])
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
+        
     print("stats: ", stats)
-    print(data.O)
-    print([(y[-1], min(y)[0], max(y)[0]) for y in data.O])

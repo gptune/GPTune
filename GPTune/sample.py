@@ -21,6 +21,7 @@ import numpy as np
 import math
 import skopt.space
 from skopt.space import *
+import time
 
 from autotune.space import Space
 
@@ -50,9 +51,11 @@ class Sample(abc.ABC):
             cpt = 0
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
+                # t1 = time.time_ns()	
                 S2 = self.sample(n_samples, space, kwargs=kwargs)
+                # t2 = time.time_ns()	
+                # print('sample_para:',(t2-t1)/1e9)               
                 
-				
                 for s_norm in S2:  		
                     # print("jiji",s_norm)							
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
@@ -65,6 +68,7 @@ class Sample(abc.ABC):
                         if (cpt >= n_samples):
                             break
                 # print('input',S,space[0],isinstance(space[0], Categorical)) 
+
                 n_itr += 1
                 if(n_itr%1000==0 and n_itr>=1000):
                     print('n_itr',n_itr,'still trying generating constrained samples...')
@@ -85,16 +89,20 @@ class Sample(abc.ABC):
 
     def sample_parameters(self, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
+
+        
         P = []
         for t in I:
             # print('before inverse_transform:',np.array(t, ndmin=2))
             I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
             # I_orig = t
-            # print('before inverse_transform I_orig:',I_orig)			
+            # print('after inverse_transform I_orig:',I_orig)			
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
             P.append(xs)
+
+
 
         return P
 
@@ -143,7 +151,7 @@ import openturns as ot
 class SampleOpenTURNS(Sample):
 
     """
-    XXX: This class, together with the underlying OpenTURNS only works on Intel-based CPUs.
+    XXX: This class, together with the underlying OpenTURNS only works on Intel and AMD CPUs.
     The reason is that OpenTURNS requires the Intel 'Thread Building Block' library to compile and execute.
     """
 
