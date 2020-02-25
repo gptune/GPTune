@@ -103,7 +103,7 @@ if __name__ == '__main__':
     options['model_restarts'] = 1
 
     options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = True
+    options['shared_memory_parallelism'] = False
 
     options['model_processes'] = 1
     # options['model_threads'] = 1
