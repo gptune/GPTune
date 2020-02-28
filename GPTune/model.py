@@ -269,6 +269,7 @@ class Model_DGP(Model):
 		
 if __name__ == '__main__':
 	def objective(point):
+		print('this is a dummy definition')
 		return point
 	mpi_comm = MPI.Comm.Get_parent()
 	mpi_rank = mpi_comm.Get_rank()

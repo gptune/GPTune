@@ -34,7 +34,7 @@ import mpi4py
 from mpi4py import MPI		  
 class GPTune(object):
 
-	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, **kwargs):
+	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, **kwargs):
 
 		"""
 		tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
@@ -42,7 +42,7 @@ class GPTune(object):
 		data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
 		options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
 		"""
-		self.problem  = Problem(tuningproblem)
+		self.problem  = Problem(tuningproblem,driverabspath=driverabspath)
 		if (computer is None):
 			computer = Computer()
 		self.computer = computer
@@ -135,10 +135,9 @@ class GPTune(object):
 		t2 = time.time_ns()	
 		time_sample_init = time_sample_init	+ (t2-t1)/1e9	
 
-
 		t1 = time.time_ns()
 		if (self.data.O is None):
-			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, kwargs = kwargs) 
+			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, options = kwargs) 
 		t2 = time.time_ns()
 		time_fun = time_fun + (t2-t1)/1e9
 		# print("good!")	
@@ -176,7 +175,7 @@ class GPTune(object):
 	#            if (self.mpi_rank == 0):
 
 			t1 = time.time_ns()
-			newdata.O = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, I = newdata.I, P = newdata.P, kwargs = kwargs)
+			newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, options = kwargs)
 			t2 = time.time_ns()
 			time_fun = time_fun + (t2-t1)/1e9		
 	#                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
@@ -285,7 +284,7 @@ class GPTune(object):
 			# InewNormList.append(InewNorms[i,:])
 		
 		t1 = time.time_ns()
-		O = self.computer.evaluate_objective(problem = self.problem, fun = self.problem.objective, I = InewNorms, P =aprxoptsNormList, kwargs = kwargs)
+		O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, options = kwargs)
 		t2 = time.time_ns()
 		time_fun = time_fun + (t2-t1)/1e9		
 

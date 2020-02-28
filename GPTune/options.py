@@ -26,11 +26,16 @@ class Options(dict):
 		distributed_memory_parallelism = False   # Using distributed_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
 		shared_memory_parallelism      = False   # Using shared_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
 		constraints_evaluation_parallelism = False  # Reserved option 
-		objective_evaluation_parallelism   = False  # Reserved option
 		verbose = False     # Control the verbosity level
 		oversubscribe = False     # Set this to True when the physical core count is less than computer.nodes*computer.cores and the --oversubscribe MPI runtime option is used 
 
 		
+		""" Options for the function evaluation """
+		objective_evaluation_parallelism   = False  # Using distributed_memory_parallelism or shared_memory_parallelism for evaluating multiple application instances in parallel
+		objective_multisample_processes = None  # Number of MPIs each handling one application call
+		objective_multisample_threads = None  # Number of threads each handling one application call
+		objective_nprocmax = None # Maximum number of cores for each application call, default to computer.cores*computer.nodes-1 
+
 		""" Options for the sampling phase """
 		sample_class = 'SampleOpenTURNS' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
 		sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
@@ -116,7 +121,33 @@ class Options(dict):
 			# 	self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
 			self['search_threads'] =1
 		
+
+		if(self['objective_nprocmax'] is None):
+			self['objective_nprocmax'] = computer.cores*computer.nodes-1
+		self['objective_nprocmax'] = min(self['objective_nprocmax'],computer.cores*computer.nodes-1)
 		
+
+		if (self['objective_evaluation_parallelism']==True and self['distributed_memory_parallelism']==True):
+			self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
+			nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))
+			if(self['objective_multisample_processes'] is None):
+				self['objective_multisample_processes'] = nproc
+			self['objective_multisample_processes'] = min(self['objective_multisample_processes'],nproc)	
+			self['objective_multisample_threads'] = 1		
+		elif (self['objective_evaluation_parallelism']==True and self['shared_memory_parallelism']==True):	
+			nproc = max(1,math.floor((computer.cores*computer.nodes)/(self['objective_nprocmax']+1)))		
+			if(self['objective_multisample_threads'] is None):
+				self['objective_multisample_threads'] = computer.cores
+			self['objective_multisample_threads'] = min(self['objective_multisample_threads'],computer.cores,nproc)			
+			self['objective_multisample_processes'] = 1
+		else:
+			self['objective_multisample_threads'] = 1
+			self['objective_multisample_processes'] = 1			
+
+
+
+
+
 		print('\n\n------Validating the options')			
 		# print("Parallelism in GTune:")
 		
@@ -130,7 +161,10 @@ class Options(dict):
 		print("  model_restart_processes:", self['model_restart_processes'])
 		print("  model_restart_threads:", self['model_restart_threads'])
 		print("  search_multitask_processes:", self['search_multitask_processes'])		
-		print("  search_multitask_threads:", self['search_multitask_threads'])		
+		print("  search_multitask_threads:", self['search_multitask_threads'])	
+		print("  objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])	
+		print("  objective_multisample_processes:", self['objective_multisample_processes'])	
+		print("  objective_multisample_threads:", self['objective_multisample_threads'])	
 		
 		if(self['oversubscribe']==False):
 			if (computer.cores*computer.nodes<=1):

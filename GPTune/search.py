@@ -150,7 +150,7 @@ import pygmo as pg
 class SearchPyGMO(Search):
 
 	"""
-	XXX: This class, together with the underlying PyGMO only works on Intel-based CPUs.
+	XXX: This class, together with the underlying PyGMO only works on Intel and AMD CPUs.
 	The reason is that PyGMO requires the Intel 'Thread Building Block' library to compile and execute.
 	"""
 	# YL: TBB works also on AMD processors
@@ -226,6 +226,7 @@ class SearchPyGMO(Search):
 if __name__ == '__main__':
 
 	def objective(point):
+		print('this is a dummy definition')
 		return point
 		
 	mpi_comm = MPI.Comm.Get_parent()

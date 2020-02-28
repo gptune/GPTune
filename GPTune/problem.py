@@ -16,10 +16,11 @@
 #
 
 from autotune.problem import TuningProblem
+import copy
 
 class Problem(object):
 
-    def __init__(self, tp : TuningProblem):
+    def __init__(self, tp : TuningProblem, driverabspath):
 
         self.name = tp.name
 
@@ -28,6 +29,7 @@ class Problem(object):
         self.OS = tp.output_space
 
         self.objective   = tp.objective
+        self.driverabspath   = driverabspath
         self.constraints = tp.constraints
         self.models      = tp.models
 

@@ -32,6 +32,8 @@ import os
 import mpi4py
 from mpi4py import MPI
 import numpy as nps
+import time
+
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
 # from GPTune import *
@@ -79,12 +81,12 @@ def objective(point):
     # t = point['t']
     # x = point['x']
     # f = 20*x**2+t
+    time.sleep(1.0)
 
     return f
 
 
 constraints = {"cst1": "x >= 0. and x <= 1."}
-print('demo before TuningProblem')
 problem = TuningProblem(input_space, parameter_space,output_space, objective, constraints, None)
 
 # Run Autotuning
@@ -98,12 +100,17 @@ problem = TuningProblem(input_space, parameter_space,output_space, objective, co
 
 
 if __name__ == '__main__':
-    computer = Computer(nodes=1, cores=16, hosts=None)
+    computer = Computer(nodes=2, cores=16, hosts=None)
     options = Options()
     options['model_restarts'] = 1
 
     options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = False
+    options['shared_memory_parallelism'] = True
+
+    options['objective_evaluation_parallelism'] = True
+    options['objective_multisample_threads'] = 8
+    options['objective_multisample_processes'] = 8
+    options['objective_nprocmax'] = 1
 
     options['model_processes'] = 1
     # options['model_threads'] = 1
@@ -121,13 +128,12 @@ if __name__ == '__main__':
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleOpenTURNS'
         
-
     options.validate(computer=computer)
     data = Data(problem)
-    gt = GPTune(problem, computer=computer, data=data, options=options)
+    gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
     # print('demo before MLA')
-    NI=20
-    NS=10
+    NI=1
+    NS=100
     (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=NS-1)
 
 
