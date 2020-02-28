@@ -70,7 +70,7 @@ class Options(dict):
 		search_gen = 1000  # Number of evolution generations in pgymo
 		search_evolve = 10  # Number of times migration in pgymo
 		search_max_iters = 10  # Max number of searches to get results respecting the constraints 
-		search_best_N = 1  # Maximum number of points selected using a multi-objective search algorithm 
+		search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm 
 
 		
 		self.update(locals())
@@ -108,7 +108,10 @@ class Options(dict):
 		
 		if (self['model_class']=='Model_LCM'):
 			if(self['model_processes'] is None):
-				self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/self['model_restart_processes']/self['model_restart_threads']))
+				if (self['distributed_memory_parallelism']):
+					self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/(self['model_restart_processes']+1)/self['model_restart_threads']))
+				else:
+					self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/self['model_restart_processes']/self['model_restart_threads']))
 			self['model_threads'] =1
 		else:
 			self['model_processes'] = 1
@@ -121,7 +124,7 @@ class Options(dict):
 			# 	self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
 			self['search_threads'] =1
 		
-
+		print(self['objective_nprocmax'],'jibajib')
 		if(self['objective_nprocmax'] is None):
 			self['objective_nprocmax'] = computer.cores*computer.nodes-1
 		self['objective_nprocmax'] = min(self['objective_nprocmax'],computer.cores*computer.nodes-1)
@@ -129,7 +132,7 @@ class Options(dict):
 
 		if (self['objective_evaluation_parallelism']==True and self['distributed_memory_parallelism']==True):
 			self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
-			nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))
+			nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))  # here we always assume the user invoke application code with MPI_Spawn, if not, "+1" can be removed
 			if(self['objective_multisample_processes'] is None):
 				self['objective_multisample_processes'] = nproc
 			self['objective_multisample_processes'] = min(self['objective_multisample_processes'],nproc)	
@@ -148,31 +151,57 @@ class Options(dict):
 
 
 
-		print('\n\n------Validating the options')			
-		# print("Parallelism in GTune:")
+		print('\n\n------Validating the options')	
+		print("  ")		
+		print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
+		print("   ---> distributed_memory_parallelism:", self['distributed_memory_parallelism'])
+		print("   ---> shared_memory_parallelism:", self['shared_memory_parallelism'])
+		print("   ---> objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])
+
 		
-		print("  model_processes:", self['model_processes'])
-		print("  model_threads:", self['model_threads'])
-		print("  search_processes:", self['search_processes'])
-		print("  search_threads:", self['search_threads'])		
+		if(self['distributed_memory_parallelism']):
+			ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_processes']+1		
+		else:
+			ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_threads']
+		print("  ")
+		print("  total core counts for modeling:", ncore_model)
+		print("   ---> model_processes:", self['model_processes'])
+		print("   ---> model_threads:", self['model_threads'])
+		print("   ---> model_restart_processes:", self['model_restart_processes'])
+		print("   ---> model_restart_threads:", self['model_restart_threads'])
+
+
+		if(self['distributed_memory_parallelism']):
+			ncore_search = self['search_threads']*self['search_multitask_processes']+1		
+		else:
+			ncore_search = self['search_threads']*(self['search_multitask_threads'])
+		print("  ")
+		print("  total core counts for search:", ncore_search)	
+		print("   ---> search_processes:", self['search_processes'])
+		print("   ---> search_threads:", self['search_threads'])		
+		print("   ---> search_multitask_processes:", self['search_multitask_processes'])		
+		print("   ---> search_multitask_threads:", self['search_multitask_threads'])	
 		
-		print("  distributed_memory_parallelism:", self['distributed_memory_parallelism'])
-		print("  shared_memory_parallelism:", self['shared_memory_parallelism'])
-		print("  model_restart_processes:", self['model_restart_processes'])
-		print("  model_restart_threads:", self['model_restart_threads'])
-		print("  search_multitask_processes:", self['search_multitask_processes'])		
-		print("  search_multitask_threads:", self['search_multitask_threads'])	
-		print("  objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])	
-		print("  objective_multisample_processes:", self['objective_multisample_processes'])	
-		print("  objective_multisample_threads:", self['objective_multisample_threads'])	
+		
+		if(self['distributed_memory_parallelism']):
+			ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1	
+		else:
+			ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)		
+		print("  ")
+		print("  total core counts for objective function evaluation:", ncore_obj)	
+		print("   ---> core counts in a single application run:", self['objective_nprocmax'])
+		print("   ---> objective_multisample_processes:", self['objective_multisample_processes'])	
+		print("   ---> objective_multisample_threads:", self['objective_multisample_threads'])	
 		
 		if(self['oversubscribe']==False):
 			if (computer.cores*computer.nodes<=1):
 				raise Exception("the computer should has at least 2 total cores")
 					
-			if ((computer.cores*computer.nodes-1)<self['model_restart_processes']*self['model_restart_threads']*self['model_processes']*self['model_threads']):
-				raise Exception("model_restart_processes*model_restart_threads*model_processes*model_threads should not exceed cores*nodes-1")
-			if (self['distributed_memory_parallelism'] and (computer.cores*computer.nodes-1)<self['search_multitask_processes']*self['search_multitask_threads']*self['search_processes']*self['search_threads']):
-				raise Exception("search_multitask_processes*search_multitask_threads*search_processes*search_threads should not exceed cores*nodes-1")	
-				
+			if ((computer.cores*computer.nodes)<ncore_model):
+				raise Exception("Reduce one of the options: model_restart_processes,model_restart_threads,model_processes,model_threads")
+			if ((computer.cores*computer.nodes)<ncore_search):
+				raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")	
+			if ((computer.cores*computer.nodes)<ncore_obj):
+				raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")	
+							
 				

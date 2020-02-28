@@ -209,7 +209,7 @@ class SearchPyGMO(Search):
 					front = ndf[0]
 				fs = pop.get_f()[front]
 				xs = pop.get_x()[front]
-				bestidx = pg.select_best_N_mo(points = fs, N = kwargs['search_best_N'])
+				bestidx = pg.select_best_N_mo(points = fs, N = kwargs['search_more_samples'])
 				# print('bestidx',bestidx)
 				xss = xs[bestidx]
 				fss = fs[bestidx]
