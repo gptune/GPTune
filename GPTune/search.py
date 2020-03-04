@@ -36,6 +36,10 @@ from computer import Computer
 from data import Data
 from model import Model
 
+from pathlib import Path
+import importlib
+
+
 class Search(abc.ABC):
 
 	def __init__(self, problem : Problem, computer : Computer):
@@ -136,9 +140,20 @@ class SurrogateProblem(object):
 		cond = self.computer.evaluate_constraints(self.problem, point)
 
 		xNorm = self.problem.PS.transform(xi0)[0]
-		# print(x)
-		# print(xNorm)
+
 		if (cond):
+			if(self.problem.models is not None):
+				if(self.problem.driverabspath is not None):
+					modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+					sys.path.append(self.problem.driverabspath) # add path to sys
+					module = importlib.import_module(modulename) # import driver name as a module 
+				else: 
+					raise Exception('performance models require passing driverabspath to GPTune')
+				# modeldata= self.problem.models(point)
+				modeldata= module.models(point)
+				xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space 
+				# print(xNorm)
+			
 			# print("cond",cond,- self.ei(x),'x',x,'xi',xi)
 			return self.ei(xNorm)
 		else:
@@ -229,6 +244,10 @@ if __name__ == '__main__':
 		print('this is a dummy definition')
 		return point
 		
+	def models(point):
+		print('this is a dummy definition')
+		return point
+
 	mpi_comm = MPI.Comm.Get_parent()
 	mpi_rank = mpi_comm.Get_rank()
 	mpi_size = mpi_comm.Get_size()

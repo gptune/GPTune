@@ -85,14 +85,14 @@ class Model_GPy_LCM(Model):
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         if (multitask):
-            kernels_list = [GPy.kern.RBF(input_dim = self.problem.DP, ARD=True) for k in range(model_latent)]
-            K = GPy.util.multioutput.LCM(input_dim = self.problem.DP, num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
+            kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
+            K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
         else:
-            K = GPy.kern.RBF(input_dim = self.problem.DP, ARD=True, name='GPy_GP')
+            K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
             else:
@@ -101,7 +101,7 @@ class Model_GPy_LCM(Model):
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
 
-        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = "True", optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
 #        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
@@ -162,7 +162,7 @@ class Model_LCM(Model):
 					else:
 						seed = restart_iter
 					np.random.seed(seed)
-					kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+					kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
 					if (restart_iter == 0 and self.M is not None):
 						kern.set_param_array(self.M.kern.get_param_array())
 					return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
@@ -171,7 +171,7 @@ class Model_LCM(Model):
 		else:
 			def fun(restart_iter):
 				np.random.seed(restart_iter)
-				kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+				kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
 				# print('I am here')
 				return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
 			res = list(map(fun, restart_iters))
@@ -179,7 +179,7 @@ class Model_LCM(Model):
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager == False): 
 			return res
 		
-		kern = LCM(input_dim = self.problem.DP, num_outputs = data.NI, Q = Q)
+		kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
 		bestxopt = min(res, key = lambda x: x[1])[0]
 		kern.set_param_array(bestxopt)
 
@@ -271,6 +271,9 @@ if __name__ == '__main__':
 	def objective(point):
 		print('this is a dummy definition')
 		return point
+	def models(point):
+		print('this is a dummy definition')
+		return point        
 	mpi_comm = MPI.Comm.Get_parent()
 	mpi_rank = mpi_comm.Get_rank()
 	mpi_size = mpi_comm.Get_size()

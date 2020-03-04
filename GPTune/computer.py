@@ -97,9 +97,16 @@ class Computer(object):
 
         return O
 
+    # def evaluate_models_onepoint(self, problem : Problem, point: dict):  # a simple wrapper for problem.models, point is in the original space
+    #     print('nani')
+    #     O= problem.models(point)
+    #     return O
+
+
+
     def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, options:dict=None):  # P2 is in the normalized space
 
-        if(problem.driverabspath is not None):
+        if(problem.driverabspath is not None and options['distributed_memory_parallelism']):
             modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
             sys.path.append(problem.driverabspath) # add path to sys
             module = importlib.import_module(modulename) # import driver name as a module 
@@ -197,7 +204,10 @@ if __name__ == '__main__':
     def objective(point):
         print('this is a dummy definition')
         return point
-        
+    def models(point):
+        print('this is a dummy definition')
+        return point        
+
     mpi_comm = MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
     mpi_size = mpi_comm.Get_size()

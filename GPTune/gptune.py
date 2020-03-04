@@ -32,6 +32,8 @@ import math
 
 import mpi4py
 from mpi4py import MPI		  
+import numpy as np
+
 class GPTune(object):
 
 	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, **kwargs):
@@ -140,6 +142,7 @@ class GPTune(object):
 			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, options = kwargs) 
 		t2 = time.time_ns()
 		time_fun = time_fun + (t2-t1)/1e9
+		# print(self.data.O)
 		# print("good!")	
 #            if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
 #                mpi_comm.bcast(self.data, root=0)
@@ -160,8 +163,24 @@ class GPTune(object):
 			t1 = time.time_ns()
 			for o in range(self.problem.DO):
 				tmpdata = copy.deepcopy(self.data)
-				tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]	
+				tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+				if(self.problem.models is not None):
+					for i in range(len(tmpdata.P)):
+						t = tmpdata.I[i]
+						I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]					
+						points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
+						modeldata=[]
+						for p in range(len(tmpdata.P[i])):
+							x = tmpdata.P[i][p]
+							x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
+							points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
+							points.update(points1)
+							modeldata.append(self.problem.models(points))
+						modeldata=np.array(modeldata)	
+						tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space 
+				# print(tmpdata.P[0])
 				modelers[o].train(data = tmpdata, **kwargs)
+			
 			t2 = time.time_ns()
 			time_model = time_model + (t2-t1)/1e9
 		
@@ -266,7 +285,7 @@ class GPTune(object):
 			K = GPy.kern.RBF(input_dim=self.problem.DI)
 			M = GPy.models.GPRegression(INorms, PSoptNorms[k], K)
 			# M.optimize_restarts(num_restarts = 10, robust=True, verbose=False, parallel=False, num_processes=None, messages="False")
-			M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = "False", optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+			M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 			MSopt.append(M)
 
 		aprxoptsNorm=np.hstack([MSopt[k].predict_noiseless(InewNorms)[0] for k in range(self.problem.DP)])  # the index [0] is the mean value, [1] is the variance

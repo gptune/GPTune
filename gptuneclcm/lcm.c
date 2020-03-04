@@ -46,7 +46,7 @@ double d_one   =  1.0;
 void K
 (
     // Dimensions / Sizes
-    const int DI,  // dimension of parameter space
+    const int DI,  // dimension of tuning parameter space
     const int NT,  // #of tasks
     const int NL,  // #of latent functions in LCM
     const int m,   // #row dimension of K
@@ -55,7 +55,7 @@ void K
     const double* restrict const theta, // size DI*NL, length scales for each Gaussian kernel k_q 
     const double* restrict const var,  // size NL, variance for each Gaussian kernel k_q 
     const double* restrict const BS,   // parameter matrices of size NT*NT of for each kernel k_q
-    const double*          const X1,   
+    const double*          const X1,   // YL: This function will only be called by GPy, which seems to assume column major for X1 and X2 once inside K
     const double*          const X2,
     // Output array
     double* restrict C      // this is required by python, so C is row major
@@ -63,7 +63,6 @@ void K
 {
     int i, j, d, q, idxi, idxj;
     double *dists, sum;
-
 # pragma omp parallel private ( i, j, d, q, idxi, idxj, sum, dists ) shared ( C )
     {
         dists = (double *) malloc(DI * sizeof(double));
@@ -73,14 +72,19 @@ void K
         {
             for (j = 0; j < n; j++)
             {
-                idxi = (int) X1[i * (DI+1) + DI];
-                idxj = (int) X2[j * (DI+1) + DI];
+                // idxi = (int) X1[i * (DI+1) + DI];  
+                // idxj = (int) X2[j * (DI+1) + DI];   
+
+                idxi = (int) X1[m * DI + i];
+                idxj = (int) X2[n * DI + j];
 
                 C[i*n + j] = 0.;
 
                 for (d = 0; d < DI; d++)
                 {
-                    dists[d] = fabs(X1[i * (DI+1) + d] - X2[j * (DI+1) + d]);
+                    // dists[d] = fabs(X1[i * (DI+1) + d] - X2[j * (DI+1) + d]);
+                    dists[d] = fabs(X1[m * d + i] - X2[n * d + j]);
+
                     dists[d] = dists[d] * dists[d];
                 }
                 for (q = 0; q < NL; q++)
@@ -394,6 +398,7 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
 						}
 					}
 				}
+                // printf("nima %5d%5d\n",idxi,idxj);
             }
 			
             cg2l(z, gi, &ljstart, &tmppid);			
@@ -401,6 +406,7 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
             {
 //@                z->K[li * z->lc + ljstart] += sigma[idxi] + 1e-8;
                 z->K[ljstart * z->lr + li] += sigma[idxi] + 1e-8;     //YL: why is 1e-8 here?
+                // printf("%5d%5d%14f\n",ljstart,li,z->K[ljstart * z->lr + li]);
             }
         }
     }

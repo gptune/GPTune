@@ -124,7 +124,6 @@ class Options(dict):
 			# 	self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
 			self['search_threads'] =1
 		
-		print(self['objective_nprocmax'],'jibajib')
 		if(self['objective_nprocmax'] is None):
 			self['objective_nprocmax'] = computer.cores*computer.nodes-1
 		self['objective_nprocmax'] = min(self['objective_nprocmax'],computer.cores*computer.nodes-1)

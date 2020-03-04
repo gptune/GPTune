@@ -100,6 +100,13 @@ class LCM(GPy.kern.Kern):
 
 		self.parameters_changed()
 
+		# print(self.theta)
+		# print(self.var)
+		# print(self.kappa)
+		# print(self.sigma)
+		# print(self.WS)
+		# print(self.BS)
+
 	def parameters_changed(self):
 
 		for q in range(self.Q):
@@ -218,6 +225,9 @@ class LCM(GPy.kern.Kern):
 			return (grad)
 
 		x0 = self.get_param_array()
+
+		# sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
+
 		sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
 		# print("!!!!")
 	#            bounds = [(None, None)] * len(x0)

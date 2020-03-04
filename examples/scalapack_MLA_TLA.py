@@ -52,7 +52,7 @@ def objective(point):
 
     # this become useful when the parameters returned by TLA1 do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
-        print('Warning: wrong parameters for objective function!!!')
+        print('Warning: wrong parameters for objective function!!!', nproc,p)
         return 1e12
 
     nth = int(nprocmax / nproc)
@@ -63,6 +63,32 @@ def objective(point):
     print(params, ' scalapack time: ', elapsedtime)
 
     return elapsedtime
+
+
+
+
+# should always use this name for user-defined model function
+def models(point):
+    m = point['m']
+    n = point['n']
+    nproc = point['nproc']
+    p = point['p']
+    mb = point['mb']
+    nb = point['nb']
+
+    # this become useful when the parameters returned by TLA1 do not respect the constraints
+    if(nproc == 0 or p == 0 or nproc < p):
+        print('Warning: wrong parameters for models function!!!', nproc,p)
+        return 1e12
+
+    # nth = int(nprocmax / nproc)
+    q = int(nproc / p)
+
+    b = max(mb,nb)
+    # elapsedtime = (2*n**2*(3*m-n)/3/nproc + b*n**2/2/q + 3*b*n*(2*m-n)/2/p + b**2*n/3/p)/(max(m,n)*min(m,n)**2)
+    elapsedtime = max(m,n)*min(m,n)**2/nproc/(max(m,n)*min(m,n)**2)
+
+    return [elapsedtime]
 
 
 def main():
@@ -111,7 +137,9 @@ def main():
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objective, constraints, None)
+    # problem = TuningProblem(IS, PS, OS, objective, constraints, models) # use performance models
+    problem = TuningProblem(IS, PS, OS, objective, constraints, None) # no performance model
+
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     """ Set and validate options """
     options = Options()
@@ -129,7 +157,7 @@ def main():
 
     options.validate(computer=computer)
     data = Data(problem)
-    gt = GPTune(problem, computer=computer, data=data, options=options)
+    gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
 
     # """ Building MLA with NI random tasks """
     # NI = ntask
@@ -138,6 +166,7 @@ def main():
     # print("stats: ",stats)
 
     """ Building MLA with the given list of tasks """
+    # giventask = [[2000, 2000]]
     giventask = [[460, 500], [800, 690]]
     NI = len(giventask)
     NS = nruns
@@ -152,8 +181,7 @@ def main():
         print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
         print("    Ps ", data.P[tid])
         print("    Os ", data.O[tid])
-        print('    Popt ', data.P[tid][np.argmin(
-            data.O[tid])], 'Yopt ', min(data.O[tid])[0])
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     """ Call TLA for 2 new tasks using the constructed LCM model"""
     newtask = [[400, 500], [800, 600]]
