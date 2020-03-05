@@ -218,6 +218,7 @@
     -DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
     -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
   make pddrive_spawn &>>build_gptune.log
+  make pzdrive_spawn &>>build_gptune.log
 
 
   rm -rf /usr/bin/lsb_release	

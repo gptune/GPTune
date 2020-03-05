@@ -87,6 +87,7 @@ cmake .. \
 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 make pddrive_spawn
+make pzdrive_spawn
 
 
 cd ../../../
