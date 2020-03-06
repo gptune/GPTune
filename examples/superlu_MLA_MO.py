@@ -112,8 +112,8 @@ def main():
 
 	nprocmax = nodes*cores-1
 	nprocmin = nodes
-	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
+	matrices = ["big.rua", "g4.rua", "g20.rua"]
+#	matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
 	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -168,8 +168,8 @@ def main():
 	#print("stats: ",stats)
 
 	""" Building MLA with the given list of tasks """	
-	#giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-	giventask = [["Si2.rb"]]	
+	giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
+	#giventask = [["Si2.rb"]]	
 	NI = len(giventask)
 	NS = nruns
 	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
