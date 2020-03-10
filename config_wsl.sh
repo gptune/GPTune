@@ -99,20 +99,20 @@
   
   printf "${BLUE} GC; Installing openmpi\n"
   cd $GPROOT/installDir
-  wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-  bzip2 -d openmpi-4.0.1.tar.bz2
-  tar -xvf openmpi-4.0.1.tar &> build_mpi.log
-  cd openmpi-4.0.1/ 
+  wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.2.tar.bz2
+  bzip2 -d openmpi-4.0.2.tar.bz2
+  tar -xvf openmpi-4.0.2.tar &> build_mpi.log
+  cd openmpi-4.0.2/ 
   cp $GPROOT/travis_build_openmpi.sh .
   cp $GPROOT/log_monitor.sh .
   bash travis_build_openmpi.sh  
     #make -j8 
     #make install  
-  sudo cp -r $GPROOT/installDir/openmpi-4.0.1/lib/* /usr/lib/x86_64-linux-gnu/.
-  export MPICC="$GPROOT/installDir/openmpi-4.0.1/bin/mpicc"
-  export MPICXX="$GPROOT/installDir/openmpi-4.0.1/bin/mpicxx"
-  export MPIF90="$GPROOT/installDir/openmpi-4.0.1/bin/mpif90"
-  export MPIRUN="$GPROOT/installDir/openmpi-4.0.1/bin/mpirun"
+  sudo cp -r $GPROOT/installDir/openmpi-4.0.2/lib/* /usr/lib/x86_64-linux-gnu/.
+  export MPICC="$GPROOT/installDir/openmpi-4.0.2/bin/mpicc"
+  export MPICXX="$GPROOT/installDir/openmpi-4.0.2/bin/mpicxx"
+  export MPIF90="$GPROOT/installDir/openmpi-4.0.2/bin/mpif90"
+  export MPIRUN="$GPROOT/installDir/openmpi-4.0.2/bin/mpirun"
   printf "${BLUE} GC; Done installing openmpi\n"
   
   printf "${BLUE} GC; Installing BLASfrom apt\n"
@@ -170,8 +170,7 @@
   rm -rf CTestTestfile.cmake
   rm -rf cmake_install.cmake
   rm -rf CMakeFiles
-  |
-    cmake .. \
+  cmake .. \
     -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_CXX_COMPILER=$MPICXX \
     -DCMAKE_C_COMPILER=$MPICC \
@@ -203,8 +202,7 @@
   PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
   mkdir -p build
   cd build
-  |
-    cmake .. \
+  cmake .. \
     -DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
     -DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
     -DBUILD_SHARED_LIBS=OFF \
