@@ -158,9 +158,10 @@
   export PYTHONPATH="$PYTHONPATH:$GPROOT/mpi4py/"
   export PYTHONPATH="$PYTHONPATH:$GPROOT/GPTune/"
   export PYTHONPATH="$PYTHONPATH:$GPROOT/examples/scalapack-driver/spt/"
+  export PYTHONPATH="$PYTHONPATH:$GPROOT/installDir/Python-3.7.4/lib/python3.7/site-packages"
   export PYTHONWARNINGS=ignore
 
-
+  rm -rf /usr/bin/lsb_release
   env CC=$MPICC pip3.7 install -r requirements.txt &>build_gptune.log
 
   mkdir -p build
@@ -219,7 +220,7 @@
   make pzdrive_spawn &>>build_gptune.log
 
 
-  rm -rf /usr/bin/lsb_release	
+	
   cd ../../../
   rm -rf mpi4py
   git clone https://github.com/mpi4py/mpi4py.git

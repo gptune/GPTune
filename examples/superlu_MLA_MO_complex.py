@@ -75,7 +75,7 @@ def objective(point):                  # should always use this name for user-de
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()
 
-	print(params, ' superlu time: ', tmpdata[0], ' memory: ', tmpdata[1])
+	print(params, ' superlu factor time: ', tmpdata[0], ' solve time: ', tmpdata[1])
 	# tmpdata1 = copy.deepcopy(tmpdata)
 	# tmpdata1[0]=tmpdata[1]
 	# tmpdata1[1]=tmpdata[0]	
@@ -113,7 +113,7 @@ def main():
 	nprocmax = nodes*cores-1
 	nprocmin = nodes
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	matrices = ["nimrodMatrix-V.mtx", "nimrodMatrix-B.mtx"]
+	matrices = ["nimrodMatrix-V.bin", "nimrodMatrix-B.bin"]
 	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -124,11 +124,11 @@ def main():
 	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="runtime")
-	memory    = Real        (float("-Inf") , float("Inf"), transform="normalize", name="memory")
+	factor   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="factor_time")
+	solve    = Real        (float("-Inf") , float("Inf"), transform="normalize", name="solve_time")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	OS = Space([runtime, memory])
+	OS = Space([factor, solve])
 	cst1 = "NSUP >= NREL"
 	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 	constraints = {"cst1" : cst1, "cst2" : cst2}
@@ -152,7 +152,7 @@ def main():
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
 	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	options['search_pop_size'] = 100 # 1000
+	options['search_pop_size'] = 1000 # 1000
 	options['search_gen'] = 10
 	options['search_best_N'] = 4
 	options.validate(computer = computer)
@@ -169,7 +169,7 @@ def main():
 
 	""" Building MLA with the given list of tasks """	
 	#giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-	giventask = [["nimrodMatrix-V.mtx"]]	
+	giventask = [["nimrodMatrix-V.bin"]]	
 	NI = len(giventask)
 	NS = nruns
 	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))

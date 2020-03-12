@@ -20,6 +20,7 @@
   export PYTHONPATH="$PYTHONPATH:$GPROOT/mpi4py/"
   export PYTHONPATH="$PYTHONPATH:$GPROOT/GPTune/"
   export PYTHONPATH="$PYTHONPATH:$GPROOT/examples/scalapack-driver/spt/"
+  export PYTHONPATH="$PYTHONPATH:$GPROOT/installDir/Python-3.7.4/lib/python3.7/site-packages"  
   export PYTHONWARNINGS=ignore
 
 
