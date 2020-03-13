@@ -40,7 +40,7 @@ from autotune.search import *
 ################################################################################
 
 
-def objective(point):                  # should always use this name for user-defined objective function
+def objectives(point):                  # should always use this name for user-defined objective function
     
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
@@ -140,7 +140,7 @@ def main():
 	target='memory'
 	# target='time'
 
-	problem = TuningProblem(IS, PS, OS, objective, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

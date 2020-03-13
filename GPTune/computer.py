@@ -155,7 +155,7 @@ class Computer(object):
                     kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                     kwargs.update(kwargst)
                     # print(kwargs)
-                    return module.objective(kwargs)                    
+                    return module.objectives(kwargs)                    
                 O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))	
         else:
 
@@ -164,7 +164,7 @@ class Computer(object):
                 x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
-                o = module.objective(kwargs)
+                o = module.objectives(kwargs)
                 # print('kwargs',kwargs,'o',o)
                 O2.append(o)
         return O2
@@ -201,7 +201,7 @@ class Computer(object):
 
 if __name__ == '__main__':
 
-    def objective(point):
+    def objectives(point):
         print('this is a dummy definition')
         return point
     def models(point):

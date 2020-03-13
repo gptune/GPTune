@@ -44,7 +44,7 @@ from pdqrdriver import pdqrdriver
 
 
 ''' The objective function required by GPTune. '''
-def objective(point):                  # should always use this name for user-defined objective function
+def objectives(point):                  # should always use this name for user-defined objective function
 	m = point['m']
 	n = point['n']
 	mb = point['mb']

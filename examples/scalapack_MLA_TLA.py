@@ -42,7 +42,7 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 
 
 # should always use this name for user-defined objective function
-def objective(point):
+def objectives(point):
     m = point['m']
     n = point['n']
     mb = point['mb']
@@ -137,18 +137,21 @@ def main():
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
 
-    # problem = TuningProblem(IS, PS, OS, objective, constraints, models) # use performance models
-    problem = TuningProblem(IS, PS, OS, objective, constraints, None) # no performance model
+    # problem = TuningProblem(IS, PS, OS, objectives, constraints, models) # use performance models
+    problem = TuningProblem(IS, PS, OS, objectives, constraints, None) # no performance model
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     """ Set and validate options """
     options = Options()
-    # options['model_processes'] = 1
+    options['model_processes'] = 1
     # options['model_threads'] = 1
     options['model_restarts'] = 1
     # options['search_multitask_processes'] = 1
     # options['model_restart_processes'] = 1
     # options['model_restart_threads'] = 1
+
+    # options['objective_evaluation_parallelism'] = True
+
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None

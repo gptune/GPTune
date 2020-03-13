@@ -28,7 +28,7 @@ class Problem(object):
         self.PS = tp.parameter_space
         self.OS = tp.output_space
 
-        self.objective   = tp.objective
+        self.objectives   = tp.objective
         self.driverabspath   = driverabspath
         self.constraints = tp.constraints
         self.models      = tp.models

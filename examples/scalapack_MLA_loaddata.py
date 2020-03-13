@@ -42,11 +42,11 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 ''' The objective function required by GPTune. '''
 
 
-def objective(point):
+def objectives(point):
     m = point['m']
     n = point['n']
-    mb = point['mb']*8
-    nb = point['nb']*8
+    mb = point['mb']
+    nb = point['nb']
     nproc = point['nproc']
     p = point['p']
 
@@ -58,8 +58,6 @@ def objective(point):
     q = int(nproc / p)
     params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
 
-
-    print(params, ' before scalapack  ' )
 
     elapsedtime = pdqrdriver(params, niter=3, JOBID=JOBID)
     print(params, ' scalapack time: ', elapsedtime)
@@ -96,10 +94,10 @@ def main():
     nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
     nprocmin = nodes
 
-    m = Integer(512, mmax, transform="normalize", name="m")
-    n = Integer(512, nmax, transform="normalize", name="n")
-    mb = Integer(1, 16, transform="normalize", name="mb")
-    nb = Integer(1, 16, transform="normalize", name="nb")
+    m = Integer(128, mmax, transform="normalize", name="m")
+    n = Integer(128, nmax, transform="normalize", name="n")
+    mb = Integer(1, 128, transform="normalize", name="mb")
+    nb = Integer(1, 128, transform="normalize", name="nb")
     nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
@@ -107,8 +105,8 @@ def main():
     IS = Space([m, n])
     PS = Space([mb, nb, nproc, p])
     OS = Space([r])
-    cst1 = "mb * 8 * p <= m"
-    cst2 = "nb * 8 * nproc <= n * p"
+    cst1 = "mb * p <= m"
+    cst2 = "nb * nproc <= n * p"
     cst3 = "nproc >= p"
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)

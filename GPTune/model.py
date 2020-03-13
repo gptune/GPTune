@@ -268,7 +268,7 @@ class Model_DGP(Model):
 
 		
 if __name__ == '__main__':
-	def objective(point):
+	def objectives(point):
 		print('this is a dummy definition')
 		return point
 	def models(point):
