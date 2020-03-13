@@ -18,7 +18,7 @@ works, and perform publicly and display publicly, and to permit other to do so.
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
 
-## Depdency
+## Dependency
 GPTune relies on OpenMPI/4.0 (url), Python 3.7, BLAS/LAPACK/SCALAPACK(url) (compiled with OpenMPI/4.0?), mpi4py (built with openmpi/4.0), scikit-optimize, autotune, intel-depdent lib (??). 
 
 All these need be installed before installing GPTune.
