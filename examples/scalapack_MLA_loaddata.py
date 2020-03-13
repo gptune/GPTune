@@ -111,7 +111,7 @@ def main():
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objective, constraints, None)
+    problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """
