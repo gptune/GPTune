@@ -31,7 +31,7 @@ import sys
 import os
 import mpi4py
 from mpi4py import MPI
-import numpy as nps
+import numpy as np
 import time
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
@@ -48,7 +48,7 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 # Categoricalnorm(categories, transform="onehot", name="yourname")
 
 
-# Argmin{x} objective(t,x), for x in [0., 1.]
+# Argmin{x} objectives(t,x), for x in [0., 1.]
 
 
 input_space = Space([Real(0., 10., transform="normalize", name="t")])
@@ -61,11 +61,10 @@ parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
 output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
 
 
-def objective(point):
+def objectives(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
     """
-
     t = point['t']
     x = point['x']
     a = 2 * np.pi
@@ -75,6 +74,7 @@ def objective(point):
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
     f = d * e
 
+    # print('test:',test)
     """
     f(t,x) = x^2+t
     """
@@ -86,12 +86,12 @@ def objective(point):
     return f
 
 
-
+# test=1  # make sure to set global variables here, rather than in the main function 
 def models(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
     """
-
+    # global test
     t = point['t']
     x = point['x']
     a = 2 * np.pi
@@ -100,6 +100,7 @@ def models(point):
     d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
     f = d * e
+    # print('dd',test)
 
     """
     f(t,x) = x^2+t
@@ -109,13 +110,16 @@ def models(point):
     # f = 20*x**2+t
     # time.sleep(1.0)
 
-    return [f*10]
+    return [f*(1+np.random.uniform()*0.1)]
 
 
 
 constraints = {"cst1": "x >= 0. and x <= 1."}
-# problem = TuningProblem(input_space, parameter_space,output_space, objective, constraints, models)  # with performance model
-problem = TuningProblem(input_space, parameter_space,output_space, objective, constraints, None)  # no performance model
+problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+
+
+
 
 
 
@@ -130,11 +134,14 @@ problem = TuningProblem(input_space, parameter_space,output_space, objective, co
 
 
 if __name__ == '__main__':
+    
+    import matplotlib.pyplot as plt
+
     computer = Computer(nodes=8, cores=2, hosts=None)
     options = Options()
     options['model_restarts'] = 1
 
-    options['distributed_memory_parallelism'] = False
+    options['distributed_memory_parallelism'] = True
     options['shared_memory_parallelism'] = False
 
     options['objective_evaluation_parallelism'] = False
@@ -153,7 +160,7 @@ if __name__ == '__main__':
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_GPy_LCM'
+    options['model_class'] = 'Model_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
@@ -161,9 +168,53 @@ if __name__ == '__main__':
     options.validate(computer=computer)
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
+    
+    
+
+    """ Plot the objective function for t=1,2,3,4,5,6 """
+    def annot_min(x,y, ax=None):
+        xmin = x[np.argmin(y)]
+        ymin = y.min()
+        text= "x={:.3f}, y={:.3f}".format(xmin, ymin)
+        if not ax:
+            ax=plt.gca()
+        bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+        arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=60")
+        kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
+        ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
+
+    
+    x = np.arange(0., 1., 0.00001)
+    for t in range(1,7):
+        fig = plt.figure(figsize=[12.8, 9.6])
+        I_orig=[t]
+        kwargst = {gt.problem.IS[k].name: I_orig[k] for k in range(gt.problem.DI)}
+
+        y=np.zeros([len(x),1])
+        for i in range(len(x)):
+            P_orig=[x[i]]
+            kwargs = {gt.problem.PS[k].name: P_orig[k] for k in range(gt.problem.DP)}
+            kwargs.update(kwargst)
+            y[i]=objectives(kwargs) 
+        fontsize=20
+        plt.rcParams.update({'font.size': fontsize})
+        plt.plot(x, y, 'b')
+        plt.xlabel('x',fontsize=fontsize+2)
+        plt.ylabel('y(t,x)',fontsize=fontsize+2)
+        plt.title('t=%d'%t,fontsize=fontsize+2)
+        print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
+    
+        annot_min(x,y)
+        # plt.show()
+        plt.show(block=False)
+        fig.savefig('obj_t_%d.eps'%t)       
+    
+    
+    
+    
     # print('demo before MLA')
     NI=1
-    NS=160
+    NS=40
     # (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=NS-10)
     (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=int(NS/2))
 
