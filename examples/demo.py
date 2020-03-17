@@ -183,32 +183,33 @@ if __name__ == '__main__':
         kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
         ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
 
-    
-    x = np.arange(0., 1., 0.00001)
-    for t in range(1,7):
-        fig = plt.figure(figsize=[12.8, 9.6])
-        I_orig=[t]
-        kwargst = {gt.problem.IS[k].name: I_orig[k] for k in range(gt.problem.DI)}
+    plot=0
+    if plot==1:
+        x = np.arange(0., 1., 0.00001)
+        for t in range(1,7):
+            fig = plt.figure(figsize=[12.8, 9.6])
+            I_orig=[t]
+            kwargst = {gt.problem.IS[k].name: I_orig[k] for k in range(gt.problem.DI)}
 
-        y=np.zeros([len(x),1])
-        for i in range(len(x)):
-            P_orig=[x[i]]
-            kwargs = {gt.problem.PS[k].name: P_orig[k] for k in range(gt.problem.DP)}
-            kwargs.update(kwargst)
-            y[i]=objectives(kwargs) 
-        fontsize=20
-        plt.rcParams.update({'font.size': fontsize})
-        plt.plot(x, y, 'b')
-        plt.xlabel('x',fontsize=fontsize+2)
-        plt.ylabel('y(t,x)',fontsize=fontsize+2)
-        plt.title('t=%d'%t,fontsize=fontsize+2)
-        print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
-    
-        annot_min(x,y)
-        # plt.show()
-        plt.show(block=False)
-        fig.savefig('obj_t_%d.eps'%t)       
-    
+            y=np.zeros([len(x),1])
+            for i in range(len(x)):
+                P_orig=[x[i]]
+                kwargs = {gt.problem.PS[k].name: P_orig[k] for k in range(gt.problem.DP)}
+                kwargs.update(kwargst)
+                y[i]=objectives(kwargs) 
+            fontsize=20
+            plt.rcParams.update({'font.size': fontsize})
+            plt.plot(x, y, 'b')
+            plt.xlabel('x',fontsize=fontsize+2)
+            plt.ylabel('y(t,x)',fontsize=fontsize+2)
+            plt.title('t=%d'%t,fontsize=fontsize+2)
+            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
+        
+            annot_min(x,y)
+            # plt.show()
+            plt.show(block=False)
+            fig.savefig('obj_t_%d.eps'%t)       
+        
     
     
     

@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2018.
 
 # module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi
-module load openmpi/4.0.2
+module load openmpi/4.0.1
 
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
