@@ -47,9 +47,9 @@ def objectives(point):                  # should always use this name for user-d
 	nproc = point['nproc']
 	NSUP = point['NSUP']
 	NREL = point['NREL']
-	NTH   = int(nprocmax / nproc) 
+	nthreads   = int(nprocmax / nproc) 
 	npcols     = int(nproc / nprows)
-	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'NTH', NTH, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
+	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
 	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
@@ -57,13 +57,13 @@ def objectives(point):                  # should always use this name for user-d
 
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
-	envstr= 'OMP_NUM_THREADS=%d\n' %(NTH)   
+	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
 	envstr+= 'NREL=%d\n' %(NREL)   
 	envstr+= 'NSUP=%d\n' %(NSUP)   
 	info.Set('env',envstr)
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(NTH), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
+	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
 	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
