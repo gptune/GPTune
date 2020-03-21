@@ -141,7 +141,7 @@ if __name__ == '__main__':
     options = Options()
     options['model_restarts'] = 1
 
-    options['distributed_memory_parallelism'] = True
+    options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
 
     options['objective_evaluation_parallelism'] = False
