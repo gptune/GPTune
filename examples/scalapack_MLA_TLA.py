@@ -55,10 +55,10 @@ def objectives(point):
         print('Warning: wrong parameters for objective function!!!', nproc,p)
         return 1e12
 
-    nth = int(nprocmax / nproc)
+    nthreads = int(nprocmax / nproc)
     q = int(nproc / p)
 
-    params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
+    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1.)]
     elapsedtime = pdqrdriver(params, niter=3, JOBID=JOBID)
     print(params, ' scalapack time: ', elapsedtime)
 
@@ -81,7 +81,7 @@ def models(point):
         print('Warning: wrong parameters for models function!!!', nproc,p)
         return 1e12
 
-    # nth = int(nprocmax / nproc)
+    # nthreads = int(nprocmax / nproc)
     q = int(nproc / p)
 
     b = max(mb,nb)

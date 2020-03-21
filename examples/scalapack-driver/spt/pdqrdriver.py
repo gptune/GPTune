@@ -45,7 +45,7 @@ def write_input(params, RUNDIR, niter=1):
             fin.write("%2s%6d%6d%6d%6d%6d%6d%20.13E\n"%(param[0], param[1], param[2], param[5], param[6], param[9], param[10],param[11]))
     fin.close()
 
-def execute(nproc, nth, RUNDIR):
+def execute(nproc, nthreads, RUNDIR):
 
     #XXX To be removed
     def v_sequential():
@@ -56,7 +56,7 @@ def execute(nproc, nth, RUNDIR):
         # print('nimdda',RUNDIR)
         
         info = MPI.Info.Create()
-        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nth))
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))
         
         
         
@@ -74,7 +74,7 @@ def execute(nproc, nth, RUNDIR):
         return 0
 
 
-        # return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=%d; mpirun -c %d -n %d %s/pdqrdriver 2>> QR.err &  wait;"%(RUNDIR, nth, 2*nth, nproc, BINDIR))
+        # return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=%d; mpirun -c %d -n %d %s/pdqrdriver 2>> QR.err &  wait;"%(RUNDIR, nthreads, 2*nthreads, nproc, BINDIR))
 
 ##    err = v_sequential()
     err = v_parallel()
@@ -136,9 +136,9 @@ def pdqrdriver(params, niter=10,JOBID: int = None):
     os.system("mkdir -p %s"%(RUNDIR))
     # print('nima',RUNDIR)
 
-    dtype = [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nth", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
+    dtype = [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nthreads", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
     params = np.array(params, dtype=dtype)
-    perm = np.argsort(params, order=["nproc", "nth"])
+    perm = np.argsort(params, order=["nproc", "nthreads"])
     invperm = np.argsort(perm)
     idxproc = 8
     idxth = 7

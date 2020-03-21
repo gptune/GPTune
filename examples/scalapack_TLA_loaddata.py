@@ -55,9 +55,9 @@ def objectives(point):                  # should always use this name for user-d
 		print('Warning: wrong parameters for objective function!!!')
 		return 1e12
 
-	nth   = int(nprocmax / nproc) 
+	nthreads   = int(nprocmax / nproc) 
 	q     = int(nproc / p)
-	params = [('QR', m, n, nodes, cores, mb, nb, nth, nproc, p, q, 1.)]
+	params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1.)]
 	elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
 	print(params, ' scalapack time: ', elapsedtime)
 	return elapsedtime 

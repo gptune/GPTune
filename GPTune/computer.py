@@ -127,7 +127,7 @@ class Computer(object):
                 raise Exception('objective_evaluation_parallelism and distributed_memory_parallelism require passing driverabspath to GPTune')
 
             nproc = min(options['objective_multisample_processes'],len(P2))
-            mpi_comm = self.spawn(__file__, nproc, nth=1, kwargs=options) 
+            mpi_comm = self.spawn(__file__, nproc, nthreads=1, kwargs=options) 
             kwargs_tmp = options
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
@@ -173,7 +173,7 @@ class Computer(object):
 
         
 
-    def spawn(self, executable, nproc, nth, args=None, kwargs=None): 
+    def spawn(self, executable, nproc, nthreads, args=None, kwargs=None): 
 
         # XXX
 #        check_mpi()
@@ -187,7 +187,7 @@ class Computer(object):
 #        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         
         info = MPI.Info.Create()
-        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nth))        
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))        
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc,info=info)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         # process_rank = comm.Get_rank()
         # process_count = comm.Get_size()
