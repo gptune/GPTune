@@ -1,4 +1,4 @@
-module load python3/3.7-anaconda-2019.07
+module load python/3.7-anaconda-2019.07
 module unload cray-mpich/7.7.6
 
 module swap PrgEnv-intel PrgEnv-gnu
