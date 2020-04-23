@@ -57,22 +57,23 @@ class Data(object):
 	# To GPTune I is 2D numpy array. To user I is a list of lists
 	# To GPTune P is is list/collection of 2D numpy array with column dimension corresponding to PS dimension. To user P is a list of (list of lists)
 	# To GPTune and user O is is list/collection of 2D numpy array with column dimension 1 for single-objective function. 
-    def __init__(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, O : Collection[np.ndarray] = None):
+    def __init__(self, problem : Problem, I = None, P = None, O = None):
+    # def __init__(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, O : Collection[np.ndarray] = None):
 
         self.problem = problem
 
-        if (not self.check_inputs(I)):
-            raise Exception("")
+        # if (not self.check_inputs(I)):
+        #     raise Exception("")
 
         self.I = I
 
-        if (not self.check_parameters(P)):
-            raise Exception("")
+        # if (not self.check_parameters(P)):
+        #     raise Exception("")
 
         self.P = P
 
-        if (not self.check_outputs(O)):
-            raise Exception("")
+        # if (not self.check_outputs(O)):
+        #     raise Exception("")
 
         self.O = O
 

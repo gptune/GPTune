@@ -30,6 +30,9 @@ import os
 import numpy as np
 import argparse
 import pickle
+from random import *
+from callopentuner import OpenTuner
+import time
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -45,8 +48,8 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 def objectives(point):
     m = point['m']
     n = point['n']
-    mb = point['mb']
-    nb = point['nb']
+    mb = point['mb']*8
+    nb = point['nb']*8
     nproc = point['nproc']
     p = point['p']
 
@@ -94,10 +97,13 @@ def main():
     nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
     nprocmin = nodes
 
-    m = Integer(128, mmax, transform="normalize", name="m")
-    n = Integer(128, nmax, transform="normalize", name="n")
-    mb = Integer(1, 128, transform="normalize", name="mb")
-    nb = Integer(1, 128, transform="normalize", name="nb")
+    mmin=128
+    nmin=128
+
+    m = Integer(mmin, mmax, transform="normalize", name="m")
+    n = Integer(nmin, nmax, transform="normalize", name="n")
+    mb = Integer(1, 16, transform="normalize", name="mb")
+    nb = Integer(1, 16, transform="normalize", name="nb")
     nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
@@ -105,8 +111,8 @@ def main():
     IS = Space([m, n])
     PS = Space([mb, nb, nproc, p])
     OS = Space([r])
-    cst1 = "mb * p <= m"
-    cst2 = "nb * nproc <= n * p"
+    cst1 = "mb*8 * p <= m"
+    cst2 = "nb*8 * nproc <= n * p"
     cst3 = "nproc >= p"
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
@@ -129,32 +135,62 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
 
+
     """ Intialize the tuner with existing data stored as last check point"""
     try:
         data = pickle.load(open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'rb'))
+        giventask = data.I
     except (OSError, IOError) as e:
         data = Data(problem)
-    gt = GPTune(problem, computer=computer, data=data, options=options)
+        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
 
-    """ Building MLA with NI random tasks """
-    NI = ntask
-    NS = nruns
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, NS1=max(NS//2, 1))
-    print("stats: ", stats)
+    # giventask = [[2000,2000]]
 
-    """ Dump the data to file as a new check point """
-    pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+    ## the following will use only task lists stored in the pickle file
+    # data = Data(problem)
 
-    """ Dump the tuner to file for TLA use """
-    pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
 
-    """ Print all input and parameter samples """
-    for tid in range(NI):
-        print("tid: %d" % (tid))
-        print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-        print("    Ps ", data.P[tid])
-        print("    Os ", data.O[tid])
-        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
+
+    TUNER_NAME = os.environ['TUNER_NAME']
+
+    if(TUNER_NAME=='GPTune'):
+
+        gt = GPTune(problem, computer=computer, data=data, options=options)
+
+        """ Building MLA with NI random tasks """
+        NI = ntask
+        NS = nruns
+        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+        print("stats: ", stats)
+
+        """ Dump the data to file as a new check point """
+        pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+
+        """ Dump the tuner to file for TLA use """
+        pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+    if(TUNER_NAME=='opentuner'):
+        NI = ntask
+        NS = nruns
+        data = Data(problem,I=giventask)
+        (data.P, data.O,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
 
 
 def parse_args():

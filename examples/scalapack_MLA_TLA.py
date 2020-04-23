@@ -30,6 +30,8 @@ import os
 import numpy as np
 import argparse
 import pickle
+from random import *
+from callopentuner import OpenTuner
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -120,8 +122,10 @@ def main():
     nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
     nprocmin = nodes
 
-    m = Integer(128, mmax, transform="normalize", name="m")
-    n = Integer(128, nmax, transform="normalize", name="n")
+    mmin=128
+    nmin=128
+    m = Integer(mmin, mmax, transform="normalize", name="m")
+    n = Integer(nmin, nmax, transform="normalize", name="n")
     mb = Integer(1, 128, transform="normalize", name="mb")
     nb = Integer(1, 128, transform="normalize", name="nb")
     nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
@@ -159,42 +163,58 @@ def main():
     options['verbose'] = False
 
     options.validate(computer=computer)
+    # giventask = [[2000, 2000]]
+    # giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+    giventask = [[460, 500], [800, 690]]
+
+
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
 
-    # """ Building MLA with NI random tasks """
-    # NI = ntask
-    # NS = nruns
-    # (data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
-    # print("stats: ",stats)
+    TUNER_NAME = os.environ['TUNER_NAME']
 
-    """ Building MLA with the given list of tasks """
-    # giventask = [[2000, 2000]]
-    giventask = [[460, 500], [800, 690]]
-    NI = len(giventask)
-    NS = nruns
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
-    print("stats: ", stats)
-    pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (
-        nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+    if(TUNER_NAME=='GPTune'):
+        """ Building MLA with the given list of tasks """
+        NI = len(giventask)
+        NS = nruns
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+        print("stats: ", stats)
+        pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (
+            nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
 
-    """ Print all input and parameter samples """
-    for tid in range(NI):
-        print("tid: %d" % (tid))
-        print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-        print("    Ps ", data.P[tid])
-        print("    Os ", data.O[tid])
-        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-    """ Call TLA for 2 new tasks using the constructed LCM model"""
-    newtask = [[400, 500], [800, 600]]
-    (aprxopts, objval, stats) = gt.TLA1(newtask, NS=None)
-    print("stats: ", stats)
+        """ Call TLA for 2 new tasks using the constructed LCM model"""
+        newtask = [[400, 500], [800, 600]]
+        (aprxopts, objval, stats) = gt.TLA1(newtask, NS=None)
+        print("stats: ", stats)
 
-    """ Print the optimal parameters and function evaluations"""
-    for tid in range(len(newtask)):
-        print("new task: %s" % (newtask[tid]))
-        print('    predicted Popt: ', aprxopts[tid], ' objval: ', objval[tid])
+        """ Print the optimal parameters and function evaluations"""
+        for tid in range(len(newtask)):
+            print("new task: %s" % (newtask[tid]))
+            print('    predicted Popt: ', aprxopts[tid], ' objval: ', objval[tid])
+
+
+    if(TUNER_NAME=='opentuner'):
+        NI = ntask
+        NS = nruns
+        data = Data(problem,I=giventask)
+        (data.P, data.O,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
+        print("stats: ", stats)
+
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%d " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 def parse_args():

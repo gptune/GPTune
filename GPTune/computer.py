@@ -42,7 +42,7 @@ class Computer(object):
         if (hosts != None and nodes != len(hosts)):
             raise Exception('The number of elements in "hosts" does not match with the number of "nodes"')
 
-    def evaluate_constraints(self, problem : Problem, point : Collection, inputs_only : bool = False, **kwargs):  # point is in the original spaces
+    def evaluate_constraints(self, problem, point : Collection, inputs_only : bool = False, **kwargs):  # point is in the original spaces
 
 #       kwargs['constraints_evaluation_parallelism']
 

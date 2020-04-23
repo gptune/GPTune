@@ -25,6 +25,7 @@ from autotune.space import *
 from autotune.problem import *
 from gptune import GPTune
 from data import Data
+from data import Categoricalnorm
 from options import Options
 from computer import Computer
 import sys
@@ -33,6 +34,7 @@ import mpi4py
 from mpi4py import MPI
 import numpy as np
 import time
+from callopentuner import OpenTuner
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -50,10 +52,9 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
 # Argmin{x} objectives(t,x), for x in [0., 1.]
 
-
 input_space = Space([Real(0., 10., transform="normalize", name="t")])
 parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
-
+# print(input_space.dimension_names[1],type(input_space.dimensions[1]),input_space.dimensions[1].bounds,type(input_space.dimensions[1].bounds),input_space.dimensions[1].bounds[1],isinstance(input_space.dimensions[1],Categorical))
 # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
 # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
@@ -83,7 +84,7 @@ def objectives(point):
     # f = 20*x**2+t
     # time.sleep(1.0)
 
-    return f
+    return [f]
 
 
 # test=1  # make sure to set global variables here, rather than in the main function 
@@ -155,20 +156,19 @@ if __name__ == '__main__':
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
-    # options['search_threads'] = 1
+    options['search_threads'] = 8
 
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM'
+    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
-        
+
     options.validate(computer=computer)
-    data = Data(problem)
-    gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-    
+
+    os.environ['TUNER_NAME'] = 'GPTune'
     
 
     """ Plot the objective function for t=1,2,3,4,5,6 """
@@ -211,21 +211,35 @@ if __name__ == '__main__':
             fig.savefig('obj_t_%d.eps'%t)       
         
     
+    giventask = [[6]]
+    NI=len(giventask)
+    NS=40	    
     
+    TUNER_NAME = os.environ['TUNER_NAME']
+
+    if(TUNER_NAME=='GPTune'):
+        data = Data(problem)
+        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
+        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%d " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        print("stats: ", stats)
     
-    # print('demo before MLA')
-    NI=1
-    NS=40
-    # (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=NS-10)
-    (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, NS1=int(NS/2))
 
+    if(TUNER_NAME=='opentuner'):
+        data = Data(problem,I=giventask)
+        (data.P, data.O,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%d " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-    """ Print all input and parameter samples """
-    for tid in range(NI):
-        print("tid: %d" % (tid))
-        print("    t:%d " % (data.I[tid][0]))
-        print("    Ps ", data.P[tid])
-        print("    Os ", data.O[tid])
-        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-    print("stats: ", stats)
