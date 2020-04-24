@@ -138,6 +138,7 @@ def OpenTuner(T, NS, tp : TuningProblem, computer : Computer, run_id="OpenTuner"
 
     X = []
     Y = []
+    data = Data(tp)
     # Xopt = []
     # Yopt = []
 
@@ -171,7 +172,10 @@ def OpenTuner(T, NS, tp : TuningProblem, computer : Computer, run_id="OpenTuner"
     stats['time_total'] = (t2-t1)/1e9	
     stats['time_fun'] = timefun
 
+    data.I=T
+    data.P=X
+    data.O=Y
     # Finalize
 
-    return (X, Y, stats)
+    return (data, stats)
 

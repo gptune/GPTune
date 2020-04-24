@@ -180,8 +180,7 @@ def main():
     if(TUNER_NAME=='opentuner'):
         NI = ntask
         NS = nruns
-        data = Data(problem,I=giventask)
-        (data.P, data.O,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
+        (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):
