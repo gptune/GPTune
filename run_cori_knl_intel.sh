@@ -11,8 +11,11 @@ module load openmpi/4.0.1
 
 export OMPI_MCA_btl_ugni_virtual_device_count=1
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
+
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+# export PYTHONPATH=$PYTHONPATH:$PWD/cython/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPy/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONPATH=$PYTHONPATH:$PWD/examples/scalapack-driver/spt/
 export PYTHONWARNINGS=ignore

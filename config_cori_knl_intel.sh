@@ -22,6 +22,8 @@ module load openmpi/4.0.1
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+# export PYTHONPATH=$PYTHONPATH:$PWD/cython/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPy/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 CCC=mpicc
@@ -29,9 +31,24 @@ CCCPP=mpiCC
 FTN=mpif90
 
 
+# rm -rf cython
+# git clone https://github.com/cython/cython.git
+# cd cython
+# LDSHARED="$CCC -shared" CC=$CCC python setup.py build_ext --inplace
+# python setup.py install --user
+# cd ../
+
+rm -rf GPy
+git clone https://github.com/SheffieldML/GPy.git
+cd GPy
+LDSHARED="$CCC -shared" CC=$CCC python setup.py build_ext --inplace
+python setup.py install --user
+cd ../
+
+
 #pip uninstall -r requirements.txt
 #env CC=$CCC pip install --upgrade --user -r requirements.txt
-env CC=$CCC pip install --user -r requirements.txt
+env CC=$CCC pip install --user -r requirements_intel.txt
 
 
 
@@ -45,7 +62,7 @@ rm -rf CTestTestfile.cmake
 rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
-	-DCMAKE_CXX_FLAGS="-fopenmp" \
+	-DCMAKE_CXX_FLAGS="-qopenmp" \
 	-DCMAKE_C_FLAGS="-qopenmp" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
@@ -55,7 +72,7 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
 	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_SCALAPACK_LIBRARIES="/global/homes/l/liuyangz/Cori/my_software/scalapack-2.1.0/build_knl_openmpi_intel_gnu/lib/libscalapack.so"
+	-DTPL_SCALAPACK_LIBRARIES="/global/homes/l/liuyangz/Cori/my_software/scalapack-2.1.0/build_knl_openmpi_intel/lib/libscalapack.so"
 make
 cp lib_gptuneclcm.so ../.
 cp pdqrdriver ../
@@ -100,6 +117,8 @@ cmake .. \
 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 make pddrive_spawn
 make pzdrive_spawn
+
+
 
 
 
