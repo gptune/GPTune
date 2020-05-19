@@ -1,3 +1,4 @@
+
 #! /usr/bin/env python3
 
 """
@@ -41,13 +42,15 @@ from autotune.search import *
 def objectives(point):                  # should always use this name for user-defined objective function
     
 	COLPERM = point['COLPERM']
+	ROWPERM = point['ROWPERM']
 	nprows = 2**point['nprows']
-	nproc = 2**point['nproc']
+	nproc = 2**point['nproc']*3
+	# nproc = 12
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 	nblock     = int(nprocmax/nproc)
 	npcols     = int(nproc/ nprows)
-	params = ['COLPERM', COLPERM, 'nblock', nblock, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
+	params = ['ROWPERM', ROWPERM, 'COLPERM', COLPERM, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
 
 	# INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
@@ -149,13 +152,15 @@ def main():
 	TUNER_NAME = os.environ['TUNER_NAME']
 
 
-	nprocmax = nodes*cores-1
+	# nprocmax = nodes*cores-1
+	nprocmax = 384
 	nprocmin = nodes
 
 	# Input parameters
-	COLPERM   = Categoricalnorm (['MMD_AT_PLUS_A', 'MMD_ATA', 'NATURAL'], transform="onehot", name="COLPERM")
-	nprows    = Integer     (0, np.log2(nprocmax), transform="normalize", name="nprows")
-	nproc    = Integer     (0, np.log2(nprocmax), transform="normalize", name="nproc")
+	ROWPERM   = Categoricalnorm (['NOROWPERM', 'LargeDiag_MC64'], transform="onehot", name="ROWPERM")
+	COLPERM   = Categoricalnorm (['MMD_AT_PLUS_A', 'METIS_AT_PLUS_A'], transform="onehot", name="COLPERM")
+	nprows    = Integer     (0, 3, transform="normalize", name="nprows")
+	nproc    = Integer     (0, 3, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
 
@@ -163,22 +168,23 @@ def main():
 
 
 
-	examples = ["Run05_B_XY"]
+	examples = ["Run05_A_XY"]
 	example    = Categoricalnorm (examples, transform="onehot", name="matrix")
 	
 	IS = Space([example])
-	PS = Space([COLPERM, nproc, nprows, NSUP, NREL])
+	PS = Space([ROWPERM, COLPERM, nprows, nproc, NSUP, NREL])
+	# PS = Space([ROWPERM, COLPERM, nprows, NSUP, NREL])
 	OS = Space([result])
 	cst1 = "NSUP >= NREL"
-	cst2 = "nprows<=nproc"
+	cst2 = "nprows<=2"
 	constraints = {"cst1" : cst1,"cst2" : cst2}
 	models = {}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
-	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/M3DC1/m3dc1_newrepo_620_04_08_20/M3DC1/unstructured_openmpi_spawn/_cori_knl-3d-opt-60")
-	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/M3DC1/m3dc1_newrepo_620_04_08_20/M3DC1/Run05_B_XY")
+	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/M3DC1/m3dc1_newrepo_620_04_08_20/M3DC1/unstructured_openmpi_spawn_intel/_cori_knl-3d-opt-60")
+	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/M3DC1/m3dc1_newrepo_620_04_08_20/M3DC1/Run05_A_XY")
 	os.system("cp %s/*.smb ."%(RUNDIR))
 	os.system("cp %s/C1input ."%(RUNDIR))
 	os.system("cp %s/AnalyticModel ."%(RUNDIR))
@@ -206,7 +212,7 @@ def main():
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
 	options['model_class '] = 'Model_LCM'
-	options['verbose'] = False
+	options['verbose'] = True
 
 	options.validate(computer = computer)
 
@@ -224,10 +230,11 @@ def main():
 	# print("stats: ",stats)
 
 	""" Building MLA with the given list of tasks """	
-	giventask = [["Run05_B_XY"]]	
+	giventask = [["Run05_A_XY"]]	
 	NI = len(giventask)
 	NS = nruns
 	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
+	# (data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = 10)
 	print("stats: ",stats)
 
 
