@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -rf ~/.local/lib
+
 module load gcc/9.1.0
 module load openmpi/gcc-9.1.0/4.0.1
 module load scalapack-netlib/gcc-9.1.0/2.0.2
@@ -100,11 +102,11 @@ python setup.py install
 
 
 
-# cd ../
-# rm -rf scikit-optimize
-# git clone https://github.com/scikit-optimize/scikit-optimize.git
-# cd scikit-optimize/
-# pip install --user -e .
+cd ../
+rm -rf scikit-optimize
+git clone https://github.com/scikit-optimize/scikit-optimize.git
+cd scikit-optimize/
+pip install --user -e .
  
  
 cd ../

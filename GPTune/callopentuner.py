@@ -70,7 +70,6 @@ class OpenTunerInterface(opentuner.MeasurementInterface):
         # Extract parameters
 
         cfg = desired_result.configuration.data
-
         t = self.args.t
         x = [cfg[p] for p in self.args.tp.parameter_space.dimension_names]
         kwargs = {d.name: x[i] for (i, d) in enumerate(self.args.tp.parameter_space)}
