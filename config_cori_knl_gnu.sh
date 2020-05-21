@@ -1,16 +1,19 @@
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
 
+module unload darshan
+module swap craype-haswell craype-mic-knl
+module load craype-hugepages2M
+module unload cray-libsci
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
 
 module swap PrgEnv-intel PrgEnv-gnu
-export MKLROOT=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
-
-# module use /global/common/software/m3169/cori/modulefiles
-# module unload openmpi
+export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 module load openmpi/4.0.1
+
+
 
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
@@ -26,7 +29,7 @@ FTN=mpif90
 #env CC=$CCC pip install --upgrade --user -r requirements.txt
 env CC=$CCC pip install --user -r requirements.txt
 
-
+rm -rf build
 mkdir -p build
 cd build
 export CRAYPE_LINK_TYPE=dynamic
@@ -44,13 +47,20 @@ cmake .. \
 	-DCMAKE_Fortran_COMPILER=$FTN \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_SCALAPACK_LIBRARIES="/global/homes/l/liuyangz/Cori/my_software/scalapack-2.1.0/build_knl_openmpi_gnu/lib/libscalapack.so"
+
 make
 cp lib_gptuneclcm.so ../.
 cp pdqrdriver ../
 
+
+# -DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"
+# -DTPL_SCALAPACK_LIBRARIES="/global/homes/l/liuyangz/Cori/my_software/scalapack-2.0.2/build_knl_openmpi/lib/libscalapack.so"
+
+# -DTPL_SCALAPACK_LIBRARIES="/project/projectdirs/m2957/liuyangz/my_software/petsc-3-12_superlu-6-2-openmpi-knl/cori-knl-openmpi401-real-620/lib/libscalapack.a"
+# -DCMAKE_SHARED_LINKER_FLAGS='-lgfortran'
 
 
 cd ../examples/
@@ -67,6 +77,7 @@ make install > make_parmetis_install.log 2>&1
 cd ../
 PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
 PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
+rm -rf build
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -83,8 +94,8 @@ cmake .. \
 	-DCMAKE_Fortran_COMPILER=$FTN \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 make pddrive_spawn
