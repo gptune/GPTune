@@ -8,5 +8,4 @@ lhsmdu
 ipyparallel
 opentuner
 hpbandster
-scikit-optimize
 pygmo 

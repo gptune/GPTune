@@ -32,6 +32,7 @@ import argparse
 import pickle
 from random import *
 from callopentuner import OpenTuner
+from callhpbandster import HpBandSter
 import time
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
@@ -144,11 +145,11 @@ def main():
         data = Data(problem)
         giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
 
-    # giventask = [[2000,2000]]
+    # # giventask = [[2000, 2000]]
+    # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
 
-    ## the following will use only task lists stored in the pickle file
+    # # the following will use only task lists stored in the pickle file
     # data = Data(problem)
-
 
 
     TUNER_NAME = os.environ['TUNER_NAME']
@@ -190,7 +191,18 @@ def main():
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-
+    if(TUNER_NAME=='hpbandster'):
+        NI = ntask
+        NS = nruns
+        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 def parse_args():
 

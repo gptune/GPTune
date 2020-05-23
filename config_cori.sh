@@ -103,11 +103,11 @@ python setup.py install --user
 
 
 
-# cd ../
-# rm -rf scikit-optimize
-# git clone https://github.com/scikit-optimize/scikit-optimize.git
-# cd scikit-optimize/
-# env CC=$CCC pip install --user -e .
+cd ../
+rm -rf scikit-optimize
+git clone https://github.com/scikit-optimize/scikit-optimize.git
+cd scikit-optimize/
+env CC=$CCC pip install --user -e .
 
 
 cd ../
