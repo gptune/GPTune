@@ -5,8 +5,8 @@ module load python/3.7-anaconda-2019.10
 module unload cray-mpich
 
 module swap PrgEnv-intel PrgEnv-gnu
-export MKLROOT=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
+export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 
 # module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi
@@ -25,6 +25,30 @@ FTN=mpif90
 #pip uninstall -r requirements.txt
 #env CC=$CCC pip install --upgrade --user -r requirements.txt
 env CC=$CCC pip install --user -r requirements.txt
+
+
+
+
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
+rm -rf build
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$CCC \
+    -DCMAKE_Fortran_COMPILER=$FTN \
+    -DCMAKE_INSTALL_PREFIX=. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DCMAKE_Fortran_FLAGS="-fopenmp" \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so"
+make -j8  
+cd ../../
+export SCALAPACK_LIB="$PWD/scalapack-2.1.0/build/lib/libscalapack.so" 
+
 
 
 mkdir -p build
@@ -46,7 +70,7 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
 	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make
 cp lib_gptuneclcm.so ../.
 cp pdqrdriver ../
@@ -107,7 +131,10 @@ cd ../
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-env CC=$CCC pip install --user -e .
+python setup.py build 
+python setup.py install --user
+# env CC=mpicc pip install --user -e .								  
+
 
 
 cd ../

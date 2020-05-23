@@ -1,9 +1,9 @@
-module load python/3.7-anaconda-2019.07
-module unload cray-mpich/7.7.6
+module load python/3.7-anaconda-2019.10
+module unload cray-mpich
 
 module swap PrgEnv-intel PrgEnv-gnu
-export MKLROOT=/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2018.1.163/linux/mkl/lib/intel64
+export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 
 # module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi

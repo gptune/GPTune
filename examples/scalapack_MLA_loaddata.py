@@ -90,9 +90,10 @@ def main():
     nruns = args.nruns
     truns = args.truns
     JOBID = args.jobid
+    TUNER_NAME = args.optimization
 
     os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = 'GPTune'
+    os.environ['TUNER_NAME'] = TUNER_NAME
     os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
     nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
@@ -130,7 +131,7 @@ def main():
     # options['model_restart_processes'] = 1
     # options['model_restart_threads'] = 1
     options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = True
+    options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
     options['model_class '] = 'Model_LCM'
     options['verbose'] = False
@@ -150,9 +151,6 @@ def main():
 
     # # the following will use only task lists stored in the pickle file
     # data = Data(problem)
-
-
-    TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
 
@@ -216,7 +214,7 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=1,help='Number of cores per machine node')
     parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments
-    parser.add_argument('-optimization', type=str,help='Optimization algorithm (opentuner, spearmint, mogpo)')
+    parser.add_argument('-optimization', type=str,help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')

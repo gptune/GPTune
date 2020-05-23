@@ -29,6 +29,32 @@ FTN=mpif90
 #env CC=$CCC pip install --upgrade --user -r requirements.txt
 env CC=$CCC pip install --user -r requirements.txt
 
+
+
+
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
+rm -rf build
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$CCC \
+    -DCMAKE_Fortran_COMPILER=$FTN \
+    -DCMAKE_INSTALL_PREFIX=. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DCMAKE_Fortran_FLAGS="-fopenmp" \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so"
+make -j8  
+cd ../../
+export SCALAPACK_LIB="$PWD/scalapack-2.1.0/build/lib/libscalapack.so" 
+
+
+
+
 rm -rf build
 mkdir -p build
 cd build
@@ -49,7 +75,7 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
 	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_SCALAPACK_LIBRARIES="/global/homes/l/liuyangz/Cori/my_software/scalapack-2.1.0/build_knl_openmpi_gnu/lib/libscalapack.so"
+	-DTPL_SCALAPACK_LIBRARIES=${SCALAPACK_LIB}
 
 make
 cp lib_gptuneclcm.so ../.
