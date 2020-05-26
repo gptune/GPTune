@@ -1,5 +1,5 @@
-rm -rf  ~/.cache/pip
-rm -rf ~/.local/cori/
+#rm -rf  ~/.cache/pip
+#rm -rf ~/.local/cori/
 
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
@@ -43,11 +43,12 @@ cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
     -DCMAKE_Fortran_FLAGS="-fopenmp" \
-	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
-	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so"
+	-DBLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so" \
+	-DLAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;${MKLROOT}/lib/intel64/libmkl_def.so;${MKLROOT}/lib/intel64/libmkl_avx.so"
 make -j8  
 cd ../../
 export SCALAPACK_LIB="$PWD/scalapack-2.1.0/build/lib/libscalapack.so" 
+
 
 
 
@@ -63,6 +64,7 @@ cmake .. \
 	-DCMAKE_CXX_FLAGS="" \
 	-DCMAKE_C_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_INSTALL_PREFIX=$PWD \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
 	-DCMAKE_Fortran_COMPILER=$FTN \
@@ -101,7 +103,8 @@ rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
-	-DBUILD_SHARED_LIBS=OFF \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_INSTALL_PREFIX=$PWD \
 	-DCMAKE_CXX_COMPILER=$CCCPP \
 	-DCMAKE_C_COMPILER=$CCC \
 	-DCMAKE_Fortran_COMPILER=$FTN \
@@ -113,6 +116,7 @@ cmake .. \
 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 make pddrive_spawn
 make pzdrive_spawn
+make install
 
 
 
