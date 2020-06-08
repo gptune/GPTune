@@ -97,8 +97,7 @@ class SurrogateProblem(object):
 
 		self.tid = tid
 
-		# self.I     = self.data.I[tid]
-		
+		self.D     = self.data.D[tid]
 		self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
 		
 		# self.POrig = self.data.P[tid]
@@ -133,8 +132,10 @@ class SurrogateProblem(object):
 	def fitness(self, x):   # x is the normalized space
 		xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
 		xi=xi0[0]
+		point0 = self.D
 		point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
 		point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+		point.update(point0)
 		point.update(point2)
 		# print("point", point)		
 		cond = self.computer.evaluate_constraints(self.problem, point)

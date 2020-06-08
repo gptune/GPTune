@@ -36,7 +36,7 @@ import numpy as np
 
 class GPTune(object):
 
-	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, **kwargs):
+	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
 
 		"""
 		tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
@@ -44,7 +44,7 @@ class GPTune(object):
 		data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
 		options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
 		"""
-		self.problem  = Problem(tuningproblem,driverabspath=driverabspath)
+		self.problem  = Problem(tuningproblem,driverabspath=driverabspath,models_update=models_update)
 		if (computer is None):
 			computer = Computer()
 		self.computer = computer
@@ -112,6 +112,10 @@ class GPTune(object):
 			check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
 			self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
 			# print("riji",type(self.data.I),type(self.data.I[0]))
+			self.data.D = [{}] * NI
+		else:
+			if (self.data.D is None):
+				self.data.D = [{}] * NI	
 		
 		if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
 			raise Exception("len(self.data.P) !=len(self.data.I)")		
@@ -139,7 +143,7 @@ class GPTune(object):
 
 		t1 = time.time_ns()
 		if (self.data.O is None):
-			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, options = kwargs) 
+			self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs) 
 		t2 = time.time_ns()
 		time_fun = time_fun + (t2-t1)/1e9
 		# print(self.data.O)
@@ -156,8 +160,23 @@ class GPTune(object):
 		optiter = 0
 		while len(self.data.P[0])<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
 		# for optiter in range(NS - len(self.data.P[0])): 
+
+			if(self.problem.models_update is not None):
+				########## denormalize the data as the user always work in the original space
+				tmpdata = copy.deepcopy(self.data)
+				if tmpdata.I is not None:    # from 2D numpy array to a list of lists    
+					tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
+				if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)       
+					tmp=[]
+					for x in tmpdata.P:		
+						xOrig = self.problem.PS.inverse_transform(x)
+						tmp.append(xOrig)		
+					tmpdata.P=tmp		
+				self.problem.models_update(tmpdata)
+				self.data.D = tmpdata.D
+
 			# print("riji",type(self.data.I),type(self.data.I[0]))
-			newdata = Data(problem = self.problem, I = self.data.I)
+			newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
 			print("MLA iteration: ",optiter)
 			optiter = optiter + 1
 			t1 = time.time_ns()
@@ -166,6 +185,7 @@ class GPTune(object):
 				tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 				if(self.problem.models is not None):
 					for i in range(len(tmpdata.P)):
+						points0 = tmpdata.D[i]
 						t = tmpdata.I[i]
 						I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]					
 						points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
@@ -175,6 +195,7 @@ class GPTune(object):
 							x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
 							points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
 							points.update(points1)
+							points.update(points0)
 							modeldata.append(self.problem.models(points))
 						modeldata=np.array(modeldata)	
 						tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space 
@@ -194,7 +215,7 @@ class GPTune(object):
 	#            if (self.mpi_rank == 0):
 
 			t1 = time.time_ns()
-			newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, options = kwargs)
+			newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, options = kwargs)
 			t2 = time.time_ns()
 			time_fun = time_fun + (t2-t1)/1e9		
 	#                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):

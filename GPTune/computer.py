@@ -84,14 +84,15 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, options: dict=None):  # P and I are in the normalized space
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, options: dict=None):  # P and I are in the normalized space
         O = []
         for i in range(len(I)):
             t = I[i]
             I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
             # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
             P2 = P[i]
-            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, options = options)
+            D2 = D[i]
+            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
             tmp = np.array(O2).reshape((len(O2), problem.DO))
             O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
@@ -104,7 +105,7 @@ class Computer(object):
 
 
 
-    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, options:dict=None):  # P2 is in the normalized space
+    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, D2 : dict=None, options:dict=None):  # P2 is in the normalized space
 
         if(problem.driverabspath is not None and options['distributed_memory_parallelism']):
             modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
@@ -131,7 +132,7 @@ class Computer(object):
             kwargs_tmp = options
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
-            _ = mpi_comm.bcast((self, problem,P2, I_orig, pids, kwargs_tmp), root=mpi4py.MPI.ROOT)
+            _ = mpi_comm.bcast((self, problem,P2, D2, I_orig, pids, kwargs_tmp), root=mpi4py.MPI.ROOT)
 
             tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
             mpi_comm.Disconnect()
@@ -154,6 +155,7 @@ class Computer(object):
                     x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
                     kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                     kwargs.update(kwargst)
+                    kwargs.update(D2)
                     # print(kwargs)
                     return module.objectives(kwargs)                    
                 O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))	
@@ -164,6 +166,7 @@ class Computer(object):
                 x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
+                kwargs.update(D2)
                 o = module.objectives(kwargs)
                 # print('kwargs',kwargs,'o',o)
                 O2.append(o)
@@ -211,8 +214,8 @@ if __name__ == '__main__':
     mpi_comm = MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
     mpi_size = mpi_comm.Get_size()
-    (computer, problem,P2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
+    (computer, problem,P2, D2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
-    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, kwargs)
+    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
     res = mpi_comm.gather(tmpdata, root=0) 
     mpi_comm.Disconnect()	

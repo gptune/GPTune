@@ -55,9 +55,10 @@ class Categoricalnorm(Categorical):
 
 class Data(object):
 	# To GPTune I is 2D numpy array. To user I is a list of lists
-	# To GPTune P is is list/collection of 2D numpy array with column dimension corresponding to PS dimension. To user P is a list of (list of lists)
-	# To GPTune and user O is is list/collection of 2D numpy array with column dimension 1 for single-objective function. 
-    def __init__(self, problem : Problem, I = None, P = None, O = None):
+	# To GPTune P is a list/collection of 2D numpy array with column dimension corresponding to PS dimension. To user P is a list of (list of lists)
+	# To GPTune and user O is a list/collection of 2D numpy array with column dimension 1 for single-objective function. 
+    # To GPTune and user D is a list/collection of dictionaries  
+    def __init__(self, problem : Problem, I = None, P = None, O = None, D = None):
     # def __init__(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, O : Collection[np.ndarray] = None):
 
         self.problem = problem
@@ -76,6 +77,9 @@ class Data(object):
         #     raise Exception("")
 
         self.O = O
+
+
+        self.D = D
 
     @property
     def NI(self):
@@ -132,6 +136,9 @@ class Data(object):
 
         if (not np.array_equal(self.I, newdata.I)):
             raise Exception("The tasks in the newdata should be the same as the current tasks")
+
+        if (not np.array_equal(self.D, newdata.D)):
+            raise Exception("The tasks dictionaries in the newdata should be the same as the current tasks")
 
         self.P = [np.concatenate((self.P[i], newdata.P[i])) for i in range(len(self.P))]
         self.O = [np.concatenate((self.O[i], newdata.O[i])) for i in range(len(self.O))]

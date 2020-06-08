@@ -34,6 +34,7 @@ from random import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import time
+from sklearn.linear_model import LinearRegression
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -45,14 +46,14 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 
 ''' The objective function required by GPTune. '''
 
-
 def objectives(point):
     m = point['m']
     n = point['n']
-    mb = point['mb']*8
-    nb = point['nb']*8
+    mb = point['b']*8
+    nb = point['b']*8
     nproc = point['nproc']
     p = point['p']
+
 
     # this become useful when the parameters returned by TLA1 do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
@@ -97,28 +98,29 @@ def main():
     os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
     nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
-    nprocmin = nodes
+    # nprocmin = nodes
+    nprocmin = nodes*cores-2
 
     mmin=128
     nmin=128
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
-    mb = Integer(1, 16, transform="normalize", name="mb")
-    nb = Integer(1, 16, transform="normalize", name="nb")
+    b = Integer(4, 16, transform="normalize", name="b")
     nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
-    PS = Space([mb, nb, nproc, p])
+    PS = Space([b, nproc, p])
     OS = Space([r])
-    cst1 = "mb*8 * p <= m"
-    cst2 = "nb*8 * nproc <= n * p"
+    cst1 = "b*8 * p <= m"
+    cst2 = "b*8 * nproc <= n * p"
     cst3 = "nproc >= p"
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
 
+    # problem = TuningProblem(IS, PS, OS, objectives, constraints, models) # use performance models
     problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
@@ -143,23 +145,28 @@ def main():
         data = pickle.load(open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'rb'))
         giventask = data.I
     except (OSError, IOError) as e:
-        data = Data(problem)
+        data = Data(problem,D=[{'c0': 0, 'c1': 0,'c2': 0,'c3': 0,'c4': 0}]*ntask)
         giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+        
 
-    # # giventask = [[2000, 2000]]
+    giventask = [[mmax, nmax]]
+    # giventask = [[14825, 1390],[9556, 3362],[17335, 14697],[19552, 8778],[19421, 10935],[17269, 16601],[17831,2469],[18060, 15993],[12175, 1118],[7330,6247] ]
+    # giventask = [[18060, 15993],[17269, 16601],[17335, 14697],[19552, 8778],[19421, 10935]]
+
+
     # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
 
-    # # the following will use only task lists stored in the pickle file
-    # data = Data(problem)
+    # the following will use only task lists stored in the pickle file
+    data = Data(problem,D=[{'c0': 0, 'c1': 0,'c2': 0,'c3': 0,'c4': 0}]*len(giventask))
 
     if(TUNER_NAME=='GPTune'):
 
-        gt = GPTune(problem, computer=computer, data=data, options=options)
+        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
 
         """ Building MLA with NI random tasks """
         NI = ntask
         NS = nruns
-        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS)
         print("stats: ", stats)
 
         """ Dump the data to file as a new check point """
@@ -186,7 +193,7 @@ def main():
             print("tid: %d" % (tid))
             print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
             print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
+            print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='hpbandster'):
@@ -199,7 +206,7 @@ def main():
             print("tid: %d" % (tid))
             print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
             print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
+            print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 def parse_args():

@@ -127,9 +127,9 @@
   
   printf "${BLUE} GC; Installing ScaLAPACK from source\n"
   cd $GPROOT/installDir
-  wget http://www.netlib.org/scalapack/scalapack-2.0.2.tgz
-  tar -xf scalapack-2.0.2.tgz
-  cd scalapack-2.0.2
+  wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+  tar -xf scalapack-2.1.0.tgz
+  cd scalapack-2.1.0
   rm -rf build
   mkdir -p build
   cd build
@@ -144,7 +144,7 @@
     -DBLAS_LIBRARIES="$BLAS_LIB" \
     -DLAPACK_LIBRARIES="$LAPACK_LIB"
   make -j8  &>build_scalapack.log
-  sudo cp $GPROOT/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
+  sudo cp $GPROOT/installDir/scalapack-2.1.0/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
   export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
   

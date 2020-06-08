@@ -20,7 +20,7 @@ import copy
 
 class Problem(object):
 
-    def __init__(self, tp : TuningProblem, driverabspath):
+    def __init__(self, tp : TuningProblem, driverabspath, models_update):
 
         self.name = tp.name
 
@@ -30,6 +30,7 @@ class Problem(object):
 
         self.objectives   = tp.objective
         self.driverabspath   = driverabspath
+        self.models_update   = models_update
         self.constraints = tp.constraints
         self.models      = tp.models
 

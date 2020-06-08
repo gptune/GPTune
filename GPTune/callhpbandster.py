@@ -191,7 +191,7 @@ def HpBandSter(T, NS, tp : TuningProblem, computer : Computer, run_id="HpBandSte
         # yopt = min([v['loss'] for k,v in res[incumbent].results.items()])
         X.append(xs)
         tmp = np.array(ys).reshape((len(ys), 1))
-        Y.append(ys)
+        Y.append(tmp)
         # Xopt.append(xopt)
         # Yopt.append(yopt)
         timefun=timefun+workers[0].timefun
