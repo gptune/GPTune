@@ -219,7 +219,14 @@
   make pddrive_spawn &>>build_gptune.log
   make pzdrive_spawn &>>build_gptune.log
 
-
+  cd ../../
+  rm -rf hypre
+  git clone https://github.com/hypre-space/hypre.git
+  cd hypre/src/
+  ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI"
+  make
+  cp ../../hypre-driver/src/ij.c ./test/.
+  make test
 	
   cd ../../../
   rm -rf mpi4py

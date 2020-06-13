@@ -228,7 +228,7 @@ def main():
     if(TUNER_NAME=='hpbandster'):
         NI = ntask
         NS = nruns
-        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1)
+        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):

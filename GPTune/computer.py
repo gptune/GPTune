@@ -91,7 +91,10 @@ class Computer(object):
             I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
             # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
             P2 = P[i]
-            D2 = D[i]
+            if D is not None:
+                D2 = D[i]
+            else:
+                D2 = None
             O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
             tmp = np.array(O2).reshape((len(O2), problem.DO))
             O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
@@ -166,7 +169,8 @@ class Computer(object):
                 x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
-                kwargs.update(D2)
+                if D2 is not None:
+                    kwargs.update(D2)
                 o = module.objectives(kwargs)
                 # print('kwargs',kwargs,'o',o)
                 O2.append(o)

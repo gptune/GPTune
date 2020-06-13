@@ -115,6 +115,14 @@ make pddrive_spawn
 make pzdrive_spawn
 
 
+cd ../../
+rm -rf hypre
+git clone https://github.com/hypre-space/hypre.git
+cd hypre/src/
+./configure CC=$CCC CXX=$CCCPP FC=$FTN CFLAGS="-DTIMERUSEMPI"
+make
+cp ../../hypre-driver/src/ij.c ./test/.
+make test
 
 # make CC=$CCC
 cd ../../../
@@ -142,3 +150,6 @@ rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 env CC=$CCC pip install --user -e .
+
+
+cp ../patches/opentuner/manipulator.py  ~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/opentuner/search/.
