@@ -123,3 +123,5 @@ rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 pip install --user -e .
+
+cp ../patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.

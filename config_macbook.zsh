@@ -1,5 +1,9 @@
 #!/bin/zsh
 
+rm -rf ~/.local/lib
+
+
+
 source /usr/local/Cellar/modules/4.3.0/init/zsh
 
 module load gcc/9.2.0
@@ -130,3 +134,8 @@ rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 pip install --user -e .
+
+
+cp ../patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.
+
+
