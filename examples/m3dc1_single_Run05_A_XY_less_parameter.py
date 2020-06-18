@@ -251,7 +251,7 @@ def main():
 		print("    example:%s"%(data.I[tid][0]))
 		print("    Ps ", data.P[tid])
 		print("    Os ", data.O[tid])
-		print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Yopt ', min(data.O[tid])[0])
+		print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
 
 
 
