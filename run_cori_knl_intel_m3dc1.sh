@@ -1,14 +1,10 @@
 #!/bin/bash
-#SBATCH -J Run05D_GPTune
+#SBATCH -J Run05A_GPTune
 #SBATCH -C knl,quad,cache
-#SBATCH -N 128
-#SBATCH -q premium
-#SBATCH -t 4:00:00
+#SBATCH -N 7
+#SBATCH -q regular
+#SBATCH -t 1:00:00
 #SBATCH -A m2957
-#SBATCH --tasks-per-node=32
-#SBATCH --cpus-per-task=4
-
-# --cpus-per-task is 4 x threads-per-mpi on knl
 
 module unload darshan
 module swap craype-haswell craype-mic-knl
@@ -51,7 +47,7 @@ FTN=mpif90
 
 cd examples
 
-mpirun -N 32 --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./m3dc1_single_Run05_D_XY_nblock.py -nodes 1792 -cores 2 -ntask 1 -nrun 20 -machine cori -jobid 0 | tee a.out
+mpirun -N 64 --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./m3dc1_single_Run05_A_XY_less_parameter.py -nodes 192 -cores 2 -ntask 1 -nrun 10 -machine cori -jobid 0 | tee a.out
 
 # mpirun -N 150 --map-by ppr:64:node --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./m3dc1_single_Run05_D_XY_nblock.py -nodes 1792 -cores 2 -ntask 1 -nrun 20 -machine cori -jobid 0
 # mpirun -N 15 --map-by ppr:64:node --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./m3dc1_single.py -nodes 224 -cores 2 -ntask 1 -nrun 20 -machine cori -jobid 0
