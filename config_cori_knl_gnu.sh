@@ -151,7 +151,8 @@ cd ../
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-env CC=$CCC pip install --user -e .
+python setup.py build 
+python setup.py install --user
 
 
 cd ../
