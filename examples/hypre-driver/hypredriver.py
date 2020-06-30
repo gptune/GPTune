@@ -30,6 +30,9 @@ def execute(params, RUNDIR, niter = 1):
     smooth_num_levels = params['smooth_num_levels']
     interp_type = params['interp_type']
     agg_num_levels = params['agg_num_levels']
+    nthreads = params['nthreads']
+    npernode = params['npernode']
+
     
     # reshape for args
     NProc = Px*Py*Pz
@@ -80,9 +83,12 @@ def execute(params, RUNDIR, niter = 1):
         return runtime
 
     def v_parallel():
-        nthreads = 1
+
         info = MPI.Info.Create()
         info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))
+        info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+        
+
         print('exec ', EXCUDIR, 'args: ', myargslist, 'nproc', NProc)
         runtimes = []
         for i in range(niter):
@@ -107,11 +113,11 @@ def hypredriver(params, niter = 3, JOBID: int=-1):
     if (JOBID==-1):  # -1 is the default value if jobid is not set from command line
         JOBID = os.getpid()
     RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(JOBID)))
-    os.system("mkdir -p %s"%(RUNDIR))
+    os.makedirs("%s"%(RUNDIR),exist_ok=True)
     dtype = [("nx", int), ("ny", int), ("nz", int), ("coeffs_a", 'U10'), ("coeffs_c", 'U10'), ("problem_name", 'U10'), ("solver", int), 
             ("Px", int), ("Py", int), ("Pz", int), ("strong_threshold", float), 
             ("trunc_factor", float), ("P_max_elmts", int), ("coarsen_type", int), ("relax_type", int),
-            ("smooth_type", int), ("smooth_num_levels", int), ("interp_type", int), ("agg_num_levels", int)]
+            ("smooth_type", int), ("smooth_num_levels", int), ("interp_type", int), ("agg_num_levels", int), ("nthreads", int), ("npernode", int)]
     params = np.array(params, dtype=dtype)
     times = []
     for param in params:
@@ -125,8 +131,8 @@ def hypredriver(params, niter = 3, JOBID: int=-1):
 if __name__ == "__main__":
     os.environ['MACHINE_NAME'] = 'cori'
     os.environ['TUNER_NAME'] = 'GPTune'
-    params = [(60, 50, 80, '-a 0 0 0 ', '-c 1 1 1 ', '-laplacian ', 3, 2, 2, 2, 0.25, 0, 4, 10, 8, 6, 0, 6, 0),\
-              (60, 50, 80, '-a 0 0 0 ', '-c 1 1 1 ', '-laplacian ', 3, 2, 2, 2, 0.3, 0.2, 5, 10, 8, 6, 1, 6, 1)
+    params = [(60, 50, 80, '-a 0 0 0 ', '-c 1 1 1 ', '-laplacian ', 3, 2, 2, 2, 0.25, 0, 4, 10, 8, 6, 0, 6, 0, 1, 1),\
+              (60, 50, 80, '-a 0 0 0 ', '-c 1 1 1 ', '-laplacian ', 3, 2, 2, 2, 0.3, 0.2, 5, 10, 8, 6, 1, 6, 1, 1, 1)
               ]
     times = hypredriver(params, niter=1)
     

@@ -139,7 +139,7 @@ class Model_LCM(Model):
 			Q = kwargs['model_latent']
 
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager): 
-			mpi_comm = self.computer.spawn(__file__, kwargs['model_restart_processes'], kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
+			mpi_comm = self.computer.spawn(__file__, nproc=kwargs['model_restart_processes'], nthreads=kwargs['model_restart_threads'], kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
 			# print("kwargs_tmp",kwargs_tmp)
 

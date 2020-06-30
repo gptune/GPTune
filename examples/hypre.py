@@ -20,12 +20,13 @@
 """
 Example of invocation of this script:
 
-python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori -jobid 0
+python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
 
 where:
     -nxmax/nymax/nzmax       maximum number of discretization size for each dimension
     -nodes                   number of compute node
     -cores                   number of cores per node
+    -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -machine                 name of the machine 
     -ntask                   number of different tasks to be tuned
     -nrun                    number of calls per task
@@ -73,6 +74,7 @@ import pickle
 from random import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
+import math
 
 # import mpi4py
 # from mpi4py import MPI
@@ -111,12 +113,14 @@ def objectives(point):
     NProc = Px*Py*Pz
     # CoarsTypes = {0:"-cljp ", 1:"-ruge ", 2:"-ruge2b ", 3:"-ruge2b ", 4:"-ruge3c ", 6:"-falgout ", 8:"-pmis ", 10:"-hmis "}
     # CoarsType = CoarsTypes[coarsen_type]
+    npernode =  math.ceil(float(NProc)/nodes)  
+    nthreads = int(cores / npernode)
 
     # call Hypre 
     params = [(nx, ny, nz, coeffs_a, coeffs_c, problem_name, solver,
                Px, Py, Pz, strong_threshold, 
                trunc_factor, P_max_elmts, coarsen_type, relax_type, 
-               smooth_type, smooth_num_levels, interp_type, agg_num_levels)]
+               smooth_type, smooth_num_levels, interp_type, agg_num_levels, nthreads, npernode)]
     runtime = hypredriver(params, niter=1, JOBID=JOBID)
     print(params, ' hypre time: ', runtime)
 
@@ -141,6 +145,7 @@ def main():
     nzmax = args.nzmax
     nodes = args.nodes
     cores = args.cores
+    nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
     ntask = args.ntask
     nruns = args.nruns
@@ -152,8 +157,9 @@ def main():
     os.environ['TUNER_NAME'] = TUNER_NAME
     # os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
-    nprocmax = nodes*cores-1 
-    nprocmin = nodes
+    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+    nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space 
+
     
     nxmin = 20
     nymin = 20
@@ -290,10 +296,11 @@ def parse_args():
     # Machine related arguments
     parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
     parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
+    parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
     # Algorithm related arguments
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-optimization', type=str,help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, default=-1, help='Number of runs per task')
     # parser.add_argument('-truns', type=int, default=-1, help='Time of runs')

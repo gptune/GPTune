@@ -180,30 +180,27 @@ class Computer(object):
 
         
 
-    def spawn(self, executable, nproc, nthreads, args=None, kwargs=None): 
+    def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None): 
 
-        # XXX
-#        check_mpi()
-#        mpi_info = MPI.Info.Create()
-#        mpi_info.Set("add-hostfile", "slurm.hosts")
-#        mpi_info.Set("host", "slurm.hosts")
-         
+        print('exec', executable, 'args', args, 'nproc', nproc)
+ 
+        npernodes=npernode
+        if(npernode is None):
+            npernodes=self.cores
 
-        print('exec', executable, 'args', args, 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-#        comm = MPI.COMM_SELF.Spawn(executable, args=args, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-#        comm = MPI.COMM_SELF.Spawn('/usr/common/software/python/3.7-anaconda-2019.07/bin/python', args=executable, maxprocs=nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-        
         info = MPI.Info.Create()
-        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))        
+#        info.Set("add-hostfile", "slurm.hosts")
+#        info.Set("host", "slurm.hosts")
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))  
+        info.Set('npernode','%d'%(npernodes))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+           
+              
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc,info=info)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         # process_rank = comm.Get_rank()
         # process_count = comm.Get_size()
         # process_host = MPI.Get_processor_name()
         # print('manager',process_rank, process_count, process_host)
         return comm
-
-#print(MPI.COMM_WORLD.Get_rank(), MPI.Get_processor_name())
-
 
 
 if __name__ == '__main__':

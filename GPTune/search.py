@@ -58,7 +58,8 @@ class Search(abc.ABC):
 
 		if (kwargs['distributed_memory_parallelism'] and i_am_manager):
 			nproc = min(kwargs['search_multitask_processes'],data.NI)
-			mpi_comm = self.computer.spawn(__file__, nproc, kwargs['search_multitask_threads'], kwargs=kwargs) # XXX add args and kwargs
+			npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
+			mpi_comm = self.computer.spawn(__file__, nproc=nproc, nthreads=kwargs['search_multitask_threads'], npernode=npernode, kwargs=kwargs) # XXX add args and kwargs
 			kwargs_tmp = kwargs
 			if "mpi_comm" in kwargs_tmp:
 				del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable

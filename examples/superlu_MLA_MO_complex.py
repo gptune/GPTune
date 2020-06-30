@@ -1,12 +1,29 @@
 #! /usr/bin/env python3
-
+# GPTune Copyright (c) 2019, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory (subject to receipt of any
+# required approvals from the U.S.Dept. of Energy) and the University of
+# California, Berkeley.  All rights reserved.
+#
+# If you have questions about your rights to use or distribute this software,
+# please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+#
+# NOTICE. This Software was developed under funding from the U.S. Department
+# of Energy and the U.S. Government consequently retains certain rights.
+# As such, the U.S. Government has been granted for itself and others acting
+# on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
+# the Software to reproduce, distribute copies to the public, prepare
+# derivative works, and perform publicly and display publicly, and to permit
+# other to do so.
+#
+################################################################################
 """
 Example of invocation of this script:
-python superlu.py -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori
+python superlu.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
 
 where:
     -nodes is the number of compute nodes
     -cores is the number of cores per node
+	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -machine is the name of the machine
@@ -24,6 +41,7 @@ import copy
 import mpi4py
 from mpi4py import MPI
 from array import array
+import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -37,7 +55,7 @@ from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 import pygmo as pg
-
+import math
 
 ################################################################################
 
@@ -51,9 +69,10 @@ def objectives(point):                  # should always use this name for user-d
 	nproc = point['nproc']
 	NSUP = point['NSUP']
 	NREL = point['NREL']
-	nthreads   = int(nprocmax / nproc) 
+	npernode =  math.ceil(float(nproc)/nodes)  
+	nthreads = int(cores / npernode)
 	npcols     = int(nproc / nprows)
-	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
+	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'npernode', npernode, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
 	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
@@ -65,6 +84,8 @@ def objectives(point):                  # should always use this name for user-d
 	envstr+= 'NREL=%d\n' %(NREL)   
 	envstr+= 'NSUP=%d\n' %(NSUP)   
 	info.Set('env',envstr)
+	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
 	print('exec', "%s/pzdrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
@@ -100,18 +121,19 @@ def main():
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
+	nprocmin_pernode = args.nprocmin_pernode
 	machine = args.machine
 	optimization = args.optimization
 	nruns = args.nruns
 	truns = args.truns
 	# JOBID = args.jobid
-	os.environ['MACHINE_NAME']=machine
-	os.environ['TUNER_NAME']='GPTune'
-	TUNER_NAME = os.environ['TUNER_NAME']
+	TUNER_NAME = args.optimization
+	os.environ['MACHINE_NAME'] = machine
+	os.environ['TUNER_NAME'] = TUNER_NAME
 
 
-	nprocmax = nodes*cores-1
-	nprocmin = nodes
+	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
 	matrices = ["nimrodMatrix-V.bin", "nimrodMatrix-B.bin", "cg20.cua"]
 	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
@@ -124,8 +146,8 @@ def main():
 	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	factor   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="factor_time")
-	solve    = Real        (float("-Inf") , float("Inf"), transform="normalize", name="solve_time")
+	factor   = Real        (float("-Inf") , float("Inf"), name="factor_time")
+	solve    = Real        (float("-Inf") , float("Inf"), name="solve_time")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
 	OS = Space([factor, solve])
@@ -161,36 +183,37 @@ def main():
 	data = Data(problem)
 	gt = GPTune(problem, computer = computer, data = data, options = options)
 
-	#""" Building MLA with NI random tasks """
-	#NI = ntask
-	#NS = nruns
-	#(data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
-	#print("stats: ",stats)
+	if(TUNER_NAME=='GPTune'):
+		#""" Building MLA with NI random tasks """
+		#NI = ntask
+		#NS = nruns
+		#(data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
+		#print("stats: ",stats)
 
-	""" Building MLA with the given list of tasks """	
-	#giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-	giventask = [["cg20.cua"]]	
-	# giventask = [["nimrodMatrix-V.bin"]]	
-	NI = len(giventask)
-	NS = nruns
-	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
-	print("stats: ",stats)
+		""" Building MLA with the given list of tasks """	
+		#giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
+		giventask = [["cg20.cua"]]	
+		# giventask = [["nimrodMatrix-V.bin"]]	
+		NI = len(giventask)
+		NS = nruns
+		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
+		print("stats: ",stats)
 
 
-	""" Print all input and parameter samples """	
-	for tid in range(NI):
-		print("tid: %d"%(tid))
-		print("    matrix:%s"%(data.I[tid][0]))
-		print("    Ps ", data.P[tid])
-		print("    Os ", data.O[tid])
-		ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-		front = ndf[0]
-		# print('front id: ',front)
-		fopts = data.O[tid][front]
-		xopts = [data.P[tid][i] for i in front]
-		print('    Popts ', xopts)		
-		print('    Oopts ', fopts)		
-		
+		""" Print all input and parameter samples """	
+		for tid in range(NI):
+			print("tid: %d"%(tid))
+			print("    matrix:%s"%(data.I[tid][0]))
+			print("    Ps ", data.P[tid])
+			print("    Os ", data.O[tid])
+			ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
+			front = ndf[0]
+			# print('front id: ',front)
+			fopts = data.O[tid][front]
+			xopts = [data.P[tid][i] for i in front]
+			print('    Popts ', xopts)		
+			print('    Oopts ', fopts)		
+			
   
 def parse_args():
 
@@ -202,9 +225,10 @@ def parse_args():
 	# Machine related arguments
 	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
 	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
+	parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
 	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
 	# Algorithm related arguments
-	parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nruns', type=int, help='Number of runs per task')
 	parser.add_argument('-truns', type=int, help='Time of runs')

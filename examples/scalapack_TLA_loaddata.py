@@ -3,12 +3,13 @@
 """
 Example of invocation of this script:
 
-python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori -jobid 0
+python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
     -nodes is the number of compute nodes
     -cores is the number of cores per node
+	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -machine is the name of the machine
@@ -22,6 +23,7 @@ import os
 import numpy as np
 import argparse
 import pickle
+import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -51,13 +53,15 @@ def objectives(point):                  # should always use this name for user-d
 	nb = point['nb']
 	nproc = point['nproc']
 	p = point['p']
-	if(nproc==0 or p==0 or nproc<p): # this become useful when the parameters returned by TLA1 do not respect the constraints
+	if(nproc==0 or p==0 or nproc<p): # this becomes useful when the parameters returned by TLA1 do not respect the constraints
 		print('Warning: wrong parameters for objective function!!!')
 		return 1e12
 
-	nthreads   = int(nprocmax / nproc) 
-	q     = int(nproc / p)
-	params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1.)]
+    npernode =  math.ceil(float(nproc)/nodes)  
+    nthreads = int(cores / npernode)
+    q = int(nproc / p)
+    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
+
 	elapsedtime = pdqrdriver(params, niter = 3, JOBID=JOBID)
 	print(params, ' scalapack time: ', elapsedtime)
 	return elapsedtime 
@@ -80,6 +84,7 @@ def main():
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
+	nprocmin_pernode = args.nprocmin_pernode
 	machine = args.machine
 	# optimization = args.optimization
 	nruns = args.nruns
@@ -88,8 +93,9 @@ def main():
 	os.environ['MACHINE_NAME']=machine
 	os.environ['TUNER_NAME']='GPTune'
 	os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;"%(machine, machine))
-	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
-	nprocmin = nodes
+    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+    nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space 
+
 	
 	""" Load the tuner and data from file """
 	gt = pickle.load(open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl'%(nodes,cores,mmax,nmax,machine,JOBID), 'rb'))
@@ -115,9 +121,10 @@ def parse_args():
 	# Machine related arguments
 	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
 	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
-	# Algorithm related arguments
-	parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
+    parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
+    parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
+    # Algorithm related arguments
+    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nruns', type=int, help='Number of runs per task')
 	parser.add_argument('-truns', type=int, help='Time of runs')

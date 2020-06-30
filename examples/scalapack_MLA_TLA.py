@@ -3,12 +3,13 @@
 """
 Example of invocation of this script:
 
-python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -ntask 20 -nrun 800 -machine cori -jobid 0
+python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
     -nodes is the number of compute nodes
     -cores is the number of cores per node
+    -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -machine is the name of the machine
@@ -32,6 +33,7 @@ import argparse
 import pickle
 from random import *
 from callopentuner import OpenTuner
+import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
@@ -52,15 +54,16 @@ def objectives(point):
     nproc = point['nproc']
     p = point['p']
 
-    # this become useful when the parameters returned by TLA1 do not respect the constraints
+    # this becomes useful when the parameters returned by TLA1 do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
         print('Warning: wrong parameters for objective function!!!', nproc,p)
         return 1e12
 
-    nthreads = int(nprocmax / nproc)
+    npernode =  math.ceil(float(nproc)/nodes)  
+    nthreads = int(cores / npernode)
     q = int(nproc / p)
+    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
 
-    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1.)]
     elapsedtime = pdqrdriver(params, niter=3, JOBID=JOBID)
     print(params, ' scalapack time: ', elapsedtime)
 
@@ -110,17 +113,20 @@ def main():
     ntask = args.ntask
     nodes = args.nodes
     cores = args.cores
+    nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
     nruns = args.nruns
     truns = args.truns
     JOBID = args.jobid
+    TUNER_NAME = args.optimization
 
     os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = 'GPTune'
+    os.environ['TUNER_NAME'] = TUNER_NAME
     os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
-    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning
-    nprocmin = nodes
+    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+    nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space 
+
 
     mmin=128
     nmin=128
@@ -129,7 +135,7 @@ def main():
     mb = Integer(1, 128, transform="normalize", name="mb")
     nb = Integer(1, 128, transform="normalize", name="nb")
     nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
-    p = Integer(1, nprocmax, transform="normalize", name="p")
+    p = Integer(0, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
@@ -171,7 +177,6 @@ def main():
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
 
-    TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
         """ Building MLA with the given list of tasks """
@@ -210,9 +215,22 @@ def main():
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
             print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
+            print("    Os ", data.O[tid].tolist())
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+    if(TUNER_NAME=='hpbandster'):
+        NI = ntask
+        NS = nruns
+        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
@@ -229,11 +247,11 @@ def parse_args():
                         help='Number of machine nodes')
     parser.add_argument('-cores', type=int, default=1,
                         help='Number of cores per machine node')
+    parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')                    
     parser.add_argument('-machine', type=str,
                         help='Name of the computer (not hostname)')
     # Algorithm related arguments
-    parser.add_argument('-optimization', type=str,
-                        help='Optimization algorithm (opentuner, spearmint, mogpo)')
+    parser.add_argument('-optimization', type=str, default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')

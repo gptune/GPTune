@@ -45,11 +45,7 @@ def write_input(params, RUNDIR, niter=1):
             fin.write("%2s%6d%6d%6d%6d%6d%6d%20.13E\n"%(param[0], param[1], param[2], param[5], param[6], param[9], param[10],param[11]))
     fin.close()
 
-def execute(nproc, nthreads, RUNDIR):
-
-    #XXX To be removed
-    def v_sequential():
-        return os.system("cd %s; export OMP_PLACES=threads; export OMP_PROC_BIND=spread; export OMP_NUM_THREADS=1; %s/pdqrdriver 2> err;"%(RUNDIR, BINDIR))
+def execute(nproc, nthreads, npernode, RUNDIR):
 
     def v_parallel():
         # os.system("cd %s;"%(RUNDIR)) 
@@ -57,7 +53,7 @@ def execute(nproc, nthreads, RUNDIR):
         
         info = MPI.Info.Create()
         info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))
-        
+        info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
         
         
         # info.Set("add-hostfile", "myhostfile.txt")
@@ -65,9 +61,7 @@ def execute(nproc, nthreads, RUNDIR):
          
 
        
-        
-        
-        print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
+        print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc, 'nthreads', nthreads, 'npernode', npernode)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Disconnect()
         
@@ -133,29 +127,30 @@ def pdqrdriver(params, niter=10,JOBID: int = None):
     if (JOBID==-1):  # -1 is the default value if jobid is not set from command line
         JOBID = os.getpid()
     RUNDIR = os.path.abspath(os.path.join(EXPDIR, str(JOBID)))
-    os.system("mkdir -p %s"%(RUNDIR))
+    os.makedirs("%s"%(RUNDIR),exist_ok=True)
     # print('nima',RUNDIR)
 
-    dtype = [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nthreads", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float)]
+    dtype = [("fac", 'U10'), ("m", int), ("n", int), ("nodes", int), ("cores", int), ("mb", int), ("nb", int), ("nthreads", int), ("nproc", int), ("p", int), ("q", int), ("thresh", float), ("npernode", int)]
     params = np.array(params, dtype=dtype)
     perm = np.argsort(params, order=["nproc", "nthreads"])
     invperm = np.argsort(perm)
     idxproc = 8
     idxth = 7
+    idxnpernode = 12
     times = np.array([])
     k_beg = 0
     k_end = 1
     while (k_end < len(params)):
         if ((params[perm[k_beg]][idxproc] != params[perm[k_end]][idxproc]) or (params[perm[k_beg]][idxth] != params[perm[k_end]][idxth])):
             write_input(params[perm[k_beg:k_end]], RUNDIR, niter=niter)
-            execute(params[perm[k_beg]][idxproc], params[perm[k_beg]][idxth], RUNDIR)
+            execute(params[perm[k_beg]][idxproc], params[perm[k_beg]][idxth], params[perm[k_beg]][idxnpernode], RUNDIR)
             times2 = read_output(params[perm[k_beg:k_end]], RUNDIR, niter=niter)
             times = np.concatenate((times, times2))
             k_beg = k_end
         k_end += 1
     if (k_beg < len(params)):
         write_input(params[perm[k_beg:k_end]], RUNDIR, niter=niter)
-        execute(params[perm[k_beg]][idxproc], params[perm[k_beg]][idxth], RUNDIR)
+        execute(params[perm[k_beg]][idxproc], params[perm[k_beg]][idxth], params[perm[k_beg]][idxnpernode], RUNDIR)
         times2 = read_output(params[perm[k_beg:k_end]], RUNDIR, niter=niter)
         times = np.concatenate((times, times2))
     times = times[invperm]
@@ -169,12 +164,12 @@ if __name__ == "__main__":
     # Test
 
 #    compile()
-    params = [('QR', 1000, 1000, 1, 32, 32, 32, 2, 2, 2, 1, 1.),\
-              ('QR', 1000, 1000, 1, 32, 32, 32, 1, 1, 1, 1, 1.),\
-              ('QR', 1000, 1000, 1, 32, 32, 32, 2, 1, 1, 1, 1.),\
-              ('QR',  100,  100, 1, 32, 32, 32, 2, 1, 1, 1, 1.),\
-              ('QR', 1000, 1000, 1, 32, 32, 32, 1, 2, 2, 1, 1.),\
-              ('QR',  100,  100, 1, 32, 32, 32, 1, 2, 2, 1, 1.)]
+    params = [('QR', 1000, 1000, 1, 32, 32, 32, 2, 2, 2, 1, 1., 1),\
+              ('QR', 1000, 1000, 1, 32, 32, 32, 1, 1, 1, 1, 1., 1),\
+              ('QR', 1000, 1000, 1, 32, 32, 32, 2, 1, 1, 1, 1., 1),\
+              ('QR',  100,  100, 1, 32, 32, 32, 2, 1, 1, 1, 1., 1),\
+              ('QR', 1000, 1000, 1, 32, 32, 32, 1, 2, 2, 1, 1., 1),\
+              ('QR',  100,  100, 1, 32, 32, 32, 1, 2, 2, 1, 1., 1)]
     times = pdqrdriver(params, niter=3)
     print(times)
 #    clean()

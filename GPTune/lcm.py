@@ -160,8 +160,8 @@ class LCM(GPy.kern.Kern):
 		raise("Not implemented")
 
 	def train_kernel(self, X, Y, computer, kwargs):
-
-		mpi_comm = computer.spawn(__file__, kwargs['model_processes'], kwargs['model_threads'], kwargs = kwargs)
+		npernode = int(computer.cores/kwargs['model_threads'])
+		mpi_comm = computer.spawn(__file__, nproc=kwargs['model_processes'], nthreads=kwargs['model_threads'], npernode=npernode, kwargs = kwargs)
 
 		X = np.concatenate([np.concatenate([X[i], np.ones((len(X[i]), 1)) * i], axis=1) for i in range(len(X))])
 		Y = np.array(list(itertools.chain.from_iterable(Y)))

@@ -181,9 +181,11 @@ class Options(dict):
 		print("   ---> search_multitask_processes:", self['search_multitask_processes'])		
 		print("   ---> search_multitask_threads:", self['search_multitask_threads'])	
 		
-		
 		if(self['distributed_memory_parallelism']):
-			ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1	
+			if(self['objective_evaluation_parallelism']==True):
+				ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1	
+			else: 
+				ncore_obj = (self['objective_nprocmax']+1)		
 		else:
 			ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)		
 		print("  ")

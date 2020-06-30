@@ -116,8 +116,8 @@ def models(point):
 
 
 constraints = {"cst1": "x >= 0. and x <= 1."}
-problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
 
 
@@ -138,9 +138,9 @@ if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
 
-    computer = Computer(nodes=8, cores=2, hosts=None)
+    computer = Computer(nodes=1, cores=32, hosts=None)
     options = Options()
-    options['model_restarts'] = 1
+    options['model_restarts'] = 10
 
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
-    options['search_threads'] = 8
+    # options['search_threads'] = 8
 
 
     # options['mpi_comm'] = None
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     
     giventask = [[6]]
     NI=len(giventask)
-    NS=40	    
+    NS=400	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 

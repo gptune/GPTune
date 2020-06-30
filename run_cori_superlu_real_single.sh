@@ -6,13 +6,13 @@
 #SBATCH --mail-user=liuyangzhuan@lbl.gov
 #SBATCH -C haswell
 
-
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
 
 module swap PrgEnv-intel PrgEnv-gnu
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+
 
 module load openmpi/4.0.1
 
@@ -30,5 +30,7 @@ FTN=mpif90
 cd examples
 
 rm -rf *.pkl
-mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_MO_complex.py  -nodes 16 -cores 32 -nprocmin_pernode 1 -ntask 1 -nrun 40 -machine cori
+tuner='GPTune'
+ mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_single.py  -nodes 2 -cores 32 -nprocmin_pernode 1 -ntask 1 -nrun 40 -machine cori -optimization ${tuner}
+#mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_TLA.py  -nodes 2 -cores 32 -nprocmin_pernode 1 -ntask 1 -nrun 40 -machine cori -optimization ${tuner}
 # mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca routed radix  -n 1 python ./superlu_MLA_MO_complex.py  -nodes 128 -cores 2 -ntask 1 -nrun 40 -machine cori
