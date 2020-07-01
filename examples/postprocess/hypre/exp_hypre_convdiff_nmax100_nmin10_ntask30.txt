@@ -1,0 +1,179 @@
+Task 1: nx, ny, nz = [58, 47, 46]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.14 nth  0	0.15 nth  7	0.13 nth  17	0	0
+OpenTuner	0.17 nth  7	0.1 nth  18	0.2 nth  12	0	0
+Hpbandster	0.25 nth  7	0.14 nth  17	0.14 nth  1	0	0
+					
+Task 2: nx, ny, nz = [43, 20, 75]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.11 nth  1	0.07 nth  3	0.08 nth  20	0	0
+OpenTuner	0.1 nth  4	0.12 nth  20	0.09 nth  27	0	0
+Hpbandster	0.1 nth  9	0.12 nth  9	0.06 nth  18	0	0
+					
+Task 3: nx, ny, nz = [52, 77, 76]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.30 nth  3	0.30 nth  10	0.34 nth  24	0	0
+OpenTuner	0.27 nth  7	0.85 nth  20	0.29 nth  14	0	0
+Hpbandster	0.22 nth  5	0.32 nth  5	0.35 nth  25	0	0
+					
+Task 4: nx, ny, nz = [92, 27, 82]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.38 nth  7	0.18 nth  1	0.13 nth  22	0	0
+OpenTuner	0.24 nth  7	0.25 nth  9	0.15 nth  24	0	0
+Hpbandster	0.24 nth  6	0.24 nth  18	0.2 nth  16	0	0
+					
+Task 5: nx, ny, nz = [81, 43, 46]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.19 nth  4	0.18 nth  14	0.16 nth  17	0	0
+OpenTuner	0.18 nth  7	0.14 nth  13	0.35 nth  28	0	0
+Hpbandster	0.35 nth  9	0.18 nth  6	0.2 nth  7	0	0
+					
+Task 6: nx, ny, nz = [68, 87, 38]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.31 nth  5	0.23 nth  18	0.24 nth  29	0	0
+OpenTuner	0.16 nth  10	0.24 nth  17	0.21 nth  23	0	0
+Hpbandster	0.22 nth  0	0.34 nth  3	0.19 nth  27	0	0
+					
+Task 7: nx, ny, nz = [62, 14, 72]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.06 nth  2	0.06 nth  8	0.05 nth  23	0	0
+OpenTuner	0.10 nth  9	0.09 nth  20	0.06 nth  28	0	0
+Hpbandster	0.08 nth  8	0.08 nth  8	0.1 nth  0	0	0
+					
+Task 8: nx, ny, nz = [46, 84, 53]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.3 nth  2	0.22 nth  9	0.19 nth  21	0	0
+OpenTuner	0.28 nth  5	0.61 nth  9	0.22 nth  28	0	0
+Hpbandster	0.24 nth  8	0.22 nth  19	0.22 nth  1	0	0
+					
+Task 9: nx, ny, nz = [38, 55, 54]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.16 nth  8	0.1 nth  14	0.16 nth  12	0	0
+OpenTuner	0.16 nth  4	0.2 nth  2	0.11 nth  11	0	0
+Hpbandster	0.24 nth  7	0.14 nth  17	0.11 nth  10	0	0
+					
+Task 10: nx, ny, nz = [38, 63, 67]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.19 nth  3	0.14 nth  17	0.16 nth  18	0	0
+OpenTuner	0.35 nth  10	0.15 nth  19	0.22 nth  16	0	0
+Hpbandster	0.16 nth  6	0.2 nth  19	0.16 nth  5	0	0
+
+Task 11: nx, ny, nz = [81, 84, 39]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.32 nth  2	0.27 nth  18	0.28 nth  16	0	0
+OpenTuner	0.2 nth  6	0.15 nth  17	0.2 nth  17	0	0
+Hpbandster	0.38 nth  7	0.26 nth  1	0.30 nth  7	0	0
+					
+Task 12: nx, ny, nz = [39, 99, 26]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.1 nth  5	0.11 nth  0	0.12 nth  26	0	0
+OpenTuner	0.09 nth  8	0.16 nth  8	0.11 nth  28	0	0
+Hpbandster	0.18 nth  4	0.21 nth  4	0.1 nth  9	0	0
+					
+Task 13: nx, ny, nz = [75, 55, 39]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.21 nth  9	0.18 nth  17	0.2 nth  12	0	0
+OpenTuner	0.48 nth  10	0.14 nth  13	0.16 nth  23	0	0
+Hpbandster	0.2 nth  0	0.17 nth  12	0.15 nth  21	0	0
+					
+Task 14: nx, ny, nz = [32, 10, 97]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.03 nth  9	0.04 nth  17	0.03 nth  26	0	0
+OpenTuner	0.04 nth  9	0.07 nth  13	0.02 nth  18	0	0
+Hpbandster	0.09 nth  3	0.04 nth  0	0.02 nth  25	0	0
+					
+Task 15: nx, ny, nz = [89, 94, 15]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.13 nth  8	0.12 nth  4	0.09 nth  0	0	0
+OpenTuner	0.17 nth  8	0.11 nth  7	0.08 nth  27	0	0
+Hpbandster	0.26 nth  6	0.13 nth  17	0.12 nth  7	0	0
+					
+Task 16: nx, ny, nz = [71, 11, 46]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.04 nth  0	0.05 nth  19	0.04 nth  0	0	0
+OpenTuner	0.06 nth  5	0.07 nth  15	0.04 nth  16	0	0
+Hpbandster	0.04 nth  9	0.11 nth  11	0.05 nth  0	0	0
+					
+Task 17: nx, ny, nz = [94, 32, 98]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.39 nth  9	0.23 nth  19	0.25 nth  23	0	0
+OpenTuner	0.3 nth  10	0.28 nth  19	0.24 nth  27	0	0
+Hpbandster	0.29 nth  0	0.34 nth  10	0.22 nth  21	0	0
+					
+Task 18: nx, ny, nz = [14, 52, 45]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.05 nth  0	0.04 nth  16	0.04 nth  5	0	0
+OpenTuner	0.03 nth  5	0.1 nth  5	0.04 nth  9	0	0
+Hpbandster	0.07 nth  7	0.07 nth  3	0.04 nth  0	0	0
+					
+Task 19: nx, ny, nz = [96, 86, 27]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.2 nth  7	0.22 nth  10	0.17 nth  25	0	0
+OpenTuner	0.48 nth  6	0.16 nth  13	0.19 nth  10	0	0
+Hpbandster	0.21 nth  8	0.19 nth  15	0.17 nth  25	0	0
+					
+Task 20: nx, ny, nz = [70, 29, 25]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.12 nth  3	0.06 nth  10	0.07 nth  13	0	0
+OpenTuner	0.09 nth  3	0.07 nth  16	0.07 nth  28	0	0
+Hpbandster	0.06 nth  3	0.08 nth  7	0.06 nth  19	0	0
+
+Task 21: nx, ny, nz = [70, 17, 16]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.03 nth  7	0.03 nth  13	0.04 nth  10	0	0
+OpenTuner	0.05 nth  0	0.02 nth  1	0.05 nth  1	0	0
+Hpbandster	0.06 nth  2	0.03 nth  7	0.03 nth  23	0	0
+					
+Task 22: nx, ny, nz = [10, 40, 51]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.04 nth  9	0.03 nth  7	0.03 nth  26	0	0
+OpenTuner	0.04 nth  9	0.04 nth  1	0.06 nth  16	0	0
+Hpbandster	0.04 nth  0	0.03 nth  11	0.03 nth  18	0	0
+					
+Task 23: nx, ny, nz = [65, 44, 54]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.2 nth  6	0.18 nth  13	0.15 nth  22	0	0
+OpenTuner	0.37 nth  10	0.17 nth  14	0.16 nth  30	0	0
+Hpbandster	0.22 nth  3	0.19 nth  15	0.18 nth  25	0	0
+					
+Task 24: nx, ny, nz = [43, 60, 40]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.12 nth  7	0.11 nth  11	0.13 nth  10	0	0
+OpenTuner	0.26 nth  10	0.17 nth  19	0.1 nth  22	0	0
+Hpbandster	0.18 nth  9	0.11 nth  19	0.14 nth  5	0	0
+					
+Task 25: nx, ny, nz = [53, 38, 61]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.14 nth  6	0.14 nth  0	0.15 nth  0	0	0
+OpenTuner	0.21 nth  4	0.18 nth  19	0.19 nth  19	0	0
+Hpbandster	0.18 nth  8	0.12 nth  12	0.12 nth  0	0	0
+					
+Task 26: nx, ny, nz = [78, 40, 22]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.06 nth  5	0.1 nth  13	0.06 nth  27	0	0
+OpenTuner	0.06 nth  10	0.14 nth  2	0.07 nth  12	0	0
+Hpbandster	0.07 nth  7	0.1 nth  16	0.09 nth  21	0	0
+					
+Task 27: nx, ny, nz = [63, 95, 11]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.06 nth  9	0.07 nth  7	0.05 nth  26	0	0
+OpenTuner	0.04 nth  8	0.08 nth  10	0.06 nth  21	0	0
+Hpbandster	0.06 nth  3	0.1 nth  16	0.06 nth  18	0	0
+					
+Task 28: nx, ny, nz = [42, 44, 54]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.17 nth  0	0.12 nth  6	0.11 nth  21	0	0
+OpenTuner	0.23 nth  2	0.17 nth  20	0.11 nth  28	0	0
+Hpbandster	0.12 nth  9	0.13 nth  7	0.15 nth  21	0	0
+					
+Task 29: nx, ny, nz = [89, 10, 10]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.01 nth  9	0.02 nth  5	0.01 nth  20	0	0
+OpenTuner	0.02 nth  3	0.01 nth  11	0.02 nth  25	0	0
+Hpbandster	0.04 nth  9	0.02 nth  6	0.02 nth  23	0	0
+					
+Task 30: nx, ny, nz = [28, 57, 61]					
+Tuner / #runs	10	20	30	40	50
+GPTune	0.13 nth  8	0.11 nth  3	0.14 nth  17	0	0
+OpenTuner	0.14 nth  1	0.1 nth  14	0.09 nth  27	0	0
+Hpbandster	0.14 nth  4	0.15 nth  2	0.12 nth  16	0	0

@@ -1,0 +1,24 @@
+Task 1: m, n = [18060, 15993]					
+Tuner / #runs	10	20	40
+PerModel	1.98E+00	2.07E+00	1.97E+00
+NoModel	    2.65E+00	2.05E+00	1.96E+00
+					
+Task 2: m, n = [17269, 16601]					
+Tuner / #runs	10	20	40
+PerModel	2.16E+00	2.05E+00	1.95E+00
+NoModel	    2.80E+00	2.19E+00	2.08E+00
+
+Task 3: m, n = [17335, 14697]					
+Tuner / #runs	10	20	40
+PerModel	1.77E+00	1.74E+00	1.73E+00
+NoModel	    1.84E+00	1.69E+00	1.73E+00
+
+Task 4: m, n = [19552, 8778]					
+Tuner / #runs	10	20	40
+PerModel	1.17E+00	1.13E+00	1.04E+00
+NoModel	    1.50E+00	1.14E+00	1.04E+00
+
+Task 5: m, n = [19421, 10935]					
+Tuner / #runs	10	20	40
+PerModel	1.46E+00	1.47E+00	1.33E+00
+NoModel	    1.63E+00	1.66E+00	1.32E+00

@@ -1,0 +1,60 @@
+Task 1: m, n = [1390, 14825]					
+Tuner / #runs	10	20	40
+GPTune	3.70E-02	7.34E-02	4.38E-02
+OpenTuner	2.91E-01	3.79E-02	6.02E-02
+Hpbandster	7.54E-02	8.84E-02	6.00E-02
+					
+Task 2: m, n = [9556, 3362]					
+Tuner / #runs	10	20	40
+GPTune	1.93E-01	2.01E-01	2.60E-01
+OpenTuner	3.08E-01	2.48E-01	2.91E-01
+Hpbandster	2.98E-01	2.35E-01	2.31E-01
+
+Task 3: m, n = [17335, 14697]					
+Tuner / #runs	10	20	40
+GPTune	1.96E+00	1.88E+00	2.04E+00
+OpenTuner	2.43E+01	1.74E+00	1.90E+00
+Hpbandster	1.97E+00	2.54E+00	2.36E+00
+
+Task 4: m, n = [19552, 8778]					
+Tuner / #runs	10	20	40
+GPTune	1.16E+00	1.27E+00	1.21E+00
+OpenTuner	1.62E+00	1.09E+00	1.90E+00
+Hpbandster	1.75E+00	1.57E+00	1.21E+00
+
+Task 5: m, n = [19421, 10935]					
+Tuner / #runs	10	20	40
+GPTune	1.53E+00	1.38E+00	1.68E+00
+OpenTuner	1.52E+00	1.52E+00	2.29E+00
+Hpbandster	2.66E+00	1.69E+00	1.58E+00
+
+Task 6: m, n = [17269, 16601]					
+Tuner / #runs	10	20	40
+GPTune	2.06E+00	2.71E+00	2.62E+00
+OpenTuner	8.24E+00	2.48E+00	2.41E+00
+Hpbandster	2.88E+00	2.31E+00	3.16E+00
+
+Task 7: m, n = [2469, 17831]					
+Tuner / #runs	10	20	40
+GPTune	1.25E-01	9.20E-02	1.02E-01
+OpenTuner	9.83E-02	1.11E-01	1.16E-01
+Hpbandster	1.86E-01	1.99E-01	2.59E-01
+
+Task 8: m, n = [18060, 15993]					
+Tuner / #runs	10	20	40
+GPTune	2.08E+00	2.03E+00	2.71E+00
+OpenTuner	4.01E+00	2.74E+00	7.73E+00
+Hpbandster	3.85E+00	2.84E+00	2.74E+00
+
+Task 9: m, n = [12175, 1118]					
+Tuner / #runs	10	20	40
+GPTune	6.11E-02	5.97E-02	8.46E-02
+OpenTuner	9.12E-02	9.99E-02	9.82E-02
+Hpbandster	9.05E-02	6.48E-02	1.06E-01
+
+Task 10: m, n = [6247, 7330]					
+Tuner / #runs	10	20	40
+GPTune	3.25E-01	2.87E-01	3.60E-01
+OpenTuner	4.91E-01	3.35E-01	3.62E-01
+Hpbandster	4.95E-01	5.96E-01	4.80E-01
+

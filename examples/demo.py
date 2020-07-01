@@ -116,8 +116,8 @@ def models(point):
 
 
 constraints = {"cst1": "x >= 0. and x <= 1."}
-# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
 
 
@@ -138,11 +138,11 @@ if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
 
-    computer = Computer(nodes=1, cores=32, hosts=None)
+    computer = Computer(nodes=1, cores=16, hosts=None)
     options = Options()
-    options['model_restarts'] = 10
+    options['model_restarts'] = 1
 
-    options['distributed_memory_parallelism'] = False
+    options['distributed_memory_parallelism'] = True
     options['shared_memory_parallelism'] = False
 
     options['objective_evaluation_parallelism'] = False
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
 
-    options['model_processes'] = 1
+    options['model_processes'] = 8
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
 
@@ -211,9 +211,11 @@ if __name__ == '__main__':
             fig.savefig('obj_t_%d.eps'%t)       
         
     
-    giventask = [[6]]
+    # giventask = [[6]]
+    giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
+
     NI=len(giventask)
-    NS=400	    
+    NS=80	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 
@@ -221,14 +223,15 @@ if __name__ == '__main__':
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
         (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
             print("    t:%d " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
+            print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        print("stats: ", stats)
+        
     
 
     if(TUNER_NAME=='opentuner'):
@@ -239,6 +242,16 @@ if __name__ == '__main__':
             print("tid: %d" % (tid))
             print("    t:%d " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
+            print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+    if(TUNER_NAME=='hpbandster'):
+        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(ntask):
+            print("tid: %d" % (tid))
+            print("    t:%d " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
