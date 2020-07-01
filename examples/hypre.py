@@ -44,9 +44,9 @@ Task space:
     ay:    convection coefficient for d/dy
     az:    convection coefficient for d/dz
 Input space:
-    Px:                processor topology, with NProc = Px*Py*Pz
-    Py:                processor topology, with NProc = Px*Py*Pz
-    Pz:                processor topology, with NProc = Px*Py*Pz
+    Px:                processor topology, with Nproc = Px*Py*Pz where Pz is a dependent parameter
+    Py:                processor topology, with Nproc = Px*Py*Pz where Pz is a dependent parameter
+    Nproc:             total number of MPIs 
     strong_threshold:  AMG strength threshold
     trunc_factor:      Truncation factor for interpolation
     P_max_elmts:       Max number of elements per row for AMG interpolation
@@ -99,7 +99,8 @@ def objectives(point):
     # tuning params / input params
     Px = point['Px']
     Py = point['Py']
-    Pz = point['Pz']
+    Nproc = point['Nproc']
+    Pz = int(Nproc / (Px*Py))
     strong_threshold = point['strong_threshold']
     trunc_factor = point['trunc_factor']
     P_max_elmts = point['P_max_elmts']
@@ -110,10 +111,9 @@ def objectives(point):
     interp_type = point['interp_type']
     agg_num_levels = point['agg_num_levels']
 
-    NProc = Px*Py*Pz
     # CoarsTypes = {0:"-cljp ", 1:"-ruge ", 2:"-ruge2b ", 3:"-ruge2b ", 4:"-ruge3c ", 6:"-falgout ", 8:"-pmis ", 10:"-hmis "}
     # CoarsType = CoarsTypes[coarsen_type]
-    npernode =  math.ceil(float(NProc)/nodes)  
+    npernode =  math.ceil(float(Nproc)/nodes)  
     nthreads = int(cores / npernode)
 
     # call Hypre 
@@ -169,7 +169,7 @@ def main():
     nz = Integer(nzmin, nzmax, transform="normalize", name="nz")
     Px = Integer(1, nprocmax, transform="normalize", name="Px")
     Py = Integer(1, nprocmax, transform="normalize", name="Py")
-    Pz = Integer(1, nprocmax, transform="normalize", name="Pz")
+    Nproc = Integer(nprocmin, nprocmax, transform="normalize", name="Nproc")
     strong_threshold = Real(0, 1, transform="normalize", name="strong_threshold")
     trunc_factor =  Real(0, 1, transform="normalize", name="trunc_factor")
     P_max_elmts = Integer(1, 12,  transform="normalize", name="P_max_elmts")
@@ -182,18 +182,13 @@ def main():
     r = Real(float("-Inf"), float("Inf"), name="r")
     
     IS = Space([nx, ny, nz])
-    PS = Space([Px, Py, Pz, strong_threshold, trunc_factor, P_max_elmts, coarsen_type, relax_type, smooth_type, smooth_num_levels, interp_type, agg_num_levels])
+    PS = Space([Px, Py, Nproc, strong_threshold, trunc_factor, P_max_elmts, coarsen_type, relax_type, smooth_type, smooth_num_levels, interp_type, agg_num_levels])
     OS = Space([r])
     
     # Question: how to set constraints
-    cst1 = f"Px * Py * Pz <= {nprocmax}"
-    cst2 = f"Px * Py * Pz >= {nprocmin}"
-    constraints = {"cst1": cst1, "cst2": cst2}
-    
-    # cst1 = f"1 <= Px <= {nprocmax}"
-    # cst2 = f"1 <= Py <= {nprocmax}"
-    # cst3 = f"1 <= Pz <= {nprocmax}"
-    # constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+    cst1 = f"Px * Py  <= Nproc"
+    constraints = {"cst1": cst1}
+
     print(IS, PS, OS, constraints)
 
     problem = TuningProblem(IS, PS, OS, objectives, constraints, None) # no performance model
