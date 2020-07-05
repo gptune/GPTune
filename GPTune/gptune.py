@@ -207,7 +207,12 @@ class GPTune(object):
 		
 			t1 = time.time_ns()
 			res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
-			newdata.P = [x[1][0] for x in res]
+			
+			more_samples=NS # YL: this makes sure P has the same length across all tasks
+			for x in res:
+				more_samples=min(more_samples,x[1][0].shape[0])	
+			newdata.P = [x[1][0][0:more_samples,:] for x in res]
+
 			t2 = time.time_ns()
 			time_search = time_search + (t2-t1)/1e9		
 	#XXX add the info of problem.models here

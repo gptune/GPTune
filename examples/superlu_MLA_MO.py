@@ -206,14 +206,14 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
 			front = ndf[0]
 			# print('front id: ',front)
 			fopts = data.O[tid][front]
 			xopts = [data.P[tid][i] for i in front]
 			print('    Popts ', xopts)		
-			print('    Oopts ', fopts)		
+			print('    Oopts ', fopts.tolist())		
 			
   
 def parse_args():
