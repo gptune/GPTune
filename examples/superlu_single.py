@@ -141,9 +141,9 @@ def main():
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
-	matrices = ["big.rua", "g4.rua", "g20.rua"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -169,8 +169,8 @@ def main():
 
 
 
-	# target='memory'
-	target='time'
+	target='memory'
+	# target='time'
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -185,7 +185,7 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class '] = 'Model_LCM'
+	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 
 	options.validate(computer = computer)
@@ -203,8 +203,8 @@ def main():
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [["big.rua"]]		
-	# # giventask = [["Si2.rb"]]		
-	# data = Data(problem)
+	giventask = [["Si2.bin"]]		
+	data = Data(problem)
 
 
 
@@ -229,7 +229,7 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
@@ -243,7 +243,7 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
 		NI = ntask
@@ -256,7 +256,7 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 

@@ -136,8 +136,8 @@ def main():
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 	matrices = ["big.rua", "g4.rua", "g20.rua"]
-#	matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 	# Input parameters
@@ -175,9 +175,9 @@ def main():
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
 	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	options['search_pop_size'] = 100
+	options['search_pop_size'] = 1000
 	options['search_gen'] = 10
-	options['search_best_N'] = 4
+	options['search_more_samples'] = 4
 	options.validate(computer = computer)
 
 	""" Intialize the tuner with existing data"""		
@@ -194,7 +194,10 @@ def main():
 
 		""" Building MLA with the given list of tasks """	
 		giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-		#giventask = [["Si2.rb"]]	
+		# giventask = [["Si2.bin"]]	
+		# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"], ["SiO.bin"], ["Ga3As3H12.bin"],["GaAsH6.bin"],["H2O.bin"]]	
+		# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"], ["SiO.bin"]]	
+
 		NI = len(giventask)
 		NS = nruns
 		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))

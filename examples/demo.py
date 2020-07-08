@@ -116,8 +116,8 @@ def models(point):
 
 
 constraints = {"cst1": "x >= 0. and x <= 1."}
-problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
 
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     options = Options()
     options['model_restarts'] = 1
 
-    options['distributed_memory_parallelism'] = True
+    options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
 
     options['objective_evaluation_parallelism'] = False
@@ -150,19 +150,19 @@ if __name__ == '__main__':
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
 
-    options['model_processes'] = 8
+    options['model_processes'] = 1
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
-    # options['search_threads'] = 8
+    # options['search_threads'] = 16
 
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['verbose'] = False
+    options['verbose'] = True
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
 
@@ -211,26 +211,27 @@ if __name__ == '__main__':
             fig.savefig('obj_t_%d.eps'%t)       
         
     
-    # giventask = [[6]]
-    giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
+    giventask = [[6]]
+    # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=80	    
+    NS=800	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        # """ Print all input and parameter samples """
+        # for tid in range(NI):
+        #     print("tid: %d" % (tid))
+        #     print("    t:%d " % (data.I[tid][0]))
+        #     print("    Ps ", data.P[tid])
+        #     print("    Os ", data.O[tid].tolist())
+        #     print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
         
     
 

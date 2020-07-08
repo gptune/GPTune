@@ -26,6 +26,7 @@ import itertools
 import scipy
 import sys
 from sys import platform
+import time 
 
 ROOTDIR = os.path.abspath(__file__ + "/../../build")
 
@@ -161,7 +162,17 @@ class LCM(GPy.kern.Kern):
 
 	def train_kernel(self, X, Y, computer, kwargs):
 		npernode = int(computer.cores/kwargs['model_threads'])
-		mpi_comm = computer.spawn(__file__, nproc=kwargs['model_processes'], nthreads=kwargs['model_threads'], npernode=npernode, kwargs = kwargs)
+		
+		mpi_size=kwargs['model_processes']  # this makes sure every rank belongs to the blacs grid
+		nprow = int(np.sqrt(mpi_size))
+		npcol = mpi_size // nprow 
+		mpi_size = nprow * npcol
+
+		t1 = time.time_ns()
+		mpi_comm = computer.spawn(__file__, nproc=mpi_size, nthreads=kwargs['model_threads'], npernode=npernode, kwargs = kwargs)
+		t2 = time.time_ns()
+		if (kwargs['verbose']):
+			print('LCM spawn time: ',(t2-t1)/1e9)
 
 		X = np.concatenate([np.concatenate([X[i], np.ones((len(X[i]), 1)) * i], axis=1) for i in range(len(X))])
 		Y = np.array(list(itertools.chain.from_iterable(Y)))
@@ -200,6 +211,7 @@ class LCM(GPy.kern.Kern):
 
 		def fun(x, *args):
 
+			t3 = time.time_ns()
 			x2 = transform_x(x)
 			_ = mpi_comm.bcast(("fun_jac", x2), root=mpi4py.MPI.ROOT)
 	#            gradients[:] = 0.
@@ -214,6 +226,8 @@ class LCM(GPy.kern.Kern):
 			if (neg_log_marginal_likelihood < min(history_fs)):
 				history_xs.append(x2)
 				history_fs.append(neg_log_marginal_likelihood)
+			t4 = time.time_ns()
+			# print('fun_jac py: ',(t4-t3)/1e9)
 
 			return (neg_log_marginal_likelihood)
 
@@ -227,8 +241,12 @@ class LCM(GPy.kern.Kern):
 		x0 = self.get_param_array()
 
 		# sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
-
+		t3 = time.time_ns()
 		sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
+		t4 = time.time_ns()
+		if (kwargs['verbose']):
+			print('L-BFGS time: ',(t4-t3)/1e9)
+
 		# print("!!!!")
 	#            bounds = [(None, None)] * len(x0)
 	#            sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad, bounds=None, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1, 'maxiter': 1, 'iprint': -1, 'maxls': 100})

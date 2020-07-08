@@ -219,17 +219,26 @@ class SearchPyGMO(Search):
 				pop = pg.population(prob = prob, size = kwargs['search_pop_size'], seed = cpt+1)
 				pop = algo.evolve(pop)
 				
-				if(self.problem.DO==2):				
-					front = pg.non_dominated_front_2d(pop.get_f())
-				else:
-					ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(pop.get_f())
-					front = ndf[0]
-				fs = pop.get_f()[front]
-				xs = pop.get_x()[front]
-				bestidx = pg.select_best_N_mo(points = fs, N = kwargs['search_more_samples'])
-				# print('bestidx',bestidx)
-				xss = xs[bestidx]
-				fss = fs[bestidx]
+
+				""" It seems pop.get_f() is already sorted, no need to perform the following sorting """
+				# if(self.problem.DO==2):				
+				# 	front = pg.non_dominated_front_2d(pop.get_f())
+				# else:
+				# 	ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(pop.get_f())
+				# 	front = ndf[0]
+				# fs = pop.get_f()[front]
+				# xs = pop.get_x()[front]
+				# bestidx = pg.select_best_N_mo(points = fs, N = kwargs['search_more_samples'])
+				# xss = xs[bestidx]
+				# fss = fs[bestidx]				
+				# # print('bestidx',bestidx)
+
+				firstn = min(int(kwargs['search_more_samples']),np.shape(pop.get_f())[0])
+				fss = pop.get_f()[0:firstn]
+				xss = pop.get_x()[0:firstn]
+				# print('firstn',firstn,int(kwargs['search_more_samples']),np.shape(pop.get_f()),xss)
+
+				
 				if(np.max(fss)< float('Inf')):
 					cond = True
 					bestX.append(xss)

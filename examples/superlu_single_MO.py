@@ -55,7 +55,9 @@ from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 import pygmo as pg
+
 import math
+
 
 ################################################################################
 
@@ -86,17 +88,16 @@ def objectives(point):                  # should always use this name for user-d
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
 
-
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/pzdrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
-	comm = MPI.COMM_SELF.Spawn("%s/pzdrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
+	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
+	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 
-	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pzdrive_spawn.c to see how the return value are communicated """																	
+	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
 	tmpdata = array('f', [0,0])
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()
 
-	print(params, ' superlu factor time: ', tmpdata[0], ' solve time: ', tmpdata[1])
+	print(params, ' superlu time: ', tmpdata[0], ' memory: ', tmpdata[1])
 	# tmpdata1 = copy.deepcopy(tmpdata)
 	# tmpdata1[0]=tmpdata[1]
 	# tmpdata1[1]=tmpdata[0]	
@@ -121,7 +122,7 @@ def main():
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
-	nprocmin_pernode = args.nprocmin_pernode
+	nprocmin_pernode = args.nprocmin_pernode	
 	machine = args.machine
 	optimization = args.optimization
 	nruns = args.nruns
@@ -135,8 +136,8 @@ def main():
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	matrices = ["nimrodMatrix-V.bin", "nimrodMatrix-B.bin", "cg20.cua"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 	# Input parameters
@@ -146,11 +147,11 @@ def main():
 	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	factor   = Real        (float("-Inf") , float("Inf"), name="factor_time")
-	solve    = Real        (float("-Inf") , float("Inf"), name="solve_time")
+	runtime   = Real        (float("-Inf") , float("Inf"), name="runtime")
+	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	OS = Space([factor, solve])
+	OS = Space([runtime, memory])
 	cst1 = "NSUP >= NREL"
 	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
 	constraints = {"cst1" : cst1, "cst2" : cst2}
@@ -174,45 +175,44 @@ def main():
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = False
 	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	options['search_pop_size'] = 1000 # 1000
+	options['search_pop_size'] = 1000
 	options['search_gen'] = 10
 	options['search_more_samples'] = 4
 	options.validate(computer = computer)
 
-	""" Intialize the tuner with existing data"""		
-	data = Data(problem)
-	gt = GPTune(problem, computer = computer, data = data, options = options)
-
 	if(TUNER_NAME=='GPTune'):
-		#""" Building MLA with NI random tasks """
-		#NI = ntask
-		#NS = nruns
-		#(data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
-		#print("stats: ",stats)
+
+
 
 		""" Building MLA with the given list of tasks """	
-		#giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-		giventask = [["cg20.cua"]]	
-		# giventask = [["nimrodMatrix-V.bin"]]	
-		NI = len(giventask)
-		NS = nruns
-		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
-		print("stats: ",stats)
+		# giventasks = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
+		# giventasks = [["Si2.bin"],["SiH4.bin"]]	
+		# giventasks = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"], ["SiO.bin"], ["Ga3As3H12.bin"],["GaAsH6.bin"],["H2O.bin"]]	
+		giventasks = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"], ["SiO.bin"]]	
 
+		for tmp in giventasks:
+			giventask = [tmp]
+			data = Data(problem)
+			gt = GPTune(problem, computer = computer, data = data, options = options)
 
-		""" Print all input and parameter samples """	
-		for tid in range(NI):
-			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
-			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			front = ndf[0]
-			# print('front id: ',front)
-			fopts = data.O[tid][front]
-			xopts = [data.P[tid][i] for i in front]
-			print('    Popts ', xopts)		
-			print('    Oopts ', fopts)		
+			NI = len(giventask)
+			NS = nruns
+			(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
+			print("stats: ",stats)
+
+			""" Print all input and parameter samples """	
+			for tid in range(NI):
+				print("tid: %d"%(tid))
+				print("    matrix:%s"%(data.I[tid][0]))
+				print("    Ps ", data.P[tid])
+				print("    Os ", data.O[tid].tolist())
+				ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
+				front = ndf[0]
+				# print('front id: ',front)
+				fopts = data.O[tid][front]
+				xopts = [data.P[tid][i] for i in front]
+				print('    Popts ', xopts)		
+				print('    Oopts ', fopts.tolist())		
 			
   
 def parse_args():

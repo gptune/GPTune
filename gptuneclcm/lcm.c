@@ -321,7 +321,7 @@ double fun_jac // negloglike_and_grads
     // Declare variables
 
     int k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, info, tmppid;
-    double sum, ws2, a, dldk, *dL_dK;
+    double sum, ws2, a, dldk, *dL_dK, t1, t2;
 
     // Unpack hyper-parameters
 
@@ -334,6 +334,8 @@ double fun_jac // negloglike_and_grads
     // Initialize outputs
 
     double neg_log_marginal_likelihood = 0.;
+
+    t1 = omp_get_wtime();
 
     for (k = 0; k < z->nparam ; k++)
     {
@@ -623,7 +625,12 @@ for (int p = 0; p < 8; p++)
     }
 
     MPI_Allreduce(z->buffer, gradients, z->nparam, MPI_DOUBLE, MPI_SUM, z->mpi_comm);
-
+    
+    t2 = omp_get_wtime();
+    // if (z->pid == 0){
+    //     printf("time in fun_jac: %e\n",t2-t1);
+    //     fflush(stdout);
+    // }
     return neg_log_marginal_likelihood;
 }
 

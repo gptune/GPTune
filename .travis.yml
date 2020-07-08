@@ -233,7 +233,14 @@ install:
     -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
   - make pddrive_spawn &>>build_gptune.log
 
-
+  - cd ../../
+  - rm -rf hypre
+  - git clone https://github.com/hypre-space/hypre.git
+  - cd hypre/src/
+  - ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI"
+  - make
+  - cp ../../hypre-driver/src/ij.c ./test/.
+  - make test
 
   - cd ../../../
   - rm -rf mpi4py
@@ -259,9 +266,10 @@ install:
 script:
   - cd $TRAVIS_BUILD_DIR/examples
   - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./demo.py
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 5 -machine travis -jobid 0
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_TLA.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
-  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 6 -machine travis  
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1  -ntask 2 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 5 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 10 -machine travis -jobid 0
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_TLA.py -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 4 -machine travis 
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_MO.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 6 -machine travis  
+  - $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_MO.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 6 -nxmax 40 -nymax 40 -nzmax 40  -machine travis  

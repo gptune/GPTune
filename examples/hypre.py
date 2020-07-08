@@ -115,7 +115,7 @@ def objectives(point):
     # CoarsType = CoarsTypes[coarsen_type]
     npernode =  math.ceil(float(Nproc)/nodes)  
     nthreads = int(cores / npernode)
-
+    
     # call Hypre 
     params = [(nx, ny, nz, coeffs_a, coeffs_c, problem_name, solver,
                Px, Py, Pz, strong_threshold, 
@@ -187,7 +187,8 @@ def main():
     
     # Question: how to set constraints
     cst1 = f"Px * Py  <= Nproc"
-    constraints = {"cst1": cst1}
+    cst2 = f"not(coarsen_type=='0' and P_max_elmts==10 and relax_type=='18' and smooth_type=='6' and smooth_num_levels==3 and interp_type=='8' and agg_num_levels==1)"
+    constraints = {"cst1": cst1,"cst2": cst2}
 
     print(IS, PS, OS, constraints)
 
