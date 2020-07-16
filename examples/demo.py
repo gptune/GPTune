@@ -35,8 +35,11 @@ from mpi4py import MPI
 import numpy as np
 import time
 from callopentuner import OpenTuner
+from callhpbandster import HpBandSter
+import logging
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 # from GPTune import *
 
@@ -52,15 +55,6 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
 
 # Argmin{x} objectives(t,x), for x in [0., 1.]
 
-input_space = Space([Real(0., 10., transform="normalize", name="t")])
-parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
-# print(input_space.dimension_names[1],type(input_space.dimensions[1]),input_space.dimensions[1].bounds,type(input_space.dimensions[1].bounds),input_space.dimensions[1].bounds[1],isinstance(input_space.dimensions[1],Categorical))
-# input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
-# parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
-
-
-output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
-
 
 def objectives(point):
     """
@@ -73,7 +67,7 @@ def objectives(point):
     c = a * x
     d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
-    f = d * e
+    f = d * e + 1
 
     # print('test:',test)
     """
@@ -114,29 +108,32 @@ def models(point):
     return [f*(1+np.random.uniform()*0.1)]
 
 
-
-constraints = {"cst1": "x >= 0. and x <= 1."}
-# problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
-
-
-
-
-
-
-# Run Autotuning
-
-#search_param_dict = {}
-#search_param_dict['method'] = 'MLA'
-#
-#search = Search(problem, search_param_dict)
-#
-# search.run()
+""" Plot the objective function for t=1,2,3,4,5,6 """
+def annot_min(x,y, ax=None):
+    xmin = x[np.argmin(y)]
+    ymin = y.min()
+    text= "x={:.3f}, y={:.3f}".format(xmin, ymin)
+    if not ax:
+        ax=plt.gca()
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+    arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=60")
+    kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
+    ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
 
 
 if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
+
+    input_space = Space([Real(0., 10., transform="normalize", name="t")])
+    parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
+    # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
+    # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
+
+    output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
+    constraints = {"cst1": "x >= 0. and x <= 1."}
+    # problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+    problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
     computer = Computer(nodes=1, cores=16, hosts=None)
     options = Options()
@@ -162,76 +159,35 @@ if __name__ == '__main__':
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['verbose'] = True
+    options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
 
     options.validate(computer=computer)
 
-    os.environ['TUNER_NAME'] = 'GPTune'
-    
-
-    """ Plot the objective function for t=1,2,3,4,5,6 """
-    def annot_min(x,y, ax=None):
-        xmin = x[np.argmin(y)]
-        ymin = y.min()
-        text= "x={:.3f}, y={:.3f}".format(xmin, ymin)
-        if not ax:
-            ax=plt.gca()
-        bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-        arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=60")
-        kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
-        ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
-
-    plot=0
-    if plot==1:
-        x = np.arange(0., 1., 0.00001)
-        for t in range(1,7):
-            fig = plt.figure(figsize=[12.8, 9.6])
-            I_orig=[t]
-            kwargst = {gt.problem.IS[k].name: I_orig[k] for k in range(gt.problem.DI)}
-
-            y=np.zeros([len(x),1])
-            for i in range(len(x)):
-                P_orig=[x[i]]
-                kwargs = {gt.problem.PS[k].name: P_orig[k] for k in range(gt.problem.DP)}
-                kwargs.update(kwargst)
-                y[i]=objectives(kwargs) 
-            fontsize=20
-            plt.rcParams.update({'font.size': fontsize})
-            plt.plot(x, y, 'b')
-            plt.xlabel('x',fontsize=fontsize+2)
-            plt.ylabel('y(t,x)',fontsize=fontsize+2)
-            plt.title('t=%d'%t,fontsize=fontsize+2)
-            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
-        
-            annot_min(x,y)
-            # plt.show()
-            plt.show(block=False)
-            fig.savefig('obj_t_%d.eps'%t)       
-        
+    os.environ['TUNER_NAME'] = 'hpbandster'
     
     giventask = [[6]]
     # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=800	    
+    NS=100	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
-        # """ Print all input and parameter samples """
-        # for tid in range(NI):
-        #     print("tid: %d" % (tid))
-        #     print("    t:%d " % (data.I[tid][0]))
-        #     print("    Ps ", data.P[tid])
-        #     print("    Os ", data.O[tid].tolist())
-        #     print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%d " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
         
     
 
@@ -250,9 +206,41 @@ if __name__ == '__main__':
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
-        for tid in range(ntask):
+        for tid in range(NI):
             print("tid: %d" % (tid))
             print("    t:%d " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
+
+
+    plot=0
+    if plot==1:
+        x = np.arange(0., 1., 0.00001)
+        Nplot=6
+        for t in range(1,Nplot+1):
+            fig = plt.figure(figsize=[12.8, 9.6])
+            I_orig=[t]
+            kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}
+
+            y=np.zeros([len(x),1])
+            for i in range(len(x)):
+                P_orig=[x[i]]
+                kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
+                kwargs.update(kwargst)
+                y[i]=objectives(kwargs) 
+            fontsize=30
+            plt.rcParams.update({'font.size': 21})
+            plt.plot(x, y, 'b')
+            plt.xlabel('x',fontsize=fontsize+2)
+            plt.ylabel('y(t,x)',fontsize=fontsize+2)
+            plt.title('t=%d'%t,fontsize=fontsize+2)
+            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
+        
+            annot_min(x,y)
+            # plt.show()
+            # plt.show(block=False)
+            fig.savefig('obj_t_%d.eps'%t)                
+
