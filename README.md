@@ -163,7 +163,7 @@ cmake .. \
     -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 make pddrive_spawn 
 ```
-Note that `pddrive_spawn` is a modified application driver what will be launched by GPTune via MPI spawning (see the Usage section). The files `superlu_*.py` in the `examples` folder shows how to tune the performance of sparse LU factorization with different features of GPTune. 
+Note that `pddrive_spawn` is a modified application driver that will be launched by GPTune via MPI spawning (see the Usage section). The files `superlu_*.py` in the `examples` folder shows how to tune the performance of sparse LU factorization with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples
 $MPIRUN -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 10 -machine youmachine -optimization 'GPTune'
@@ -212,13 +212,13 @@ The evaluation of that statement should be a boolean.
 2. Functions: the user can define a Python function that returns a boolean. 
 
 #### Objective Function
-The user need to define a Python function representing the objective function
+The user need to define a Python function representing the objective function to be optimized
 ```
 def objectives(point)
-   # extract the parameters, invoke the application code, and store the objective function value in 'result'
+   # extract the parameters from 'point', invoke the application code, and store the objective function value in 'result'
    return result
 ```
-Here point is a dictionary containing key pairs representing task and tuning parameters. If the application code is distributed-memory parallel, the user needs to modify the application code (in C, Fortran, Python, etc.) with the MPI spawning syntax and invoke the code using MPI.COMM_SELF.Spawn from mpi4py. Please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.   
+Here point is a dictionary containing key pairs representing task and tuning parameters. If the application code is distributed-memory parallel, the user needs to modify the application code (in C, C++, Fortran, Python, etc.) with the MPI spawning syntax and invoke the code using MPI.COMM_SELF.Spawn from mpi4py. Please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.   
 
 #### Performance Models
 
