@@ -7,6 +7,8 @@ sudo: required
 branches:
   only:
   - master
+  - nimrod
+  - m3dc1
 
 notifications:
   email:

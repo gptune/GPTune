@@ -88,9 +88,9 @@ def objectives(point):                  # should always use this name for user-d
 		elif(line.find("nlayers")!=-1):
 			fout.write("nlayers= %s\n"%(int(np.floor(2**lphi/3.0)+1)))  	
 		elif(line.find("mx")!=-1):
-			fout.write("mx= %s\n"%(2**mx))
+			fout.write("mx= %s\n"%(2**mx)) 
 		elif(line.find("nstep")!=-1):
-			fout.write("nstep= %s\n"%(nstep))  			  
+			fout.write("nstep= %s\n"%(nstep))  			 
 		elif(line.find("my")!=-1):
 			fout.write("my= %s\n"%(2**my))   
 		elif(line.find("nxbl")!=-1):
@@ -109,6 +109,7 @@ def objectives(point):                  # should always use this name for user-d
 	if(nprocmax<nlayers):
 		print('nprocmax', nprocmax, 'nlayers', nlayers, 'decrease lphi!')
 		raise Exception("nprocmax<nlayers")
+
 	if(nproc>int(2**mx/2**nbx)*int(2**my/2**nby)*int(np.floor(2**lphi/3.0)+1)): # nproc <= nlayers*nxbl*nybl
 		nproc = int(2**mx/2**nbx)*int(2**my/2**nby)*int(np.floor(2**lphi/3.0)+1) 
 
@@ -256,7 +257,7 @@ def main():
 	# print("stats: ",stats)
 
 	""" Building MLA with the given list of tasks """	
-	giventask = [[6,8,2,15]]	
+	giventask = [[6,8,2,3],[6,8,2,3],[6,8,2,3],[6,8,2,15]]	
 	NI = len(giventask)
 	NS = nruns
 	(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
