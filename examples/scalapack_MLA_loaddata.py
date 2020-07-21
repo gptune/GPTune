@@ -214,7 +214,7 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=1,help='Number of cores per machine node')
     parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments
-    parser.add_argument('-optimization', type=str,help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
