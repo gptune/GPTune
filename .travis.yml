@@ -3,7 +3,7 @@ compiler: gcc
 os: linux
 dist: bionic
 sudo: required
-
+ 
 branches:
   only:
   - master
@@ -244,11 +244,11 @@ install:
   - python3.7 setup.py build --mpicc="$MPICC -shared" &>>build_gptune.log
   - python3.7 setup.py install &>>build_gptune.log
 
-  # - cd ../
-  # - rm -rf scikit-optimize
-  # - git clone https://github.com/scikit-optimize/scikit-optimize.git
-  # - cd scikit-optimize/
-  # - env CC=$MPICC pip3.7 install -e .
+  - cd ../
+  - rm -rf scikit-optimize
+  - git clone https://github.com/scikit-optimize/scikit-optimize.git
+  - cd scikit-optimize/
+  - env CC=$MPICC pip3.7 install -e .
  
   - cd ../
   - rm -rf autotune
