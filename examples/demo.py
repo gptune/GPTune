@@ -219,8 +219,8 @@ if __name__ == '__main__':
     plot=0
     if plot==1:
         x = np.arange(0., 1., 0.00001)
-        Nplot=6
-        for t in range(1,Nplot+1):
+        Nplot=9.5
+        for t in np.linspace(0,Nplot,20):
             fig = plt.figure(figsize=[12.8, 9.6])
             I_orig=[t]
             kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}

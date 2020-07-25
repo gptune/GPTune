@@ -78,7 +78,7 @@ def plot(data1, data2, data3, args):
     # ax.plot([0,ntask+1], [0.5, 0.5], linestyle=':', linewidth=1)
     ax.set_ylabel('Ratio of objective minimum',fontdict=font)
     ax.set_xlabel('Task ID',fontdict=font)
-    ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
+    # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
     ax.set_xticks(x)
     ax.set_xticklabels(x)
     ax.legend(prop=font_mag,loc='upper left',ncol=1)
