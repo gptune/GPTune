@@ -1,5 +1,7 @@
+#!/bin/bash
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
+
 
 module unload darshan
 module swap craype-haswell craype-mic-knl
@@ -14,7 +16,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.
 module load openmpi/4.0.1
 
 
-
+export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
