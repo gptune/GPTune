@@ -31,29 +31,37 @@ def data_process(args):
     PerModelvsNoModel1 = []
     PerModelvsNoModel2 = []
     PerModelvsNoModel3 = []
+    PerModelvsTrue1 = []
+    PerModelvsTrue2 = []
+    PerModelvsTrue3 = []    
     size_set = []
     for i in range(ntask):
         task_current = results_summary[i]
         results_PerModel = task_current[3][0]
         results_NoModel = task_current[3][1]
+        results_True = task_current[3][2]
         assert results_PerModel[0] == "PerModel"
         assert results_NoModel[0] == "NoModel"
+        assert results_True[0] == "True "
         idx_nrun = task_current[2].index(args.nrun1)
         PerModelvsNoModel1.append((1+results_NoModel[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))
+        PerModelvsTrue1.append((1+results_True[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))        
         idx_nrun = task_current[2].index(args.nrun2)
         PerModelvsNoModel2.append((1+results_NoModel[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))
+        PerModelvsTrue2.append((1+results_True[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))         
         idx_nrun = task_current[2].index(args.nrun3)
-        PerModelvsNoModel3.append((1+results_NoModel[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))     
-    return PerModelvsNoModel1, PerModelvsNoModel2, PerModelvsNoModel3
+        PerModelvsNoModel3.append((1+results_NoModel[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))  
+        PerModelvsTrue3.append((1+results_True[1][idx_nrun])/(1+results_PerModel[1][idx_nrun]))    
+    return PerModelvsNoModel1, PerModelvsNoModel2, PerModelvsNoModel3, PerModelvsTrue1, PerModelvsTrue2, PerModelvsTrue3
 
-def plot(data1, data2, data3, args):
+def plot(data1, data2, data3, data10,data20,data30, args):
     my_source = gen_source(args)
     ntask = len(data1)
     
     font = {'family': 'serif',
         'color':  'black',
         'weight': 'normal',
-        'size': 12,
+        'size': 14,
         }
     font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=10)
 
@@ -66,20 +74,36 @@ def plot(data1, data2, data3, args):
     # plt.clf()
     x = np.arange(1, ntask+1)
     width = 0.25  # the width of the bars
-    fig, ax = plt.subplots()
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    plt.subplots_adjust(hspace=0.005)
     # ax.bar(x - width/2, data1, width, label=f'OpenTuner/GPTune, {p1}(>=1), {p3}(<0.5)')
     # ax.bar(x + width/2, data2, width, label=f'HpBandster/GPTune, {p2}(>=1), {p4}(<0.5)')
-    ax.bar(x - width, data1, width, color='tab:blue', label=f'NS={args.nrun1}, {p1}(>=1)')
-    ax.bar(x , data2, width, color='tab:orange', label=f'NS={args.nrun2}, {p2}(>=1)')
-    ax.bar(x + width, data3, width, color='tab:brown', label=f'NS={args.nrun3}, {p3}(>=1)')
-    ax.plot([1- width*3/2,ntask+width*3/2], [1, 1], c='black', linestyle=':')
+    ax1.bar(x - width, data1, width, color='tab:blue', label=f'NS={args.nrun1}, {p1}(>=1)')
+    ax1.bar(x , data2, width, color='tab:orange', label=f'NS={args.nrun2}, {p2}(>=1)')
+    ax1.bar(x + width, data3, width, color='tab:brown', label=f'NS={args.nrun3}, {p3}(>=1)')
+    ax1.plot([1- width*3/2,ntask+width*3/2], [1, 1], c='black', linestyle=':')
     # ax.plot([0,ntask+1], [0.5, 0.5], linestyle=':', linewidth=1)
-    ax.set_ylabel('Ratio of objective minimum',fontdict=font)
-    ax.set_xlabel('Task ID',fontdict=font)
+    ax1.set_ylabel('Ratio vs no model',fontdict=font)
+    # ax1.set_xlabel('Task ID',fontdict=font)
     # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
-    ax.set_xticks(x)
-    ax.set_xticklabels(x)
-    ax.legend(prop=font_mag,loc='upper left',ncol=1)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(x)
+    ax1.legend(prop=font_mag,loc='upper left',ncol=1)
+
+
+    ax2.bar(x - width, data10, width, color='tab:blue', label=f'NS={args.nrun1}')
+    ax2.bar(x , data20, width, color='tab:orange', label=f'NS={args.nrun2}')
+    ax2.bar(x + width, data30, width, color='tab:brown', label=f'NS={args.nrun3}')
+    ax2.plot([1- width*3/2,ntask+width*3/2], [1, 1], c='black', linestyle=':')
+    # ax.plot([0,ntask+1], [0.5, 0.5], linestyle=':', linewidth=1)
+    ax2.set_ylabel('Ratio vs true',fontdict=font)
+    ax2.set_xlabel('Task ID',fontdict=font)
+    # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(x)
+    ax2.legend(prop=font_mag,loc='upper left',ncol=1)
+
+
     fig.tight_layout()
     filename = os.path.splitext(os.path.basename(my_source))[0]
     plt.ion()
@@ -88,36 +112,16 @@ def plot(data1, data2, data3, args):
     input("Press [enter] to continue.")
     fig.savefig(os.path.join("./plots", f"{filename}.pdf"))
 
-# def plot_histogram(data1, args):
-#     my_source = gen_source(args)
-#     nrun = args.nrun
-#     ntask = len(data1)
-    
-#     plt.clf()
-#     fig, ax1 = plt.subplots()
-#     ax1.hist(data1, bins=np.arange(0, int(np.ceil(max(data1)))+1, 0.5), weights=np.ones(ntask) / ntask, 
-#              label=f'NoModel/PerModel, range: [{min(data1):.2f}, {max(data1):.2f}]', color='#1f77b4')
-#     ax1.plot([1, 1], [0, 1], c='black', linestyle=':')
-#     ax1.legend(fontsize=8)
-#     ax1.set_title(f'[m, n] in [{args.mmax}, {args.nmax}], nrun = {nrun}')
-#     ax1.set_ylabel('Fraction')
-#     ax1.set_xlabel('Ratio of best performance')
-#     fig.tight_layout()
-#     filename = os.path.splitext(os.path.basename(my_source))[0]
-#     plt.ion()
-#     plt.show()
-#     plt.pause(0.001)
-#     # input("Press [enter] to continue.")    
-#     fig.savefig(os.path.join("./plots", f"hist_{filename}_nrun{nrun}.pdf"))
-    
-    
     
 def main(args):
-    PerModelvsNoModel1, PerModelvsNoModel2, PerModelvsNoModel3 = data_process(args)
+    PerModelvsNoModel1, PerModelvsNoModel2, PerModelvsNoModel3,PerModelvsTrue1,PerModelvsTrue2,PerModelvsTrue3 = data_process(args)
     print(PerModelvsNoModel1)
     print(PerModelvsNoModel2)
     print(PerModelvsNoModel3)
-    plot(PerModelvsNoModel1,PerModelvsNoModel2, PerModelvsNoModel3, args)
+    print(PerModelvsTrue1)
+    print(PerModelvsTrue2)
+    print(PerModelvsTrue3)
+    plot(PerModelvsNoModel1,PerModelvsNoModel2, PerModelvsNoModel3,PerModelvsTrue1,PerModelvsTrue2,PerModelvsTrue3, args)
     # plot_histogram(OpenTunervsGPTune, args)
     
 if __name__ == "__main__":
