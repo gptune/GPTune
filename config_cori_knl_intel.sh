@@ -1,3 +1,4 @@
+#!/bin/bash
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
 
@@ -12,7 +13,7 @@ module unload cray-mpich
 module swap intel intel/19.0.3.199 
 
 # module swap PrgEnv-intel PrgEnv-gnu
-
+export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 module load openmpi/4.0.1

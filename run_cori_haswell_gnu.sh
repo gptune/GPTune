@@ -1,3 +1,4 @@
+#!/bin/bash
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
 
@@ -8,7 +9,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.
 # module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi
 module load openmpi/4.0.1
-
+export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
