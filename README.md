@@ -36,9 +36,9 @@ The rest can be installed as follows:
 ## Install SCALAPACK
 ```
 cd $GPTUNEROOT
-wget http://www.netlib.org/scalapack/scalapack-2.0.2.tgz
-tar -xf scalapack-2.0.2.tgz
-cd scalapack-2.0.2
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
 rm -rf build
 mkdir -p build
 cd build
