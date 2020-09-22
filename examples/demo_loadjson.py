@@ -166,7 +166,7 @@ if __name__ == '__main__':
 
     options.validate(computer=computer)
 
-    os.environ['TUNER_NAME'] = 'hpbandster'
+    os.environ['TUNER_NAME'] = 'GPTune'
 
     giventask = [[6]]
     # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
@@ -263,7 +263,7 @@ if __name__ == '__main__':
 
             json_data["perf_data"].append({
                     "id":t,
-                    "I":data.I[t],
+                    "I":np.array(data.I[t]).tolist(),
                     "func_eval":run_data
                 })
 
