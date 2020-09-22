@@ -4,6 +4,8 @@ rm -rf ~/.local/cori/
   
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
+module unload cmake
+module load cmake/3.14.4
 
 module swap PrgEnv-intel PrgEnv-gnu
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
@@ -89,7 +91,9 @@ mkdir -p install
 make config shared=1 cc=$CCC cxx=$CCCPP prefix=$PWD/install
 make install > make_parmetis_install.log 2>&1
 
-cd ../
+cd ../ 
+cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
+cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
 PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
 mkdir -p build
@@ -125,6 +129,92 @@ cd hypre/src/
 make
 cp ../../hypre-driver/src/ij.c ./test/.
 make test
+
+
+
+
+
+cd ../../
+rm -rf ButterflyPACK
+git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+cd ButterflyPACK
+git clone https://github.com/opencollab/arpack-ng.git
+cd arpack-ng
+git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-fopenmp" \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DMPI=ON \
+	-DEXAMPLES=ON \
+	-DCOVERALLS=ON 
+make
+cd ../../
+mkdir build
+cd build
+cmake .. \
+	-DCMAKE_Fortran_FLAGS="-I${MKLROOT}/include"\
+	-DCMAKE_CXX_FLAGS="" \
+	-DBUILD_SHARED_LIBS=OFF \
+	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+make
+make install
+
+
+
+
+cd ../../
+rm -rf STRUMPACK
+git clone https://github.com/pghysels/STRUMPACK.git
+cd STRUMPACK
+git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
+mkdir build
+cd build
+
+export METIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
+export ParMETIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
+export ButterflyPACK_DIR=$PWD/../../ButterflyPACK/build/lib/cmake/ButterflyPACK
+
+cmake ../ \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DSTRUMPACK_COUNT_FLOPS=ON \
+	-DSTRUMPACK_TASK_TIMERS=ON \
+	-DTPL_ENABLE_SCOTCH=OFF \
+	-DTPL_ENABLE_ZFP=OFF \
+	-DTPL_ENABLE_PTSCOTCH=OFF \
+	-DTPL_ENABLE_PARMETIS=ON \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DTPL_LAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+
+make install -j4
+make examples -j4
+
+
+
 
 # make CC=$CCC
 cd ../../../

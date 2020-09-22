@@ -61,16 +61,21 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
-	model = point['model']
-	freq = point['freq']*1e5
-	nproc     = 32
-	# nthreads  =1 
+	model2d = point['model2d']
+	nunk = point['nunk']
+	wavelength = point['wavelength']
+
+	lrlevel = point['lrlevel']
+	xyzsort = point['xyzsort']
+	nmin_leaf = 2**point['nmin_leaf']
+	nproc     = point['nproc']
+
 	npernode =  math.ceil(float(nproc)/nodes)  
 	nthreads = int(cores / npernode)
 
-	params = [model, 'freq', freq]
-	RUNDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_hss_factor_acc/build/EXAMPLE"
-	INPUTDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_hss_factor_acc/EXAMPLE/EM3D_DATA/preprocessor_3dmesh"
+	params = ['model2d', model2d,'nunk', nunk,'wavelength', wavelength,'lrlevel', lrlevel,'xyzsort', xyzsort,'nmin_leaf', nmin_leaf, 'nproc', nproc]
+
+	RUNDIR = os.path.abspath(__file__ + "/../ButterflyPACK/build/EXAMPLE")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
 
@@ -83,15 +88,15 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/ie3dporteigen"%(RUNDIR), args=['-quant', '--data_dir', '%s/%s'%(INPUTDIR,model), '--freq', '%s'%(freq),'--si', '1', '--which', 'LM','--nev', '100','--cmmode', '0','-option', '--tol_comp', '1d-4','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--knn','100'], maxprocs=nproc,info=info)
+	print('exec', "%s/ie2d"%(RUNDIR), 'args', ['-quant', '--model2d', '%s'%(model2d), '--wavelength', '%s'%(wavelength),'--nunk', '%s'%(nunk),'-option', '--tol_comp', '1d-4','--lrlevel', '%s'%(lrlevel),'--xyzsort', '%s'%(xyzsort),'--nmin_leaf', '%s'%(nmin_leaf),'--format', '1','--precon', '3','--sample_para','2d0','--knn','20','--verbosity','1'], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
+	comm = MPI.COMM_SELF.Spawn("%s/ie2d"%(RUNDIR), args=['-quant', '--model2d', '%s'%(model2d), '--wavelength', '%s'%(wavelength),'--nunk', '%s'%(nunk),'-option', '--tol_comp', '1d-4','--lrlevel', '%s'%(lrlevel),'--xyzsort', '%s'%(xyzsort),'--nmin_leaf', '%s'%(nmin_leaf),'--format', '1','--precon', '3','--sample_para','2d0','--knn','20','--verbosity','1'], maxprocs=nproc,info=info)
+
 
 	""" gather the return value using the inter-communicator """							
-	tmpdata = np.array([0, 0],dtype=np.float64)
+	tmpdata = np.array([0],dtype=np.float64)
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
-	if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-		tmpdata[0]=1e2
-	print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
+	print(params, 'time:', tmpdata[0])
 
 	return [tmpdata[0]] 
 
@@ -133,26 +138,25 @@ def main():
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
 
-	
 
 	# Task parameters
-	geomodels = ["cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko"]
-	# geomodels = ["cavity_wakefield_4K_feko"]
-	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
+	model2d 	= Integer     (1, 13, transform="normalize", name="model2d")
+	nunk 		= Integer     (5000, 10000000, transform="normalize", name="nunk")
+	wavelength  = Real        (0.00001 , 0.02,name="wavelength")
 
 
-	# Input parameters  # the frequency resolution is 100Khz
-	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (6320, 6430, transform="normalize", name="freq")
-	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
-	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
-	# freq      = Integer     (500, 900, transform="normalize", name="freq")
+	# Input parameters
+	lrlevel   = Categoricalnorm (['0','100'], transform="onehot", name="lrlevel")
+	xyzsort   = Categoricalnorm (['0','1','2'], transform="onehot", name="xyzsort")
+	nmin_leaf = Integer     (5, 9, transform="normalize", name="nmin_leaf")
+	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+
+
 	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
-	result2   = Real        (float("-Inf") , float("Inf"),name="r2")
-	
-	IS = Space([model])
-	PS = Space([freq])
-	# OS = Space([result1,result2])
+
+
+	IS = Space([model2d,nunk,wavelength])
+	PS = Space([lrlevel,xyzsort,nmin_leaf,nproc])
 	OS = Space([result1])
 
 	constraints = {}
@@ -184,22 +188,9 @@ def main():
 	options.validate(computer = computer)
 	
 
-
-	# """ Intialize the tuner with existing data stored as last check point"""
-	# try:
-	# 	data = pickle.load(open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, geomodels, machine), 'rb'))
-	# 	giventask = data.I
-	# except (OSError, IOError) as e:
-	# 	data = Data(problem)
-	# 	giventask = [[np.random.choice(geomodels,size=1)[0]] for i in range(ntask)]
-
-
-	# """ Building MLA with the given list of tasks """
-	# giventask = [["big.rua"]]		
-	# giventask = [["pillbox_4000"]]		
-	giventask = [["cavity_5cell_30K_feko"]]		
-	# giventask = [["cavity_rec_17K_feko"]]		
-	# giventask = [["cavity_wakefield_4K_feko"]]		
+	# """ Building MLA with the given list of tasks """	
+	giventask = [[7,100000,0.001]]			
+	# giventask = [[7,5000,0.02]]			
 	data = Data(problem)
 
 
@@ -212,17 +203,10 @@ def main():
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
 		print("stats: ", stats)
 
-
-		# """ Dump the data to file as a new check point """
-		# pickle.dump(data, open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
-		# """ Dump the tuner to file for TLA use """
-		# pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
 			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
+			print("    model2d:%d nunk:%d wavelength:%1.6e" % (data.I[tid][0], data.I[tid][1], data.I[tid][2]))
 			print("    Ps ", data.P[tid])
 			
 

@@ -53,7 +53,7 @@ from gptune import GPTune
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
+
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
@@ -61,19 +61,40 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
-	model = point['model']
-	freq = point['freq']*1e5
-	nproc     = 32
-	# nthreads  =1 
+	gridsize = point['gridsize']
+	sp_reordering_method = point['sp_reordering_method']
+	sp_matching = point['sp_matching']
+	sp_compression = point['sp_compression']
+	sp_compression1 = sp_compression
+	sp_nd_param = point['sp_nd_param']
+	sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
+	sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
+	sp_compression_leaf_size = 2**point['sp_compression_leaf_size']
+	sp_compression_rel_tol = 10.0**point['sp_compression_rel_tol']
+	
+	if(sp_compression == 'hss'):
+		extra_str=['--hss_rel_tol', '%s'%(sp_compression_rel_tol)]
+	elif(sp_compression == 'blr'):
+		extra_str=['--blr_rel_tol', '%s'%(sp_compression_rel_tol)]
+	elif(sp_compression == 'hodlr'):
+		extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '0']
+	elif(sp_compression == 'hodbf'):
+		extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '100']
+		sp_compression1 = 'hodlr'
+	elif(sp_compression == 'none'):
+		extra_str=[' ']
+
+	if(sp_reordering_method == 'metis'):
+		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
+
+	nproc = point['nproc']
 	npernode =  math.ceil(float(nproc)/nodes)  
 	nthreads = int(cores / npernode)
-
-	params = [model, 'freq', freq]
-	RUNDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_hss_factor_acc/build/EXAMPLE"
-	INPUTDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_hss_factor_acc/EXAMPLE/EM3D_DATA/preprocessor_3dmesh"
+	
+	params = ['gridsize', gridsize, 'sp_reordering_method', sp_reordering_method, 'sp_matching', sp_matching, 'sp_compression', sp_compression1, 'sp_nd_param', sp_nd_param, 'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'sp_compression_leaf_size', sp_compression_leaf_size, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
+	RUNDIR = os.path.abspath(__file__ + "/../STRUMPACK/build/examples")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
-
 
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
@@ -83,18 +104,20 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/ie3dporteigen"%(RUNDIR), args=['-quant', '--data_dir', '%s/%s'%(INPUTDIR,model), '--freq', '%s'%(freq),'--si', '1', '--which', 'LM','--nev', '100','--cmmode', '0','-option', '--tol_comp', '1d-4','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--knn','100'], maxprocs=nproc,info=info)
+	print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '%s'%(sp_matching),'--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
+	comm = MPI.COMM_SELF.Spawn("%s/testPoisson3dMPIDist"%(RUNDIR), args=['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '%s'%(sp_matching),'--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, maxprocs=nproc,info=info)
 
-	""" gather the return value using the inter-communicator """							
-	tmpdata = np.array([0, 0],dtype=np.float64)
+	""" gather the return value using the inter-communicator """																	
+	tmpdata = np.array([0],dtype=np.float64)
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
-	if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-		tmpdata[0]=1e2
-	print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
 
-	return [tmpdata[0]] 
+	retval = tmpdata[0]
+	print(params, ' strumpack time: ', retval)
 
+
+	return [retval] 
+	
 	
 def main():
 
@@ -105,7 +128,6 @@ def main():
 	global nprocmax
 	global nprocmin
 
-	
 	# Parse command line arguments
 
 	args   = parse_args()
@@ -132,29 +154,32 @@ def main():
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
-
-	
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
-	geomodels = ["cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko"]
-	# geomodels = ["cavity_wakefield_4K_feko"]
-	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
+	gridsize = Integer     (30, 100, transform="normalize", name="gridsize")
+
+	# Input parameters
+	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','geometric'], transform="onehot", name="sp_reordering_method")
+	sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
+	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
+	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
+	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
+	sp_matching   = Categoricalnorm (['0','2','3','4','5'], transform="onehot", name="sp_matching")
+	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
+	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
+	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
+	sp_compression_leaf_size     = Integer     (5, 9, transform="normalize", name="sp_compression_leaf_size")
+	sp_compression_rel_tol     = Integer(-6, -1, transform="normalize", name="sp_compression_rel_tol")
 
 
-	# Input parameters  # the frequency resolution is 100Khz
-	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (6320, 6430, transform="normalize", name="freq")
-	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
-	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
-	# freq      = Integer     (500, 900, transform="normalize", name="freq")
-	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
-	result2   = Real        (float("-Inf") , float("Inf"),name="r2")
-	
-	IS = Space([model])
-	PS = Space([freq])
-	# OS = Space([result1,result2])
-	OS = Space([result1])
-
+	result   = Real        (float("-Inf") , float("Inf"),name="r")
+	IS = Space([gridsize])
+	PS = Space([sp_reordering_method,sp_matching, sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,nproc])
+	OS = Space([result])
 	constraints = {}
 	models = {}
 
@@ -177,29 +202,11 @@ def main():
 	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 
-	# options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	# options['search_pop_size'] = 1000 # 1000
-	# options['search_gen'] = 10
-
 	options.validate(computer = computer)
 	
-
-
-	# """ Intialize the tuner with existing data stored as last check point"""
-	# try:
-	# 	data = pickle.load(open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, geomodels, machine), 'rb'))
-	# 	giventask = data.I
-	# except (OSError, IOError) as e:
-	# 	data = Data(problem)
-	# 	giventask = [[np.random.choice(geomodels,size=1)[0]] for i in range(ntask)]
-
-
+	
 	# """ Building MLA with the given list of tasks """
-	# giventask = [["big.rua"]]		
-	# giventask = [["pillbox_4000"]]		
-	giventask = [["cavity_5cell_30K_feko"]]		
-	# giventask = [["cavity_rec_17K_feko"]]		
-	# giventask = [["cavity_wakefield_4K_feko"]]		
+	giventask = [[100]]		
 	data = Data(problem)
 
 
@@ -212,32 +219,13 @@ def main():
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
 		print("stats: ", stats)
 
-
-		# """ Dump the data to file as a new check point """
-		# pickle.dump(data, open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
-		# """ Dump the tuner to file for TLA use """
-		# pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			
-
-			OL=np.asarray([o[0] for o in data.O[tid]], dtype=np.float64)
-			np.set_printoptions(suppress=False,precision=8)	
-			print("    Os ", OL)
+			print("    Os ", data.O[tid])
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-			# ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			# front = ndf[0]
-			# # print('front id: ',front)
-			# fopts = data.O[tid][front]
-			# xopts = [data.P[tid][i] for i in front]
-			# print('    Popts ', xopts)		
-			# print('    Oopts ', fopts)
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
