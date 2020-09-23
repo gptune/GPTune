@@ -194,11 +194,14 @@ if __name__ == '__main__':
                 OS_history_t = []
                 num_evals = len(history_data["perf_data"][t]["func_eval"])
                 for i in range(num_evals):
-                    PS_history_t.append(history_data["perf_data"][t]["func_eval"][i]["P"])
-                    OS_history_t.append(history_data["perf_data"][t]["func_eval"][i]["O"])
+                    func_eval = history_data["perf_data"][t]["func_eval"][i]
+                    PS_history_t.append([func_eval["P"][parameter_space[k].name] for k in range(len(parameter_space))])
+                    OS_history_t.append([func_eval["O"][output_space[k].name] for k in range(len(output_space))])
 
                 PS_history.append(PS_history_t)
                 OS_history.append(OS_history_t)
+            print (PS_history)
+            print (OS_history)
             data.P = PS_history
             data.O = np.array(OS_history)
 
@@ -247,7 +250,7 @@ if __name__ == '__main__':
     # Save data into JSON
     with open("demo.json", "w") as f_out:
         json_data = {}
-        json_data["id"] = "0"
+        json_data["id"] = 0
         json_data["name"] = "demo"
         json_data["perf_data"] = []
         num_tasks = len(data.I)
@@ -256,14 +259,15 @@ if __name__ == '__main__':
             run_data = []
             for i in range(num_runs):
                 run_data.append({
-                    "id":json.dumps(i),
-                    "P":data.P[t][i],
-                    "O":data.O[t][i].tolist()
+                    "id":i,
+                    "P":{parameter_space[k].name:data.P[t][i][k] for k in range(len(data.P[t][i]))},
+                    "O":{output_space[k].name:data.O[t][i].tolist()[k] for k in range(len(data.O[t][i].tolist()))}
                     })
 
+            I_list = np.array(data.I[t]).tolist()
             json_data["perf_data"].append({
                     "id":t,
-                    "I":np.array(data.I[t]).tolist(),
+                    "I":{input_space[k].name:I_list[k] for k in range(len(I_list))},
                     "func_eval":run_data
                 })
 
