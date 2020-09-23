@@ -184,7 +184,8 @@ if __name__ == '__main__':
             num_tasks = len(history_data["perf_data"])
             IS_history = []
             for t in range(num_tasks):
-                IS_history.append(np.array(history_data["perf_data"][t]["I"]))
+                input_dict = history_data["perf_data"][t]["I"]
+                IS_history.append(np.array([input_dict[input_space[k].name] for k in range(len(input_space))]))
             data.I = IS_history
 
             PS_history = []
@@ -260,7 +261,7 @@ if __name__ == '__main__':
             for i in range(num_runs):
                 run_data.append({
                     "id":i,
-                    "P":{parameter_space[k].name:data.P[t][i][k] for k in range(len(data.P[t][i]))},
+                    "P":{parameter_space[k].name:data.P[t][i].tolist()[k] for k in range(len(data.P[t][i].tolist()))},
                     "O":{output_space[k].name:data.O[t][i].tolist()[k] for k in range(len(data.O[t][i].tolist()))}
                     })
 
