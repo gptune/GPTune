@@ -113,7 +113,7 @@ class Computer(object):
                 t = I[i]
                 I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
 
-				input_exist = False
+                input_exist = False
                 for k in range(len(json_data["perf_data"])):
                     if json_data["perf_data"][k]["id"] == i: # this input exists
                         input_exist = True

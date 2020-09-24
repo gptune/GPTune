@@ -53,6 +53,7 @@ class GPTune(object):
 		self.data     = data
 		if (options is None):
 			options = Options()
+
 		self.options  = options
 
 		""" Init history database JSON file """
@@ -61,7 +62,41 @@ class GPTune(object):
 			import os.path
 
 			json_data_path = self.options["history_db_path"]+self.options["application_name"]+".json"
-			if not os.path.exists(json_data_path):
+			if os.path.exists(json_data_path):
+			    # Load previous history data
+				# [TODO] Need an approach to deal with new problems not in the history database
+				with open(json_data_path, "r") as f_in:
+					self.data = Data(self.problem)
+
+					print ("Found a history database")
+					history_data = json.load(f_in)
+
+					#print (self.problem.IS[0].name)
+					#print (self.problem.PS)
+					#print (self.problem.OS)
+
+					num_tasks = len(history_data["perf_data"])
+					IS_history = []
+					for t in range(num_tasks):
+						input_dict = history_data["perf_data"][t]["I"]
+						IS_history.append(np.array([input_dict[self.problem.IS[k].name] for k in range(len(self.problem.IS))]))
+					self.data.I = IS_history
+
+					PS_history = []
+					OS_history = []
+					for t in range(num_tasks):
+						PS_history_t = []
+						OS_history_t = []
+						num_evals = len(history_data["perf_data"][t]["func_eval"])
+						for i in range(num_evals):
+							func_eval = history_data["perf_data"][t]["func_eval"][i]
+							PS_history_t.append([func_eval["P"][self.problem.PS[k].name] for k in range(len(self.problem.PS))])
+							OS_history_t.append([func_eval["O"][self.problem.OS[k].name] for k in range(len(self.problem.OS))])
+						PS_history.append(PS_history_t)
+						OS_history.append(OS_history_t)
+					self.data.P = PS_history
+					self.data.O = np.array(OS_history)
+			else:
 				print ("Create a JSON file at " + json_data_path)
 				with open(json_data_path, "w") as f_out:
 					json_data = {}
@@ -82,6 +117,10 @@ class GPTune(object):
 					#		})
 
 					json.dump(json_data, f_out, indent=4)
+				if (data is None):
+					data = Data(self.problem)
+				self.data     = data
+
 
 	def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
