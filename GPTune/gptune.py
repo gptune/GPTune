@@ -55,6 +55,34 @@ class GPTune(object):
 			options = Options()
 		self.options  = options
 
+		""" Init history database JSON file """
+		if (self.options['history_db'] == 1 and self.options["application_name"] is not None):
+			import json
+			import os.path
+
+			json_data_path = self.options["history_db_path"]+self.options["application_name"]+".json"
+			if not os.path.exists(json_data_path):
+				print ("Create a JSON file at " + json_data_path)
+				with open(json_data_path, "w") as f_out:
+					json_data = {}
+					json_data["id"] = 0 # (TODO) assign a UID
+					json_data["name"] = self.options["application_name"]
+					json_data["perf_data"] = []
+
+					#num_tasks = len(self.data.I)
+					#print ("num_tasks: %d" % len(self.data.I))
+					#for t in range(num_tasks):
+					#	func_eval_data = []
+
+					#	I_list = np.array(self.data.I[t]).tolist()
+					#	json_data["perf_data"].append({
+					#		"id":t,
+					#		"I":{self.problem.IS[k].name:I_list[k] for k in range(len(I_list))},
+					#		"func_eval":func_eval_data
+					#		})
+
+					json.dump(json_data, f_out, indent=4)
+
 	def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
 		print('\n\n\n------Starting MLA with %d tasks and %d samples each '%(NI,NS))	

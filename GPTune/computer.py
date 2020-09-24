@@ -85,19 +85,103 @@ class Computer(object):
 
 
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, options: dict=None):  # P and I are in the normalized space
-        O = []
-        for i in range(len(I)):
-            t = I[i]
-            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
-            # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
-            P2 = P[i]
-            if D is not None:
-                D2 = D[i]
-            else:
-                D2 = None
-            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-            tmp = np.array(O2).reshape((len(O2), problem.DO))
-            O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+        import json
+        import os.path
+        if (options["history_db"] == 1 and options["application_name"] is not None):
+            print ("[evaluate_objective] %s" % options["application_name"])
+            print ("[evaluate_objective] %d" % options["history_db"])
+            print (I)
+
+            json_data_path = options["history_db_path"]+options["application_name"]+".json"
+            if not os.path.exists(json_data_path):
+                print ("Create a JSON file at " + json_data_path)
+                with open(json_data_path, "w") as f_out:
+                    json_data = {}
+                    json_data["id"] = 0 # (TODO) assign a UID
+                    json_data["name"] = self.options["application_name"]
+                    json_data["perf_data"] = []
+                    json.dump(json_data, f_out, indent=4)
+
+            with open(json_data_path, "r") as f_in:
+                json_data = json.load(f_in)
+
+            O = []
+            num_tasks = len(I)
+            print ("num_tasks: %d" % len(I))
+            print ("input space name: %s" % problem.IS[0].name)
+            for i in range(num_tasks):
+                t = I[i]
+                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+
+				input_exist = False
+                for k in range(len(json_data["perf_data"])):
+                    if json_data["perf_data"][k]["id"] == i: # this input exists
+                        input_exist = True
+                        break
+
+                if input_exist == False:
+                    json_data["perf_data"].append({
+                            "id":i,
+                            "I":{problem.IS[k].name:I_orig[k] for k in range(len(problem.IS))},
+                            "func_eval":[]
+                            })
+
+            #print (problem.IS.inverse_transform(np.array(t, ndmin=2))[0])
+            for i in range(len(I)):
+                t = I[i]
+                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+                P2 = P[i]
+                if D is not None:
+                    D2 = D[i]
+                else:
+                    D2 = None
+                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+                tmp = np.array(O2).reshape((len(O2), problem.DO))
+                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+
+                # transform to the original parameter space
+                pids = list(range(len(P2)))
+                print ("pids: ")
+                print (pids)
+                X_orig = []
+                for j in pids:
+                    x = P2[j]
+                    X_orig.append(problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
+
+                # Save function evaluation data into the JSON file
+                # Currently does not properly assign ID (need a UID)
+                # Currently does not check parameter duplication assuming B.O. does not generate duplicated parameters
+                for j in range(len(P2)):
+                    json_data["perf_data"][i]["func_eval"].append({
+                            "id":j,
+                            "P":{problem.PS[k].name:X_orig[j][k] for k in range(len(problem.PS))},
+                            "O":{problem.OS[k].name:tmp[j][k] for k in range(len(problem.OS))}
+                        })
+                print ("I_orig_: ")
+                print (I_orig)
+                print ("X_orig: ")
+                print (X_orig)
+                print ("tmp: ")
+                print (tmp)
+
+            with open(json_data_path, "w") as f_out:
+                json.dump(json_data, f_out, indent=4)
+
+        else:
+            O = []
+            for i in range(len(I)):
+                t = I[i]
+                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+                P2 = P[i]
+                if D is not None:
+                    D2 = D[i]
+                else:
+                    D2 = None
+                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+                tmp = np.array(O2).reshape((len(O2), problem.DO))
+                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
         return O
 
@@ -219,4 +303,4 @@ if __name__ == '__main__':
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
     tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
     res = mpi_comm.gather(tmpdata, root=0) 
-    mpi_comm.Disconnect()	
+    mpi_comm.Disconnect()
