@@ -63,7 +63,6 @@ def objectives(point):                  # should always use this name for user-d
     
 	gridsize = point['gridsize']
 	sp_reordering_method = point['sp_reordering_method']
-	sp_matching = point['sp_matching']
 	sp_compression = point['sp_compression']
 	sp_compression1 = sp_compression
 	sp_nd_param = point['sp_nd_param']
@@ -87,11 +86,11 @@ def objectives(point):                  # should always use this name for user-d
 	if(sp_reordering_method == 'metis'):
 		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
 
-	nproc = point['nproc']
-	npernode =  math.ceil(float(nproc)/nodes)  
+	npernode = 2**point['npernode']
+	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	
-	params = ['gridsize', gridsize, 'sp_reordering_method', sp_reordering_method, 'sp_matching', sp_matching, 'sp_compression', sp_compression1, 'sp_nd_param', sp_nd_param, 'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'sp_compression_leaf_size', sp_compression_leaf_size, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
+	params = ['gridsize', gridsize, 'sp_reordering_method', sp_reordering_method,'sp_compression', sp_compression1, 'sp_nd_param', sp_nd_param, 'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'sp_compression_leaf_size', sp_compression_leaf_size, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
 	RUNDIR = os.path.abspath(__file__ + "/../STRUMPACK/build/examples")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
@@ -104,8 +103,8 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '%s'%(sp_matching),'--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
-	comm = MPI.COMM_SELF.Spawn("%s/testPoisson3dMPIDist"%(RUNDIR), args=['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '%s'%(sp_matching),'--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, maxprocs=nproc,info=info)
+	print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
+	comm = MPI.COMM_SELF.Spawn("%s/testPoisson3dMPIDist"%(RUNDIR), args=['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator """																	
 	tmpdata = np.array([0],dtype=np.float64)
@@ -151,8 +150,8 @@ def main():
 	os.environ['TUNER_NAME'] = TUNER_NAME
 	
 	
-	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
+	# nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+	# nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
@@ -162,13 +161,12 @@ def main():
 	gridsize = Integer     (30, 100, transform="normalize", name="gridsize")
 
 	# Input parameters
-	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','geometric'], transform="onehot", name="sp_reordering_method")
-	sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
+	sp_reordering_method   = Categoricalnorm (['metis','parmetis','geometric'], transform="onehot", name="sp_reordering_method")
+	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
 	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
-	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
-	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
-	sp_matching   = Categoricalnorm (['0','2','3','4','5'], transform="onehot", name="sp_matching")
-	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
+	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
+	npernode     = Integer     (0, 5, transform="normalize", name="npernode")
 	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
 	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
 	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
@@ -178,7 +176,7 @@ def main():
 
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([gridsize])
-	PS = Space([sp_reordering_method,sp_matching, sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,nproc])
+	PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,npernode])
 	OS = Space([result])
 	constraints = {}
 	models = {}
@@ -206,7 +204,7 @@ def main():
 	
 	
 	# """ Building MLA with the given list of tasks """
-	giventask = [[100]]		
+	giventask = [[80]]		
 	data = Data(problem)
 
 

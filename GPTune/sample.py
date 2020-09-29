@@ -3,10 +3,10 @@
 # required approvals from the U.S.Dept. of Energy) and the University of
 # California, Berkeley.  All rights reserved.
 #
-# If you have questions about your rights to use or distribute this software, 
+# If you have questions about your rights to use or distribute this software,
 # please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
 #
-# NOTICE. This Software was developed under funding from the U.S. Department 
+# NOTICE. This Software was developed under funding from the U.S. Department
 # of Energy and the U.S. Government consequently retains certain rights.
 # As such, the U.S. Government has been granted for itself and others acting
 # on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
@@ -38,7 +38,7 @@ class Sample(abc.ABC):
             S = self.sample(n_samples, space)
 
         else:
-        
+
             if ('sample_max_iter' in kwargs):
                 sample_max_iter = kwargs['sample_max_iter']
             else:
@@ -51,13 +51,13 @@ class Sample(abc.ABC):
             cpt = 0
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
-                # t1 = time.time_ns()	
+                # t1 = time.time_ns()
                 S2 = self.sample(n_samples, space, kwargs=kwargs)
-                # t2 = time.time_ns()	
-                # print('sample_para:',(t2-t1)/1e9)               
-                
-                for s_norm in S2:  		
-                    # print("jiji",s_norm)							
+                # t2 = time.time_ns()
+                # print('sample_para:',(t2-t1)/1e9)
+
+                for s_norm in S2:
+                    # print("jiji",s_norm)
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     # print("dfdfdfdfd",kwargs2)
@@ -67,12 +67,12 @@ class Sample(abc.ABC):
                         cpt += 1
                         if (cpt >= n_samples):
                             break
-                # print('input',S,space[0],isinstance(space[0], Categorical)) 
+                # print('input',S,space[0],isinstance(space[0], Categorical))
 
                 n_itr += 1
                 if(n_itr%1000==0 and n_itr>=1000):
                     print('n_itr',n_itr,'still trying generating constrained samples...')
-				
+
 
             if (cpt < n_samples):
                 raise Exception("Only %d valid samples were generated while %d were requested.\
@@ -80,7 +80,7 @@ class Sample(abc.ABC):
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
         # print('reqi',S,'nsample',n_samples,sample_max_iter,space)
         S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
-        
+
         return S
 
     def sample_inputs(self, n_samples : int, IS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
@@ -90,13 +90,13 @@ class Sample(abc.ABC):
     def sample_parameters(self, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
 
-        
+
         P = []
         for t in I:
             # print('before inverse_transform:',np.array(t, ndmin=2))
             I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
             # I_orig = t
-            # print('after inverse_transform I_orig:',I_orig)			
+            # print('after inverse_transform I_orig:',I_orig)
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
@@ -171,7 +171,7 @@ class SampleOpenTURNS(Sample):
             distribution  = ot.ComposedDistribution(distributions)
             # Caching space and distribution to speed-up future samplings, especially if invoked by the sample_constrained method.
             self.cached_space = space
-            self.cached_distribution = distribution 
+            self.cached_distribution = distribution
 
         lhs = ot.LHSExperiment(distribution, n_samples)
         lhs.setAlwaysShuffle(True) # randomized
