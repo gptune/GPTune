@@ -5,10 +5,10 @@
 # required approvals from the U.S.Dept. of Energy) and the University of
 # California, Berkeley.  All rights reserved.
 #
-# If you have questions about your rights to use or distribute this software, 
+# If you have questions about your rights to use or distribute this software,
 # please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
 #
-# NOTICE. This Software was developed under funding from the U.S. Department 
+# NOTICE. This Software was developed under funding from the U.S. Department
 # of Energy and the U.S. Government consequently retains certain rights.
 # As such, the U.S. Government has been granted for itself and others acting
 # on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
@@ -26,7 +26,7 @@ from mpi4py import MPI
 import os
 import sys
 import concurrent
-from concurrent import futures	
+from concurrent import futures
 
 from pathlib import Path
 import importlib
@@ -88,7 +88,7 @@ class Computer(object):
         O = []
         for i in range(len(I)):
             t = I[i]
-            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]		
+            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
             # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
             P2 = P[i]
             if D is not None:
@@ -113,9 +113,9 @@ class Computer(object):
         if(problem.driverabspath is not None and options['distributed_memory_parallelism']):
             modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
             sys.path.append(problem.driverabspath) # add path to sys
-            module = importlib.import_module(modulename) # import driver name as a module 
+            module = importlib.import_module(modulename) # import driver name as a module
             # func = getattr(module, funcName)
-        else: 
+        else:
             module =problem
 
         O2=[]
@@ -126,12 +126,12 @@ class Computer(object):
 
 
         if (options['distributed_memory_parallelism'] and options['objective_evaluation_parallelism'] and i_am_manager):
-            
+
             if(problem.driverabspath is None):
                 raise Exception('objective_evaluation_parallelism and distributed_memory_parallelism require passing driverabspath to GPTune')
 
             nproc = min(options['objective_multisample_processes'],len(P2))
-            mpi_comm = self.spawn(__file__, nproc, nthreads=1, kwargs=options) 
+            mpi_comm = self.spawn(__file__, nproc, nthreads=1, kwargs=options)
             kwargs_tmp = options
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
@@ -140,33 +140,33 @@ class Computer(object):
             tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
             mpi_comm.Disconnect()
 
-            # reordering is needed as tmpdata[p] stores p, p+nproc, p+2nproc, ... 
+            # reordering is needed as tmpdata[p] stores p, p+nproc, p+2nproc, ...
             Otmp=[]
             offset=[0] * (nproc+1)
             for p in range(int(nproc)):
                 Otmp = Otmp + tmpdata[p]
                 offset[p+1]=offset[p]+len(tmpdata[p])
-            for it in range(len(tmpdata[0])): 
+            for it in range(len(tmpdata[0])):
                 for p in range(int(nproc)):
                     if(len(O2)<len(P2)):
                         O2.append(Otmp[offset[p]+it])
-                                
+
         elif (options['shared_memory_parallelism'] and options['objective_evaluation_parallelism']):
             with concurrent.futures.ThreadPoolExecutor(max_workers = options['objective_multisample_threads']) as executor:
                 def fun(pid):
                     x = P2[pid]
-                    x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
+                    x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                     kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                     kwargs.update(kwargst)
                     kwargs.update(D2)
                     # print(kwargs)
-                    return module.objectives(kwargs)                    
-                O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))	
+                    return module.objectives(kwargs)
+                O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))
         else:
 
             for j in pids:
                 x = P2[j]
-                x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]		
+                x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
                 if D2 is not None:
@@ -178,12 +178,12 @@ class Computer(object):
 
 
 
-        
 
-    def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None): 
+
+    def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None):
 
         print('exec', executable, 'args', args, 'nproc', nproc)
- 
+
         npernodes=npernode
         if(npernode is None):
             npernodes=self.cores
@@ -191,10 +191,10 @@ class Computer(object):
         info = MPI.Info.Create()
 #        info.Set("add-hostfile", "slurm.hosts")
 #        info.Set("host", "slurm.hosts")
-        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))  
+        info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))
         info.Set('npernode','%d'%(npernodes))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-           
-              
+
+
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=executable, maxprocs=nproc,info=info)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         # process_rank = comm.Get_rank()
         # process_count = comm.Get_size()
@@ -210,7 +210,7 @@ if __name__ == '__main__':
         return point
     def models(point):
         print('this is a dummy definition')
-        return point        
+        return point
 
     mpi_comm = MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
@@ -218,5 +218,5 @@ if __name__ == '__main__':
     (computer, problem,P2, D2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
     tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
-    res = mpi_comm.gather(tmpdata, root=0) 
-    mpi_comm.Disconnect()	
+    res = mpi_comm.gather(tmpdata, root=0)
+    mpi_comm.Disconnect()
