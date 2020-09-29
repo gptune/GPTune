@@ -36,127 +36,6 @@ import numpy as np
 
 class GPTune(object):
 
-<<<<<<< HEAD
-	def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
-
-		"""
-		tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
-		computer     : object specifying the architectural characteristics of the computer to run on (See file 'GPTune/computer.py')
-		data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
-		options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
-		"""
-		self.problem  = Problem(tuningproblem,driverabspath=driverabspath,models_update=models_update)
-		if (computer is None):
-			computer = Computer()
-		self.computer = computer
-		if (data is None):
-			data = Data(self.problem)
-		self.data     = data
-		if (options is None):
-			options = Options()
-
-		self.options  = options
-
-		""" Init history database JSON file """
-		if (self.options['history_db'] == 1 and self.options["application_name"] is not None):
-			import json
-			import os.path
-
-			json_data_path = self.options["history_db_path"]+self.options["application_name"]+".json"
-			if os.path.exists(json_data_path):
-			    # Load previous history data
-				# [TODO] Need an approach to deal with new problems not in the history database
-				with open(json_data_path, "r") as f_in:
-					self.data = Data(self.problem)
-
-					print ("Found a history database")
-					history_data = json.load(f_in)
-
-					#print (self.problem.IS[0].name)
-					#print (self.problem.PS)
-					#print (self.problem.OS)
-
-					num_tasks = len(history_data["perf_data"])
-					IS_history = []
-					for t in range(num_tasks):
-						input_dict = history_data["perf_data"][t]["I"]
-						IS_history.append(np.array([input_dict[self.problem.IS[k].name] for k in range(len(self.problem.IS))]))
-					self.data.I = IS_history
-
-					PS_history = []
-					OS_history = []
-					for t in range(num_tasks):
-						PS_history_t = []
-						OS_history_t = []
-						num_evals = len(history_data["perf_data"][t]["func_eval"])
-						for i in range(num_evals):
-							func_eval = history_data["perf_data"][t]["func_eval"][i]
-							PS_history_t.append([func_eval["P"][self.problem.PS[k].name] for k in range(len(self.problem.PS))])
-							OS_history_t.append([func_eval["O"][self.problem.OS[k].name] for k in range(len(self.problem.OS))])
-						PS_history.append(PS_history_t)
-						OS_history.append(OS_history_t)
-					self.data.P = PS_history
-					self.data.O = np.array(OS_history)
-			else:
-				print ("Create a JSON file at " + json_data_path)
-				with open(json_data_path, "w") as f_out:
-					json_data = {}
-					json_data["id"] = 0 # (TODO) assign a UID
-					json_data["name"] = self.options["application_name"]
-					json_data["perf_data"] = []
-
-					#num_tasks = len(self.data.I)
-					#print ("num_tasks: %d" % len(self.data.I))
-					#for t in range(num_tasks):
-					#	func_eval_data = []
-
-					#	I_list = np.array(self.data.I[t]).tolist()
-					#	json_data["perf_data"].append({
-					#		"id":t,
-					#		"I":{self.problem.IS[k].name:I_list[k] for k in range(len(I_list))},
-					#		"func_eval":func_eval_data
-					#		})
-
-					json.dump(json_data, f_out, indent=4)
-				if (data is None):
-					data = Data(self.problem)
-				self.data     = data
-
-
-	def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
-
-		print('\n\n\n------Starting MLA with %d tasks and %d samples each '%(NI,NS))	
-		stats = {
-			"time_total": 0,
-			"time_sample_init": 0,			
-			"time_fun": 0,
-			"time_search": 0,
-			"time_model": 0
-		}
-		time_fun=0
-		time_sample_init=0
-		time_search=0
-		time_model=0
-				
-		np.set_printoptions(suppress=False,precision=4)
-		
-		if (self.data.P is not None and len(self.data.P[0])>=NS):
-			print('self.data.P[0])>=NS, no need to run MLA. Returning...')
-			return (copy.deepcopy(self.data), None,stats)	
-		
-		t3 = time.time_ns()
-		
-		t1 = time.time_ns()	
-
-		options1 = copy.deepcopy(self.options)
-		kwargs.update(options1)
-
-		""" Multi-task Learning Autotuning """
-
-		
-		if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-			self.data.I = Igiven 
-=======
     def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
 
         """
@@ -174,7 +53,74 @@ class GPTune(object):
         self.data     = data
         if (options is None):
             options = Options()
+
         self.options  = options
+
+        """ Init history database JSON file """
+        if (self.options['history_db'] == 1 and self.options["application_name"] is not None):
+            import json
+            import os.path
+
+            json_data_path = self.options["history_db_path"]+self.options["application_name"]+".json"
+            if os.path.exists(json_data_path):
+                # Load previous history data
+                # [TODO] Need an approach to deal with new problems not in the history database
+                with open(json_data_path, "r") as f_in:
+                    self.data = Data(self.problem)
+
+                    print ("Found a history database")
+                    history_data = json.load(f_in)
+
+                    #print (self.problem.IS[0].name)
+                    #print (self.problem.PS)
+                    #print (self.problem.OS)
+
+                    num_tasks = len(history_data["perf_data"])
+                    IS_history = []
+                    for t in range(num_tasks):
+                        input_dict = history_data["perf_data"][t]["I"]
+                        IS_history.append(np.array([input_dict[self.problem.IS[k].name] for k in range(len(self.problem.IS))]))
+                    self.data.I = IS_history
+
+                    PS_history = []
+                    OS_history = []
+                    for t in range(num_tasks):
+                        PS_history_t = []
+                        OS_history_t = []
+                        num_evals = len(history_data["perf_data"][t]["func_eval"])
+                        for i in range(num_evals):
+                            func_eval = history_data["perf_data"][t]["func_eval"][i]
+                            PS_history_t.append([func_eval["P"][self.problem.PS[k].name] for k in range(len(self.problem.PS))])
+                            OS_history_t.append([func_eval["O"][self.problem.OS[k].name] for k in range(len(self.problem.OS))])
+                        PS_history.append(PS_history_t)
+                        OS_history.append(OS_history_t)
+                    self.data.P = PS_history
+                    self.data.O = np.array(OS_history)
+            else:
+                print ("Create a JSON file at " + json_data_path)
+                with open(json_data_path, "w") as f_out:
+                    json_data = {}
+                    json_data["id"] = 0 # (TODO) assign a UID
+                    json_data["name"] = self.options["application_name"]
+                    json_data["perf_data"] = []
+
+                    #num_tasks = len(self.data.I)
+                    #print ("num_tasks: %d" % len(self.data.I))
+                    #for t in range(num_tasks):
+                    #   func_eval_data = []
+
+                    #   I_list = np.array(self.data.I[t]).tolist()
+                    #   json_data["perf_data"].append({
+                    #       "id":t,
+                    #       "I":{self.problem.IS[k].name:I_list[k] for k in range(len(I_list))},
+                    #       "func_eval":func_eval_data
+                    #       })
+
+                    json.dump(json_data, f_out, indent=4)
+                if (data is None):
+                    data = Data(self.problem)
+                self.data     = data
+
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
@@ -209,7 +155,6 @@ class GPTune(object):
 
         if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Igiven
->>>>>>> master
 
 ########## normalize the data as the user always work in the original space
 

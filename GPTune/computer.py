@@ -85,7 +85,6 @@ class Computer(object):
 
 
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, options: dict=None):  # P and I are in the normalized space
-<<<<<<< HEAD
         import json
         import os.path
         if (options["history_db"] == 1 and options["application_name"] is not None):
@@ -183,21 +182,6 @@ class Computer(object):
                 O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
                 tmp = np.array(O2).reshape((len(O2), problem.DO))
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
-=======
-        O = []
-        for i in range(len(I)):
-            t = I[i]
-            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-            # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
-            P2 = P[i]
-            if D is not None:
-                D2 = D[i]
-            else:
-                D2 = None
-            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-            tmp = np.array(O2).reshape((len(O2), problem.DO))
-            O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
->>>>>>> master
 
         return O
 
@@ -318,9 +302,5 @@ if __name__ == '__main__':
     (computer, problem,P2, D2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
     tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
-<<<<<<< HEAD
-    res = mpi_comm.gather(tmpdata, root=0) 
-=======
     res = mpi_comm.gather(tmpdata, root=0)
->>>>>>> master
     mpi_comm.Disconnect()
