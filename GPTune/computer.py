@@ -112,6 +112,7 @@ class Computer(object):
             for i in range(num_tasks):
                 t = I[i]
                 I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                I_orig_list = np.array(I_orig).tolist()
 
                 input_exist = False
                 for k in range(len(json_data["perf_data"])):
@@ -122,7 +123,7 @@ class Computer(object):
                 if input_exist == False:
                     json_data["perf_data"].append({
                             "id":i,
-                            "I":{problem.IS[k].name:I_orig[k] for k in range(len(problem.IS))},
+                            "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
                             "func_eval":[]
                             })
 
@@ -153,10 +154,12 @@ class Computer(object):
                 # Currently does not properly assign ID (need a UID)
                 # Currently does not check parameter duplication assuming B.O. does not generate duplicated parameters
                 for j in range(len(P2)):
+                    P_orig_list = np.array(X_orig[j]).tolist()
+                    O_orig_list = np.array(tmp[j]).tolist()
                     json_data["perf_data"][i]["func_eval"].append({
                             "id":j,
-                            "P":{problem.PS[k].name:X_orig[j][k] for k in range(len(problem.PS))},
-                            "O":{problem.OS[k].name:tmp[j][k] for k in range(len(problem.OS))}
+                            "P":{problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))},
+                            "O":{problem.OS[k].name:O_orig_list[k] for k in range(len(problem.OS))}
                         })
                 print ("I_orig_: ")
                 print (I_orig)
