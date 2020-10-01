@@ -165,11 +165,22 @@ class Computer(object):
                 # Currently does not check parameter duplication assuming B.O. does not generate duplicated parameters
                 for j in range(len(P2)):
                     P_orig_list = np.array(X_orig[j]).tolist()
+                    parameter_set = {problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))}
+                    print ("parameter set")
+                    print (parameter_set)
+
+                    # this machine/node/core/nproc information is given by CK-GPTune
+                    parameter_set['machine'] = os.environ.get('MACHINE_NAME','Unknown')
+                    parameter_set['nodes'] = int(os.environ.get('nodes','1'))
+                    parameter_set['cores'] = int(os.environ.get('cores','1'))
+                    parameter_set['nprocmin_pernode'] = int(os.environ.get('nprocmin_pernode','1'))
+
                     O_orig_list = np.array(tmp[j]).tolist()
                     json_data["perf_data"][i]["func_eval"].append({
-                            "P":{problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))},
+                            "P":parameter_set,
                             "O":{problem.OS[k].name:O_orig_list[k] for k in range(len(problem.OS))}
                         })
+
                 print ("I_orig_: ")
                 print (I_orig)
                 print ("X_orig: ")
