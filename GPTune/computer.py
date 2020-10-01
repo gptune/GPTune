@@ -97,7 +97,6 @@ class Computer(object):
                 print ("Create a JSON file at " + json_data_path)
                 with open(json_data_path, "w") as f_out:
                     json_data = {}
-                    json_data["id"] = 0 # (TODO) assign a UID
                     json_data["name"] = self.options["application_name"]
                     json_data["perf_data"] = []
                     json.dump(json_data, f_out, indent=4)
@@ -116,13 +115,24 @@ class Computer(object):
 
                 input_exist = False
                 for k in range(len(json_data["perf_data"])):
-                    if json_data["perf_data"][k]["id"] == i: # this input exists
+                    #print ("existing I")
+                    #print (json_data["perf_data"][k]["I"])
+                    #print ("compare current")
+                    #print (I_orig_list)
+                    compare_all_elems = True
+                    for l in range(len(problem.IS)):
+                        name = problem.IS[l].name
+                        if (json_data["perf_data"][k]["I"][problem.IS[l].name] != I_orig_list[l]):
+                            compare_all_elems = False
+                            break
+
+                    if compare_all_elems == True:
+                        print ("input task already exists")
                         input_exist = True
                         break
 
                 if input_exist == False:
                     json_data["perf_data"].append({
-                            "id":i,
                             "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
                             "func_eval":[]
                             })
@@ -157,7 +167,6 @@ class Computer(object):
                     P_orig_list = np.array(X_orig[j]).tolist()
                     O_orig_list = np.array(tmp[j]).tolist()
                     json_data["perf_data"][i]["func_eval"].append({
-                            "id":j,
                             "P":{problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))},
                             "O":{problem.OS[k].name:O_orig_list[k] for k in range(len(problem.OS))}
                         })

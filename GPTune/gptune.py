@@ -100,7 +100,6 @@ class GPTune(object):
                 print ("Create a JSON file at " + json_data_path)
                 with open(json_data_path, "w") as f_out:
                     json_data = {}
-                    json_data["id"] = 0 # (TODO) assign a UID
                     json_data["name"] = self.options["application_name"]
                     json_data["perf_data"] = []
 
