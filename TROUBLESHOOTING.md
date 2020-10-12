@@ -1,4 +1,4 @@
-﻿# Troubleshooting
+# Troubleshooting
 
  - Q: What kind of compilers do I need? 
  - A: Usually the Linux system would come with gcc compilers, however, you might need to install gfortran:
@@ -40,3 +40,26 @@ export LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
 export GPTUNEROOT=~/GPTune
  ```
 
+- Q: Why the `pip` does not work, or install into a wrong version of python?
+- A: Use `sudo python -m pip` to replace `pip` with the correction version of python. `python --version` gives you the version of python in use. If you must use `pip` and encounter permission denied error, try `sudo pip` instead.
+- Q: I get `cannot import name '_imaging' from 'PIL'` error.
+- A: Most likely you do not have the up-to-date version of Pillow, uninstall all versions of Pillow using `sudo pip uninstall Pillow` until there are none left (use `pip list` to check), then `sudo pip install Pillow` will give you the up-to-date version.
+- Q: I get `ModuleNotFoundError: No module named 'gptune'`
+- A: This may occur when you run an old version of example provided. You may try following import syntax in your .py header, BEFORE anything else. 
+```
+import sys
+import os
+import mpi4py
+#import logging
+sys.path.insert(0, os.path.abspath(__file__ + "/../../GPTune/"))
+sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
+```
+  Also try to export following environment variables.
+```
+export PYTHONPATH=$PYTHONPATH:$PWD/autotune/  
+export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/  
+export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/  
+export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/  
+export PYTHONPATH=$PYTHONPATH:$PWD/examples/scalapack-driver/spt/  
+export PYTHONWARNINGS=ignore
+```
