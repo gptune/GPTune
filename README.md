@@ -23,7 +23,7 @@ GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, S
 ```
 export MPICC=path-to-c-compiler-wrapper
 export MPICXX=path-to-cxx-compiler-wrapper
-export MPICXX=path-to-f90-compiler-wrapper
+export MPIF90=path-to-f90-compiler-wrapper
 export MPIRUN=path-to-mpirun
 export BLAS_LIB=path-to-blas-lib
 export LAPACK_LIB=path-to-lapack-lib
