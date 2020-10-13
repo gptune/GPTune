@@ -115,7 +115,7 @@ class GPTune(object):
                     #       "func_eval":func_eval_data
                     #       })
 
-                    json.dump(json_data, f_out, indent=4)
+                    json.dump(json_data, f_out, indent=2)
                 if (data is None):
                     data = Data(self.problem)
                 self.data     = data

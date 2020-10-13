@@ -99,7 +99,7 @@ class Computer(object):
                     json_data = {}
                     json_data["name"] = self.options["application_name"]
                     json_data["perf_data"] = []
-                    json.dump(json_data, f_out, indent=4)
+                    json.dump(json_data, f_out, indent=2)
 
             with open(json_data_path, "r") as f_in:
                 json_data = json.load(f_in)
@@ -188,7 +188,7 @@ class Computer(object):
                 print (tmp)
 
             with open(json_data_path, "w") as f_out:
-                json.dump(json_data, f_out, indent=4)
+                json.dump(json_data, f_out, indent=2)
 
         else:
             O = []
