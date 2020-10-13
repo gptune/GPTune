@@ -173,10 +173,17 @@ class Computer(object):
                     PS_machine['cores'] = int(os.environ.get('cores','1'))
                     PS_machine['nprocmin_pernode'] = int(os.environ.get('nprocmin_pernode','1'))
 
+                    import ast
+                    compile_deps = ast.literal_eval(os.environ.get('compile_deps',''))
+
+                    PS_software = {}
+                    PS_software['compile_deps'] = compile_deps
+
                     O_orig_list = np.array(tmp[j]).tolist()
                     json_data["perf_data"][i]["func_eval"].append({
                             "P":{problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))},
                             "P_m":PS_machine,
+                            "P_s":PS_software,
                             "O":{problem.OS[k].name:O_orig_list[k] for k in range(len(problem.OS))}
                         })
 
