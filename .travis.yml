@@ -14,6 +14,8 @@ notifications:
   email:
     recipients:
       - liuyangzhuan@lbl.gov
+      - hrluo@lbl.gov
+      - younghyun@berkeley.edu
     on_failure: always
     on_success: always
   slack:
