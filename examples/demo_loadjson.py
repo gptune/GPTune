@@ -259,10 +259,13 @@ if __name__ == '__main__':
             num_runs = len(data.P[t])
             run_data = []
             for i in range(num_runs):
+                P_list = np.array(data.P[t][i]).tolist()
+                O_list = np.array(data.O[t][i]).tolist()
+
                 run_data.append({
                     "id":i,
-                    "P":{parameter_space[k].name:data.P[t][i].tolist()[k] for k in range(len(data.P[t][i].tolist()))},
-                    "O":{output_space[k].name:data.O[t][i].tolist()[k] for k in range(len(data.O[t][i].tolist()))}
+                    "P":{parameter_space[k].name:P_list[k] for k in range(len(P_list))},
+                    "O":{output_space[k].name:O_list[k] for k in range(len(O_list))}
                     })
 
             I_list = np.array(data.I[t]).tolist()

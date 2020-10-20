@@ -174,7 +174,7 @@ class Computer(object):
                     PS_machine['nprocmin_pernode'] = int(os.environ.get('nprocmin_pernode','1'))
 
                     import ast
-                    compile_deps = ast.literal_eval(os.environ.get('compile_deps',''))
+                    compile_deps = ast.literal_eval(os.environ.get('compile_deps','{}'))
 
                     PS_software = {}
                     PS_software['compile_deps'] = compile_deps
