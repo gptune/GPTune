@@ -25,6 +25,7 @@ from problem import Problem
 from computer import Computer
 from data import Data
 from options import Options
+from historydb import HistoryDB
 from sample import *
 from model import *
 from search import *
@@ -36,13 +37,14 @@ import numpy as np
 
 class GPTune(object):
 
-    def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
+    def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, history_db : HistoryDB = None, driverabspath=None, models_update=None, **kwargs):
 
         """
         tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
         computer     : object specifying the architectural characteristics of the computer to run on (See file 'GPTune/computer.py')
         data         : object containing the data of a previous tuning (See file 'GPTune/data.py')
         options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
+        history_db   : object containing the history database configuration and its behaviours (See file 'GPTune/historydb.py')
         """
         self.problem  = Problem(tuningproblem,driverabspath=driverabspath,models_update=models_update)
         if (computer is None):
@@ -53,73 +55,12 @@ class GPTune(object):
         self.data     = data
         if (options is None):
             options = Options()
-
         self.options  = options
-
-        """ Init history database JSON file """
-        if (self.options['history_db'] == 1 and self.options["application_name"] is not None):
-            import json
-            import os.path
-
-            json_data_path = self.options["history_db_path"]+self.options["application_name"]+".json"
-            if os.path.exists(json_data_path):
-                # Load previous history data
-                # [TODO] Need an approach to deal with new problems not in the history database
-                with open(json_data_path, "r") as f_in:
-                    self.data = Data(self.problem)
-
-                    print ("Found a history database")
-                    history_data = json.load(f_in)
-
-                    #print (self.problem.IS[0].name)
-                    #print (self.problem.PS)
-                    #print (self.problem.OS)
-
-                    num_tasks = len(history_data["perf_data"])
-                    IS_history = []
-                    for t in range(num_tasks):
-                        input_dict = history_data["perf_data"][t]["I"]
-                        IS_history.append(np.array([input_dict[self.problem.IS[k].name] for k in range(len(self.problem.IS))]))
-                    self.data.I = IS_history
-
-                    PS_history = []
-                    OS_history = []
-                    for t in range(num_tasks):
-                        PS_history_t = []
-                        OS_history_t = []
-                        num_evals = len(history_data["perf_data"][t]["func_eval"])
-                        for i in range(num_evals):
-                            func_eval = history_data["perf_data"][t]["func_eval"][i]
-                            PS_history_t.append([func_eval["P"][self.problem.PS[k].name] for k in range(len(self.problem.PS))])
-                            OS_history_t.append([func_eval["O"][self.problem.OS[k].name] for k in range(len(self.problem.OS))])
-                        PS_history.append(PS_history_t)
-                        OS_history.append(OS_history_t)
-                    self.data.P = PS_history
-                    self.data.O = np.array(OS_history)
-            else:
-                print ("Create a JSON file at " + json_data_path)
-                with open(json_data_path, "w") as f_out:
-                    json_data = {}
-                    json_data["name"] = self.options["application_name"]
-                    json_data["perf_data"] = []
-
-                    #num_tasks = len(self.data.I)
-                    #print ("num_tasks: %d" % len(self.data.I))
-                    #for t in range(num_tasks):
-                    #   func_eval_data = []
-
-                    #   I_list = np.array(self.data.I[t]).tolist()
-                    #   json_data["perf_data"].append({
-                    #       "id":t,
-                    #       "I":{self.problem.IS[k].name:I_list[k] for k in range(len(I_list))},
-                    #       "func_eval":func_eval_data
-                    #       })
-
-                    json.dump(json_data, f_out, indent=2)
-                if (data is None):
-                    data = Data(self.problem)
-                self.data     = data
-
+        if (history_db is None):
+            history_db = HistoryDB()
+        self.history_db = historydb
+        if (self.history_db.history_db == 1):
+            self.history_db.load_db(self.data, self.problem)
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
@@ -209,7 +150,7 @@ class GPTune(object):
 
         t1 = time.time_ns()
         if (self.data.O is None):
-            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.history_db, options = kwargs)
         t2 = time.time_ns()
         time_fun = time_fun + (t2-t1)/1e9
         # print(self.data.O)
@@ -286,7 +227,7 @@ class GPTune(object):
     #            if (self.mpi_rank == 0):
 
             t1 = time.time_ns()
-            newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, options = kwargs)
+            newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, history_db = self.history_db, options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
     #                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
@@ -395,7 +336,7 @@ class GPTune(object):
             # InewNormList.append(InewNorms[i,:])
 
         t1 = time.time_ns()
-        O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, options = kwargs)
+        O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, history_db = self.history_db, options = kwargs)
         t2 = time.time_ns()
         time_fun = time_fun + (t2-t1)/1e9
 

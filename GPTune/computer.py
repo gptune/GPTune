@@ -20,6 +20,7 @@
 import numpy as np
 from problem import Problem
 from data import Data
+from historydb import HistoryDB
 from typing import Collection, Callable
 import mpi4py
 from mpi4py import MPI
@@ -84,142 +85,30 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, options: dict=None):  # P and I are in the normalized space
-        import json
-        import os.path
-        if (options["history_db"] == 1 and options["application_name"] is not None):
-            print ("[evaluate_objective] %s" % options["application_name"])
-            print ("[evaluate_objective] %d" % options["history_db"])
-            print (I)
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None):  # P and I are in the normalized space
 
-            json_data_path = options["history_db_path"]+options["application_name"]+".json"
-            if not os.path.exists(json_data_path):
-                print ("Create a JSON file at " + json_data_path)
-                with open(json_data_path, "w") as f_out:
-                    json_data = {}
-                    json_data["name"] = self.options["application_name"]
-                    json_data["perf_data"] = []
-                    json.dump(json_data, f_out, indent=2)
+        history_db.update_IS(problem = problem, I = I)
 
-            with open(json_data_path, "r") as f_in:
-                json_data = json.load(f_in)
+        O = []
+        for i in range(len(I)):
+            t = I[i]
+            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+            # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+            P2 = P[i]
+            if D is not None:
+                D2 = D[i]
+            else:
+                D2 = None
+            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+            tmp = np.array(O2).reshape((len(O2), problem.DO))
+            O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
-            O = []
-            num_tasks = len(I)
-            print ("num_tasks: %d" % len(I))
-            print ("input space name: %s" % problem.IS[0].name)
-            for i in range(num_tasks):
-                t = I[i]
-                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-                I_orig_list = np.array(I_orig).tolist()
-
-                input_exist = False
-                for k in range(len(json_data["perf_data"])):
-                    #print ("existing I")
-                    #print (json_data["perf_data"][k]["I"])
-                    #print ("compare current")
-                    #print (I_orig_list)
-                    compare_all_elems = True
-                    for l in range(len(problem.IS)):
-                        name = problem.IS[l].name
-                        if (json_data["perf_data"][k]["I"][problem.IS[l].name] != I_orig_list[l]):
-                            compare_all_elems = False
-                            break
-
-                    if compare_all_elems == True:
-                        print ("input task already exists")
-                        input_exist = True
-                        break
-
-                if input_exist == False:
-                    json_data["perf_data"].append({
-                            "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
-                            "func_eval":[]
-                            })
-
-            #print (problem.IS.inverse_transform(np.array(t, ndmin=2))[0])
-            for i in range(len(I)):
-                t = I[i]
-                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-                # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
-                P2 = P[i]
-                if D is not None:
-                    D2 = D[i]
-                else:
-                    D2 = None
-                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-                tmp = np.array(O2).reshape((len(O2), problem.DO))
-                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
-
-                # transform to the original parameter space
-                pids = list(range(len(P2)))
-                print ("pids: ")
-                print (pids)
-                X_orig = []
-                for j in pids:
-                    x = P2[j]
-                    X_orig.append(problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
-
-                # Save function evaluation data into the JSON file
-                # Currently does not properly assign ID (need a UID)
-                # Currently does not check parameter duplication assuming B.O. does not generate duplicated parameters
-                for j in range(len(P2)):
-                    P_orig_list = np.array(X_orig[j]).tolist()
-
-                    # this machine/node/core/nproc information is given by CK-GPTune
-                    PS_machine = {}
-                    PS_machine['machine'] = os.environ.get('MACHINE_NAME','Unknown')
-                    PS_machine['nodes'] = int(os.environ.get('nodes','1'))
-                    PS_machine['cores'] = int(os.environ.get('cores','1'))
-                    PS_machine['nprocmin_pernode'] = int(os.environ.get('nprocmin_pernode','1'))
-
-                    import ast
-                    compile_deps = ast.literal_eval(os.environ.get('compile_deps','{}'))
-
-                    PS_software = {}
-                    PS_software['compile_deps'] = compile_deps
-
-                    O_orig_list = np.array(tmp[j]).tolist()
-                    json_data["perf_data"][i]["func_eval"].append({
-                            "P":{problem.PS[k].name:P_orig_list[k] for k in range(len(problem.PS))},
-                            "P_m":PS_machine,
-                            "P_s":PS_software,
-                            "O":{problem.OS[k].name:O_orig_list[k] for k in range(len(problem.OS))}
-                        })
-
-                print ("I_orig_: ")
-                print (I_orig)
-                print ("X_orig: ")
-                print (X_orig)
-                print ("tmp: ")
-                print (tmp)
-
-            with open(json_data_path, "w") as f_out:
-                json.dump(json_data, f_out, indent=2)
-
-        else:
-            O = []
-            for i in range(len(I)):
-                t = I[i]
-                I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-                # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
-                P2 = P[i]
-                if D is not None:
-                    D2 = D[i]
-                else:
-                    D2 = None
-                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-                tmp = np.array(O2).reshape((len(O2), problem.DO))
-                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+            history_db.update_func_eval(problem = problem,\
+                    task_parameter = I[i], \
+                    tuning_parameter = P[i],\
+                    evaluation_result = tmp)
 
         return O
-
-    # def evaluate_models_onepoint(self, problem : Problem, point: dict):  # a simple wrapper for problem.models, point is in the original space
-    #     print('nani')
-    #     O= problem.models(point)
-    #     return O
-
-
 
     def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, D2 : dict=None, options:dict=None):  # P2 is in the normalized space
 
