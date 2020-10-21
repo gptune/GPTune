@@ -191,7 +191,7 @@ if __name__ == '__main__':
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=history_db, driverabspath=os.path.abspath(__file__))
+        gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db, driverabspath=os.path.abspath(__file__))
         (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
         # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
