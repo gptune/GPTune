@@ -30,6 +30,7 @@ from sample import *
 from model import *
 from search import *
 import math
+import os
 
 import mpi4py
 from mpi4py import MPI
@@ -56,11 +57,25 @@ class GPTune(object):
         if (options is None):
             options = Options()
         self.options  = options
+
         if (history_db is None):
             history_db = HistoryDB()
+            # if history db setting is given by CK-GPTune automatically
+            if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+                import ast
+                history_db.history_db = 1
+                history_db.application_name = os.environ.get('CKGPTUNE_APPLICATION_NAME','Unknown')
+                history_db.machine_name = os.environ.get('CKGPTUNE_MACHINE_NAME','Unknown')
+                history_db.compile_deps = ast.literal_eval(os.environ.get('CKGPTUNE_COMPILE_DEPS','{}'))
         self.history_db = history_db
         if (self.history_db.history_db == 1):
             self.history_db.load_db(self.data, self.problem)
+
+        # TODO: nodes/cores in computer module can be different with the application's nodes/cores?
+        if self.history_db.nodes == "Unknown":
+            self.history_db.nodes = self.computer.nodes
+        if self.history_db.cores == "Unknown":
+            self.history_db.cores = self.computer.cores
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
