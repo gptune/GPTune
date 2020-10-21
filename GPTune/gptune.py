@@ -58,7 +58,7 @@ class GPTune(object):
         self.options  = options
         if (history_db is None):
             history_db = HistoryDB()
-        self.history_db = historydb
+        self.history_db = history_db
         if (self.history_db.history_db == 1):
             self.history_db.load_db(self.data, self.problem)
 
