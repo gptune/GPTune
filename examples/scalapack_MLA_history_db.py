@@ -149,19 +149,55 @@ def main():
     history_db = HistoryDB()
     history_db.history_db = 1
     history_db.application_name = 'scalapack-pdqrdriver'
-    history_db.machine_name = machine
+
+    history_db.machine = machine
     history_db.nodes = nodes
     history_db.cores = cores
-    history_db.nprocmin_pernode = nprocmin_pernode
 
     history_db.compile_deps = {
                 "openmpi":{
                     "version":"4.0.0",
-                    "version_split":[4,0,0]
+                    "version_split":[4,0,0],
+                    "tags":"lib,mpi,openmpi"
                 },
                 "scalapack":{
                     "version":"2.1.0",
-                    "version_split":[2,1,0]
+                    "version_split":[2,1,0],
+                    "tags":"lib,scalapack"
+                }
+            }
+    history_db.runtime_deps = {}
+
+    # setting options for loading previous data
+    # for now, task parameter has to be the same.
+    history_db.load_deps = {
+                "machine_deps": {
+                    "machine":['mymachine','cori'],
+                    "nodes":[nodes],
+                    "cores":[i for i in range(cores-1, cores+2, 1)]
+                },
+                "software_deps": {
+                    "compile_deps": {
+                        "mpi":[
+                            {
+                                "name":"openmpi",
+                                "version_from":[4,0,0],
+                                "version_to":[5,0,0],
+                                #"tags":"lib,mpi,openmpi"
+                            },
+                            {
+                                "name":"intelmpi"
+                                #"tags":"lib,mpi,intel,mpicc"
+                            }
+                        ],
+                        "scalapack":[
+                            {
+                                "name":"scalapack",
+                                "version":[2,1,0]
+                            }
+                        ]
+                    },
+                    "runtime_deps": {}
                 }
             }
 

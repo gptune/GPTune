@@ -54,6 +54,9 @@ class GPTune(object):
         if (data is None):
             data = Data(self.problem)
         self.data     = data
+        print (self.data.I)
+        print (self.data.P)
+        print (self.data.O)
         if (options is None):
             options = Options()
         self.options  = options
