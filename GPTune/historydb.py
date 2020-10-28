@@ -31,10 +31,11 @@ class HistoryDB(dict):
         self.application_name = None
 
         """ Pass machine-related information """
-        self.machine = 'Unknown'
-        self.nodes = 'Unknown'
-        self.cores = 'Unknown'
-        #self.nprocmin_pernode = 'Unknown'
+        self.machine_deps = {
+                "machine":"Unknown",
+                "nodes":"Unknown",
+                "cores":"Unknown"
+                }
 
         """ Pass software-related information as dictionaries """
         self.compile_deps = {}
@@ -49,7 +50,7 @@ class HistoryDB(dict):
     def check_load_deps(self, func_eval):
         ''' check machine dependencies '''
         machine_deps = self.load_deps['machine_deps']
-        machine_parameter = func_eval['P_m']
+        machine_parameter = func_eval['machine_deps']
 
         print ("machine_parameter: " + str(machine_parameter['machine']))
         print ("machine_deps: " + str(machine_deps['machine']))
@@ -74,7 +75,7 @@ class HistoryDB(dict):
 
         ''' check compile-level software dependencies '''
         compile_deps = self.load_deps['software_deps']['compile_deps']
-        compile_parameter = func_eval['P_s']['compile_deps']
+        compile_parameter = func_eval['compile_deps']
         for dep_name in compile_deps.keys():
             deps_passed = False
             for option in range(len(compile_deps[dep_name])):
@@ -262,11 +263,6 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuning_parameter_orig).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
-                #print ("eval: " + str(i))
-                #print ("task_parameter: " + str(task_parameter_orig_list))
-                #print ("tuning_parameter: " + str(tuning_parameter_orig_list))
-                #print ("evaluation_result: " + str(evaluation_result_orig_list))
-
                 # find pointer to the json entry for the task parameter
                 json_task_idx = 0
                 for k in range(len(json_data["perf_data"])):
@@ -283,12 +279,9 @@ class HistoryDB(dict):
                 json_data["perf_data"][json_task_idx]["func_eval"].append({
                         "P":{problem.PS[k].name:tuning_parameter_orig_list[k]
                             for k in range(len(problem.PS))},
-                        "P_m":{'machine':self.machine,
-                            'nodes':self.nodes,
-                            'cores':self.cores},
-                            #'nprocmin_pernode':self.nprocmin_pernode},
-                        "P_s":{'compile_deps':self.compile_deps,
-                            'runtime_deps':self.runtime_deps},
+                        "machine_deps":self.machine_deps,
+                        "compile_deps":self.compile_deps,
+                        "runtime_deps":self.runtime_deps,
                         "O":{problem.OS[k].name:evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))}
                     })

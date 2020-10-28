@@ -150,9 +150,11 @@ def main():
     history_db.history_db = 1
     history_db.application_name = 'scalapack-pdqrdriver'
 
-    history_db.machine = machine
-    history_db.nodes = nodes
-    history_db.cores = cores
+    history_db.machine_deps = {
+                "machine":machine,
+                "nodes":nodes,
+                "cores":cores
+            }
 
     history_db.compile_deps = {
                 "openmpi":{
@@ -172,7 +174,7 @@ def main():
     # for now, task parameter has to be the same.
     history_db.load_deps = {
                 "machine_deps": {
-                    "machine":['mymachine','cori'],
+                    "machine":[machine,'cori'],
                     "nodes":[nodes],
                     "cores":[i for i in range(cores-1, cores+2, 1)]
                 },

@@ -75,10 +75,10 @@ class GPTune(object):
             self.history_db.load_db(self.data, self.problem)
 
         # TODO: nodes/cores in computer module can be different with the application's nodes/cores?
-        if self.history_db.nodes == "Unknown":
-            self.history_db.nodes = self.computer.nodes
-        if self.history_db.cores == "Unknown":
-            self.history_db.cores = self.computer.cores
+        if self.history_db.machine_deps["nodes"] == "Unknown":
+            self.history_db.machine_deps["nodes"] = self.computer.nodes
+        if self.history_db.machine_deps["cores"] == "Unknown":
+            self.history_db.machine["cores"] = self.computer.cores
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
 
