@@ -266,6 +266,9 @@ class LCM(GPy.kern.Kern):
         xopt = history_xs[history_fs.index(min(history_fs))]
         fopt = min(history_fs)
 
+        if(xopt is None):
+            raise Exception(f"L-BFGS failed: consider reducing options['model_latent'] !")
+
 
     #        # Particle Swarm Optimization
     #
