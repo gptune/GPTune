@@ -78,6 +78,7 @@ typedef struct
     int mb;            // Blocking factor used to distribute the rows of the global matrix K in ScaLAPACK
     int lr;            // Local number of rows of K matrix
     int lc;            // Local number of columns of K matrix
+    int maxtries;      // Max number of jittering 
     int nprow;         // Number of rows process
     int npcol;         // Number of columns process
     int pid;           // Process ID in communicator mpi_comm
@@ -106,6 +107,7 @@ fun_jac_struct* initialize
     double* Y,
     // MPI ScaLAPACK related parameters
     int mb,
+    int maxtries,
     int nprow,
     int npcol,
     MPI_Comm comm
