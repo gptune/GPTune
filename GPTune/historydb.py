@@ -20,6 +20,7 @@ from problem import Problem
 from data import Data
 import json
 import os.path
+from filelock import FileLock
 
 class HistoryDB(dict):
 
@@ -138,106 +139,111 @@ class HistoryDB(dict):
             if os.path.exists(json_data_path):
                 # Load previous history data
                 # [TODO] Need to deal with new problems not in the history database
-                with open(json_data_path, "r") as f_in:
-                    #self.data = Data(self.problem)
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        #self.data = Data(self.problem)
 
-                    print ("Found a history database")
-                    history_data = json.load(f_in)
+                        print ("Found a history database")
+                        history_data = json.load(f_in)
 
-                    num_tasks = len(history_data["perf_data"])
-                    IS_history = []
-                    for t in range(num_tasks):
-                        input_dict = history_data["perf_data"][t]["I"]
-                        IS_history.append(\
-                                np.array([input_dict[problem.IS[k].name] \
-                                for k in range(len(problem.IS))]))
+                        num_tasks = len(history_data["perf_data"])
+                        IS_history = []
+                        for t in range(num_tasks):
+                            input_dict = history_data["perf_data"][t]["I"]
+                            IS_history.append(\
+                                    np.array([input_dict[problem.IS[k].name] \
+                                    for k in range(len(problem.IS))]))
 
-                    num_loaded_data = 0
-                    PS_history = []
-                    OS_history = []
-                    for t in range(num_tasks):
-                        PS_history_t = []
-                        OS_history_t = []
-                        num_evals = len(history_data["perf_data"][t]["func_eval"])
-                        for i in range(num_evals):
-                            func_eval = history_data["perf_data"][t]["func_eval"][i]
-                            if (self.check_load_deps(func_eval)):
-                                PS_history_t.append(\
-                                        [func_eval["P"][problem.PS[k].name] \
-                                        for k in range(len(problem.PS))])
-                                OS_history_t.append(\
-                                        [func_eval["O"][problem.OS[k].name] \
-                                        for k in range(len(problem.OS))])
-                                num_loaded_data += 1
-                            else:
-                                print ("failed to load")
-                        PS_history.append(PS_history_t)
-                        OS_history.append(OS_history_t)
+                        num_loaded_data = 0
+                        PS_history = []
+                        OS_history = []
+                        for t in range(num_tasks):
+                            PS_history_t = []
+                            OS_history_t = []
+                            num_evals = len(history_data["perf_data"][t]["func_eval"])
+                            for i in range(num_evals):
+                                func_eval = history_data["perf_data"][t]["func_eval"][i]
+                                if (self.check_load_deps(func_eval)):
+                                    PS_history_t.append(\
+                                            [func_eval["P"][problem.PS[k].name] \
+                                            for k in range(len(problem.PS))])
+                                    OS_history_t.append(\
+                                            [func_eval["O"][problem.OS[k].name] \
+                                            for k in range(len(problem.OS))])
+                                    num_loaded_data += 1
+                                else:
+                                    print ("failed to load")
+                            PS_history.append(PS_history_t)
+                            OS_history.append(OS_history_t)
 
-                    # [TODO] quick implementation to avoid setting data class
-                    # if no data has been loaded
-                    # otherwise, that leads to a problem in gptune.py (line 125)
-                    if (num_loaded_data > 0):
-                        data.I = IS_history
-                        data.P = PS_history
-                        data.O = np.array(OS_history)
-                        #print ("data.I: " + str(data.I))
-                        #print ("data.P: " + str(data.P))
-                        print ("data.O: " + str(data.O))
-                    else:
-                        print ("no prev data has been loaded")
+                        # [TODO] quick implementation to avoid setting data class
+                        # if no data has been loaded
+                        # otherwise, that leads to a problem in gptune.py (line 125)
+                        if (num_loaded_data > 0):
+                            data.I = IS_history
+                            data.P = PS_history
+                            data.O = np.array(OS_history)
+                            #print ("data.I: " + str(data.I))
+                            #print ("data.P: " + str(data.P))
+                            print ("data.O: " + str(data.O))
+                        else:
+                            print ("no prev data has been loaded")
             else:
                 print ("Create a JSON file at " + json_data_path)
-                with open(json_data_path, "w") as f_out:
-                    json_data = {}
-                    json_data["name"] = self.application_name
-                    json_data["perf_data"] = []
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {}
+                        json_data["name"] = self.application_name
+                        json_data["perf_data"] = []
 
-                    json.dump(json_data, f_out, indent=2)
+                        json.dump(json_data, f_out, indent=2)
 
     def update_IS(self, problem : Problem, I : np.ndarray = None):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if not os.path.exists(json_data_path):
                 print ("Create a JSON file at " + json_data_path)
-                with open(json_data_path, "w") as f_out:
-                    json_data = {}
-                    json_data["name"] = self.application_name
-                    json_data["perf_data"] = []
-                    json.dump(json_data, f_out, indent=2)
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {}
+                        json_data["name"] = self.application_name
+                        json_data["perf_data"] = []
+                        json.dump(json_data, f_out, indent=2)
 
-            with open(json_data_path, "r") as f_in:
-                json_data = json.load(f_in)
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
 
-                O = []
-                num_tasks = len(I)
-                for i in range(num_tasks):
-                    t = I[i]
-                    I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-                    I_orig_list = np.array(I_orig).tolist()
+                    O = []
+                    num_tasks = len(I)
+                    for i in range(num_tasks):
+                        t = I[i]
+                        I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                        I_orig_list = np.array(I_orig).tolist()
 
-                    input_exist = False
-                    for k in range(len(json_data["perf_data"])):
-                        compare_all_elems = True
-                        for l in range(len(problem.IS)):
-                            name = problem.IS[l].name
-                            if (json_data["perf_data"][k]["I"][problem.IS[l].name] != I_orig_list[l]):
-                                compare_all_elems = False
+                        input_exist = False
+                        for k in range(len(json_data["perf_data"])):
+                            compare_all_elems = True
+                            for l in range(len(problem.IS)):
+                                name = problem.IS[l].name
+                                if (json_data["perf_data"][k]["I"][problem.IS[l].name] != I_orig_list[l]):
+                                    compare_all_elems = False
+                                    break
+
+                            if compare_all_elems == True:
+                                print ("input task already exists")
+                                input_exist = True
                                 break
 
-                        if compare_all_elems == True:
-                            print ("input task already exists")
-                            input_exist = True
-                            break
+                        if input_exist == False:
+                            json_data["perf_data"].append({
+                                    "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
+                                    "func_eval":[]
+                                    })
 
-                    if input_exist == False:
-                        json_data["perf_data"].append({
-                                "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
-                                "func_eval":[]
-                                })
-
-            with open(json_data_path, "w") as f_out:
-                json.dump(json_data, f_out, indent=2)
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "w") as f_out:
+                    json.dump(json_data, f_out, indent=2)
 
         return
 
@@ -249,8 +255,9 @@ class HistoryDB(dict):
 
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
-            with open(json_data_path, "r") as f_in:
-                json_data = json.load(f_in)
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
 
             # transform to the original parameter space
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]
@@ -286,8 +293,9 @@ class HistoryDB(dict):
                             for k in range(len(problem.OS))}
                     })
 
-            with open(json_data_path, "w") as f_out:
-                json.dump(json_data, f_out, indent=2)
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "w") as f_out:
+                    json.dump(json_data, f_out, indent=2)
 
         return
 
