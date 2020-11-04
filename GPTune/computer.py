@@ -30,7 +30,7 @@ from concurrent import futures
 
 from pathlib import Path
 import importlib
-
+import inspect
 
 class Computer(object):
 
