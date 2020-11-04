@@ -1,0 +1,60 @@
+Task 1: m, n = [9496, 7549]
+Tuner / #runs	10
+GPTune	0.741164
+OpenTuner	1.350061
+Hpbandster	1.064561
+					
+Task 2: m, n = [21487, 20981]
+Tuner / #runs	10
+GPTune	4.497037
+OpenTuner	4.185512
+Hpbandster	6.539453
+
+Task 3: m, n = [37073, 20774]				
+Tuner / #runs	10
+GPTune	7.047603
+OpenTuner	4.042941
+Hpbandster	10.768322
+
+Task 4: m, n = [11070, 34241]				
+Tuner / #runs	10
+GPTune	1.071485
+OpenTuner	2.74406
+Hpbandster	3.605991
+
+Task 5: m, n = [27958, 39976]			
+Tuner / #runs	10
+GPTune	7.212767
+OpenTuner	16.102627
+Hpbandster	7.423176
+
+Task 6: m, n = [17026, 15910]				
+Tuner / #runs	10
+GPTune	2.186616
+OpenTuner	3.362484
+Hpbandster	2.275725
+
+Task 7: m, n = [23884, 4712]				
+Tuner / #runs	10
+GPTune	0.924713
+OpenTuner	0.553652
+Hpbandster	0.556605
+
+Task 8: m, n = [6666, 11170]				
+Tuner / #runs	10
+GPTune	0.411944
+OpenTuner	2.042721
+Hpbandster	1.200072
+
+Task 9: m, n = [23324, 26545]			
+Tuner / #runs	10
+GPTune	5.811236
+OpenTuner	13.90433
+Hpbandster	6.302738
+
+Task 10: m, n = [8381, 29070]			
+Tuner / #runs	10
+GPTune	1.501592
+OpenTuner	3.568216
+Hpbandster	1.177272
+
