@@ -131,9 +131,10 @@ class GPTune(object):
         if (NSmin<NS1):
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-            for i in range(len(self.data.P)):
-                NSi = self.data.P[i].shape[0]
-                tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+            if (NSmin>0):
+                for i in range(len(self.data.P)):
+                    NSi = self.data.P[i].shape[0]
+                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
 
 #            #XXX add the info of problem.models here
