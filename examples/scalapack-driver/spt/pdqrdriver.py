@@ -66,7 +66,7 @@ def execute(nproc, nthreads, npernode, RUNDIR):
         comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Barrier()
         comm.Disconnect()
-        time.sleep(5.0)
+        # time.sleep(5.0)
         
         return 0
 

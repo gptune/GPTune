@@ -51,8 +51,8 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 def objectives(point):
     m = point['m']
     n = point['n']
-    mb = point['mb']*8
-    nb = point['nb']*8
+    mb = point['mb']*bunit
+    nb = point['nb']*bunit
     p = point['p']
     npernode = 2**point['npernode']
     nproc = nodes*npernode
@@ -172,11 +172,11 @@ def main():
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
         print("stats: ", stats)
 
-        # """ Dump the data to file as a new check point """
-        # pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+        """ Dump the data to file as a new check point """
+        pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
 
-        # """ Dump the tuner to file for TLA use """
-        # pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+        """ Dump the tuner to file for TLA use """
+        pickle.dump(gt, open('MLA_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
 
         """ Print all input and parameter samples """
         for tid in range(NI):
