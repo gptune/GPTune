@@ -65,11 +65,14 @@ def objectives(point):                  # should always use this name for user-d
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
 	nprows = point['nprows']
-	nproc = point['nproc']
+	
+	npernode = 2**point['npernode']
+	nproc = nodes*npernode
+	nthreads = int(cores / npernode)
+
+
 	NSUP = point['NSUP']
 	NREL = point['NREL']
-	npernode =  math.ceil(float(nproc)/nodes)  
-	nthreads = int(cores / npernode)
 	npcols     = int(nproc / nprows)
 	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'npernode', npernode, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
@@ -105,7 +108,11 @@ def objectives(point):                  # should always use this name for user-d
 
 	return [retval] 
 	
-	
+def cst1(NSUP,NREL):
+	return NSUP >= NREL
+def cst2(npernode,nprows):
+	return nodes * 2**npernode >= nprows
+			
 def main():
 
 	global ROOTDIR
@@ -113,7 +120,6 @@ def main():
 	global cores
 	global target
 	global nprocmax
-	global nprocmin
 
 	# Parse command line arguments
 
@@ -138,12 +144,12 @@ def main():
 	os.environ['TUNER_NAME'] = TUNER_NAME
 	
 	
-	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
+	nprocmax = nodes*cores  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+
 
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
-	matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
+	matrices = ["big.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -152,15 +158,14 @@ def main():
 	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
+	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
 	OS = Space([result])
-	cst1 = "NSUP >= NREL"
-	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
+
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
 
@@ -169,8 +174,8 @@ def main():
 
 
 
-	target='memory'
-	# target='time'
+	# target='memory'
+	target='time'
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -194,7 +199,7 @@ def main():
 
 	""" Intialize the tuner with existing data stored as last check point"""
 	try:
-		data = pickle.load(open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'rb'))
+		data = pickle.load(open('Data_SLU_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'rb'))
 		giventask = data.I
 	except (OSError, IOError) as e:
 		data = Data(problem)
@@ -203,7 +208,8 @@ def main():
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [["big.rua"]]		
-	giventask = [["Si2.bin"]]		
+	# giventask = [["Si2.bin"]]	
+	giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
 	data = Data(problem)
 
 
@@ -218,18 +224,20 @@ def main():
 
 
 		""" Dump the data to file as a new check point """
-		pickle.dump(data, open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
+		pickle.dump(data, open('Data_SLU_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
 
 		""" Dump the tuner to file for TLA use """
-		pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
+		pickle.dump(gt, open('MLA_SLU_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
 
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
@@ -242,7 +250,7 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
@@ -255,7 +263,7 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 

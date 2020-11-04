@@ -85,7 +85,7 @@ class Model_GPy_LCM(Model):
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
-
+        
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
