@@ -174,6 +174,7 @@ class GPTune(object):
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
         optiter = 0
+        NSmin = min(map(len, self.data.P)) 
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
 
             if(self.problem.models_update is not None):
