@@ -170,7 +170,7 @@ def main():
 
 	""" Set and validate options """	
 	options = Options()
-	# options['model_processes'] = 1
+	options['model_processes'] = 1
 	# options['model_threads'] = 1
 	options['model_restarts'] = 1
 	# options['search_multitask_processes'] = 1
