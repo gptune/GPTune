@@ -1,10 +1,10 @@
 set -x 
 
-mmax=20000
-nmax=20000
+mmax=40000
+nmax=40000
 ntask=10
 nrun=10
-nodes=16
+nodes=64
 exp=tuners
 # read results
 python scalapack_parse_results.py --mmax ${mmax} --nmax ${nmax} --ntask ${ntask} --nodes ${nodes} --exp ${exp}

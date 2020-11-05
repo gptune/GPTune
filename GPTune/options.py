@@ -56,6 +56,7 @@ class Options(dict):
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
+        model_max_jitter_try = 10 # Max number of jittering 
 
 
         """ Options for the search phase """

@@ -96,9 +96,11 @@ class GPTune(object):
         time_model=0
 
         np.set_printoptions(suppress=False,precision=4)
-
-        if (self.data.P is not None and len(self.data.P[0])>=NS):
-            print('self.data.P[0])>=NS, no need to run MLA. Returning...')
+        NSmin=0
+        if (self.data.P is not None):
+            NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
+        if (self.data.P is not None and NSmin>=NS):
+            print('NSmin>=NS, no need to run MLA. Returning...')
             return (copy.deepcopy(self.data), None,stats)
 
         t3 = time.time_ns()
@@ -109,6 +111,11 @@ class GPTune(object):
         kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
+
+        if (NS1 is not None and NS1>NS):
+            raise Exception("NS1>NS")
+        if (NS1 is None):
+            NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
 
 
         if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
@@ -125,6 +132,7 @@ class GPTune(object):
                 xNorm = self.problem.PS.transform(x)
                 tmp.append(xNorm)
             self.data.P=tmp
+
 
 #        if (self.mpi_rank == 0):
 
@@ -145,15 +153,15 @@ class GPTune(object):
         if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
-        if (self.data.P is None):
-            if (NS1 is not None and NS1>NS):
-                raise Exception("NS1>NS")
-
-            if (NS1 is None):
-                NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
-
+        if (NSmin<NS1):
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-            self.data.P = sampler.sample_parameters(n_samples = NS1, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            if (NSmin>0):
+                for i in range(len(self.data.P)):
+                    NSi = self.data.P[i].shape[0]
+                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+
+
 #            #XXX add the info of problem.models here
 #            for P2 in P:
 #                for x in P2:
@@ -167,8 +175,16 @@ class GPTune(object):
         time_sample_init = time_sample_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
-        if (self.data.O is None):
-            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.history_db, options = kwargs)
+        if (NSmin<NS1):
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.history_db, options = kwargs)
+            if(NSmin==0): # no existing tuning data is available
+                self.data.O = tmpO
+                self.data.P = tmpP
+            else:
+                for i in range(len(self.data.P)):
+                    self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
+                    self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
+
         t2 = time.time_ns()
         time_fun = time_fun + (t2-t1)/1e9
         # print(self.data.O)
@@ -183,8 +199,7 @@ class GPTune(object):
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
         optiter = 0
-        while len(self.data.P[0])<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
-        # for optiter in range(NS - len(self.data.P[0])):
+        while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
 
             if(self.problem.models_update is not None):
                 ########## denormalize the data as the user always work in the original space
@@ -200,7 +215,6 @@ class GPTune(object):
                 self.problem.models_update(tmpdata)
                 self.data.D = tmpdata.D
 
-            # print("riji",type(self.data.I),type(self.data.I[0]))
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
             print("MLA iteration: ",optiter)
             optiter = optiter + 1
@@ -224,6 +238,9 @@ class GPTune(object):
                             modeldata.append(self.problem.models(points))
                         modeldata=np.array(modeldata)
                         tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+                for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
+                    tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
+                    tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
                 # print(tmpdata.P[0])
                 modelers[o].train(data = tmpdata, **kwargs)
 
@@ -233,10 +250,10 @@ class GPTune(object):
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
 
-            more_samples=NS-len(self.data.P[0]) # YL: this makes sure P has the same length across all tasks
-            for x in res:
-                more_samples=min(more_samples,x[1][0].shape[0])
-            newdata.P = [x[1][0][0:more_samples,:] for x in res]
+            newdata.P = [x[1][0] for x in res]
+            for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+                NSi = self.data.P[i].shape[0]
+                newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
             # print(more_samples,newdata.P)
             t2 = time.time_ns()
             time_search = time_search + (t2-t1)/1e9
@@ -255,6 +272,7 @@ class GPTune(object):
     #
     #                newdata.O = mpi_comm.bcast(None, root=0)
             self.data.merge(newdata)
+            NSmin = min(map(len, self.data.P))
 
 ########## denormalize the data as the user always work in the original space
         if self.data.I is not None:    # from 2D numpy array to a list of lists

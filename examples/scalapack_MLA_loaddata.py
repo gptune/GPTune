@@ -51,32 +51,40 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 def objectives(point):
     m = point['m']
     n = point['n']
-    mb = point['mb']*8
-    nb = point['nb']*8
-    nproc = point['nproc']
+    mb = point['mb']*bunit
+    nb = point['nb']*bunit
     p = point['p']
+    npernode = 2**point['npernode']
+    nproc = nodes*npernode
+    nthreads = int(cores / npernode)    
 
     # this becomes useful when the parameters returned by TLA1 do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
         print('Warning: wrong parameters for objective function!!!')
         return 1e12
-    npernode =  math.ceil(float(nproc)/nodes)  
-    nthreads = int(cores / npernode)
     q = int(nproc / p)
+    nproc = p*q
     params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
 
-
-    elapsedtime = pdqrdriver(params, niter=3, JOBID=JOBID)
+    print(params, ' scalapack starts ') 
+    elapsedtime = pdqrdriver(params, niter=2, JOBID=JOBID)
     print(params, ' scalapack time: ', elapsedtime)
 
     return elapsedtime
 
+def cst1(mb,p,m):
+    return mb*bunit * p <= m
+def cst2(nb,npernode,n,p):
+    return nb * bunit * nodes * 2**npernode <= n * p
+def cst3(npernode,p):
+    return nodes * 2**npernode >= p
 
 def main():
 
     global ROOTDIR
     global nodes
     global cores
+    global bunit
     global JOBID
     global nprocmax
     global nprocmin
@@ -100,26 +108,24 @@ def main():
     os.environ['TUNER_NAME'] = TUNER_NAME
     os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
-    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-    nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space 
+    nprocmax = nodes*cores  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 
-    mmin=128
-    nmin=128
+    bunit=8
+    mmin=1280
+    nmin=1280
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
     mb = Integer(1, 16, transform="normalize", name="mb")
     nb = Integer(1, 16, transform="normalize", name="nb")
-    nproc = Integer(nprocmin, nprocmax, transform="normalize", name="nproc")
-    p = Integer(0, nprocmax, transform="normalize", name="p")
+    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
-    PS = Space([mb, nb, nproc, p])
+    PS = Space([mb, nb, npernode, p])
     OS = Space([r])
-    cst1 = "mb*8 * p <= m"
-    cst2 = "nb*8 * nproc <= n * p"
-    cst3 = "nproc >= p"
+    
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
 
@@ -128,7 +134,7 @@ def main():
 
     """ Set and validate options """
     options = Options()
-    # options['model_processes'] = 16
+    options['model_processes'] = 1
     # options['model_threads'] = 1
     options['model_restarts'] = 1
     options['search_multitask_processes'] = 1
@@ -137,7 +143,7 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class '] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options.validate(computer=computer) 
 
@@ -153,8 +159,8 @@ def main():
     # # giventask = [[2000, 2000]]
     # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
 
-    # # the following will use only task lists stored in the pickle file
-    # data = Data(problem)
+    # the following will use only task lists stored in the pickle file
+    data = Data(problem)
 
     if(TUNER_NAME=='GPTune'):
 
@@ -185,6 +191,12 @@ def main():
         NS = nruns
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
+        
+        
+        """ Dump the data to file as a new check point """
+        pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+        
+        
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
@@ -198,6 +210,11 @@ def main():
         NS = nruns
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
+        
+        # """ Dump the data to file as a new check point """
+        # pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
+        
+        
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))

@@ -155,6 +155,7 @@ fun_jac_struct* initialize
     double* Y,
     // MPI ScaLAPACK related parameters
     int mb,
+    int maxtries,
     int nprow,
     int npcol,
     MPI_Comm comm
@@ -173,6 +174,7 @@ fun_jac_struct* initialize
     z->m      = m;
     z->X      = X;
     z->Y      = Y;
+    z->maxtries      = maxtries;
 
     // MPI ScaLAPACK related parameters
     z->mpi_comm = comm;
@@ -331,6 +333,10 @@ double fun_jac // negloglike_and_grads
     double* sigma = kappa + z->NL * z->NT;  // diagonal matrix D of variances in LCM
     double* ws    = sigma + z->NT;          // W_q used to form B_q
     
+    double* Kcopy;
+    if(z->lr * z->lc>0)
+        Kcopy = (double *) malloc(z->lr * z->lc      * sizeof(double));
+
     // Initialize outputs
 
     double neg_log_marginal_likelihood = 0.;
@@ -407,9 +413,16 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
             if (z->pcolid == tmppid)
             {
 //@                z->K[li * z->lc + ljstart] += sigma[idxi] + 1e-8;
-                z->K[ljstart * z->lr + li] += sigma[idxi] + 1e-8;     //YL: why is 1e-8 here?
+                z->K[ljstart * z->lr + li] += sigma[idxi];    
                 // printf("%5d%5d%14f\n",ljstart,li,z->K[ljstart * z->lr + li]);
             }
+        }
+
+
+# pragma omp for
+        for (k = 0; k < z->lr * z->lc; k++)
+        {
+            Kcopy[k] = z->K[k];
         }
     }
 
@@ -438,8 +451,49 @@ for (int p = 0; p < 8; p++)
     /**************************************************************************************************/
 
     // Compute dL_dK
+    
 	if(z->prowid!=-1 && z->pcolid!=-1){
-		pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+        info=1;
+        int ntry=0;
+        double jitter = 1e-8;
+        while(info>0 && ntry<z->maxtries){
+            
+        # pragma omp parallel private ( k, li, gi, ljstart, tmppid ) shared ( z )
+            {            
+        # pragma omp for
+                for (k = 0; k < z->lr * z->lc; k++)
+                {
+                    z->K[k] = Kcopy[k];
+                }
+            
+
+        # pragma omp for
+                for (li = 0; li < z->lr; li++)
+                {
+                    rl2g(z, li, z->prowid, &gi);
+                    cg2l(z, gi, &ljstart, &tmppid);			
+                    if (z->pcolid == tmppid)
+                    {
+                        z->K[ljstart * z->lr + li] += jitter;    
+                    }
+                }
+            }     
+
+            // printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
+
+            pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+
+            jitter*=10;   
+            ntry++;         
+
+        }
+
+        if(info>0){
+            printf("K matrix not positive definite with jittering, consider increasing option['model_max_jitter_try']");
+            exit(0);
+        }
+        free(Kcopy);
+
 	}
 /*    if (info != 0)
     {

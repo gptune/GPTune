@@ -8,6 +8,12 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
+font = {'family': 'serif',
+    'weight': 'normal',
+    'size': 18,
+    }
+matplotlib.rc('font', **font)   
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mmax', type=int, default=100, help='maximum row dimension')
@@ -55,13 +61,7 @@ def plot(data1, data2, args):
     assert len(data1) == len(data2) 
     nrun = args.nrun
     ntask = len(data1)
-    font = {'family': 'serif',
-        'color':  'black',
-        'weight': 'normal',
-        'size': 12,
-        }
     font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=font['size'])
-
 
     
     p1 = len([x for x in data1 if x >= 1])
@@ -84,7 +84,7 @@ def plot(data1, data2, args):
     ax.set_xlabel('Task ID',fontdict=font)
     ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}], NS = {nrun}',fontdict=font)   
     ax.set_xticks(x)
-    ax.set_xticklabels(x)
+    ax.set_xticklabels(x,fontdict=font)
     ax.legend(prop=font_mag)
     fig.tight_layout()
     filename = os.path.splitext(os.path.basename(my_source))[0]
@@ -96,11 +96,7 @@ def plot(data1, data2, args):
 
 def plot_histogram(data1, data2, args):
     
-    font = {'family': 'serif',
-        'color':  'black',
-        'weight': 'normal',
-        'size': 12,
-        }
+     
     font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=font['size'])    
     
     my_source = gen_source(args)

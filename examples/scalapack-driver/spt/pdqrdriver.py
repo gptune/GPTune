@@ -7,6 +7,7 @@ import os
 import mpi4py
 from mpi4py import MPI
 import sys
+import time
 ################################################################################
 
 # Paths
@@ -63,7 +64,9 @@ def execute(nproc, nthreads, npernode, RUNDIR):
        
         print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc, 'nthreads', nthreads, 'npernode', npernode)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
         comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
+        comm.Barrier()
         comm.Disconnect()
+        # time.sleep(5.0)
         
         return 0
 
