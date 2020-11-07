@@ -1,0 +1,41 @@
+Task 1: Si2
+Tuner / #runs	20
+GPTune	0.12266133
+OpenTuner	0.1614456
+Hpbandster	0.145571
+					
+Task 2: SiH4
+Tuner / #runs	20
+GPTune	0.335648
+OpenTuner	0.3979457
+Hpbandster	0.3601374
+
+Task 3: SiNa
+Tuner / #runs	20
+GPTune	0.375395
+OpenTuner	0.3203377
+Hpbandster	0.382162
+
+Task 4: Na5
+Tuner / #runs	20
+GPTune	0.4284196
+OpenTuner	0.557435
+Hpbandster	0.437497
+
+Task 5: benzene
+Tuner / #runs	20
+GPTune	0.44397
+OpenTuner	0.488588
+Hpbandster	0.536842
+
+Task 6: Si10H16
+Tuner / #runs	20
+GPTune	0.7854105
+OpenTuner	1.24149
+Hpbandster	1.03424
+
+Task 7: Si5H12
+Tuner / #runs	20
+GPTune	1.104090
+OpenTuner	1.25016
+Hpbandster	1.41377
