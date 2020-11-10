@@ -8,6 +8,11 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 
+font = {'family': 'serif',
+    'weight': 'normal',
+    'size': 16,
+    }
+matplotlib.rc('font', **font)   
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -58,12 +63,7 @@ def plot(data1, data2, data3, data10,data20,data30, args):
     my_source = gen_source(args)
     ntask = len(data1)
     
-    font = {'family': 'serif',
-        'color':  'black',
-        'weight': 'normal',
-        'size': 14,
-        }
-    font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=10)
+    font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=font['size'])
 
 
     p1 = len([x for x in data1 if x >= 1])
@@ -88,7 +88,7 @@ def plot(data1, data2, data3, data10,data20,data30, args):
     # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
     ax1.set_xticks(x)
     ax1.set_xticklabels(x)
-    ax1.legend(prop=font_mag,loc='upper left',ncol=1)
+    ax1.legend(prop=font_mag,loc='lower right',ncol=1)
 
 
     ax2.bar(x - width, data10, width, color='tab:blue', label=f'NS={args.nrun1}')
@@ -101,7 +101,7 @@ def plot(data1, data2, data3, data10,data20,data30, args):
     # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
     ax2.set_xticks(x)
     ax2.set_xticklabels(x)
-    ax2.legend(prop=font_mag,loc='upper left',ncol=1)
+    ax2.legend(prop=font_mag,loc='lower right',ncol=1)
 
 
     fig.tight_layout()

@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-
+font = {'family': 'serif',
+    'weight': 'normal',
+    'size': 18,
+    }
+matplotlib.rc('font', **font)  
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -52,12 +56,7 @@ def plot(data1, data2, data3, args):
     my_source = gen_source(args)
     ntask = len(data1)
     
-    font = {'family': 'serif',
-        'color':  'black',
-        'weight': 'normal',
-        'size': 12,
-        }
-    font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=10)
+    font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=font['size'])
 
 
     p1 = len([x for x in data1 if x >= 1])
@@ -81,7 +80,7 @@ def plot(data1, data2, data3, args):
     # ax.set_title(f'[m, n] in [{args.mmax}, {args.nmax}]',fontdict=font)   
     ax.set_xticks(x)
     ax.set_xticklabels(x)
-    ax.legend(prop=font_mag,loc='upper left',ncol=1)
+    ax.legend(prop=font_mag,loc='lower left',ncol=1)
     fig.tight_layout()
     filename = os.path.splitext(os.path.basename(my_source))[0]
     plt.ion()

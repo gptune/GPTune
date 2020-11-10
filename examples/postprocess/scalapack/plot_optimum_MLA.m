@@ -13,7 +13,7 @@ flop1 = (max(m1,n1).*min(m1,n1).^2 - 1/3*min(m1,n1).^3)/1e9;
 
 
 %% Plot figure 1
-axisticksize = 40;
+axisticksize = 50;
 origin = [200,60];
 markersize = 10;
 LineWidth = 3;
