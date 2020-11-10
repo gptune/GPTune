@@ -174,7 +174,6 @@ class Model_LCM(Model):
             def fun(restart_iter):
                 np.random.seed(restart_iter)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
-                # print('I am here')
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))
 
@@ -184,18 +183,23 @@ class Model_LCM(Model):
         kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
         bestxopt = min(res, key = lambda x: x[1])[0]
         kern.set_param_array(bestxopt)
+        best_neg_log_marginal_likelihood = min(res, key = lambda x: x[1])[1]
 
         # YL: why sigma is enough to compute the likelihood, see https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
 
-        print ("kernel: " + str(kern))
-        print ("bestxopt:" + str(bestxopt))
-        print ("sigma: " + str(kern.sigma[0]))
-        print ("likelihoods_list: " + str(likelihoods_list[0].to_dict()))
+        #print ("kernel: " + str(kern))
+        #print ("bestxopt:" + str(bestxopt))
+        #print ("best_neg_log_marginal_likelihood:" + str(best_neg_log_marginal_likelihood))
+        #for i in range(data.NI):
+        #    print ("i: " + str(i))
+        #    print ("sigma: " + str(kern.sigma[i]))
+        #    print ("likelihoods_list: " + str(likelihoods_list[i].to_dict()))
+        #print ("likelihoods_list_len: " + str(data.NI))
         #print ("self.M: " + str(self.M))
 
-        return (bestxopt)
+        return (bestxopt, best_neg_log_marginal_likelihood)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 

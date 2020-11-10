@@ -201,7 +201,6 @@ class GPTune(object):
             print("MLA iteration: ",optiter)
             optiter = optiter + 1
             t1 = time.time_ns()
-            print ("DO: " + str(self.problem.DO))
             for o in range(self.problem.DO):
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
@@ -225,9 +224,14 @@ class GPTune(object):
                     tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
                 # print(tmpdata.P[0])
-                bestxopt = modelers[o].train(data = tmpdata, **kwargs)
-                print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
-                self.history_db.update_model(self.problem, bestxopt)
+                #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
+                if (kwargs["model_class"] is "Model_LCM"):
+                    (bestxopt, best_neg_log_marginal_likelihood) = \
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    self.history_db.update_model_LCM(self.problem, bestxopt,
+                            best_neg_log_marginal_likelihood)
+                else:
+                    modelers[o].train(data = tmpdata, **kwargs)
 
             t2 = time.time_ns()
             time_model = time_model + (t2-t1)/1e9
