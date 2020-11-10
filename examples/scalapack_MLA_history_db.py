@@ -216,7 +216,7 @@ def main():
         """ Building MLA with NI random tasks """
         NI = ntask
         NS = nruns
-        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+        (data, model, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
         print("stats: ", stats)
 
         """ Print all input and parameter samples """

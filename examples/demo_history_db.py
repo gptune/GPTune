@@ -180,18 +180,19 @@ if __name__ == '__main__':
     os.environ['TUNER_NAME'] = 'GPTune'
 
     giventask = [[6],[8]]
+    #giventask = [[4],[6],[8],[10]]
     # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
 
     NI=len(giventask)
     #NS=100
-    NS=20
+    NS=10
 
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db, driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        (data, modeler, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
         # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
         """ Print all input and parameter samples """

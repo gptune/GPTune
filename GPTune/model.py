@@ -85,7 +85,7 @@ class Model_GPy_LCM(Model):
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
-        
+
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
@@ -131,7 +131,7 @@ class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
+        return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
     def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
 
@@ -189,7 +189,13 @@ class Model_LCM(Model):
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
 
-        return
+        print ("kernel: " + str(kern))
+        print ("bestxopt:" + str(bestxopt))
+        print ("sigma: " + str(kern.sigma[0]))
+        print ("likelihoods_list: " + str(likelihoods_list[0].to_dict()))
+        #print ("self.M: " + str(self.M))
+
+        return (bestxopt)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 

@@ -33,9 +33,9 @@ class HistoryDB(dict):
 
         """ Pass machine-related information """
         self.machine_deps = {
-                "machine":"Unknown",
-                "nodes":"Unknown",
-                "cores":"Unknown"
+                    "machine":"Unknown",
+                    "nodes":"Unknown",
+                    "cores":"Unknown"
                 }
 
         """ Pass software-related information as dictionaries """
@@ -43,7 +43,6 @@ class HistoryDB(dict):
         self.runtime_deps = {}
 
         """ Pass load options """
-        #self.load_db = 0
         self.load_deps = {
                     "machine_deps":{},
                     "software_deps":{
@@ -186,6 +185,7 @@ class HistoryDB(dict):
                     with open(json_data_path, "w") as f_out:
                         json_data = {}
                         json_data["name"] = self.application_name
+                        json_data["model_data"] = []
                         json_data["perf_data"] = []
 
                         json.dump(json_data, f_out, indent=2)
@@ -284,6 +284,31 @@ class HistoryDB(dict):
                         "O":{problem.OS[k].name:evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))}
                     })
+
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "w") as f_out:
+                    json.dump(json_data, f_out, indent=2)
+
+        return
+
+    def load_model(self):
+
+        return
+
+    def update_model(self, problem : Problem,\
+            bestxopt : np.ndarray):
+
+        if (self.history_db == 1 and self.application_name is not None):
+            json_data_path = self.history_db_path+self.application_name+".json"
+            with FileLock(json_data_path+".lock"):
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
+
+            json_data["model_data"].append({
+                    "hyperparameter":bestxopt.tolist()
+                })
+
+            print ("hi")
 
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "w") as f_out:
