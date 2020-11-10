@@ -44,7 +44,13 @@ class HistoryDB(dict):
 
         """ Pass load options """
         #self.load_db = 0
-        self.load_deps = {}
+        self.load_deps = {
+                    "machine_deps":{},
+                    "software_deps":{
+                        "compile_deps":{},
+                        "runtime_deps":{}
+                    }
+                }
 
         self.verbose_history_db = 1
 
@@ -53,26 +59,12 @@ class HistoryDB(dict):
         machine_deps = self.load_deps['machine_deps']
         machine_parameter = func_eval['machine_deps']
 
-        print ("machine_parameter: " + str(machine_parameter['machine']))
-        print ("machine_deps: " + str(machine_deps['machine']))
-
-        if not machine_parameter['machine'] in machine_deps['machine']:
-            if (self.verbose_history_db):
-                print ("machine_name: " + machine_parameter['machine'] +
-                        " is not in load_deps: " + str(machine_deps['machine']))
-            return False
-
-        if not machine_parameter['nodes'] in machine_deps['nodes']:
-            if (self.verbose_history_db):
-                print ("nodes: " + machine_parameter['nodes'] +
-                        " is not in load_deps: " + str(machine_deps['nodes']))
-            return False
-
-        if not machine_parameter['cores'] in machine_deps['cores']:
-            if (self.verbose_history_db):
-                print ("cores: " + machine_parameter['cores'] +
-                        " is not in load_deps: " + str(machine_deps['cores']))
-            return False
+        ''' check machine configuration dependencies '''
+        for dep_name in machine_deps:
+            if not machine_parameter[dep_name] in machine_deps[dep_name]:
+                print (dep_name+": " + machine_parameter[dep_name] +
+                       " is not in load_deps: " + str(machine_deps[dep_name]))
+                return False
 
         ''' check compile-level software dependencies '''
         compile_deps = self.load_deps['software_deps']['compile_deps']

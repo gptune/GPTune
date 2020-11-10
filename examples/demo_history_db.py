@@ -170,13 +170,12 @@ if __name__ == '__main__':
     history_db = HistoryDB()
     history_db.history_db = 1
     history_db.application_name = 'demo'
-    history_db.nodes = 1
-    history_db.cores = 16
-    history_db.nprocmin_pernode = 1
 
-#    options['history_db'] = 1
-#    options['application_name'] = 'demo'
-#    os.environ['MACHINE_NAME'] = 'example'
+    history_db.machine_deps = {
+                "machine":'example',
+                "nodes":1,
+                "cores":16
+            }
 
     os.environ['TUNER_NAME'] = 'GPTune'
 
@@ -185,7 +184,7 @@ if __name__ == '__main__':
 
     NI=len(giventask)
     #NS=100
-    NS=10
+    NS=20
 
     TUNER_NAME = os.environ['TUNER_NAME']
 
