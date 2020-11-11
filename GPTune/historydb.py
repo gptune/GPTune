@@ -53,6 +53,9 @@ class HistoryDB(dict):
 
         self.verbose_history_db = 1
 
+        """ list of UID of function evaluation data """
+        self.uids = []
+
     def check_load_deps(self, func_eval):
         ''' check machine dependencies '''
         machine_deps = self.load_deps['machine_deps']
@@ -244,6 +247,10 @@ class HistoryDB(dict):
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray):
+        import uuid
+        uid = uuid.uuid1()
+        self.uids.append(str(uid))
+        print (uid)
 
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
@@ -282,14 +289,15 @@ class HistoryDB(dict):
                         "compile_deps":self.compile_deps,
                         "runtime_deps":self.runtime_deps,
                         "O":{problem.OS[k].name:evaluation_result_orig_list[k]
-                            for k in range(len(problem.OS))}
+                            for k in range(len(problem.OS))},
+                        "uid":str(uid)
                     })
 
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "w") as f_out:
                     json.dump(json_data, f_out, indent=2)
 
-        return
+        return uid
 
     def load_model(self):
 
@@ -312,6 +320,7 @@ class HistoryDB(dict):
                     "neg_log_marginal_likelihood":neg_log_marginal_likelihood,
                     "gradients":gradients.tolist(),
                     "iteration":iteration,
+                    "func_eval":self.uids,
                     "modeler":"Model_LCM"
                 })
 
