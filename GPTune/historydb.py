@@ -223,7 +223,7 @@ class HistoryDB(dict):
                                     break
 
                             if compare_all_elems == True:
-                                print ("input task already exists")
+                                #print ("input task already exists")
                                 input_exist = True
                                 break
 
@@ -297,7 +297,9 @@ class HistoryDB(dict):
 
     def update_model_LCM(self, problem : Problem,\
             bestxopt : np.ndarray,\
-            best_neg_log_marginal_likelihood : float):
+            neg_log_marginal_likelihood : float,\
+            gradients : np.ndarray,\
+            iteration : int):
 
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
@@ -307,7 +309,9 @@ class HistoryDB(dict):
 
             json_data["model_data"].append({
                     "hyperparameter":bestxopt.tolist(),
-                    "best_neg_log_marginal_likelihood":best_neg_log_marginal_likelihood,
+                    "neg_log_marginal_likelihood":neg_log_marginal_likelihood,
+                    "gradients":gradients.tolist(),
+                    "iteration":iteration,
                     "modeler":"Model_LCM"
                 })
 

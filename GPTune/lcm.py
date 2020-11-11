@@ -205,6 +205,7 @@ class LCM(GPy.kern.Kern):
         # Gradient-based optimization
 
         gradients = np.zeros(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma) + len(self.WS))
+        iteration = [0] #np.array([0])
 
         history_xs = [None]
         history_fs = [float('Inf')]
@@ -219,6 +220,10 @@ class LCM(GPy.kern.Kern):
             (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
             # print("@@@@")
             # print(x2,neg_log_marginal_likelihood)
+            #print ("g: ", g)
+            #print ("iteration: " + str(iteration[0]))
+
+            iteration[0] += 1
 
             gradients[:] = g[:]
             if (kwargs['verbose']):
@@ -265,6 +270,8 @@ class LCM(GPy.kern.Kern):
     #            fopt = sol.fun
         xopt = history_xs[history_fs.index(min(history_fs))]
         fopt = min(history_fs)
+        #print ("gradients: ", str(gradients))
+        #print ("iteration: " + str(iteration[0]))
 
         if(xopt is None):
             raise Exception(f"L-BFGS failed: consider reducing options['model_latent'] !")
@@ -292,7 +299,7 @@ class LCM(GPy.kern.Kern):
 
         mpi_comm.Disconnect()
 
-        return (xopt, fopt)
+        return (xopt, fopt, gradients, iteration[0])
 
 if __name__ == "__main__":
 
