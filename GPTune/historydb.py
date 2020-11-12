@@ -248,11 +248,6 @@ class HistoryDB(dict):
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray):
-        import uuid
-        uid = uuid.uuid1()
-        self.uids.append(str(uid))
-        print (uid)
-
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             with FileLock(json_data_path+".lock"):
@@ -265,6 +260,11 @@ class HistoryDB(dict):
 
             num_evals = len(tuning_parameter)
             for i in range(num_evals):
+                import uuid
+                uid = uuid.uuid1()
+                self.uids.append(str(uid))
+                print (uid)
+
                 tuning_parameter_orig = problem.PS.inverse_transform(
                         np.array(tuning_parameter[i], ndmin=2))[0]
                 tuning_parameter_orig_list = np.array(tuning_parameter_orig).tolist()
@@ -298,7 +298,7 @@ class HistoryDB(dict):
                 with open(json_data_path, "w") as f_out:
                     json.dump(json_data, f_out, indent=2)
 
-        return uid
+        return
 
     def load_model(self):
 
@@ -328,7 +328,10 @@ class HistoryDB(dict):
 
         return dict_arr
 
-    def update_model_LCM(self, problem : Problem,\
+    def update_model_LCM(self,\
+            objective : int,
+            problem : Problem,\
+            input_given : np.ndarray,\
             bestxopt : np.ndarray,\
             neg_log_marginal_likelihood : float,\
             gradients : np.ndarray,\
@@ -360,13 +363,20 @@ class HistoryDB(dict):
             problem_space["PS"] = self.problem_space_to_dict(problem.PS)
             problem_space["OS"] = self.problem_space_to_dict(problem.OS)
 
+            input_list = input_given.tolist()
+            print (input_list)
+
             json_data["model_data"].append({
                     "hyperparameter":bestxopt.tolist(),
                     "model_stats":model_stats,
                     "iteration":iteration,
                     "func_eval":self.uids,
+                    "input_given":input_list,
                     "problem_space":problem_space,
-                    "modeler":"Model_LCM"
+                    "modeler":"Model_LCM",
+                    "objective_id":objective
+                    # objective id is to dinstinguish between different models for multi-objective optimization;
+                    # we might need a nicer way to manage different models
                 })
 
             with FileLock(json_data_path+".lock"):

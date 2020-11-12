@@ -225,11 +225,15 @@ class GPTune(object):
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
-                if (kwargs["model_class"] is "Model_LCM"):
+                if (kwargs["model_class"] == "Model_LCM"):
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
                         modelers[o].train(data = tmpdata, **kwargs)
-                    self.history_db.update_model_LCM(self.problem, bestxopt,
+                    self.history_db.update_model_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            bestxopt,
                             neg_log_marginal_likelihood,
                             gradients,
                             iteration)
