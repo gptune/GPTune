@@ -21,6 +21,7 @@ from data import Data
 import json
 import os.path
 from filelock import FileLock
+from autotune.space import *
 
 class HistoryDB(dict):
 
@@ -303,6 +304,30 @@ class HistoryDB(dict):
 
         return
 
+    def problem_space_to_dict(self, space : Space):
+        dict_arr = []
+
+        space_len = len(space)
+
+        for i in range(space_len):
+            dict_ = {}
+
+            lower_bound, upper_bound = space.bounds[i]
+
+            dict_["lower_bound"] = lower_bound
+            dict_["upper_bound"] = upper_bound
+
+            if space.is_real == True:
+                dict_["type"] = "real"
+            elif space.is_categorical == True:
+                dict_["type"] = "categorical"
+            else:
+                dict_["type"] = "int"
+
+            dict_arr.append(dict_)
+
+        return dict_arr
+
     def update_model_LCM(self, problem : Problem,\
             bestxopt : np.ndarray,\
             neg_log_marginal_likelihood : float,\
@@ -315,12 +340,32 @@ class HistoryDB(dict):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
 
+            self.problem_space_to_dict(problem.IS)
+
+            from scipy.stats.mstats import gmean
+            from scipy.stats.mstats import hmean
+            model_stats = {}
+            model_stats["neg_log_likelihood"] = neg_log_marginal_likelihood
+            model_stats["gradients"] = gradients.tolist()
+            model_stats["gradients_sum_abs"] = np.sum(np.absolute(gradients))
+            model_stats["gradients_average_abs"] = np.average(np.absolute(gradients))
+            model_stats["gradients_hmean_abs"] = hmean(np.absolute(gradients))
+            model_stats["gradients_gmean_abs"] = gmean(np.absolute(gradients))
+            model_stats["iteration"] = iteration
+
+            gradients_list = gradients.tolist()
+
+            problem_space = {}
+            problem_space["IS"] = self.problem_space_to_dict(problem.IS)
+            problem_space["PS"] = self.problem_space_to_dict(problem.PS)
+            problem_space["OS"] = self.problem_space_to_dict(problem.OS)
+
             json_data["model_data"].append({
                     "hyperparameter":bestxopt.tolist(),
-                    "neg_log_marginal_likelihood":neg_log_marginal_likelihood,
-                    "gradients":gradients.tolist(),
+                    "model_stats":model_stats,
                     "iteration":iteration,
                     "func_eval":self.uids,
+                    "problem_space":problem_space,
                     "modeler":"Model_LCM"
                 })
 
