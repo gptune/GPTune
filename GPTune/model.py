@@ -220,6 +220,20 @@ class Model_LCM(Model):
 
         return (mu, var)
 
+    def gen_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
+        if (kwargs['model_latent'] is None):
+            Q = data.NI
+        else:
+            Q = kwargs['model_latent']
+
+        kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
+        #print ("received hyperparameters: " + str(hyperparameters))
+        kern.set_param_array(hyperparameters)
+
+        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
+        self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
+
+        return
 
 class Model_DGP(Model):
 

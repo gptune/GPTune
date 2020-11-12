@@ -300,9 +300,30 @@ class HistoryDB(dict):
 
         return
 
-    def load_model(self):
+    def load_max_evals_hyperparameters(self, problem : Problem, input_given : np.ndarray, objective : int):
 
-        return
+        if (self.history_db == 1 and self.application_name is not None):
+            json_data_path = self.history_db_path+self.application_name+".json"
+            if os.path.exists(json_data_path):
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        print ("Found a history database")
+                        history_data = json.load(f_in)
+                        num_models = len(history_data["model_data"])
+
+                        max_evals = 0
+                        max_evals_index = -1 # TODO: if no model is found?
+                        for i in range(num_models):
+                            num_evals = len(history_data["model_data"][i]["func_eval"])
+                            print ("i: " + str(i) + " num_evals: " + str(num_evals))
+                            if history_data["model_data"][i]["objective_id"] == objective:
+                                if num_evals > max_evals:
+                                    max_evals = num_evals
+                                    max_evals_index = i
+                        hyperparameters =\
+                                history_data["model_data"][max_evals_index]["hyperparameter"]
+
+        return hyperparameters
 
     def problem_space_to_dict(self, space : Space):
         dict_arr = []
