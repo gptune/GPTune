@@ -141,9 +141,9 @@ def main():
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
-	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
-	matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -169,8 +169,8 @@ def main():
 
 
 
-	target='memory'
-	# target='time'
+	# target='memory'
+	target='time'
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -185,7 +185,7 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 
 	options.validate(computer = computer)
@@ -202,8 +202,8 @@ def main():
 
 
 	# """ Building MLA with the given list of tasks """
-	# giventask = [["big.rua"]]		
-	giventask = [["Si2.bin"]]		
+	giventask = [["big.rua"]]		
+	# giventask = [["Si2.bin"]]		
 	data = Data(problem)
 
 

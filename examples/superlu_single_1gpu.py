@@ -59,21 +59,25 @@ from callhpbandster import HpBandSter
 import math
 
 ################################################################################
-
-
 def objectives(point):                  # should always use this name for user-defined objective function
     
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
-	LOOKAHEAD = point['LOOKAHEAD']
-	nprows = point['nprows']
-	nproc = point['nproc']
+	# LOOKAHEAD = point['LOOKAHEAD']
+	nprows = 1
+	nproc = 1
 	NSUP = point['NSUP']
 	NREL = point['NREL']
-	npernode =  math.ceil(float(nproc)/nodes)  
-	nthreads = int(cores / npernode)
+	N_GEMM = 2**point['N_GEMM']
+	# N_GEMM = 10000
+	MAX_BUFFER_SIZE = 2**point['MAX_BUFFER_SIZE']
+	# MAX_BUFFER_SIZE = 5000000
+	npernode =  1
+	nthreads = 1
+	# nthreads = int(cores / npernode)
 	npcols     = int(nproc / nprows)
-	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'npernode', npernode, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
+	# params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'npernode', npernode, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
+	params = [matrix, 'COLPERM', COLPERM, 'nthreads', nthreads, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL, 'N_GEMM',N_GEMM,'MAX_BUFFER_SIZE',MAX_BUFFER_SIZE]
 	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
 	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
@@ -84,13 +88,15 @@ def objectives(point):                  # should always use this name for user-d
 	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
 	envstr+= 'NREL=%d\n' %(NREL)   
 	envstr+= 'NSUP=%d\n' %(NSUP)   
+	envstr+= 'N_GEMM=%d\n' %(N_GEMM)   
+	envstr+= 'MAX_BUFFER_SIZE=%d\n' %(MAX_BUFFER_SIZE)   
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-   
+    
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
-	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
+	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
+	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
 	tmpdata = array('f', [0,0])
@@ -106,7 +112,6 @@ def objectives(point):                  # should always use this name for user-d
 		print(params, ' superlu memory: ', retval)
 
 	return [retval] 
-
 	
 	
 def main():
@@ -119,9 +124,13 @@ def main():
 	global nprocmin
 
 	# Parse command line arguments
+
 	args   = parse_args()
 
 	# Extract arguments
+
+	# mmax = args.mmax
+	# nmax = args.nmax
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
@@ -131,55 +140,71 @@ def main():
 	nruns = args.nruns
 	truns = args.truns
 	# JOBID = args.jobid
+	
 	TUNER_NAME = args.optimization
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
-
-
+	
+	
 	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
 	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
-	matrices = ["big.rua", "g4.rua", "g20.rua"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
-	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
+
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	matrices = ["matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
+
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
+
 	# Input parameters
 	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
-	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
-	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
-	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"),name="r")
+	# LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
+	# nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
+	# nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
+	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
+	NREL      = Integer     (10, 200, transform="normalize", name="NREL")
+	N_GEMM     = Integer     (8, 16, transform="normalize", name="N_GEMM")	
+	MAX_BUFFER_SIZE     = Integer     (16, 24, transform="normalize", name="MAX_BUFFER_SIZE")	
+		
+
+	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	OS = Space([runtime])
+	# PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
+	PS = Space([COLPERM, NSUP, NREL, N_GEMM, MAX_BUFFER_SIZE])
+	OS = Space([result])
 	cst1 = "NSUP >= NREL"
-	cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
-	constraints = {"cst1" : cst1, "cst2" : cst2}
+	# cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
+	constraints = {"cst1" : cst1}
 	models = {}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
-	target='memory'
-	# target='time'
+
+
+	# target='memory'
+	target='time'
+
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	
 	options = Options()
-	# options['model_processes'] = 1
+	options['model_processes'] = 1
 	# options['model_threads'] = 1
 	options['model_restarts'] = 1
 	# options['search_multitask_processes'] = 1
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
-	options['shared_memory_parallelism'] = True
-	options['model_class'] = 'Model_LCM'
-	options['verbose'] = True
+	options['shared_memory_parallelism'] = False
+	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
+	options['verbose'] = False
+
 	options.validate(computer = computer)
+	
+
 
 	""" Intialize the tuner with existing data stored as last check point"""
 	try:
@@ -190,11 +215,16 @@ def main():
 		giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
 
 
+	# """ Building MLA with the given list of tasks """
+	giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
+	# giventask = [["big.rua"]]		
+	# giventask = [["Si2.bin"]]		
+	data = Data(problem)
 
 
-	# """ Building MLA with the given list of tasks """	
-	# giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-	# data = Data(problem)
+	# the following makes sure the first sample is using default parameters 
+	data.I = giventask
+	data.P = [[['4',128,20,13,22]]]
 
 
 	if(TUNER_NAME=='GPTune'):
@@ -218,20 +248,7 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
-
-		""" Call TLA for a new task using the constructed LCM model"""    
-		newtask = [["big.rua"]]
-		# newtask = [["H2O.rb"]]
-		(aprxopts,objval,stats) = gt.TLA1(newtask, NS=None)
-		print("stats: ",stats)
-
-		""" Print the optimal parameters and function evaluations"""	
-		for tid in range(len(newtask)):
-			print("new task: %s"%(newtask[tid]))
-			print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
-			
-
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
@@ -245,7 +262,7 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
 		NI = ntask
@@ -258,12 +275,12 @@ def main():
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 
 
-  
+
 def parse_args():
 
 	parser = argparse.ArgumentParser()
@@ -288,6 +305,8 @@ def parse_args():
 
 	args   = parser.parse_args()
 	return args
-	
+
+
 if __name__ == "__main__":
+ 
 	main()
