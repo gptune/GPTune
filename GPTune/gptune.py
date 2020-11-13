@@ -74,7 +74,8 @@ class GPTune(object):
         NSmin=0  
         if (self.data.P is not None):
             NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
-        if (self.data.P is not None and NSmin>=NS):
+        		
+        if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
             print('NSmin>=NS, no need to run MLA. Returning...')
             return (copy.deepcopy(self.data), None,stats)
 
@@ -96,18 +97,20 @@ class GPTune(object):
         if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Igiven
 
+
 ########## normalize the data as the user always work in the original space
-
-        if self.data.I is not None: # from a list of lists to a 2D numpy array
-            self.data.I = self.problem.IS.transform(self.data.I)
-
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
             tmp=[]
             for x in self.data.P:
                 xNorm = self.problem.PS.transform(x)
                 tmp.append(xNorm)
             self.data.P=tmp
+        if self.data.I is not None: # from a list of lists to a 2D numpy array
+            self.data.I = self.problem.IS.transform(self.data.I)
 
+        if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)		
+		
 
 #        if (self.mpi_rank == 0):
 
@@ -154,7 +157,7 @@ class GPTune(object):
             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, options = kwargs)
             if(NSmin==0): # no existing tuning data is available
                 self.data.O = tmpO
-                self.data.P = tmpP
+                self.data.P = tmpP	
             else:
                 for i in range(len(self.data.P)):
                     self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
