@@ -47,6 +47,7 @@ class GPTune(object):
         options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
         history_db   : object containing the history database configuration and its behaviours (See file 'GPTune/historydb.py')
         """
+        self.tuningproblem = tuningproblem
         self.problem  = Problem(tuningproblem,driverabspath=driverabspath,models_update=models_update)
         if (computer is None):
             computer = Computer()
@@ -80,7 +81,7 @@ class GPTune(object):
         if self.history_db.machine_deps["cores"] == "Unknown":
             self.history_db.machine["cores"] = self.computer.cores
 
-    def MLA_LoadModel(self, NS, NS1 = None, NI = None, Igiven = None, method = "maxevals", **kwargs):
+    def MLA_LoadModel(self, NS, NS1 = None, NI = None, Igiven = None, method = "maxevals", model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -182,12 +183,17 @@ class GPTune(object):
             # current limitations
             # - only model LCM
             # - not considering edge cases (e.g. no model is available)
-            if method == "maxevals":
-                #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
+            if model_uids == None:
+                if method == "maxevals":
+                    #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
+                    modelers[i].gen_from_hyperparameters(self.data,
+                            self.history_db.load_max_evals_hyperparameters(self.tuningproblem, self.data.I, i),
+                            **kwargs)
+                    #self.history_db.load_model_max_evals(self.problem, self.data.I)
+            else:
                 modelers[i].gen_from_hyperparameters(self.data,
-                        self.history_db.load_max_evals_hyperparameters(self.problem, self.data.I, i),
+                        self.history_db.load_model_hyperparameters(model_uids[i]),
                         **kwargs)
-                #self.history_db.load_model_max_evals(self.problem, self.data.I)
 
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
         optiter = 0

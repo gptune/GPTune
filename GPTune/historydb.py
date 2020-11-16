@@ -22,6 +22,8 @@ import json
 import os.path
 from filelock import FileLock
 from autotune.space import *
+from autotune.problem import TuningProblem
+import uuid
 
 class HistoryDB(dict):
 
@@ -180,7 +182,7 @@ class HistoryDB(dict):
                             data.O = np.array(OS_history)
                             #print ("data.I: " + str(data.I))
                             #print ("data.P: " + str(data.P))
-                            print ("data.O: " + str(data.O))
+                            #print ("data.O: " + str(data.O))
                         else:
                             print ("no prev data has been loaded")
             else:
@@ -259,7 +261,6 @@ class HistoryDB(dict):
 
             num_evals = len(tuning_parameter)
             for i in range(num_evals):
-                import uuid
                 uid = uuid.uuid1()
                 self.uids.append(str(uid))
 
@@ -298,9 +299,11 @@ class HistoryDB(dict):
 
         return
 
-    def is_model_problem_match(self, model_data : dict, problem : Problem, input_given : np.ndarray):
+    def is_model_problem_match(self, model_data : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
         model_task_parameters = model_data["task_parameters"]
-        input_task_parameters = np.array(problem.IS.inverse_transform(np.array(input_given, ndmin=2))).tolist()
+        input_task_parameters = input_given #np.array(problem.IS.inverse_transform(np.array(input_given, ndmin=2))).tolist()
+        #print ("model_task_parameters: ", model_task_parameters)
+        #print ("input_task_parameters: ", input_task_parameters)
         if len(model_task_parameters) != len(input_task_parameters):
             return False
         num_tasks = len(input_task_parameters)
@@ -312,35 +315,69 @@ class HistoryDB(dict):
                     return False
 
         IS_model = model_data["problem_space"]["IS"]
-        IS_given = self.problem_space_to_dict(problem.IS)
-        if IS_model["lower_bound"] != IS_given["lower_bound"]:
+        IS_given = self.problem_space_to_dict(tuningproblem.input_space)
+        if len(IS_model) != len(IS_given):
             return False
-        if IS_model["upper_bound"] != IS_given["upper_bound"]:
-            return False
-        if IS_model["type"] != IS_given["type"]:
-            return False
+        for i in range(len(IS_given)):
+            if IS_model[i]["lower_bound"] != IS_given[i]["lower_bound"]:
+                return False
+            if IS_model[i]["upper_bound"] != IS_given[i]["upper_bound"]:
+                return False
+            if IS_model[i]["type"] != IS_given[i]["type"]:
+                return False
 
         PS_model = model_data["problem_space"]["PS"]
-        PS_given = self.problem_space_to_dict(problem.PS)
-        if PS_model["lower_bound"] != PS_given["lower_bound"]:
+        PS_given = self.problem_space_to_dict(tuningproblem.parameter_space)
+        if len(PS_model) != len(PS_given):
             return False
-        if PS_model["upper_bound"] != PS_given["upper_bound"]:
-            return False
-        if PS_model["type"] != PS_given["type"]:
-            return False
+        for i in range(len(PS_given)):
+            if PS_model[i]["lower_bound"] != PS_given[i]["lower_bound"]:
+                return False
+            if PS_model[i]["upper_bound"] != PS_given[i]["upper_bound"]:
+                return False
+            if PS_model[i]["type"] != PS_given[i]["type"]:
+                return False
 
         OS_model = model_data["problem_space"]["OS"]
-        OS_given = self.problem_space_to_dict(problem.OS)
-        if OS_model["lower_bound"] != OS_given["lower_bound"]:
+        OS_given = self.problem_space_to_dict(tuningproblem.output_space)
+        if len(OS_model) != len(OS_given):
             return False
-        if OS_model["upper_bound"] != OS_given["upper_bound"]:
-            return False
-        if OS_model["type"] != OS_given["type"]:
-            return False
+        for i in range(len(OS_given)):
+            if OS_model[i]["lower_bound"] != OS_given[i]["lower_bound"]:
+                return False
+            if OS_model[i]["upper_bound"] != OS_given[i]["upper_bound"]:
+                return False
+            if OS_model[i]["type"] != OS_given[i]["type"]:
+                return False
 
         return True
 
-    def load_max_evals_hyperparameters(self, problem : Problem, input_given : np.ndarray, objective : int):
+    def read_model_data(self, tuningproblem=None, Igiven=None, modeler="LCM"):
+        ret = []
+        print ("problem ", tuningproblem)
+        print ("problem input_space ", self.problem_space_to_dict(tuningproblem.input_space))
+
+        if tuningproblem == "None" or Igiven == "None":
+            return ret
+
+        if (self.history_db == 1 and self.application_name is not None):
+            json_data_path = self.history_db_path+self.application_name+".json"
+            if os.path.exists(json_data_path):
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+                        num_models = len(history_data["model_data"])
+
+                        max_evals = 0
+                        max_evals_index = -1 # TODO: if no model is found?
+                        for i in range(num_models):
+                            model_data = history_data["model_data"][i]
+                            if (self.is_model_problem_match(model_data, tuningproblem, Igiven)):
+                                ret.append(model_data)
+
+        return ret
+
+    def load_max_evals_hyperparameters(self, tuningproblem : TuningProblem, input_given : np.ndarray, objective : int):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
@@ -354,7 +391,7 @@ class HistoryDB(dict):
                         max_evals_index = -1 # TODO: if no model is found?
                         for i in range(num_models):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, problem, input_given)):
+                            if (self.is_model_problem_match(model_data, tuningproblem, input_given)):
                                 num_evals = len(history_data["model_data"][i]["func_eval"])
                                 print ("i: " + str(i) + " num_evals: " + str(num_evals))
                                 if history_data["model_data"][i]["objective_id"] == objective:
@@ -362,9 +399,25 @@ class HistoryDB(dict):
                                         max_evals = num_evals
                                         max_evals_index = i
                         hyperparameters =\
-                                history_data["model_data"][max_evals_index]["hyperparameter"]
+                                history_data["model_data"][max_evals_index]["hyperparameters"]
 
         return hyperparameters
+
+    def load_model_hyperparameters(self, model_uid):
+        if (self.history_db == 1 and self.application_name is not None):
+            json_data_path = self.history_db_path+self.application_name+".json"
+            if os.path.exists(json_data_path):
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        print ("Found a history database")
+                        history_data = json.load(f_in)
+                        model_data = history_data["model_data"]
+                        num_models = len(model_data)
+                        for i in range(num_models):
+                            if model_data[i]["uid"] == model_uid:
+                                return model_data[i]["hyperparameters"]
+
+        return []
 
     def problem_space_to_dict(self, space : Space):
         dict_arr = []
@@ -429,14 +482,15 @@ class HistoryDB(dict):
             task_parameter_orig_list = np.array(task_parameter_orig).tolist()
 
             json_data["model_data"].append({
-                    "hyperparameter":bestxopt.tolist(),
+                    "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
                     "iteration":iteration,
                     "func_eval":self.uids,
                     "task_parameters":task_parameter_orig_list,
                     "problem_space":problem_space,
                     "modeler":"Model_LCM",
-                    "objective_id":objective
+                    "objective_id":objective,
+                    "uid":str(uuid.uuid1())
                     # objective id is to dinstinguish between different models for multi-objective optimization;
                     # we might need a nicer way to manage different models
                 })
