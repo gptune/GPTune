@@ -243,7 +243,6 @@ class HistoryDB(dict):
 
         return
 
-
     def update_func_eval(self, problem : Problem,\
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
@@ -263,7 +262,6 @@ class HistoryDB(dict):
                 import uuid
                 uid = uuid.uuid1()
                 self.uids.append(str(uid))
-                print (uid)
 
                 tuning_parameter_orig = problem.PS.inverse_transform(
                         np.array(tuning_parameter[i], ndmin=2))[0]
@@ -300,8 +298,49 @@ class HistoryDB(dict):
 
         return
 
-    def load_max_evals_hyperparameters(self, problem : Problem, input_given : np.ndarray, objective : int):
+    def is_model_problem_match(self, model_data : dict, problem : Problem, input_given : np.ndarray):
+        model_task_parameters = model_data["task_parameters"]
+        input_task_parameters = np.array(problem.IS.inverse_transform(np.array(input_given, ndmin=2))).tolist()
+        if len(model_task_parameters) != len(input_task_parameters):
+            return False
+        num_tasks = len(input_task_parameters)
+        for i in range(num_tasks):
+            if len(model_task_parameters[i]) != len(input_task_parameters[i]):
+                return False
+            for j in range(len(input_task_parameters[i])):
+                if model_task_parameters[i][j] != input_task_parameters[i][j]:
+                    return False
 
+        IS_model = model_data["problem_space"]["IS"]
+        IS_given = self.problem_space_to_dict(problem.IS)
+        if IS_model["lower_bound"] != IS_given["lower_bound"]:
+            return False
+        if IS_model["upper_bound"] != IS_given["upper_bound"]:
+            return False
+        if IS_model["type"] != IS_given["type"]:
+            return False
+
+        PS_model = model_data["problem_space"]["PS"]
+        PS_given = self.problem_space_to_dict(problem.PS)
+        if PS_model["lower_bound"] != PS_given["lower_bound"]:
+            return False
+        if PS_model["upper_bound"] != PS_given["upper_bound"]:
+            return False
+        if PS_model["type"] != PS_given["type"]:
+            return False
+
+        OS_model = model_data["problem_space"]["OS"]
+        OS_given = self.problem_space_to_dict(problem.OS)
+        if OS_model["lower_bound"] != OS_given["lower_bound"]:
+            return False
+        if OS_model["upper_bound"] != OS_given["upper_bound"]:
+            return False
+        if OS_model["type"] != OS_given["type"]:
+            return False
+
+        return True
+
+    def load_max_evals_hyperparameters(self, problem : Problem, input_given : np.ndarray, objective : int):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
@@ -314,12 +353,14 @@ class HistoryDB(dict):
                         max_evals = 0
                         max_evals_index = -1 # TODO: if no model is found?
                         for i in range(num_models):
-                            num_evals = len(history_data["model_data"][i]["func_eval"])
-                            print ("i: " + str(i) + " num_evals: " + str(num_evals))
-                            if history_data["model_data"][i]["objective_id"] == objective:
-                                if num_evals > max_evals:
-                                    max_evals = num_evals
-                                    max_evals_index = i
+                            model_data = history_data["model_data"][i]
+                            if (self.is_model_problem_match(model_data, problem, input_given)):
+                                num_evals = len(history_data["model_data"][i]["func_eval"])
+                                print ("i: " + str(i) + " num_evals: " + str(num_evals))
+                                if history_data["model_data"][i]["objective_id"] == objective:
+                                    if num_evals > max_evals:
+                                        max_evals = num_evals
+                                        max_evals_index = i
                         hyperparameters =\
                                 history_data["model_data"][max_evals_index]["hyperparameter"]
 
@@ -364,7 +405,7 @@ class HistoryDB(dict):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
 
-            self.problem_space_to_dict(problem.IS)
+            #self.problem_space_to_dict(problem.IS)
 
             from scipy.stats.mstats import gmean
             from scipy.stats.mstats import hmean
@@ -384,15 +425,15 @@ class HistoryDB(dict):
             problem_space["PS"] = self.problem_space_to_dict(problem.PS)
             problem_space["OS"] = self.problem_space_to_dict(problem.OS)
 
-            input_list = input_given.tolist()
-            print (input_list)
+            task_parameter_orig = problem.IS.inverse_transform(np.array(input_given, ndmin=2))
+            task_parameter_orig_list = np.array(task_parameter_orig).tolist()
 
             json_data["model_data"].append({
                     "hyperparameter":bestxopt.tolist(),
                     "model_stats":model_stats,
                     "iteration":iteration,
                     "func_eval":self.uids,
-                    "input_given":input_list,
+                    "task_parameters":task_parameter_orig_list,
                     "problem_space":problem_space,
                     "modeler":"Model_LCM",
                     "objective_id":objective
