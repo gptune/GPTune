@@ -184,14 +184,26 @@ class GPTune(object):
             # - only model LCM
             # - not considering edge cases (e.g. no model is available)
             if model_uids == None:
+                #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
                 if method == "maxevals":
-                    #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
-                    modelers[i].gen_from_hyperparameters(self.data,
+                    modelers[i].gen_model_from_hyperparameters(self.data,
                             self.history_db.load_max_evals_hyperparameters(self.tuningproblem, self.data.I, i),
                             **kwargs)
                     #self.history_db.load_model_max_evals(self.problem, self.data.I)
+                elif method == "MLE" or method == "mle":
+                    modelers[i].gen_model_from_hyperparameters(self.data,
+                            self.history_db.load_MLE_model_hyperparameters(self.tuningproblem, self.data.I, i),
+                            **kwargs)
+                elif method == "AIC" or method == "aic":
+                    modelers[i].gen_model_from_hyperparameters(self.data,
+                            self.history_db.load_AIC_model_hyperparameters(self.tuningproblem, self.data.I, i),
+                            **kwargs)
+                elif method == "BIC" or method == "bic":
+                    modelers[i].gen_model_from_hyperparameters(self.data,
+                            self.history_db.load_BIC_model_hyperparameters(self.tuningproblem, self.data.I, i),
+                            **kwargs)
             else:
-                modelers[i].gen_from_hyperparameters(self.data,
+                modelers[i].gen_model_from_hyperparameters(self.data,
                         self.history_db.load_model_hyperparameters(model_uids[i]),
                         **kwargs)
 

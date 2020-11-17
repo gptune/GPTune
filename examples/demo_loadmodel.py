@@ -194,22 +194,25 @@ if __name__ == '__main__':
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db, driverabspath=os.path.abspath(__file__))
 
-        model_data = history_db.read_model_data(tuningproblem=problem, Igiven=giventask)
-        print (model_data)
-        max_evals = 0
-        max_evals_index = -1 # TODO: if no model is found?
-        for i in range(len(model_data)):
-            num_evals = len(model_data[i]["func_eval"])
-            print ("i: " + str(i) + " num_evals: " + str(num_evals))
-            if model_data[i]["objective_id"] == 0:
-                if num_evals > max_evals:
-                    max_evals = num_evals
-                    max_evals_index = i
-        model_uids = [model_data[max_evals_index]["uid"]]
-        print ("model_uids: " + str(model_uids))
+        #model_data = history_db.read_model_data(tuningproblem=problem, Igiven=giventask)
+        #print (model_data)
+        #max_evals = 0
+        #max_evals_index = -1 # TODO: if no model is found?
+        #for i in range(len(model_data)):
+        #    num_evals = len(model_data[i]["func_eval"])
+        #    print ("i: " + str(i) + " num_evals: " + str(num_evals))
+        #    if model_data[i]["objective_id"] == 0:
+        #        if num_evals > max_evals:
+        #            max_evals = num_evals
+        #            max_evals_index = i
+        #model_uids = [model_data[max_evals_index]["uid"]]
+        #print ("model_uids: " + str(model_uids))
 
-        #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="maxevals")
-        (data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), model_uids=model_uids)
+        #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="mle")
+        #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="aic")
+        #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="bic")
+        (data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="max_evals")
+        #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), model_uids=model_uids)
         # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
         """ Print all input and parameter samples """

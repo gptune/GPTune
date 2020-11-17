@@ -220,7 +220,7 @@ class Model_LCM(Model):
 
         return (mu, var)
 
-    def gen_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
         if (kwargs['model_latent'] is None):
             Q = data.NI
         else:
