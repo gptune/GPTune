@@ -24,6 +24,7 @@ from filelock import FileLock
 from autotune.space import *
 from autotune.problem import TuningProblem
 import uuid
+import time
 
 class HistoryDB(dict):
 
@@ -316,6 +317,8 @@ class HistoryDB(dict):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
 
+            now = time.localtime()
+
             # transform to the original parameter space
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]
             task_parameter_orig_list = np.array(task_parameter_orig).tolist()
@@ -331,7 +334,8 @@ class HistoryDB(dict):
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
                 json_data["func_eval"].append({
-                        "I":{problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS))},
+                        "I":{problem.IS[k].name:task_parameter_orig_list[k]
+                            for k in range(len(problem.IS))},
                         "P":{problem.PS[k].name:tuning_parameter_orig_list[k]
                             for k in range(len(problem.PS))},
                         "machine_deps":self.machine_deps,
@@ -339,6 +343,17 @@ class HistoryDB(dict):
                         "runtime_deps":self.runtime_deps,
                         "O":{problem.OS[k].name:evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))},
+                        "time":{
+                            "tm_year":now.tm_year,
+                            "tm_mon":now.tm_mon,
+                            "tm_mday":now.tm_mday,
+                            "tm_hour":now.tm_hour,
+                            "tm_min":now.tm_min,
+                            "tm_sec":now.tm_sec,
+                            "tm_wday":now.tm_wday,
+                            "tm_yday":now.tm_yday,
+                            "tm_isdst":now.tm_isdst
+                            },
                         "uid":str(uid)
                     })
 
@@ -596,6 +611,8 @@ class HistoryDB(dict):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
 
+            now = time.localtime()
+
             from scipy.stats.mstats import gmean
             from scipy.stats.mstats import hmean
             model_stats = {}
@@ -627,6 +644,17 @@ class HistoryDB(dict):
                     "problem_space":problem_space,
                     "modeler":"Model_LCM",
                     "objective_id":objective,
+                    "time":{
+                        "tm_year":now.tm_year,
+                        "tm_mon":now.tm_mon,
+                        "tm_mday":now.tm_mday,
+                        "tm_hour":now.tm_hour,
+                        "tm_min":now.tm_min,
+                        "tm_sec":now.tm_sec,
+                        "tm_wday":now.tm_wday,
+                        "tm_yday":now.tm_yday,
+                        "tm_isdst":now.tm_isdst
+                        },
                     "uid":str(uuid.uuid1())
                     # objective id is to dinstinguish between different models for multi-objective optimization;
                     # we might need a nicer way to manage different models
