@@ -464,7 +464,7 @@ class HistoryDB(dict):
 
         return hyperparameters
 
-    def load_max_evals_hyperparameters(self, tuningproblem : TuningProblem,
+    def load_max_evals_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
@@ -488,10 +488,11 @@ class HistoryDB(dict):
 
                         hyperparameters =\
                                 history_data["model_data"][max_evals_index]["hyperparameters"]
+                        print ("loaded hyperparameters: ", hyperparameters)
 
         return hyperparameters
 
-    def load_model_hyperparameters(self, model_uid):
+    def load_model_hyperparameters_by_uid(self, model_uid):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
