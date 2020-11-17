@@ -549,7 +549,7 @@ class HistoryDB(dict):
             from scipy.stats.mstats import gmean
             from scipy.stats.mstats import hmean
             model_stats = {}
-            model_stats["log_likelihood"] = -1.0 * log_marginal_likelihood
+            model_stats["log_likelihood"] = -1.0 * neg_log_marginal_likelihood
             model_stats["neg_log_likelihood"] = neg_log_marginal_likelihood
             model_stats["gradients"] = gradients.tolist()
             model_stats["gradients_sum_abs"] = np.sum(np.absolute(gradients))
