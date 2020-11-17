@@ -352,7 +352,7 @@ class HistoryDB(dict):
 
         return True
 
-    def read_model_data(self, tuningproblem=None, Igiven=None, modeler="LCM"):
+    def read_model_data(self, tuningproblem=None, Igiven=None, modeler="Model_LCM"):
         ret = []
         print ("problem ", tuningproblem)
         print ("problem input_space ", self.problem_space_to_dict(tuningproblem.input_space))
@@ -372,12 +372,14 @@ class HistoryDB(dict):
                         max_evals_index = -1 # TODO: if no model is found?
                         for i in range(num_models):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, Igiven)):
+                            if (self.is_model_problem_match(model_data, tuningproblem, Igiven) and
+                                model_data["modeler"] == modeler):
                                 ret.append(model_data)
 
         return ret
 
-    def load_MLE_model_hyperparameters(self, tuningproblem : TuningProblem, input_given : np.ndarray, objective : int):
+    def load_MLE_model_hyperparameters(self, tuningproblem : TuningProblem,
+            input_given : np.ndarray, objective : int, modeler : str):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
@@ -389,8 +391,10 @@ class HistoryDB(dict):
                         max_mle_index = -1
                         for i in range(len(history_data["model_data"])):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given)):
-                                log_likelihood = -(model_data["neg_log_likelihood"])
+                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                                    model_data["modeler"] == modeler and
+                                    model_data["objective_id"] == objective):
+                                log_likelihood = model_data["log_likelihood"]
                                 if log_likelihood > max_mle:
                                     max_mle = log_likelihood
                                     max_mle_index = i
@@ -400,7 +404,8 @@ class HistoryDB(dict):
 
         return hyperparameters
 
-    def load_AIC_model_hyperparameters(self, tuningproblem : TuningProblem, input_given : np.ndarray, objective : int):
+    def load_AIC_model_hyperparameters(self, tuningproblem : TuningProblem,
+            input_given : np.ndarray, objective : int, modeler : str):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
@@ -413,8 +418,10 @@ class HistoryDB(dict):
                         min_aic_index = -1
                         for i in range(len(history_data["model_data"])):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given)):
-                                log_likelihood = -(model_data["neg_log_likelihood"])
+                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                                    model_data["modeler"] == modeler and
+                                    model_data["objective_id"] == objective):
+                                log_likelihood = model_data["log_likelihood"]
                                 num_parameters = len(model_data["hyperparameters"])
                                 AIC = -1.0 * 2.0 * log_likelihood + 2.0 * num_parameters
                                 if AIC < min_aic:
@@ -426,7 +433,8 @@ class HistoryDB(dict):
 
         return hyperparameters
 
-    def load_BIC_model_hyperparameters(self, tuningproblem : TuningProblem, input_given : np.ndarray, objective : int):
+    def load_BIC_model_hyperparameters(self, tuningproblem : TuningProblem,
+            input_given : np.ndarray, objective : int, modeler : str):
         import math
 
         if (self.history_db == 1 and self.application_name is not None):
@@ -440,22 +448,24 @@ class HistoryDB(dict):
                         min_bic_index = -1
                         for i in range(len(history_data["model_data"])):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given)):
-                                if model_data["objective_id"] == objective:
-                                    log_likelihood = -(model_data["neg_log_likelihood"])
-                                    num_parameters = len(model_data["hyperparameters"])
-                                    num_samples = len(model_data["func_eval"])
-                                    BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
-                                    if BIC < min_bic:
-                                        min_bic = BIC
-                                        min_bic_index = i
+                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                                    model_data["modeler"] == modeler and
+                                    model_data["objective_id"] == objective):
+                                log_likelihood = model_data["log_likelihood"]
+                                num_parameters = len(model_data["hyperparameters"])
+                                num_samples = len(model_data["func_eval"])
+                                BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
+                                if BIC < min_bic:
+                                    min_bic = BIC
+                                    min_bic_index = i
 
                         hyperparameters =\
                                 history_data["model_data"][min_bic_index]["hyperparameters"]
 
         return hyperparameters
 
-    def load_max_evals_hyperparameters(self, tuningproblem : TuningProblem, input_given : np.ndarray, objective : int):
+    def load_max_evals_hyperparameters(self, tuningproblem : TuningProblem,
+            input_given : np.ndarray, objective : int, modeler : str):
         if (self.history_db == 1 and self.application_name is not None):
             json_data_path = self.history_db_path+self.application_name+".json"
             if os.path.exists(json_data_path):
@@ -468,13 +478,14 @@ class HistoryDB(dict):
                         max_evals_index = -1 # TODO: if no model is found?
                         for i in range(len(history_data["model_data"])):
                             model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given)):
+                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                                    model_data["modeler"] == modeler and
+                                    model_data["objective_id"] == objective):
                                 num_evals = len(history_data["model_data"][i]["func_eval"])
-                                print ("i: " + str(i) + " num_evals: " + str(num_evals))
-                                if history_data["model_data"][i]["objective_id"] == objective:
-                                    if num_evals > max_evals:
-                                        max_evals = num_evals
-                                        max_evals_index = i
+                                if num_evals > max_evals:
+                                    max_evals = num_evals
+                                    max_evals_index = i
+
                         hyperparameters =\
                                 history_data["model_data"][max_evals_index]["hyperparameters"]
 
@@ -535,11 +546,10 @@ class HistoryDB(dict):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
 
-            #self.problem_space_to_dict(problem.IS)
-
             from scipy.stats.mstats import gmean
             from scipy.stats.mstats import hmean
             model_stats = {}
+            model_stats["log_likelihood"] = -1.0 * log_marginal_likelihood
             model_stats["neg_log_likelihood"] = neg_log_marginal_likelihood
             model_stats["gradients"] = gradients.tolist()
             model_stats["gradients_sum_abs"] = np.sum(np.absolute(gradients))
