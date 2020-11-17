@@ -72,8 +72,8 @@ class GPTune(object):
                 history_db.machine_name = os.environ.get('CKGPTUNE_MACHINE_NAME','Unknown')
                 history_db.compile_deps = ast.literal_eval(os.environ.get('CKGPTUNE_COMPILE_DEPS','{}'))
         self.history_db = history_db
-        if (self.history_db.history_db == 1):
-            self.history_db.load_db(self.data, self.problem)
+        #if (self.history_db.history_db == 1):
+        #    self.history_db.load_db(self.data, self.problem)
 
         # TODO: nodes/cores in computer module can be different with the application's nodes/cores?
         if self.history_db.machine_deps["nodes"] == "Unknown":
@@ -94,6 +94,9 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+
+        """ Load history function evaluation data """
+        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -325,6 +328,9 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+
+        """ Load history function evaluation data """
+        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0

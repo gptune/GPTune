@@ -86,9 +86,6 @@ class Computer(object):
 
 
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None):  # P and I are in the normalized space
-
-        history_db.update_IS(problem = problem, I = I)
-
         O = []
         for i in range(len(I)):
             t = I[i]

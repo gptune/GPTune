@@ -128,6 +128,7 @@ class HistoryDB(dict):
 
         return True
 
+    """ load_db do not work currently since database format has been changed [TODO: remove] """
     def load_db(self, data : Data, problem : Problem):
 
         """ Init history database JSON file """
@@ -141,6 +142,8 @@ class HistoryDB(dict):
                         #self.data = Data(self.problem)
 
                         print ("Found a history database")
+
+                        print ("machine_deps historydb ", self.machine_deps)
                         history_data = json.load(f_in)
 
                         num_tasks = len(history_data["perf_data"])
@@ -192,7 +195,65 @@ class HistoryDB(dict):
                         json_data = {}
                         json_data["name"] = self.application_name
                         json_data["model_data"] = []
-                        json_data["perf_data"] = []
+                        #json_data["perf_data"] = []
+                        json_data["func_eval"] = []
+
+                        json.dump(json_data, f_out, indent=2)
+
+    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray):
+        """ Init history database JSON file """
+        if (self.history_db == 1 and self.application_name is not None):
+            json_data_path = self.history_db_path+self.application_name+".json"
+            if os.path.exists(json_data_path):
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        print ("Found a history database")
+                        history_data = json.load(f_in)
+                        num_tasks = len(Igiven)
+
+                        num_loaded_data = 0
+
+                        PS_history = [[] for i in range(num_tasks)]
+                        OS_history = [[] for i in range(num_tasks)]
+
+                        for func_eval in history_data["func_eval"]:
+                            if (self.check_load_deps(func_eval)):
+                                for task_id in range(num_tasks):
+                                    compare_all_elems = True
+                                    for j in range(len(problem.IS)):
+                                        if (func_eval["I"][problem.IS[j].name] !=
+                                                Igiven[task_id][j]):
+                                            compare_all_elems = False
+                                            break
+
+                                    if compare_all_elems == True:
+                                        break
+
+                                PS_history[task_id].append(\
+                                    [func_eval["P"][problem.PS[k].name] \
+                                    for k in range(len(problem.PS))])
+                                OS_history[task_id].append(\
+                                    [func_eval["O"][problem.OS[k].name] \
+                                    for k in range(len(problem.OS))])
+                                num_loaded_data += 1
+
+                        if (num_loaded_data > 0):
+                            data.I = Igiven #IS_history
+                            data.P = PS_history
+                            data.O = np.array(OS_history)
+                            print ("data.I: " + str(data.I))
+                            print ("data.P: " + str(data.P))
+                            print ("data.O: " + str(data.O))
+                        else:
+                            print ("no prev data has been loaded")
+            else:
+                print ("Create a JSON file at " + json_data_path)
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {}
+                        json_data["name"] = self.application_name
+                        json_data["model_data"] = []
+                        json_data["func_eval"] = []
 
                         json.dump(json_data, f_out, indent=2)
 
@@ -269,20 +330,8 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuning_parameter_orig).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
-                # find pointer to the json entry for the task parameter
-                json_task_idx = 0
-                for k in range(len(json_data["perf_data"])):
-                    compare_all_elems = True
-                    for l in range(len(problem.IS)):
-                        name = problem.IS[l].name
-                        if (json_data["perf_data"][k]["I"][problem.IS[l].name]
-                                != task_parameter_orig_list[l]):
-                            compare_all_elems = False
-                            break
-                    if compare_all_elems == True:
-                        json_task_idx = k
-
-                json_data["perf_data"][json_task_idx]["func_eval"].append({
+                json_data["func_eval"].append({
+                        "I":{problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS))},
                         "P":{problem.PS[k].name:tuning_parameter_orig_list[k]
                             for k in range(len(problem.PS))},
                         "machine_deps":self.machine_deps,
