@@ -35,6 +35,8 @@ class HistoryDB(dict):
         self.history_db_path = "./"
         self.application_name = None
 
+        self.load_model = 0
+
         """ Pass machine-related information """
         self.machine_deps = {
                     "machine":"Unknown",

@@ -71,9 +71,9 @@ class GPTune(object):
                 history_db.application_name = os.environ.get('CKGPTUNE_APPLICATION_NAME','Unknown')
                 history_db.machine_name = os.environ.get('CKGPTUNE_MACHINE_NAME','Unknown')
                 history_db.compile_deps = ast.literal_eval(os.environ.get('CKGPTUNE_COMPILE_DEPS','{}'))
+                if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
+                    history_db.load_model = 1
         self.history_db = history_db
-        #if (self.history_db.history_db == 1):
-        #    self.history_db.load_db(self.data, self.problem)
 
         # TODO: nodes/cores in computer module can be different with the application's nodes/cores?
         if self.history_db.machine_deps["nodes"] == "Unknown":
@@ -525,6 +525,10 @@ class GPTune(object):
         return (copy.deepcopy(self.data), modelers, stats)
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
+        if self.history_db.history_db == 1:
+            return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
+        if self.history_db.history_db == 1 and self.history_db.load_model == 1:
+            return self.MLA_LoadModel(NS, NS1, NI, Igiven)
 
         print('\n\n\n------Starting MLA with %d tasks and %d samples each '%(NI,NS))
         stats = {
