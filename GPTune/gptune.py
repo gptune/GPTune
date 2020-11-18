@@ -277,6 +277,9 @@ class GPTune(object):
         if (self.data.P is not None):
             NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
 
+        """ Set (additional) number of samples for autotuning """
+        NS = NSmin + NS
+
         if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
             print('NSmin>=NS, no need to run MLA. Returning...')
             return (copy.deepcopy(self.data), None,stats)
