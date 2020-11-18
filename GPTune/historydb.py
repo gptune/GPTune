@@ -201,6 +201,35 @@ class HistoryDB(dict):
 
                         json.dump(json_data, f_out, indent=2)
 
+    def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Igiven : np.ndarray):
+        task_id = -1
+
+        for i in range(len(Igiven)):
+            compare_all_elems = True
+            for j in range(len(problem.IS)):
+                if (func_eval["I"][problem.IS[j].name] != Igiven[i][j]):
+                    compare_all_elems = False
+                    break
+            if compare_all_elems == True:
+                task_id = i
+                break
+
+        return task_id
+
+    def is_parameter_duplication(self, problem : Problem, PS_history, parameter):
+        for i in range(len(PS_history)):
+            for j in range(len(PS_history[i])):
+                compare_all_elems = True
+                for k in range(len(problem.PS)):
+                    if (parameter[problem.PS[k].name] != PS_history[i][j][k]):
+                        compare_all_elems = False
+                        break
+                if compare_all_elems == True:
+                    print ("found a duplication of parameter set")
+                    return True
+
+        return False
+
     def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray):
         """ Init history database JSON file """
         if (self.history_db == 1 and self.application_name is not None):
@@ -219,24 +248,20 @@ class HistoryDB(dict):
 
                         for func_eval in history_data["func_eval"]:
                             if (self.check_load_deps(func_eval)):
-                                for task_id in range(num_tasks):
-                                    compare_all_elems = True
-                                    for j in range(len(problem.IS)):
-                                        if (func_eval["I"][problem.IS[j].name] !=
-                                                Igiven[task_id][j]):
-                                            compare_all_elems = False
-                                            break
-
-                                    if compare_all_elems == True:
-                                        break
-
-                                PS_history[task_id].append(\
-                                    [func_eval["P"][problem.PS[k].name] \
-                                    for k in range(len(problem.PS))])
-                                OS_history[task_id].append(\
-                                    [func_eval["O"][problem.OS[k].name] \
-                                    for k in range(len(problem.OS))])
-                                num_loaded_data += 1
+                                task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                                if (task_id != -1):
+                                    # current policy: skip loading the func eval result
+                                    # if the same parameter data has been loaded once (duplicated)
+                                    if self.is_parameter_duplication(problem, PS_history, func_eval["P"]):
+                                        continue
+                                    else:
+                                        PS_history[task_id].append(\
+                                            [func_eval["P"][problem.PS[k].name] \
+                                            for k in range(len(problem.PS))])
+                                        OS_history[task_id].append(\
+                                            [func_eval["O"][problem.OS[k].name] \
+                                            for k in range(len(problem.OS))])
+                                        num_loaded_data += 1
 
                         if (num_loaded_data > 0):
                             data.I = Igiven #IS_history
@@ -246,7 +271,7 @@ class HistoryDB(dict):
                             print ("data.P: " + str(data.P))
                             print ("data.O: " + str(data.O))
                         else:
-                            print ("no prev data has been loaded")
+                            print ("no history data has been loaded")
             else:
                 print ("Create a JSON file at " + json_data_path)
                 with FileLock(json_data_path+".lock"):
