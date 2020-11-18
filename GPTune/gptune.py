@@ -79,7 +79,7 @@ class GPTune(object):
         if self.history_db.machine_deps["nodes"] == "Unknown":
             self.history_db.machine_deps["nodes"] = self.computer.nodes
         if self.history_db.machine_deps["cores"] == "Unknown":
-            self.history_db.machine["cores"] = self.computer.cores
+            self.history_db.machine_deps["cores"] = self.computer.cores
 
     def MLA_LoadModel(self, NS, NS1 = None, NI = None, Igiven = None, method = "maxevals", model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model with %d tasks and %d samples each '%(NI,NS))
