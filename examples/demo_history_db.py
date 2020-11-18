@@ -190,44 +190,22 @@ if __name__ == '__main__':
 
     TUNER_NAME = os.environ['TUNER_NAME']
 
-    if(TUNER_NAME=='GPTune'):
-        data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db, driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
-        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+    data = Data(problem)
+    gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db, driverabspath=os.path.abspath(__file__))
+    (data, modeler, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+    # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+    print("stats: ", stats)
+    """ Print all input and parameter samples """
+    for tid in range(NI):
+        print("tid: %d" % (tid))
+        print("    t:%d " % (data.I[tid][0]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid].tolist())
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-    if(TUNER_NAME=='opentuner'):
-        (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-    if(TUNER_NAME=='hpbandster'):
-        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-
-
+    with open("modeling_stat_demo.csv", "w") as f_out:
+        for i in range(len(stats["modeling_time"])):
+            f_out.write(str(i) + "," + str(stats["modeling_time"][i]) + "," + str(stats["modeling_iteration"][i]) + "\n")
 
     plot=0
     if plot==1:

@@ -262,7 +262,9 @@ class GPTune(object):
             "time_sample_init": 0,
             "time_fun": 0,
             "time_search": 0,
-            "time_model": 0
+            "time_model": 0,
+            "modeling_time":[],
+            "modeling_iteration":[]
         }
         time_fun=0
         time_sample_init=0
@@ -381,6 +383,7 @@ class GPTune(object):
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
             print("MLA iteration: ",optiter)
+            stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
@@ -419,10 +422,12 @@ class GPTune(object):
                             neg_log_marginal_likelihood,
                             gradients,
                             iteration)
+                    stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     modelers[o].train(data = tmpdata, **kwargs)
 
             t2 = time.time_ns()
+            stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
@@ -479,7 +484,9 @@ class GPTune(object):
             "time_sample_init": 0,
             "time_fun": 0,
             "time_search": 0,
-            "time_model": 0
+            "time_model": 0,
+            "modeling_time":[],
+            "modeling_iteration":[]
         }
         time_fun=0
         time_sample_init=0
@@ -493,7 +500,7 @@ class GPTune(object):
 
         if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
             print('NSmin>=NS, no need to run MLA. Returning...')
-            return (copy.deepcopy(self.data), None,stats)
+            return (copy.deepcopy(self.data), None, stats)
 
         t3 = time.time_ns()
 
@@ -612,6 +619,7 @@ class GPTune(object):
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
             print("MLA iteration: ",optiter)
+            stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
@@ -637,9 +645,16 @@ class GPTune(object):
                     tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
                 # print(tmpdata.P[0])
-                modelers[o].train(data = tmpdata, **kwargs)
+                if (kwargs["model_class"] == "Model_LCM"):
+                    (bestxopt, neg_log_marginal_likelihood,
+                            gradients, iteration) = \
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    stats["modeling_iteration"][optiter-1] += iteration
+                else:
+                    modelers[o].train(data = tmpdata, **kwargs)
 
             t2 = time.time_ns()
+            stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()

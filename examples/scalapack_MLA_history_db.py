@@ -85,8 +85,10 @@ def main():
     # Parse command line arguments
     args = parse_args()
 
-    mmax = args.mmax
-    nmax = args.nmax
+    #mmax = args.mmax
+    #nmax = args.nmax
+    mmax = 16000
+    nmax = 16000
     ntask = args.ntask
     nodes = args.nodes
     cores = args.cores
@@ -95,7 +97,7 @@ def main():
     nruns = args.nruns
     truns = args.truns
     JOBID = args.jobid
-    TUNER_NAME = args.optimization
+    TUNER_NAME = 'GPTune'
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -143,7 +145,6 @@ def main():
     options.validate(computer=computer)
 
     data = Data(problem)
-    giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
 
     # setting to invoke history database
     history_db = HistoryDB()
@@ -173,10 +174,15 @@ def main():
     # setting options for loading previous data
     # for now, task parameter has to be the same.
     history_db.load_deps = {
+                #"machine_deps": {
+                #    "machine":[machine,'cori'],
+                #    "nodes":[nodes],
+                #    "cores":[i for i in range(cores-1, cores+2, 1)]
+                #},
                 "machine_deps": {
-                    "machine":[machine,'cori'],
+                    "machine":['cori'],
                     "nodes":[nodes],
-                    "cores":[i for i in range(cores-1, cores+2, 1)]
+                    "cores":[cores]
                 },
                 "software_deps": {
                     "compile_deps": {
@@ -184,12 +190,7 @@ def main():
                             {
                                 "name":"openmpi",
                                 "version_from":[4,0,0],
-                                "version_to":[5,0,0],
-                                #"tags":"lib,mpi,openmpi"
-                            },
-                            {
-                                "name":"intelmpi"
-                                #"tags":"lib,mpi,intel,mpicc"
+                                "version_to":[5,0,0]
                             }
                         ],
                         "scalapack":[
@@ -203,55 +204,30 @@ def main():
                 }
             }
 
-    # # giventask = [[2000, 2000]]
+    #giventask = [[1600, 1600],[3200, 3200]]
+    giventask = [[128,128],[256,256],[512,512],[1024,1024],[2048,2048]]
+    #giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
 
-    # # the following will use only task lists stored in the pickle file
-    # data = Data(problem)
+    gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db)
 
-    if(TUNER_NAME=='GPTune'):
+    """ Building MLA with NI random tasks """
+    NI = ntask
+    NS = nruns
+    (data, model, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+    print("stats: ", stats)
 
-        gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db)
+    """ Print all input and parameter samples """
+    for tid in range(NI):
+        print("tid: %d" % (tid))
+        print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid].tolist())
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-        """ Building MLA with NI random tasks """
-        NI = ntask
-        NS = nruns
-        (data, model, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
-        print("stats: ", stats)
-
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-    if(TUNER_NAME=='opentuner'):
-        NI = ntask
-        NS = nruns
-        (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-    if(TUNER_NAME=='hpbandster'):
-        NI = ntask
-        NS = nruns
-        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+    with open("modeling_stat_scalapack.csv", "w") as f_out:
+        for i in range(len(stats["modeling_time"])):
+            f_out.write(str(i) + "," + str(stats["modeling_time"][i]) + "," + str(stats["modeling_iteration"][i]) + "\n")
 
 def parse_args():
 
