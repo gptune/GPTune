@@ -329,7 +329,7 @@ double fun_jac // negloglike_and_grads
 
     double* theta = params;                 // length scales of each kernel k_q
     double* var   = theta + z->NL * z->DI;  // variance of each kernel k_q
-    double* kappa = var   + z->NL;          // YL: diagonal regularizer in B_q ??? not documented in the paper?  
+    double* kappa = var   + z->NL;          // YL: diagonal regularizer added to B_q  
     double* sigma = kappa + z->NL * z->NT;  // diagonal matrix D of variances in LCM
     double* ws    = sigma + z->NT;          // W_q used to form B_q
     
