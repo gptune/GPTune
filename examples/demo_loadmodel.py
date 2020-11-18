@@ -211,7 +211,7 @@ if __name__ == '__main__':
         #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="mle")
         #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="aic")
         #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="bic")
-        (data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), method="max_evals")
+        (data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, method="max_evals")
         #(data, modeler, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), model_uids=model_uids)
         # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)

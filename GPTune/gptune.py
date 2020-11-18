@@ -81,50 +81,41 @@ class GPTune(object):
         if self.history_db.machine_deps["cores"] == "Unknown":
             self.history_db.machine_deps["cores"] = self.computer.cores
 
-    def MLA_LoadModel(self, NS, NS1 = None, NI = None, Igiven = None, method = "maxevals", model_uids = None, **kwargs):
-        print('\n\n\n------Starting MLA with Trained Model with %d tasks and %d samples each '%(NI,NS))
+    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", model_uids = None, **kwargs):
+        print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0
         }
         time_fun=0
-        time_sample_init=0
         time_search=0
         time_model=0
 
         """ Load history function evaluation data """
         self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
-
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         if (self.data.P is not None):
             NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
 
-        if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
-            print('NSmin>=NS, no need to run MLA. Returning...')
-            return (copy.deepcopy(self.data), None,stats)
+        #if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
+        #    print('NSmin>=NS, no need to run MLA. Returning...')
+        #    return (copy.deepcopy(self.data), None,stats)
+        """ Set (additional) number of samples for autotuning """
+        NS = NSmin + NS
 
         t3 = time.time_ns()
-
-        t1 = time.time_ns()
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
-
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
-
         if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Igiven
 
-########## normalize the data as the user always work in the original space
+        # normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
             tmp=[]
             for x in self.data.P:
@@ -137,50 +128,14 @@ class GPTune(object):
         if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
             self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)
 
-        sampler = eval(f'{kwargs["sample_class"]}()')
-        if (self.data.I is None):
-
-            if (NI is None):
-                raise Exception("Number of problems to be generated (NI) is not defined")
-
-            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
-            self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
-            # print("riji",type(self.data.I),type(self.data.I[0]))
-            self.data.D = [{}] * NI
-        else:
-            if (self.data.D is None):
-                self.data.D = [{}] * NI
+        if (self.data.D is None):
+            self.data.D = [{}] * len(self.data.I) #NI
 
         if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
-        if (NSmin<NS1):
-            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-            tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-            if (NSmin>0):
-                for i in range(len(self.data.P)):
-                    NSi = self.data.P[i].shape[0]
-                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
-
         if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
             raise Exception("len(self.data.O) !=len(self.data.I)")
-
-        t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
-
-        t1 = time.time_ns()
-        if (NSmin<NS1):
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.history_db, options = kwargs)
-            if(NSmin==0): # no existing tuning data is available
-                self.data.O = tmpO
-                self.data.P = tmpP
-            else:
-                for i in range(len(self.data.P)):
-                    self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
-                    self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
-
-        t2 = time.time_ns()
-        time_fun = time_fun + (t2-t1)/1e9
 
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
         for i in range(self.problem.DO):
@@ -255,20 +210,6 @@ class GPTune(object):
                 for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
                     tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
-#                if (kwargs["model_class"] == "Model_LCM"):
-#                    (bestxopt, neg_log_marginal_likelihood,
-#                            gradients, iteration) = \
-#                        modelers[o].train(data = tmpdata, **kwargs)
-#                    self.history_db.update_model_LCM(
-#                            o,
-#                            self.problem,
-#                            self.data.I,
-#                            bestxopt,
-#                            neg_log_marginal_likelihood,
-#                            gradients,
-#                            iteration)
-#                else:
-#                    modelers[o].train(data = tmpdata, **kwargs)
 
             t2 = time.time_ns()
             time_model = time_model + (t2-t1)/1e9
@@ -311,7 +252,6 @@ class GPTune(object):
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
         stats['time_search'] = time_search
-        stats['time_sample_init'] = time_sample_init
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -528,7 +468,7 @@ class GPTune(object):
         if self.history_db.history_db == 1:
             return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
         if self.history_db.history_db == 1 and self.history_db.load_model == 1:
-            return self.MLA_LoadModel(NS, NS1, NI, Igiven)
+            return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
 
         print('\n\n\n------Starting MLA with %d tasks and %d samples each '%(NI,NS))
         stats = {
