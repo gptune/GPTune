@@ -89,10 +89,13 @@ class Model_GPy_LCM(Model):
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
+            K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
+            # print(K)
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+                # print(self.M)
         else:
             K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             if (kwargs['model_sparse']):
@@ -187,8 +190,17 @@ class Model_LCM(Model):
         gradients = best_result[2]
         iteration = best_result[3]
         kern.set_param_array(bestxopt)
+        # print(kern.get_param_array())
+        # print('theta:',kern.theta)
+        # print('var:',kern.var)
+        # print('kappa:',kern.kappa)
+        # print('sigma:',kern.sigma)
+        # print('WS:',kern.WS)
 
-        # YL: why sigma is enough to compute the likelihood, see https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html
+
+
+
+        # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
 
@@ -211,12 +223,13 @@ class Model_LCM(Model):
         #XXX TODO
         self.train(newdata, **kwargs)
 
+    # make prediction on a single sample point of a specific task tid
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         x = np.empty((1, points.shape[0] + 1))
         x[0,:-1] = points
         x[0,-1] = tid
-        (mu, var) = self.M.predict_noiseless(x)
+        (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
 
         return (mu, var)
 

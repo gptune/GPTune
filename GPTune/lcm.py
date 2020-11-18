@@ -184,7 +184,7 @@ class LCM(GPy.kern.Kern):
         _lim_val = 36.0
         epsilon = np.finfo(np.float64).resolution
 
-        def transform_x(x):
+        def transform_x(x):  # YL: Why is this needed?
 
             x2 = x.copy()
             for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
@@ -193,7 +193,7 @@ class LCM(GPy.kern.Kern):
 
             return x2
 
-        def transform_gradient(x, grad):
+        def transform_gradient(x, grad):  # YL: Why is this needed?
 
             grad2 = grad.copy()
             x2 = transform_x(x)
@@ -211,9 +211,10 @@ class LCM(GPy.kern.Kern):
         history_fs = [float('Inf')]
 
         def fun(x, *args):
-
+            
             t3 = time.time_ns()
             x2 = transform_x(x)
+            x2 = np.insert(x2,len(self.theta), np.ones(len(self.var)))  # fix self.var to 1
             _ = mpi_comm.bcast(("fun_jac", x2), root=mpi4py.MPI.ROOT)
     #            gradients[:] = 0.
             # print("~~~~")
@@ -237,14 +238,16 @@ class LCM(GPy.kern.Kern):
             return (neg_log_marginal_likelihood)
 
         def grad(x, *args):
-
+            x = np.insert(x,len(self.theta), np.ones(len(self.var))) # fix self.var to 1   
+            
             grad = - gradients
             grad = transform_gradient(x, grad)
-
+            
+            grad = np.delete(grad,list(range(len(self.theta),len(self.theta)+len(self.var)))) # fix self.var to 1
             return (grad)
 
         x0 = self.get_param_array()
-
+        x0 = np.delete(x0,list(range(len(self.theta),len(self.theta)+len(self.var))))
         # sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
         t3 = time.time_ns()
         sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
