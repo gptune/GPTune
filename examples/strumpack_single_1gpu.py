@@ -167,7 +167,7 @@ def main():
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 
 	# Input parameters
-	sp_reordering_method   = Categoricalnorm (['metis','parmetis'], transform="onehot", name="sp_reordering_method")
+	sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
 	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
 	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
 	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
@@ -211,7 +211,7 @@ def main():
 	
 	
 	# """ Building MLA with the given list of tasks """
-	giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
+	giventask = [["temp_75k.mtx"]]		
 	data = Data(problem)
 	
 	# the following makes sure the first sample is using default parameters 

@@ -11,18 +11,13 @@ module swap PrgEnv-intel PrgEnv-gnu
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 
-# module use /global/common/software/m3169/cori/modulefiles
+module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi
 module load cuda/10.2.89 
-# module load openmpi/4.0.3
+module load openmpi/4.0.1-ucx-1.9.0-cuda-10.2.89
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/common/software/sles15_cgpu/ucx/1.9.0/lib
-export PATH=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89:$PATH
-mpicc=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89/bin/mpicc
-mpicxx=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89/bin/mpicxx
-mpif90=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89/bin/mpif90
-mpirun=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89/bin/mpirun
-
+export LD_LIBRARY_PATH=/usr/common/software/sles15_cgpu/ucx/1.9.0/lib:$LD_LIBRARY_PATH
+# export PATH=/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89:$PATH
 
 
 export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
@@ -32,9 +27,9 @@ export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
-CCC=$mpicc
-CCCPP=$mpicxx
-FTN=$mpif90
+CCC=mpicc
+CCCPP=mpicxx
+FTN=mpif90
 
 #pip uninstall -r requirements.txt
 #env CC=$CCC pip install --upgrade --user -r requirements.txt
@@ -189,6 +184,25 @@ make
 make install
 
 
+cd ../../
+wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+tar -xf scotch_6.1.0.tar.gz
+cd ./scotch_6.1.0
+export SCOTCH_DIR=`pwd`/install
+mkdir install
+cd ./src
+cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+sed -i "s/CCD/#CCD/" Makefile.inc
+printf "CCD = $CCC\n" >> Makefile.inc
+sed -i "s/CCP/#CCP/" Makefile.inc
+printf "CCP = $CCC\n" >> Makefile.inc
+sed -i "s/CCS/#CCS/" Makefile.inc
+printf "CCS = $CCC\n" >> Makefile.inc
+cat Makefile.inc
+make ptscotch 
+make prefix=../install install
 
 
 cd ../../
@@ -217,9 +231,9 @@ cmake ../ \
 	-DTPL_CUBLAS_LIBRARIES="${CUDA_ROOT}/lib64/libcublas.so;${CUDA_ROOT}/lib64/libcudart.so" \
 	-DTPL_CUBLAS_INCLUDE_DIRS="${CUDA_ROOT}/include" \
 	-DCMAKE_CUDA_FLAGS="-I/global/common/software/m3169/openmpi/4.0.1/gnu-ucx-1.9.0-cuda-10.2.89/include" \
-	-DTPL_ENABLE_SCOTCH=OFF \
+	-DTPL_ENABLE_SCOTCH=ON \
 	-DTPL_ENABLE_ZFP=OFF \
-	-DTPL_ENABLE_PTSCOTCH=OFF \
+	-DTPL_ENABLE_PTSCOTCH=ON \
 	-DTPL_ENABLE_PARMETIS=ON \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_sequential.so;${MKLROOT}/lib/intel64/libmkl_core.so" \

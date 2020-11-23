@@ -64,15 +64,16 @@ def objectives(point):                  # should always use this name for user-d
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
 	# LOOKAHEAD = point['LOOKAHEAD']
-	nprows = 1
-	nproc = 1
+	nprows = 2**point['nprows']
+	npernode =  8
+	nproc = nodes*npernode
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 	N_GEMM = 2**point['N_GEMM']
 	# N_GEMM = 10000
 	MAX_BUFFER_SIZE = 2**point['MAX_BUFFER_SIZE']
 	# MAX_BUFFER_SIZE = 5000000
-	npernode =  1
+
 	nthreads = 1
 	# nthreads = int(cores / npernode)
 	npcols     = int(nproc / nprows)
@@ -146,11 +147,11 @@ def main():
 	os.environ['TUNER_NAME'] = TUNER_NAME
 	
 	
-	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
+	# nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+	# nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	matrices = ["matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
+	matrices = ["s1_mat_0_507744.bin", "matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
@@ -160,7 +161,7 @@ def main():
 	# Input parameters
 	COLPERM   = Categoricalnorm (['2', '3', '4'], transform="onehot", name="COLPERM")
 	# LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-	# nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
+	nprows    = Integer     (0, np.log2(nodes*nprocmin_pernode), transform="normalize", name="nprows")
 	# nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 200, transform="normalize", name="NREL")
@@ -171,7 +172,7 @@ def main():
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([matrix])
 	# PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	PS = Space([COLPERM, NSUP, NREL, N_GEMM, MAX_BUFFER_SIZE])
+	PS = Space([COLPERM, NSUP, NREL, N_GEMM, MAX_BUFFER_SIZE, nprows])
 	OS = Space([result])
 	cst1 = "NSUP >= NREL"
 	# cst2 = "nproc >= nprows" # intrinsically implies "p <= nproc"
@@ -216,15 +217,16 @@ def main():
 
 
 	# """ Building MLA with the given list of tasks """
-	giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
+	# giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
+	giventask = [["s1_mat_0_507744.bin"]]		
 	# giventask = [["big.rua"]]		
 	# giventask = [["Si2.bin"]]		
 	data = Data(problem)
 
 
-	# the following makes sure the first sample is using default parameters 
+	# # the following makes sure the first sample is using default parameters 
 	data.I = giventask
-	data.P = [[['4',128,20,13,22]]]
+	data.P = [[['4',128,20,13,22, 2]]]
 
 
 	if(TUNER_NAME=='GPTune'):

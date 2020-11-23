@@ -161,7 +161,7 @@ def main():
 	gridsize = Integer     (30, 100, transform="normalize", name="gridsize")
 
 	# Input parameters
-	sp_reordering_method   = Categoricalnorm (['metis','parmetis','geometric'], transform="onehot", name="sp_reordering_method")
+	sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch','ptscotch','geometric'], transform="onehot", name="sp_reordering_method")
 	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
 	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
 	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
