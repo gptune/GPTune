@@ -172,13 +172,8 @@ def main():
     # setting options for loading previous data
     # for now, task parameter has to be the same.
     history_db.load_deps = {
-                #"machine_deps": {
-                #    "machine":[machine,'cori'],
-                #    "nodes":[nodes],
-                #    "cores":[i for i in range(cores-1, cores+2, 1)]
-                #},
                 "machine_deps": {
-                    "machine":['cori'],
+                    "machine":[machine],
                     "nodes":[nodes],
                     "cores":[cores]
                 },
@@ -209,7 +204,8 @@ def main():
     """ Building MLA with NI random tasks """
     NI = ntask
     NS = nruns
-    (data, model, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+    #(data, model, stats) = gt.MLA_HistoryDB(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+    (data, model, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
