@@ -1,0 +1,417 @@
+Space([Integer(low=3000, high=8000, prior='uniform', transform='normalize')]) Space([Integer(low=1, high=16, prior='uniform', transform='normalize'),
+       Integer(low=30, high=31, prior='uniform', transform='normalize'),
+       Integer(low=1, high=31, prior='uniform', transform='normalize')]) Space([Real(low=-inf, high=inf, prior='uniform', transform='identity')]) {'cst1': 'nb * 8 * p <= n', 'cst2': 'nb * 8 * nproc <= n * p', 'cst3': 'nproc >= p'}
+
+
+------Validating the options
+  
+  total core counts provided to GPTune: 32
+   ---> distributed_memory_parallelism: False
+   ---> shared_memory_parallelism: False
+   ---> objective_evaluation_parallelism: False
+  
+  total core counts for modeling: 2
+   ---> model_processes: 1
+   ---> model_threads: 1
+   ---> model_restart_processes: 1
+   ---> model_restart_threads: 1
+  
+  total core counts for search: 1
+   ---> search_processes: 1
+   ---> search_threads: 1
+   ---> search_multitask_processes: 1
+   ---> search_multitask_threads: 1
+  
+  total core counts for objective function evaluation: 32
+   ---> core counts in a single application run: 31
+   ---> objective_multisample_processes: 1
+   ---> objective_multisample_threads: 1
+
+
+
+------Starting MLA with 11 tasks and 10 samples each 
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3000, 112, 1, 32, 1, 30, 30, 12, 2, 8, 'L', 2)] ---> PDSYEV time: [0.84]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3000, 16, 1, 32, 1, 30, 30, 24, 1, 8, 'L', 2)] ---> PDSYEV time: [0.891]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 96, 1, 32, 1, 31, 31, 15, 2, 8, 'L', 2)] ---> PDSYEV time: [0.963]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 80, 1, 32, 1, 31, 31, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [0.715]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 32, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [0.96]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 64, 1, 32, 1, 31, 31, 23, 1, 8, 'L', 2)] ---> PDSYEV time: [1.4]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3500, 128, 1, 32, 1, 30, 30, 7, 4, 8, 'L', 2)] ---> PDSYEV time: [1.22]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3500, 96, 1, 32, 1, 30, 30, 25, 1, 8, 'L', 2)] ---> PDSYEV time: [1.17]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 40, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [1.1]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 24, 1, 32, 1, 31, 31, 16, 1, 8, 'L', 2)] ---> PDSYEV time: [1.59]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4000, 88, 1, 32, 1, 30, 30, 13, 2, 8, 'L', 2)] ---> PDSYEV time: [1.56]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 64, 1, 32, 1, 31, 31, 5, 6, 8, 'L', 2)] ---> PDSYEV time: [1.5]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 40, 1, 32, 1, 31, 31, 22, 1, 8, 'L', 2)] ---> PDSYEV time: [1.83]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4000, 120, 1, 32, 1, 30, 30, 11, 2, 8, 'L', 2)] ---> PDSYEV time: [1.8]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 24, 1, 32, 1, 31, 31, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [1.57]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4500, 48, 1, 32, 1, 31, 31, 25, 1, 8, 'L', 2)] ---> PDSYEV time: [2.36]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4500, 120, 1, 32, 1, 30, 30, 6, 5, 8, 'L', 2)] ---> PDSYEV time: [2.15]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4500, 72, 1, 32, 1, 31, 31, 16, 1, 8, 'L', 2)] ---> PDSYEV time: [3.19]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4500, 32, 1, 32, 1, 30, 30, 11, 2, 8, 'L', 2)] ---> PDSYEV time: [2.56]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4500, 96, 1, 32, 1, 31, 31, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [2.23]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5000, 32, 1, 32, 1, 31, 31, 4, 7, 8, 'L', 2)] ---> PDSYEV time: [2.96]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5000, 112, 1, 32, 1, 31, 31, 13, 2, 8, 'L', 2)] ---> PDSYEV time: [2.9]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5000, 80, 1, 32, 1, 30, 30, 15, 2, 8, 'L', 2)] ---> PDSYEV time: [2.74]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5000, 64, 1, 32, 1, 30, 30, 24, 1, 8, 'L', 2)] ---> PDSYEV time: [3.09]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5000, 32, 1, 32, 1, 31, 31, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [2.91]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 48, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [3.87]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 16, 1, 32, 1, 30, 30, 10, 3, 8, 'L', 2)] ---> PDSYEV time: [3.88]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 88, 1, 32, 1, 30, 30, 13, 2, 8, 'L', 2)] ---> PDSYEV time: [4.04]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5500, 72, 1, 32, 1, 31, 31, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [3.91]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5500, 120, 1, 32, 1, 31, 31, 20, 1, 8, 'L', 2)] ---> PDSYEV time: [4.89]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 48, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [4.86]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 64, 1, 32, 1, 31, 31, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [5.02]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6000, 120, 1, 32, 1, 30, 30, 24, 1, 8, 'L', 2)] ---> PDSYEV time: [5.64]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6000, 16, 1, 32, 1, 30, 30, 11, 2, 8, 'L', 2)] ---> PDSYEV time: [5.55]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6000, 88, 1, 32, 1, 30, 30, 17, 1, 8, 'L', 2)] ---> PDSYEV time: [6.84]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6500, 32, 1, 32, 1, 30, 30, 7, 4, 8, 'L', 2)] ---> PDSYEV time: [9.32]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6500, 128, 1, 32, 1, 30, 30, 8, 3, 8, 'L', 2)] ---> PDSYEV time: [9.56]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 40, 1, 32, 1, 31, 31, 13, 2, 8, 'L', 2)] ---> PDSYEV time: [8.7]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 88, 1, 32, 1, 31, 31, 29, 1, 8, 'L', 2)] ---> PDSYEV time: [9.3]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 80, 1, 32, 1, 31, 31, 22, 1, 8, 'L', 2)] ---> PDSYEV time: [9.32]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 24, 1, 32, 1, 30, 30, 15, 2, 8, 'L', 2)] ---> PDSYEV time: [9.81]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 64, 1, 32, 1, 30, 30, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [10.6]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7000, 48, 1, 32, 1, 31, 31, 9, 3, 8, 'L', 2)] ---> PDSYEV time: [11.3]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 96, 1, 32, 1, 30, 30, 24, 1, 8, 'L', 2)] ---> PDSYEV time: [11.]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7000, 112, 1, 32, 1, 31, 31, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [9.56]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 64, 1, 32, 1, 31, 31, 5, 6, 8, 'L', 2)] ---> PDSYEV time: [21.]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7500, 104, 1, 32, 1, 30, 30, 14, 2, 8, 'L', 2)] ---> PDSYEV time: [22.6]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 128, 1, 32, 1, 31, 31, 22, 1, 8, 'L', 2)] ---> PDSYEV time: [22.7]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 16, 1, 32, 1, 31, 31, 12, 2, 8, 'L', 2)] ---> PDSYEV time: [23.]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7500, 40, 1, 32, 1, 30, 30, 27, 1, 8, 'L', 2)] ---> PDSYEV time: [23.3]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 72, 1, 32, 1, 30, 30, 15, 2, 8, 'L', 2)] ---> PDSYEV time: [25.2]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 48, 1, 32, 1, 30, 30, 7, 4, 8, 'L', 2)] ---> PDSYEV time: [26.1]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 8000, 24, 1, 32, 1, 31, 31, 20, 1, 8, 'L', 2)] ---> PDSYEV time: [27.2]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 104, 1, 32, 1, 30, 30, 26, 1, 8, 'L', 2)] ---> PDSYEV time: [24.8]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 8000, 104, 1, 32, 1, 31, 31, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [24.2]
+MLA iteration:  0
+exec /global/homes/o/osni/Projects/GPTune/GPTune/lcm.py args None nproc 1
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 8, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [0.709]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 8, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [1.05]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4000, 16, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [1.49]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4500, 128, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [2.13]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5000, 120, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [2.89]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 8, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [3.91]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 8, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [4.89]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 8, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [8.66]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 8, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [9.85]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7500, 128, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [21.6]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 128, 1, 32, 1, 30, 30, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [25.]
+MLA iteration:  1
+exec /global/homes/o/osni/Projects/GPTune/GPTune/lcm.py args None nproc 1
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3000, 120, 1, 32, 1, 30, 30, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [0.881]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 128, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [1.07]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 128, 1, 32, 1, 31, 31, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [1.47]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4500, 128, 1, 32, 1, 31, 31, 28, 1, 8, 'L', 2)] ---> PDSYEV time: [2.31]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5000, 128, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [2.85]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 8, 1, 32, 1, 30, 30, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [3.89]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 8, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [5.13]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 120, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [8.93]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 16, 1, 32, 1, 30, 30, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [10.]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 128, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [22.]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 8000, 128, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [25.1]
+MLA iteration:  2
+exec /global/homes/o/osni/Projects/GPTune/GPTune/lcm.py args None nproc 1
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 8, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [0.709]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3500, 8, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [1.06]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 128, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [1.47]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4500, 120, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [2.14]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5000, 128, 1, 32, 1, 30, 30, 3, 10, 8, 'L', 2)] ---> PDSYEV time: [2.72]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 120, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [3.89]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 8, 1, 32, 1, 31, 31, 29, 1, 8, 'L', 2)] ---> PDSYEV time: [5.37]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6500, 16, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [8.42]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 120, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [9.84]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 120, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [21.5]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 8, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [25.]
+MLA iteration:  3
+exec /global/homes/o/osni/Projects/GPTune/GPTune/lcm.py args None nproc 1
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 96, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [0.7]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3500, 16, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [1.07]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 120, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [1.54]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4500, 128, 1, 32, 1, 30, 30, 28, 1, 8, 'L', 2)] ---> PDSYEV time: [2.35]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5000, 8, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [2.68]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5500, 8, 1, 32, 1, 30, 30, 29, 1, 8, 'L', 2)] ---> PDSYEV time: [4.36]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 120, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [5.23]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 6500, 8, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [8.23]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 7000, 8, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [10.2]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 128, 1, 32, 1, 31, 31, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [21.9]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 8000, 120, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [25.]
+MLA iteration:  4
+exec /global/homes/o/osni/Projects/GPTune/GPTune/lcm.py args None nproc 1
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 3000, 96, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [0.693]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 3500, 8, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [1.05]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 4000, 128, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [1.55]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 4500, 128, 1, 32, 1, 30, 30, 4, 7, 8, 'L', 2)] ---> PDSYEV time: [2.31]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 5000, 120, 1, 32, 1, 30, 30, 1, 30, 8, 'L', 2)] ---> PDSYEV time: [2.69]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 5500, 8, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [4.08]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6000, 8, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [4.93]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 6500, 8, 1, 32, 1, 31, 31, 31, 1, 8, 'L', 2)] ---> PDSYEV time: [9.17]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7000, 128, 1, 32, 1, 31, 31, 1, 31, 8, 'L', 2)] ---> PDSYEV time: [10.5]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 31 nthread 1 npernode 31
+[('EVX', 7500, 8, 1, 32, 1, 31, 31, 2, 15, 8, 'L', 2)] ---> PDSYEV time: [21.9]
+execute /global/u1/o/osni/Projects/GPTune-OAM/APPS/pdsyev/bin/cori/pdsepdriver nproc 30 nthread 1 npernode 30
+[('EVX', 8000, 128, 1, 32, 1, 30, 30, 30, 1, 8, 'L', 2)] ---> PDSYEV time: [25.5]
+stats:  {'time_total': 3230.194435698, 'time_sample_init': 0.025409707, 'time_fun': 3109.614336692, 'time_search': 89.479926995, 'time_model': 31.070882686000004}
+tid: 0
+    n: 3000
+    Ps[nb,nproc,p] and Os[r]:
+        [14, 30, 12] [0.84] 0
+        [2, 30, 24] [0.891] 1
+        [12, 31, 15] [0.963] 2
+        [10, 31, 26] [0.715] 3
+        [4, 31, 2] [0.96] 4
+        [1, 31, 30] [0.709] 5
+        [15, 30, 2] [0.881] 6
+        [1, 31, 30] [0.709] 7
+        [12, 31, 31] [0.7] 8
+        [12, 31, 31] [0.693] 9
+    Popt: [12, 31, 31] , Yopt: 0.693 , run: 9
+tid: 1
+    n: 3500
+    Ps[nb,nproc,p] and Os[r]:
+        [8, 31, 23] [1.4] 0
+        [16, 30, 7] [1.22] 1
+        [12, 30, 25] [1.17] 2
+        [5, 31, 2] [1.1] 3
+        [3, 31, 16] [1.59] 4
+        [1, 31, 31] [1.05] 5
+        [16, 31, 2] [1.07] 6
+        [1, 31, 31] [1.06] 7
+        [2, 30, 30] [1.07] 8
+        [1, 30, 1] [1.05] 9
+    Popt: [1, 31, 31] , Yopt: 1.05 , run: 5
+tid: 2
+    n: 4000
+    Ps[nb,nproc,p] and Os[r]:
+        [11, 30, 13] [1.56] 0
+        [8, 31, 5] [1.5] 1
+        [5, 31, 22] [1.83] 2
+        [15, 30, 11] [1.8] 3
+        [3, 31, 26] [1.57] 4
+        [2, 30, 1] [1.49] 5
+        [16, 31, 3] [1.47] 6
+        [16, 31, 30] [1.47] 7
+        [15, 31, 31] [1.54] 8
+        [16, 31, 31] [1.55] 9
+    Popt: [16, 31, 3] , Yopt: 1.47 , run: 6
+tid: 3
+    n: 4500
+    Ps[nb,nproc,p] and Os[r]:
+        [6, 31, 25] [2.36] 0
+        [15, 30, 6] [2.15] 1
+        [9, 31, 16] [3.19] 2
+        [4, 30, 11] [2.56] 3
+        [12, 31, 26] [2.23] 4
+        [16, 31, 30] [2.13] 5
+        [16, 31, 28] [2.31] 6
+        [15, 30, 30] [2.14] 7
+        [16, 30, 28] [2.35] 8
+        [16, 30, 4] [2.31] 9
+    Popt: [16, 31, 30] , Yopt: 2.13 , run: 5
+tid: 4
+    n: 5000
+    Ps[nb,nproc,p] and Os[r]:
+        [4, 31, 4] [2.96] 0
+        [14, 31, 13] [2.9] 1
+        [10, 30, 15] [2.74] 2
+        [8, 30, 24] [3.09] 3
+        [4, 31, 26] [2.91] 4
+        [15, 31, 31] [2.89] 5
+        [16, 31, 1] [2.85] 6
+        [16, 30, 3] [2.72] 7
+        [1, 30, 1] [2.68] 8
+        [15, 30, 1] [2.69] 9
+    Popt: [1, 30, 1] , Yopt: 2.68 , run: 8
+tid: 5
+    n: 5500
+    Ps[nb,nproc,p] and Os[r]:
+        [6, 30, 30] [3.87] 0
+        [2, 30, 10] [3.88] 1
+        [11, 30, 13] [4.04] 2
+        [9, 31, 3] [3.91] 3
+        [15, 31, 20] [4.89] 4
+        [1, 30, 30] [3.91] 5
+        [1, 30, 2] [3.89] 6
+        [15, 30, 1] [3.89] 7
+        [1, 30, 29] [4.36] 8
+        [1, 31, 1] [4.08] 9
+    Popt: [6, 30, 30] , Yopt: 3.87 , run: 0
+tid: 6
+    n: 6000
+    Ps[nb,nproc,p] and Os[r]:
+        [6, 31, 30] [4.86] 0
+        [8, 31, 3] [5.02] 1
+        [15, 30, 24] [5.64] 2
+        [2, 30, 11] [5.55] 3
+        [11, 30, 17] [6.84] 4
+        [1, 31, 30] [4.89] 5
+        [1, 31, 1] [5.13] 6
+        [1, 31, 29] [5.37] 7
+        [15, 31, 31] [5.23] 8
+        [1, 31, 2] [4.93] 9
+    Popt: [6, 31, 30] , Yopt: 4.86 , run: 0
+tid: 7
+    n: 6500
+    Ps[nb,nproc,p] and Os[r]:
+        [4, 30, 7] [9.32] 0
+        [16, 30, 8] [9.56] 1
+        [5, 31, 13] [8.7] 2
+        [11, 31, 29] [9.3] 3
+        [10, 31, 22] [9.32] 4
+        [1, 31, 2] [8.66] 5
+        [15, 31, 1] [8.93] 6
+        [2, 30, 30] [8.42] 7
+        [1, 30, 30] [8.23] 8
+        [1, 31, 31] [9.17] 9
+    Popt: [1, 30, 30] , Yopt: 8.23 , run: 8
+tid: 8
+    n: 7000
+    Ps[nb,nproc,p] and Os[r]:
+        [3, 30, 15] [9.81] 0
+        [8, 30, 26] [10.6] 1
+        [6, 31, 9] [11.3] 2
+        [12, 30, 24] [11.] 3
+        [14, 31, 3] [9.56] 4
+        [1, 30, 30] [9.85] 5
+        [2, 30, 2] [10.] 6
+        [15, 30, 1] [9.84] 7
+        [1, 30, 30] [10.2] 8
+        [16, 31, 1] [10.5] 9
+    Popt: [14, 31, 3] , Yopt: 9.56 , run: 4
+tid: 9
+    n: 7500
+    Ps[nb,nproc,p] and Os[r]:
+        [8, 31, 5] [21.] 0
+        [13, 30, 14] [22.6] 1
+        [16, 31, 22] [22.7] 2
+        [2, 31, 12] [23.] 3
+        [5, 30, 27] [23.3] 4
+        [16, 30, 1] [21.6] 5
+        [16, 31, 1] [22.] 6
+        [15, 31, 30] [21.5] 7
+        [16, 31, 30] [21.9] 8
+        [1, 31, 2] [21.9] 9
+    Popt: [8, 31, 5] , Yopt: 21.0 , run: 0
+tid: 10
+    n: 8000
+    Ps[nb,nproc,p] and Os[r]:
+        [9, 30, 15] [25.2] 0
+        [6, 30, 7] [26.1] 1
+        [3, 31, 20] [27.2] 2
+        [13, 30, 26] [24.8] 3
+        [13, 31, 3] [24.2] 4
+        [16, 30, 2] [25.] 5
+        [16, 31, 2] [25.1] 6
+        [1, 30, 1] [25.] 7
+        [15, 31, 1] [25.] 8
+        [16, 30, 30] [25.5] 9
+    Popt: [13, 31, 3] , Yopt: 24.2 , run: 4

@@ -137,6 +137,7 @@ def main():
 	optimization = args.optimization
 	nruns = args.nruns
 	truns = args.truns
+	obj = args.obj
 	# JOBID = args.jobid
 	
 	TUNER_NAME = args.optimization
@@ -172,10 +173,7 @@ def main():
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
-
-
-	# target='memory'
-	target='time'
+	target=obj
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -190,7 +188,7 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class '] = 'Model_LCM' # 'Model_LCM'
 	options['verbose'] = False
 
 	options.validate(computer = computer)
@@ -207,9 +205,9 @@ def main():
 
 
 	# """ Building MLA with the given list of tasks """
-	# giventask = [["big.rua"]]		
+	giventask = [["big.rua"]]		
 	# giventask = [["Si2.bin"]]	
-	giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
+	# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
 	data = Data(problem)
 
 
@@ -291,6 +289,7 @@ def parse_args():
 	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
 	parser.add_argument('-stepid', type=int, default=-1, help='step ID')
 	parser.add_argument('-phase', type=int, default=0, help='phase')
+	parser.add_argument('-obj', type=str, default='time', help='Tuning objective (time or memory)')
 
 	args   = parser.parse_args()
 	return args

@@ -165,7 +165,7 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class '] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
 
     options.validate(computer=computer)

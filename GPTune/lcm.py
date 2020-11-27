@@ -59,18 +59,19 @@ class LCM(GPy.kern.Kern):
         self.num_outputs = num_outputs
         self.Q = Q
 
-    #        self.theta =       np.ones(Q * input_dim)
-    #        self.var   =       np.ones(Q)
-    #        self.kappa =  .5 * np.ones(Q * num_outputs)
-    #        self.sigma =       np.ones(num_outputs)
-    #        self.WS    =  .5 * np.random.randn(Q * num_outputs)
+        self.theta =       np.exp(np.random.randn(Q * input_dim))
+        self.var   =       np.exp(np.random.randn(Q))
+        self.kappa =       np.exp(np.random.randn(Q * num_outputs))
+        self.sigma =       np.exp(np.random.randn(num_outputs))
+        self.WS    =       np.random.randn(Q * num_outputs)
+        # print('why????',self.theta,self.var,self.kappa,self.sigma,self.WS)
 
-        self.theta =  0.54132485 * np.ones(Q * input_dim)
-        self.var   =  0.54132485 * np.ones(Q)
-        self.kappa = -0.43275213 * np.ones(Q * num_outputs)
-        self.sigma =  0.54132485 * np.ones(num_outputs)
-    #        np.random.seed(0)
-        self.WS    =   .5 * np.random.randn(Q * num_outputs)
+    #     self.theta =  0.54132485 * np.ones(Q * input_dim)
+    #     self.var   =  0.54132485 * np.ones(Q)
+    #     self.kappa = -0.43275213 * np.ones(Q * num_outputs)
+    #     self.sigma =  0.54132485 * np.ones(num_outputs)
+    # #        np.random.seed(0)
+    #     self.WS    =   .5 * np.random.randn(Q * num_outputs)
 
         self.BS    = np.empty(Q * self.num_outputs ** 2)
 
@@ -79,6 +80,34 @@ class LCM(GPy.kern.Kern):
         x = np.concatenate([self.theta, self.var, self.kappa, self.sigma, self.WS])
 
         return x
+
+
+    def get_correlation_metric(self):
+        # self.kappa =  b_{1,1}, ..., b_{delta,1}, ..., b_{1,Q}, ..., b_{\delta,Q}
+        # self.sigma = d_1, ..., d_delta
+        # self.WS = a_{1,1}, ..., a_{delta,1}, ..., a_{1,Q}, ..., a_{delta,Q}
+        kappa = self.kappa
+        sigma = self.sigma
+        WS = self.WS
+        delta = len(sigma)
+        Q = int(len(WS)/delta)
+        # print('NI = ', delta)
+        # print('Q = ', Q)
+        B = np.zeros((delta, delta, Q))
+        for i in range(Q):
+            Wq = WS[i*delta : (i+1)*delta]
+            Kappa_q = kappa[i*delta : (i+1)*delta]
+            B[:, :, i] = np.outer(Wq, Wq) + np.diag(Kappa_q)
+            # print("In model.py, i = ", i)
+            # print(B[:, :, i])
+            
+        # return C_{i, i'}
+        C = np.zeros((delta, delta))
+        for i in range(delta):
+            for ip in range(i, delta):
+                C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
+        return C
+
 
     def set_param_array(self, x):
 
@@ -186,19 +215,32 @@ class LCM(GPy.kern.Kern):
 
         def transform_x(x):  # YL: Why is this needed?
 
-            x2 = x.copy()
-            for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
-                x2[i] = np.where(x[i]>_lim_val, x[i], np.log1p(np.exp(np.clip(x[i], -_log_lim_val, _lim_val)))) #+ epsilon
-                #x2[i] = np.where(x[i]>_lim_val, x[i], np.log(np.expm1(x[i]))) #+ epsilon
+            x2 = np.exp(x.copy())
+
+            x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = np.log(x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x)))])
+
+            # for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
+            #     x2[i] = np.where(x[i]>_lim_val, x[i], np.log1p(np.exp(np.clip(x[i], -_log_lim_val, _lim_val)))) #+ epsilon
+            #     #x2[i] = np.where(x[i]>_lim_val, x[i], np.log(np.expm1(x[i]))) #+ epsilon
 
             return x2
+
+        def inverse_transform_x(x):  # YL: Why is this needed?
+
+            x0 = x.copy()
+            ws = x0[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))]
+            x2 = np.log(x0)
+            x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = ws
+            return x2
+            
+
 
         def transform_gradient(x, grad):  # YL: Why is this needed?
 
             grad2 = grad.copy()
-            x2 = transform_x(x)
-            for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
-                grad2[i] = grad[i]*np.where(x2[i]>_lim_val, 1., - np.expm1(-x2[i]))
+            # x2 = transform_x(x)
+            # for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
+            #     grad2[i] = grad[i]*np.where(x2[i]>_lim_val, 1., - np.expm1(-x2[i]))
 
             return grad2
 
@@ -213,7 +255,7 @@ class LCM(GPy.kern.Kern):
             
             t3 = time.time_ns()
             x2 = transform_x(x)
-            x2 = np.insert(x2,len(self.theta), np.ones(len(self.var)))  # fix self.var to 1
+            # x2 = np.insert(x2,len(self.theta), np.ones(len(self.var)))  # fix self.var to 1
             _ = mpi_comm.bcast(("fun_jac", x2), root=mpi4py.MPI.ROOT)
     #            gradients[:] = 0.
             # print("~~~~")
@@ -233,26 +275,38 @@ class LCM(GPy.kern.Kern):
             return (neg_log_marginal_likelihood)
 
         def grad(x, *args):
-            x = np.insert(x,len(self.theta), np.ones(len(self.var))) # fix self.var to 1   
-            
+            # x = np.insert(x,len(self.theta), np.ones(len(self.var))) # fix self.var to 1   
             grad = - gradients
             grad = transform_gradient(x, grad)
             
-            grad = np.delete(grad,list(range(len(self.theta),len(self.theta)+len(self.var)))) # fix self.var to 1
+            # grad = np.delete(grad,list(range(len(self.theta),len(self.theta)+len(self.var)))) # fix self.var to 1
             return (grad)
 
         x0 = self.get_param_array()
-        x0 = np.delete(x0,list(range(len(self.theta),len(self.theta)+len(self.var))))
+        x0_log = inverse_transform_x(x0)
+        
+        # x0_log[0]=0
+        x0_log[list(range(len(self.theta),len(self.theta)+len(self.var)))]=0
+        # x0_log[2]=0
+        # x0_log[3]=-10
+        # x0_log[4]=-10
+        # print(x0_log,'before')
         # sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
         t3 = time.time_ns()
-        sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad)
+
+        # bounds = [(-10, 10)] * len(x0_log)
+        bounds = [(None, None)] * len(self.theta) + [(None, None)] * len(self.var) + [(None, None)] * len(self.kappa)+ [(-20, -14)] * len(self.sigma)+ [(0, 10)] * len(self.WS)
+        # print(bounds)
+
+        # sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad)
+        sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad, bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})        
+        
+        # print(sol.x,'after')
+        # print(transform_x(sol.x),'after exp')  # sol.x is not yet transformed
+
         t4 = time.time_ns()
         if (kwargs['verbose']):
             print('L-BFGS time: ',(t4-t3)/1e9)
-
-        # print("!!!!")
-    #            bounds = [(None, None)] * len(x0)
-    #            sol = scipy.optimize.minimize(fun, x0, args=(), method='L-BFGS-B', jac=grad, bounds=None, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1, 'maxiter': 1, 'iprint': -1, 'maxls': 100})
 
         if (kwargs['verbose']):
             print('fun      : ', sol.fun)
@@ -266,7 +320,7 @@ class LCM(GPy.kern.Kern):
             #print('x        : ', x)
     #            xopt = transform_x(sol.x)
     #            fopt = sol.fun
-        xopt = history_xs[history_fs.index(min(history_fs))]
+        xopt = history_xs[history_fs.index(min(history_fs))] # history_xs is already transformed
         fopt = min(history_fs)
 
         if(xopt is None):
@@ -290,11 +344,9 @@ class LCM(GPy.kern.Kern):
     #        xopt = transform_x(xopt)
 
         self.set_param_array(xopt)
-
         _ = mpi_comm.bcast(("end", None), root=mpi4py.MPI.ROOT)
 
         mpi_comm.Disconnect()
-
         return (xopt, fopt)
 
 if __name__ == "__main__":

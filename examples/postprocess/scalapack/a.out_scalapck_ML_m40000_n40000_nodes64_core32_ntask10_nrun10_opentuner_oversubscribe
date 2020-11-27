@@ -1,0 +1,410 @@
+Space([Integer(low=1280, high=40000, prior='uniform', transform='normalize'),
+       Integer(low=1280, high=40000, prior='uniform', transform='normalize')]) Space([Integer(low=1, high=16, prior='uniform', transform='normalize'),
+       Integer(low=1, high=16, prior='uniform', transform='normalize'),
+       Integer(low=2, high=5, prior='uniform', transform='normalize'),
+       Integer(low=1, high=2048, prior='uniform', transform='normalize')]) Space([Real(low=-inf, high=inf, prior='uniform', transform='identity')]) {'cst1': 'mb*8 * p <= m', 'cst2': 'nb * 8 * 64 * 2**npernode <= n * p', 'cst3': '64 * 2**npernode >= p'}
+
+
+------Validating the options
+  
+  total core counts provided to GPTune: 2048
+   ---> distributed_memory_parallelism: False
+   ---> shared_memory_parallelism: False
+   ---> objective_evaluation_parallelism: False
+  
+  total core counts for modeling: 2
+   ---> model_processes: 1
+   ---> model_threads: 1
+   ---> model_restart_processes: 1
+   ---> model_restart_threads: 1
+  
+  total core counts for search: 1
+   ---> search_processes: 1
+   ---> search_threads: 1
+   ---> search_multitask_processes: 1
+   ---> search_multitask_threads: 1
+  
+  total core counts for objective function evaluation: 2048
+   ---> core counts in a single application run: 2047
+   ---> objective_multisample_processes: 1
+   ---> objective_multisample_threads: 1
+Start OpenTuner
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 9496, 7549, 64, 32, 16, 64, 2, 1014, 338, 3, 1.0, 16)]  scalapack time:  [6.360173]
+[9496, 7549] [2, 8, 4, 338] 6.360173 OK 27 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 861 nthreads 2 npernode 16
+[('QR', 9496, 7549, 64, 32, 16, 64, 2, 861, 287, 3, 1.0, 16)]  scalapack time:  [6.291494]
+[9496, 7549] [2, 8, 4, 287] 6.291494 OK 36 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 456 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 16, 64, 4, 456, 57, 8, 1.0, 8)]  scalapack time:  [1.350061]
+[9496, 7549] [2, 8, 3, 57] 1.350061 OK 36 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 456 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 24, 80, 4, 456, 57, 8, 1.0, 8)]  scalapack time:  [2.002447]
+[9496, 7549] [3, 10, 3, 57] 2.002447 OK 36 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 294 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 24, 64, 4, 294, 294, 1, 1.0, 8)]  scalapack time:  [6.304717]
+[9496, 7549] [3, 8, 3, 294] 6.304717 OK 36 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 456 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 24, 64, 4, 456, 57, 8, 1.0, 8)]  scalapack time:  [1.833417]
+[9496, 7549] [3, 8, 3, 57] 1.833417 OK 36 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 231 nthreads 8 npernode 4
+[('QR', 9496, 7549, 64, 32, 16, 64, 8, 231, 77, 3, 1.0, 4)]  scalapack time:  [4.554407]
+[9496, 7549] [2, 8, 2, 77] 4.554407 OK 36 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 375 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 16, 56, 4, 375, 375, 1, 1.0, 8)]  scalapack time:  [7.167258]
+[9496, 7549] [2, 7, 3, 375] 7.167258 OK 36 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 470 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 16, 64, 4, 470, 94, 5, 1.0, 8)]  scalapack time:  [2.340727]
+[9496, 7549] [2, 8, 3, 94] 2.340727 OK 36 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1022 nthreads 2 npernode 16
+[('QR', 9496, 7549, 64, 32, 16, 64, 2, 1022, 146, 7, 1.0, 16)]  scalapack time:  [2.40124]
+[9496, 7549] [2, 8, 4, 146] 2.40124 OK 36 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 24, 24, 2, 1008, 28, 36, 1.0, 16)]  scalapack time:  [4.991937]
+[21487, 20981] [3, 3, 4, 28] 4.991937 OK 10 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 24, 2, 1008, 28, 36, 1.0, 16)]  scalapack time:  [5.921543]
+[21487, 20981] [1, 3, 4, 28] 5.921543 OK 10 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 24, 112, 2, 1008, 28, 36, 1.0, 16)]  scalapack time:  [5.114298]
+[21487, 20981] [3, 14, 4, 28] 5.114298 OK 12 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 692 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 24, 24, 2, 692, 692, 1, 1.0, 16)]  scalapack time:  [60.915557]
+[21487, 20981] [3, 3, 4, 692] 60.915557 OK 12 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 21487, 20981, 64, 32, 96, 24, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [6.232048]
+[21487, 20981] [12, 3, 3, 28] 6.232048 OK 12 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 16, 2, 1008, 28, 36, 1.0, 16)]  scalapack time:  [4.185512]
+[21487, 20981] [1, 2, 4, 28] 4.185512 OK 15 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 8, 2, 1008, 28, 36, 1.0, 16)]  scalapack time:  [4.90903]
+[21487, 20981] [1, 1, 4, 28] 4.90903 OK 15 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 936 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 16, 2, 936, 117, 8, 1.0, 16)]  scalapack time:  [11.179739]
+[21487, 20981] [1, 2, 4, 117] 11.179739 OK 15 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 988 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 16, 2, 988, 247, 4, 1.0, 16)]  scalapack time:  [19.363976]
+[21487, 20981] [1, 2, 4, 247] 19.363976 OK 15 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 968 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 16, 16, 2, 968, 121, 8, 1.0, 16)]  scalapack time:  [11.602671]
+[21487, 20981] [2, 2, 4, 121] 11.602671 OK 15 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1023 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 16, 16, 2, 1023, 93, 11, 1.0, 16)]  scalapack time:  [9.155704]
+[21487, 20981] [2, 2, 4, 93] 9.155704 OK 15 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 240 nthreads 8 npernode 4
+[('QR', 37073, 20774, 64, 32, 8, 24, 8, 240, 24, 10, 1.0, 4)]  scalapack time:  [6.009187]
+[37073, 20774] [1, 3, 2, 24] 6.009187 OK 10 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 8, 24, 2, 1008, 24, 42, 1.0, 16)]  scalapack time:  [5.262159]
+[37073, 20774] [1, 3, 4, 24] 5.262159 OK 10 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1000 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 8, 24, 2, 1000, 40, 25, 1.0, 16)]  scalapack time:  [5.331883]
+[37073, 20774] [1, 3, 4, 40] 5.331883 OK 11 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 8, 56, 2, 1008, 24, 42, 1.0, 16)]  scalapack time:  [6.844701]
+[37073, 20774] [1, 7, 4, 24] 6.844701 OK 14 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 48, 104, 2, 1008, 24, 42, 1.0, 16)]  scalapack time:  [7.247686]
+[37073, 20774] [6, 13, 4, 24] 7.247686 OK 15 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 8, 40, 2, 1008, 24, 42, 1.0, 16)]  scalapack time:  [6.666105]
+[37073, 20774] [1, 5, 4, 24] 6.666105 OK 16 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 24, 24, 2, 1008, 18, 56, 1.0, 16)]  scalapack time:  [4.984164]
+[37073, 20774] [3, 3, 4, 18] 4.984164 OK 16 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 37073, 20774, 64, 32, 24, 24, 4, 504, 18, 28, 1.0, 8)]  scalapack time:  [6.099238]
+[37073, 20774] [3, 3, 3, 18] 6.099238 OK 16 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 56, 24, 2, 1008, 18, 56, 1.0, 16)]  scalapack time:  [4.938297]
+[37073, 20774] [7, 3, 4, 18] 4.938297 OK 16 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1023 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 64, 24, 2, 1023, 31, 33, 1.0, 16)]  scalapack time:  [4.042941]
+[37073, 20774] [8, 3, 4, 31] 4.042941 OK 16 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 992 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 64, 8, 2, 992, 62, 16, 1.0, 16)]  scalapack time:  [7.234148]
+[37073, 20774] [8, 1, 4, 62] 7.234148 OK 16 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 112, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [3.185614]
+[11070, 34241] [5, 14, 4, 26] 3.185614 OK 40 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 104, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [4.722502]
+[11070, 34241] [5, 13, 4, 26] 4.722502 OK 40 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 8, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [6.808299]
+[11070, 34241] [5, 1, 4, 26] 6.808299 OK 40 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 16, 112, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [4.787704]
+[11070, 34241] [2, 14, 4, 26] 4.787704 OK 41 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 112, 112, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [3.547321]
+[11070, 34241] [14, 14, 4, 26] 3.547321 OK 41 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 2028 nthreads 1 npernode 32
+[('QR', 11070, 34241, 64, 32, 40, 112, 1, 2028, 26, 78, 1.0, 32)]  scalapack time:  [3.441267]
+[11070, 34241] [5, 14, 5, 26] 3.441267 OK 42 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 80, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [4.398703]
+[11070, 34241] [5, 10, 4, 26] 4.398703 OK 42 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 72, 48, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [4.006674]
+[11070, 34241] [9, 6, 4, 26] 4.006674 OK 42 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 48, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [4.813844]
+[11070, 34241] [5, 6, 4, 26] 4.813844 OK 42 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1014 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 40, 56, 2, 1014, 26, 39, 1.0, 16)]  scalapack time:  [2.982451]
+[11070, 34241] [5, 7, 4, 26] 2.982451 OK 42 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 2028 nthreads 1 npernode 32
+[('QR', 11070, 34241, 64, 32, 40, 56, 1, 2028, 26, 78, 1.0, 32)]  scalapack time:  [2.74406]
+[11070, 34241] [5, 7, 5, 26] 2.74406 OK 45 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 150 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 80, 64, 8, 150, 150, 1, 1.0, 4)]  scalapack time:  [67.735556]
+[27958, 39976] [10, 8, 2, 150] 67.735556 OK 12 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 150 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 80, 48, 8, 150, 150, 1, 1.0, 4)]  scalapack time:  [67.790612]
+[27958, 39976] [10, 6, 2, 150] 67.790612 OK 12 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 465 nthreads 4 npernode 8
+[('QR', 27958, 39976, 64, 32, 104, 48, 4, 465, 155, 3, 1.0, 8)]  scalapack time:  [46.222333]
+[27958, 39976] [13, 6, 3, 155] 46.222333 OK 12 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 40, 72, 2, 1008, 126, 8, 1.0, 16)]  scalapack time:  [31.40206]
+[27958, 39976] [5, 9, 4, 126] 31.40206 OK 14 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 243 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 8, 112, 8, 243, 27, 9, 1.0, 4)]  scalapack time:  [16.102627]
+[27958, 39976] [1, 14, 2, 27] 16.102627 OK 15 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 256 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 8, 128, 8, 256, 1, 256, 1.0, 4)]  scalapack time:  [39.69522]
+[27958, 39976] [1, 16, 2, 1] 39.69522 OK 15 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 256 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 72, 56, 8, 256, 1, 256, 1.0, 4)]  scalapack time:  [24.565618]
+[27958, 39976] [9, 7, 2, 1] 24.565618 OK 15 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 242 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 72, 64, 8, 242, 121, 2, 1.0, 4)]  scalapack time:  [41.331286]
+[27958, 39976] [9, 8, 2, 121] 41.331286 OK 17 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 224 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 96, 8, 8, 224, 56, 4, 1.0, 4)]  scalapack time:  [37.457925]
+[27958, 39976] [12, 1, 2, 56] 37.457925 OK 18 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 484 nthreads 4 npernode 8
+[('QR', 27958, 39976, 64, 32, 80, 64, 4, 484, 121, 4, 1.0, 8)]  scalapack time:  [31.647971]
+[27958, 39976] [10, 8, 3, 121] 31.647971 OK 18 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 200 nthreads 8 npernode 4
+[('QR', 27958, 39976, 64, 32, 64, 64, 8, 200, 100, 2, 1.0, 4)]  scalapack time:  [38.174413]
+[27958, 39976] [8, 8, 2, 100] 38.174413 OK 19 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 170 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 64, 88, 8, 170, 170, 1, 1.0, 4)]  scalapack time:  [14.086613]
+[17026, 15910] [8, 11, 2, 170] 14.086613 OK 15 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 170 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 64, 112, 8, 170, 170, 1, 1.0, 4)]  scalapack time:  [16.010791]
+[17026, 15910] [8, 14, 2, 170] 16.010791 OK 15 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 240 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 56, 88, 8, 240, 30, 8, 1.0, 4)]  scalapack time:  [4.175848]
+[17026, 15910] [7, 11, 2, 30] 4.175848 OK 15 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 215 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 56, 112, 8, 215, 43, 5, 1.0, 4)]  scalapack time:  [6.689874]
+[17026, 15910] [7, 14, 2, 43] 6.689874 OK 15 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 240 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 64, 88, 8, 240, 30, 8, 1.0, 4)]  scalapack time:  [5.02253]
+[17026, 15910] [8, 11, 2, 30] 5.02253 OK 15 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 131 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 56, 80, 8, 131, 131, 1, 1.0, 4)]  scalapack time:  [15.355239]
+[17026, 15910] [7, 10, 2, 131] 15.355239 OK 15 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 248 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 56, 88, 8, 248, 248, 1, 1.0, 4)]  scalapack time:  [19.016957]
+[17026, 15910] [7, 11, 2, 248] 19.016957 OK 15 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 510 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 56, 88, 4, 510, 30, 17, 1.0, 8)]  scalapack time:  [3.362484]
+[17026, 15910] [7, 11, 3, 30] 3.362484 OK 15 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 256 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 56, 88, 8, 256, 128, 2, 1.0, 4)]  scalapack time:  [11.998427]
+[17026, 15910] [7, 11, 2, 128] 11.998427 OK 15 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 510 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 80, 88, 4, 510, 30, 17, 1.0, 8)]  scalapack time:  [4.065926]
+[17026, 15910] [10, 11, 3, 30] 4.065926 OK 15 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 382 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 56, 88, 4, 382, 191, 2, 1.0, 8)]  scalapack time:  [14.126672]
+[17026, 15910] [7, 11, 3, 191] 14.126672 OK 15 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 64, 16, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [0.691079]
+[23884, 4712] [8, 2, 3, 28] 0.691079 OK 25 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 432 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 48, 16, 4, 432, 108, 4, 1.0, 8)]  scalapack time:  [1.105017]
+[23884, 4712] [6, 2, 3, 108] 1.105017 OK 25 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 72, 24, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [0.680694]
+[23884, 4712] [9, 3, 3, 28] 0.680694 OK 25 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 64, 24, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [0.553652]
+[23884, 4712] [8, 3, 3, 28] 0.553652 OK 25 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 480 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 64, 24, 4, 480, 240, 2, 1.0, 8)]  scalapack time:  [1.622379]
+[23884, 4712] [8, 3, 3, 240] 1.622379 OK 25 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 104, 24, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [1.018719]
+[23884, 4712] [13, 3, 3, 28] 1.018719 OK 26 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 56, 24, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [1.00084]
+[23884, 4712] [7, 3, 3, 28] 1.00084 OK 26 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 438 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 48, 24, 4, 438, 146, 3, 1.0, 8)]  scalapack time:  [1.529912]
+[23884, 4712] [6, 3, 3, 146] 1.529912 OK 27 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 510 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 72, 16, 4, 510, 170, 3, 1.0, 8)]  scalapack time:  [2.443566]
+[23884, 4712] [9, 2, 3, 170] 2.443566 OK 27 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 56, 40, 4, 504, 28, 18, 1.0, 8)]  scalapack time:  [0.925476]
+[23884, 4712] [7, 5, 3, 28] 0.925476 OK 27 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 414 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 64, 24, 4, 414, 207, 2, 1.0, 8)]  scalapack time:  [2.191601]
+[23884, 4712] [8, 3, 3, 207] 2.191601 OK 27 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 755 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 8, 32, 2, 755, 755, 1, 1.0, 16)]  scalapack time:  [15.6417]
+[6666, 11170] [1, 4, 4, 755] 15.6417 OK 10 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1510 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 48, 1, 1510, 755, 2, 1.0, 32)]  scalapack time:  [12.997637]
+[6666, 11170] [1, 6, 5, 755] 12.997637 OK 10 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1629 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 48, 1, 1629, 543, 3, 1.0, 32)]  scalapack time:  [8.939925]
+[6666, 11170] [1, 6, 5, 543] 8.939925 OK 10 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1813 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 40, 1, 1813, 259, 7, 1.0, 32)]  scalapack time:  [4.034227]
+[6666, 11170] [1, 5, 5, 259] 4.034227 OK 12 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1813 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 24, 40, 1, 1813, 259, 7, 1.0, 32)]  scalapack time:  [4.130929]
+[6666, 11170] [3, 5, 5, 259] 4.130929 OK 13 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1813 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 16, 40, 1, 1813, 259, 7, 1.0, 32)]  scalapack time:  [4.668786]
+[6666, 11170] [2, 5, 5, 259] 4.668786 OK 13 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1813 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 24, 1, 1813, 259, 7, 1.0, 32)]  scalapack time:  [4.928108]
+[6666, 11170] [1, 3, 5, 259] 4.928108 OK 14 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1980 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 56, 1, 1980, 660, 3, 1.0, 32)]  scalapack time:  [9.70265]
+[6666, 11170] [1, 7, 5, 660] 9.70265 OK 14 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1020 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 24, 40, 2, 1020, 170, 6, 1.0, 16)]  scalapack time:  [3.355429]
+[6666, 11170] [3, 5, 4, 170] 3.355429 OK 14 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 970 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 48, 40, 2, 970, 97, 10, 1.0, 16)]  scalapack time:  [2.042721]
+[6666, 11170] [6, 5, 4, 97] 2.042721 OK 14 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 975 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 48, 40, 2, 975, 75, 13, 1.0, 16)]  scalapack time:  [2.888819]
+[6666, 11170] [6, 5, 4, 75] 2.888819 OK 14 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 567 nthreads 2 npernode 16
+[('QR', 23324, 26545, 64, 32, 40, 24, 2, 567, 567, 1, 1.0, 16)]  scalapack time:  [94.179579]
+[23324, 26545] [5, 3, 4, 567] 94.179579 OK 11 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 88, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [17.831275]
+[23324, 26545] [11, 14, 5, 150] 17.831275 OK 12 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 64, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [14.715138]
+[23324, 26545] [8, 14, 5, 150] 14.715138 OK 15 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 72, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [19.227232]
+[23324, 26545] [9, 14, 5, 150] 19.227232 OK 15 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 48, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [17.7422]
+[23324, 26545] [6, 14, 5, 150] 17.7422 OK 15 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 24, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [13.90433]
+[23324, 26545] [3, 14, 5, 150] 13.90433 OK 16 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 900 nthreads 2 npernode 16
+[('QR', 23324, 26545, 64, 32, 24, 72, 2, 900, 150, 6, 1.0, 16)]  scalapack time:  [23.548918]
+[23324, 26545] [3, 9, 4, 150] 23.548918 OK 16 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 450 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 24, 80, 4, 450, 150, 3, 1.0, 8)]  scalapack time:  [25.423634]
+[23324, 26545] [3, 10, 3, 150] 25.423634 OK 16 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 32, 112, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [17.44293]
+[23324, 26545] [4, 14, 5, 150] 17.44293 OK 17 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 343 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 48, 120, 4, 343, 343, 1, 1.0, 8)]  scalapack time:  [56.566172]
+[23324, 26545] [6, 15, 3, 343] 56.566172 OK 17 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1950 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 24, 128, 1, 1950, 150, 13, 1.0, 32)]  scalapack time:  [19.561504]
+[23324, 26545] [3, 16, 5, 150] 19.561504 OK 17 11
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1700 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 16, 128, 1, 1700, 425, 4, 1.0, 32)]  scalapack time:  [21.861648]
+[8381, 29070] [2, 16, 5, 425] 21.861648 OK 12 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 425 nthreads 4 npernode 8
+[('QR', 8381, 29070, 64, 32, 16, 128, 4, 425, 425, 1, 1.0, 8)]  scalapack time:  [32.444442]
+[8381, 29070] [2, 16, 3, 425] 32.444442 OK 21 2
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1818 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 16, 96, 1, 1818, 303, 6, 1.0, 32)]  scalapack time:  [18.223117]
+[8381, 29070] [2, 12, 5, 303] 18.223117 OK 21 3
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1926 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 16, 96, 1, 1926, 321, 6, 1.0, 32)]  scalapack time:  [15.203549]
+[8381, 29070] [2, 12, 5, 321] 15.203549 OK 21 4
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1992 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 16, 96, 1, 1992, 332, 6, 1.0, 32)]  scalapack time:  [16.875106]
+[8381, 29070] [2, 12, 5, 332] 16.875106 OK 21 5
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1926 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 8, 96, 1, 1926, 321, 6, 1.0, 32)]  scalapack time:  [19.823013]
+[8381, 29070] [1, 12, 5, 321] 19.823013 OK 21 6
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1926 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 24, 96, 1, 1926, 321, 6, 1.0, 32)]  scalapack time:  [15.464821]
+[8381, 29070] [3, 12, 5, 321] 15.464821 OK 21 7
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1955 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 16, 96, 1, 1955, 391, 5, 1.0, 32)]  scalapack time:  [22.665614]
+[8381, 29070] [2, 12, 5, 391] 22.665614 OK 21 8
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 2043 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 32, 96, 1, 2043, 227, 9, 1.0, 32)]  scalapack time:  [10.68749]
+[8381, 29070] [4, 12, 5, 227] 10.68749 OK 22 9
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1992 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 32, 96, 1, 1992, 166, 12, 1.0, 32)]  scalapack time:  [8.906084]
+[8381, 29070] [4, 12, 5, 166] 8.906084 OK 22 10
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/opentuner/0/ nproc 1995 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 32, 80, 1, 1995, 57, 35, 1.0, 32)]  scalapack time:  [3.568216]
+[8381, 29070] [4, 10, 5, 57] 3.568216 OK 23 11
+End OpenTuner
+stats:  {'time_total': 5919.586787306, 'time_fun': 5894.004514175999}
+tid: 0
+    m:9496 n:7549
+    Ps  [[2, 8, 4, 338], [2, 8, 4, 287], [2, 8, 3, 57], [3, 10, 3, 57], [3, 8, 3, 294], [3, 8, 3, 57], [2, 8, 2, 77], [2, 7, 3, 375], [2, 8, 3, 94], [2, 8, 4, 146]]
+    Os  [[6.360173], [6.291494], [1.350061], [2.002447], [6.304717], [1.833417], [4.554407], [7.167258], [2.340727], [2.40124]]
+    Popt  [2, 8, 3, 57] Oopt  1.350061 nth  2
+tid: 1
+    m:21487 n:20981
+    Ps  [[3, 3, 4, 28], [1, 3, 4, 28], [3, 14, 4, 28], [3, 3, 4, 692], [12, 3, 3, 28], [1, 2, 4, 28], [1, 1, 4, 28], [1, 2, 4, 117], [1, 2, 4, 247], [2, 2, 4, 121], [2, 2, 4, 93]]
+    Os  [[4.991937], [5.921543], [5.114298], [60.915557], [6.232048], [4.185512], [4.90903], [11.179739], [19.363976], [11.602671], [9.155704]]
+    Popt  [1, 2, 4, 28] Oopt  4.185512 nth  5
+tid: 2
+    m:37073 n:20774
+    Ps  [[1, 3, 2, 24], [1, 3, 4, 24], [1, 3, 4, 40], [1, 7, 4, 24], [6, 13, 4, 24], [1, 5, 4, 24], [3, 3, 4, 18], [3, 3, 3, 18], [7, 3, 4, 18], [8, 3, 4, 31], [8, 1, 4, 62]]
+    Os  [[6.009187], [5.262159], [5.331883], [6.844701], [7.247686], [6.666105], [4.984164], [6.099238], [4.938297], [4.042941], [7.234148]]
+    Popt  [8, 3, 4, 31] Oopt  4.042941 nth  9
+tid: 3
+    m:11070 n:34241
+    Ps  [[5, 14, 4, 26], [5, 13, 4, 26], [5, 1, 4, 26], [2, 14, 4, 26], [14, 14, 4, 26], [5, 14, 5, 26], [5, 10, 4, 26], [9, 6, 4, 26], [5, 6, 4, 26], [5, 7, 4, 26], [5, 7, 5, 26]]
+    Os  [[3.185614], [4.722502], [6.808299], [4.787704], [3.547321], [3.441267], [4.398703], [4.006674], [4.813844], [2.982451], [2.74406]]
+    Popt  [5, 7, 5, 26] Oopt  2.74406 nth  10
+tid: 4
+    m:27958 n:39976
+    Ps  [[10, 8, 2, 150], [10, 6, 2, 150], [13, 6, 3, 155], [5, 9, 4, 126], [1, 14, 2, 27], [1, 16, 2, 1], [9, 7, 2, 1], [9, 8, 2, 121], [12, 1, 2, 56], [10, 8, 3, 121], [8, 8, 2, 100]]
+    Os  [[67.735556], [67.790612], [46.222333], [31.40206], [16.102627], [39.69522], [24.565618], [41.331286], [37.457925], [31.647971], [38.174413]]
+    Popt  [1, 14, 2, 27] Oopt  16.102627 nth  4
+tid: 5
+    m:17026 n:15910
+    Ps  [[8, 11, 2, 170], [8, 14, 2, 170], [7, 11, 2, 30], [7, 14, 2, 43], [8, 11, 2, 30], [7, 10, 2, 131], [7, 11, 2, 248], [7, 11, 3, 30], [7, 11, 2, 128], [10, 11, 3, 30], [7, 11, 3, 191]]
+    Os  [[14.086613], [16.010791], [4.175848], [6.689874], [5.02253], [15.355239], [19.016957], [3.362484], [11.998427], [4.065926], [14.126672]]
+    Popt  [7, 11, 3, 30] Oopt  3.362484 nth  7
+tid: 6
+    m:23884 n:4712
+    Ps  [[8, 2, 3, 28], [6, 2, 3, 108], [9, 3, 3, 28], [8, 3, 3, 28], [8, 3, 3, 240], [13, 3, 3, 28], [7, 3, 3, 28], [6, 3, 3, 146], [9, 2, 3, 170], [7, 5, 3, 28], [8, 3, 3, 207]]
+    Os  [[0.691079], [1.105017], [0.680694], [0.553652], [1.622379], [1.018719], [1.00084], [1.529912], [2.443566], [0.925476], [2.191601]]
+    Popt  [8, 3, 3, 28] Oopt  0.553652 nth  3
+tid: 7
+    m:6666 n:11170
+    Ps  [[1, 4, 4, 755], [1, 6, 5, 755], [1, 6, 5, 543], [1, 5, 5, 259], [3, 5, 5, 259], [2, 5, 5, 259], [1, 3, 5, 259], [1, 7, 5, 660], [3, 5, 4, 170], [6, 5, 4, 97], [6, 5, 4, 75]]
+    Os  [[15.6417], [12.997637], [8.939925], [4.034227], [4.130929], [4.668786], [4.928108], [9.70265], [3.355429], [2.042721], [2.888819]]
+    Popt  [6, 5, 4, 97] Oopt  2.042721 nth  9
+tid: 8
+    m:23324 n:26545
+    Ps  [[5, 3, 4, 567], [11, 14, 5, 150], [8, 14, 5, 150], [9, 14, 5, 150], [6, 14, 5, 150], [3, 14, 5, 150], [3, 9, 4, 150], [3, 10, 3, 150], [4, 14, 5, 150], [6, 15, 3, 343], [3, 16, 5, 150]]
+    Os  [[94.179579], [17.831275], [14.715138], [19.227232], [17.7422], [13.90433], [23.548918], [25.423634], [17.44293], [56.566172], [19.561504]]
+    Popt  [3, 14, 5, 150] Oopt  13.90433 nth  5
+tid: 9
+    m:8381 n:29070
+    Ps  [[2, 16, 5, 425], [2, 16, 3, 425], [2, 12, 5, 303], [2, 12, 5, 321], [2, 12, 5, 332], [1, 12, 5, 321], [3, 12, 5, 321], [2, 12, 5, 391], [4, 12, 5, 227], [4, 12, 5, 166], [4, 10, 5, 57]]
+    Os  [[21.861648], [32.444442], [18.223117], [15.203549], [16.875106], [19.823013], [15.464821], [22.665614], [10.68749], [8.906084], [3.568216]]
+    Popt  [4, 10, 5, 57] Oopt  3.568216 nth  10

@@ -115,7 +115,7 @@ class Options(dict):
         if (self['model_class']=='Model_LCM'):
             if(self['model_processes'] is None):
                 if (self['distributed_memory_parallelism']):
-                    self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/(self['model_restart_processes']+1)/self['model_restart_threads']))
+                    self['model_processes'] = max(1,math.floor(((computer.cores*computer.nodes-1)/(self['model_restart_processes'])-1)/self['model_restart_threads']))
                 else:
                     self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/self['model_restart_processes']/self['model_restart_threads']))
             self['model_threads'] =1
