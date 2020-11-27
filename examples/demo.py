@@ -66,7 +66,7 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=2,help='Number of cores per machine node')
     parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
-    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
+    parser.add_argument('-ntask', type=int, default=1, help='Number of tasks')
     parser.add_argument('-nruns', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')    
 
@@ -191,8 +191,9 @@ def main():
     options.validate(computer=computer)
 
     
-    # giventask = [[6],[6.5]]
+   # giventask = [[6],[6.5]]
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    print(giventask,'ggg')
 
     NI=len(giventask)
     NS=nruns	    
