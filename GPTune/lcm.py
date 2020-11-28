@@ -59,11 +59,11 @@ class LCM(GPy.kern.Kern):
         self.num_outputs = num_outputs
         self.Q = Q
 
-        self.theta =       np.exp(np.random.randn(Q * input_dim))
-        self.var   =       np.exp(np.random.randn(Q))
-        self.kappa =       np.exp(np.random.randn(Q * num_outputs))
-        self.sigma =       np.exp(np.random.randn(num_outputs))
-        self.WS    =       np.random.randn(Q * num_outputs)
+        self.theta =       np.power(10,np.random.randn(Q * input_dim))
+        self.var   =       np.power(10,np.random.randn(Q))
+        self.kappa =       np.power(10,np.random.randn(Q * num_outputs))
+        self.sigma =       np.power(10,np.random.randn(num_outputs))
+        self.WS    =       np.power(10,np.random.randn(Q * num_outputs))
         # print('why????',self.theta,self.var,self.kappa,self.sigma,self.WS)
 
     #     self.theta =  0.54132485 * np.ones(Q * input_dim)
@@ -215,9 +215,9 @@ class LCM(GPy.kern.Kern):
 
         def transform_x(x):  # YL: Why is this needed?
 
-            x2 = np.exp(x.copy())
+            x2 = np.power(10,x.copy())
 
-            x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = np.log(x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x)))])
+            # x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = np.log(x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x)))])
 
             # for i in range(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma)):
             #     x2[i] = np.where(x[i]>_lim_val, x[i], np.log1p(np.exp(np.clip(x[i], -_log_lim_val, _lim_val)))) #+ epsilon
@@ -229,8 +229,8 @@ class LCM(GPy.kern.Kern):
 
             x0 = x.copy()
             ws = x0[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))]
-            x2 = np.log(x0)
-            x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = ws
+            x2 = np.log10(x0)
+            # x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = ws
             return x2
             
 
@@ -253,6 +253,7 @@ class LCM(GPy.kern.Kern):
 
         def fun(x, *args):
             
+            # print(np.power(10,x),'hp')
             t3 = time.time_ns()
             x2 = transform_x(x)
             # x2 = np.insert(x2,len(self.theta), np.ones(len(self.var)))  # fix self.var to 1
@@ -295,7 +296,7 @@ class LCM(GPy.kern.Kern):
         t3 = time.time_ns()
 
         # bounds = [(-10, 10)] * len(x0_log)
-        bounds = [(None, None)] * len(self.theta) + [(None, None)] * len(self.var) + [(None, None)] * len(self.kappa)+ [(-20, -14)] * len(self.sigma)+ [(0, 10)] * len(self.WS)
+        bounds = [(-10, 8)] * len(self.theta) + [(None, None)] * len(self.var) + [(-10, 8)] * len(self.kappa)+ [(-10, -5)] * len(self.sigma)+ [(-10, 6)] * len(self.WS)
         # print(bounds)
 
         # sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad)

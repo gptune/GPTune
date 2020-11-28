@@ -232,12 +232,12 @@ class Model_LCM(Model):
         bestxopt = min(res, key = lambda x: x[1])[0]
         kern.set_param_array(bestxopt)
         if(kwargs['verbose']==True):
-            print('hyperparameters:', kern.get_param_array())
-            # print('theta:',kern.theta)
-            # print('var:',kern.var)
-            # print('kappa:',kern.kappa)
-            # print('sigma:',kern.sigma)
-            # print('WS:',kern.WS)
+            # print('hyperparameters:', kern.get_param_array())
+            print('theta:',kern.theta)
+            print('var:',kern.var)
+            print('kappa:',kern.kappa)
+            print('sigma:',kern.sigma)
+            print('WS:',kern.WS)
 
 
 

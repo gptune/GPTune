@@ -603,7 +603,7 @@ for (int p = 0; p < 8; p++)
                 idxk = ljstart * z->lr + li;
                 dldk = dL_dK[idxk];
 
-                sigma_gradients_TPS[idxi] += dldk;
+                sigma_gradients_TPS[idxi] += dldk*sigma[idxi];
 
                 for (q = 0; q < z->NL; q++)
                 {
@@ -613,7 +613,7 @@ for (int p = 0; p < 8; p++)
                     var_gradients_TPS[q] += 0; // This makes sure variance is fixed 
                     // var_gradients_TPS[q] += (ws2+kk) * a;
                     a *= var[q];  // a is kq in the ppopp21 paper
-                    kappa_gradients_TPS[q * z->NT + idxi] += a;
+                    kappa_gradients_TPS[q * z->NT + idxi] += a*kappa[q * z->NT + idxi];
                     for (d = 0; d < z->DI; d++)
                     {
                         theta_gradients_TPS[q * z->DI + d] += (ws2+kk) * a * (z->dists[(li * z->lc + ljstart) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
@@ -621,7 +621,7 @@ for (int p = 0; p < 8; p++)
                     // If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
                     // which is exacly what happens in the following two lines anyways
                     // so no need for an if statement
-                    ws_gradients_TPS[q * z->NT + idxi] += 2 * ws[q * z->NT + idxi] * a;
+                    ws_gradients_TPS[q * z->NT + idxi] += 2 * ws[q * z->NT + idxi]* ws[q * z->NT + idxi] * a;
                 }
             }
 
@@ -649,17 +649,18 @@ for (int p = 0; p < 8; p++)
 						// var_gradients_TPS[q] += 2. * (ws2+kk) * a;
                         a *= var[q];  // a is kq in the ppopp21 paper
                         if (idxi == idxj){
-                            kappa_gradients_TPS[q * z->NT + idxi]  += 2. * a;
+                            kappa_gradients_TPS[q * z->NT + idxi]  += 2. * a*kappa[q * z->NT + idxi];
                         }
 						for (d = 0; d < z->DI; d++)
 						{
 							theta_gradients_TPS[q * z->DI + d] += 2. * (ws2+kk) * a * (z->dists[(li * z->lc + lj) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
 						}
-						// If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
-						// which is exacly what happens in the following two lines anyways
-						// so no need for an if statement
-						ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxj] * a;
-						ws_gradients_TPS[q * z->NT + idxj] += ws[q * z->NT + idxi] * a;
+                        if (idxi == idxj){
+                            ws_gradients_TPS[q * z->NT + idxi] += 4*ws[q * z->NT + idxi]*ws[q * z->NT + idxi] * a;
+                        }else{
+                            ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxj]*ws[q * z->NT + idxi] * a;
+                            ws_gradients_TPS[q * z->NT + idxj] += ws[q * z->NT + idxi]*ws[q * z->NT + idxj] * a;
+                        }
 					}
 				}	
             }
