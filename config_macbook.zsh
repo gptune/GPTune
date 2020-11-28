@@ -3,25 +3,30 @@
 rm -rf ~/.local/lib
 
 
-
+###################################
+# The following loads preinstalled compiler, openmpi, scalapack, and python, make sure to change them to the correct paths on your machine
 source /usr/local/Cellar/modules/4.3.0/init/zsh
-
 module load gcc/9.2.0
 module load openmpi/gcc-9.2.0/4.0.1
 module load scalapack/2.0.2
 module load python/3.7.6 
 
+# set the PATH to your python installation
 export PATH=$PATH:/Users/liuyangzhuan/Library/Python/3.7/bin/
+
+# set the compiler wrappers
+CCC=$MPICC  
+CCCPP=$MPICXX
+FTN=$MPIF90
+RUN=$MPIRUN
+###################################
+
+
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
-
-CCC=$MPICC
-CCCPP=$MPICXX
-FTN=$MPIF90
-RUN=$MPIRUN
 
 python --version
 pip --version
