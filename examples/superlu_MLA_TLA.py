@@ -176,7 +176,7 @@ def main():
 	# options['search_multitask_processes'] = 1
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
-	options['shared_memory_parallelism'] = True
+	options['shared_memory_parallelism'] = False
 	options['model_class '] = 'Model_LCM'
 	options['verbose'] = True
 	options.validate(computer = computer)

@@ -26,14 +26,14 @@ RUN=$MPIRUN
 cd examples
 $RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py 
 
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine mac -jobid 0
 
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine mac -jobid 0
 
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine tr4 -jobid 0
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 1300 -nmax 1300 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine mac -jobid 0
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 1300 -nmax 1300 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine mac -jobid 0
 
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_TLA.py     -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4
-$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_TLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine tr4
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_TLA.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine mac
+$RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine mac
 
 
