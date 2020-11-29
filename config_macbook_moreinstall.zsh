@@ -36,9 +36,10 @@ CPP=/usr/local/Cellar/gcc/10.2.0/bin/g++-10
 
 # install dependencies using homebrew and virtualenv
 ###################################
+brew install wget
 brew install python@3.7
-alias python=python3
-alias pip=pip3
+alias python=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3
+alias pip=/usr/local/Cellar/python@3.7/3.7.9_2/bin/pip3
 
 python -m pip install virtualenv
 python -m venv env
@@ -57,43 +58,6 @@ brew upgrade openblas  # assuming 0.3.12_1
 
 brew install lapack
 brew upgrade lapack   # assuming 3.9.0_1
-
-
-# manually install dependencies from python
-###################################
-cd $GPTUNEROOT
-python --version
-pip --version
-pip install --upgrade -r requirements_mac.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
-cp patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
-
-
-# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang, this may cause segfault at the search phase
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
-make -j8
-
-
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install
-# env CC=mpicc pip install --user -e .
-
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-pip install -e .
-
 
 
 # manually install dependencies from cmake and make
@@ -208,6 +172,45 @@ cd hypre/src/
 make
 cp ../../hypre-driver/src/ij.c ./test/.
 make test
+
+
+
+
+# manually install dependencies from python
+###################################
+cd $GPTUNEROOT
+python --version
+pip --version
+pip install --upgrade -r requirements_mac.txt
+#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+cp patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
+
+
+# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang, this may cause segfault at the search phase
+cd $GPTUNEROOT
+rm -rf pygmo2
+git clone https://github.com/esa/pygmo2.git
+cd pygmo2
+mkdir build
+cd build
+cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+make -j8
+
+
+cd $GPTUNEROOT
+rm -rf mpi4py
+git clone https://github.com/mpi4py/mpi4py.git
+cd mpi4py/
+python setup.py build --mpicc="$MPICC -shared"
+python setup.py install
+# env CC=mpicc pip install --user -e .
+
+cd $GPTUNEROOT
+rm -rf autotune
+git clone https://github.com/ytopt-team/autotune.git
+cd autotune/
+pip install -e .
+
 
 
 
