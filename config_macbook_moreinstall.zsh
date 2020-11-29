@@ -69,14 +69,14 @@ pip install --upgrade -r requirements_mac.txt
 cp patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
 
 
-# # pip install pygmo doesn't work, build from source
+# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang, this may cause segfault at the search phase
 cd $GPTUNEROOT
 rm -rf pygmo2
 git clone https://github.com/esa/pygmo2.git
 cd pygmo2
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python
+cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
 make -j8
 
 
