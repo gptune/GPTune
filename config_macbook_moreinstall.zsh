@@ -45,9 +45,9 @@ python -m venv env
 source env/bin/activate
 
 pip install cloudpickle
-brew install tbb
-brew install pagmo
-brew install pybind11
+brew reinstall tbb
+brew reinstall pagmo
+brew reinstall pybind11
 
 brew install gcc
 brew upgrade gcc   # assuming 10.2.0
@@ -98,7 +98,7 @@ pip install -e .
 
 # manually install dependencies from cmake and make
 ###################################
-
+cd $GPTUNEROOT
 wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
 bzip2 -d openmpi-4.0.1.tar.bz2
 tar -xvf openmpi-4.0.1.tar 
