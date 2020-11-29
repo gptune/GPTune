@@ -96,118 +96,118 @@ pip install -e .
 
 
 
-# # manually install dependencies from cmake and make
-# ###################################
+# manually install dependencies from cmake and make
+###################################
 
-# wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-# bzip2 -d openmpi-4.0.1.tar.bz2
-# tar -xvf openmpi-4.0.1.tar 
-# cd openmpi-4.0.1/ 
-# ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility
-# make -j8
-# make install
-
-
-# cd $GPTUNEROOT
-# wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
-# tar -xf scalapack-2.1.0.tgz
-# cd scalapack-2.1.0
-# rm -rf build
-# mkdir -p build
-# cd build
-# mkdir -p install
-# cmake .. \
-# 	-DBUILD_SHARED_LIBS=ON \
-# 	-DCMAKE_C_COMPILER=$MPICC \
-# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-# 	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
-# 	-DCMAKE_INSTALL_PREFIX=./install \
-# 	-DCMAKE_BUILD_TYPE=Release \
-# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-# 	-DBLAS_LIBRARIES="$BLAS_LIB" \
-# 	-DLAPACK_LIBRARIES="$LAPACK_LIB"
-# make 
-# make install
+wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
+bzip2 -d openmpi-4.0.1.tar.bz2
+tar -xvf openmpi-4.0.1.tar 
+cd openmpi-4.0.1/ 
+./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility
+make -j8
+make install
 
 
-# cd $GPTUNEROOT
-# mkdir -p build
-# cd build
-# rm -rf CMakeCache.txt
-# rm -rf DartConfiguration.tcl
-# rm -rf CTestTestfile.cmake
-# rm -rf cmake_install.cmake
-# rm -rf CMakeFiles
-# cmake .. \
-# 	-DCMAKE_CXX_FLAGS="" \
-# 	-DCMAKE_C_FLAGS="-fopenmp" \
-# 	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
-# 	-DBUILD_SHARED_LIBS=ON \
-# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-# 	-DCMAKE_C_COMPILER=$MPICC \
-# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-# 	-DCMAKE_BUILD_TYPE=Release \
-# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-# 	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
-# 	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
-# 	-DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
-# make
-# cp lib_gptuneclcm.dylib ../.
-# cp pdqrdriver ../
+cd $GPTUNEROOT
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
+rm -rf build
+mkdir -p build
+cd build
+mkdir -p install
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
+	-DCMAKE_INSTALL_PREFIX=./install \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DBLAS_LIBRARIES="$BLAS_LIB" \
+	-DLAPACK_LIBRARIES="$LAPACK_LIB"
+make 
+make install
+
+
+cd $GPTUNEROOT
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="" \
+	-DCMAKE_C_FLAGS="-fopenmp" \
+	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
+	-DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
+make
+cp lib_gptuneclcm.dylib ../.
+cp pdqrdriver ../
 
 
 
-# cd $GPTUNEROOT
-# cd examples/
-# rm -rf superlu_dist
-# git clone https://github.com/xiaoyeli/superlu_dist.git
-# cd superlu_dist
+cd $GPTUNEROOT
+cd examples/
+rm -rf superlu_dist
+git clone https://github.com/xiaoyeli/superlu_dist.git
+cd superlu_dist
 
-# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-# tar -xf parmetis-4.0.3.tar.gz
-# cd parmetis-4.0.3/
-# mkdir -p install
-# make config cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-# make install > make_parmetis_install.log 2>&1
+wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+tar -xf parmetis-4.0.3.tar.gz
+cd parmetis-4.0.3/
+mkdir -p install
+make config cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+make install > make_parmetis_install.log 2>&1
 
-# cd ../
-# cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
-# PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
-# PARMETIS_LIBRARIES="$PWD/parmetis-4.0.3/install/lib/libparmetis.a;$PWD/parmetis-4.0.3/install/lib/libmetis.a"
+cd ../
+cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
+PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
+PARMETIS_LIBRARIES="$PWD/parmetis-4.0.3/install/lib/libparmetis.a;$PWD/parmetis-4.0.3/install/lib/libmetis.a"
 
-# mkdir -p build
-# cd build
-# rm -rf CMakeCache.txt
-# rm -rf DartConfiguration.tcl
-# rm -rf CTestTestfile.cmake
-# rm -rf cmake_install.cmake
-# rm -rf CMakeFiles
-# cmake .. \
-# 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRelease" \
-# 	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
-# 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
-# 	-DBUILD_SHARED_LIBS=OFF \
-# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-# 	-DCMAKE_C_COMPILER=$MPICC \
-# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-# 	-DCMAKE_BUILD_TYPE=Release \
-# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-# 	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
-# 	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
-# 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-# 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-# make pddrive_spawn
-# make pzdrive_spawn
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRelease" \
+	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
+	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+	-DBUILD_SHARED_LIBS=OFF \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
+	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+make pddrive_spawn
+make pzdrive_spawn
 
-# cd $GPTUNEROOT
-# cd examples/
-# rm -rf hypre
-# git clone https://github.com/hypre-space/hypre.git
-# cd hypre/src/
-# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI"
-# make
-# cp ../../hypre-driver/src/ij.c ./test/.
-# make test
+cd $GPTUNEROOT
+cd examples/
+rm -rf hypre
+git clone https://github.com/hypre-space/hypre.git
+cd hypre/src/
+./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI"
+make
+cp ../../hypre-driver/src/ij.c ./test/.
+make test
 
 
 
