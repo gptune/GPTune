@@ -1,6 +1,7 @@
 #!/bin/zsh
 
-rm -rf ~/.local/lib
+# rm -rf ~/.local/lib
+# rm -rf /usr/local/lib/python3.7/site-packages
 
 #set up environment variables, these are also needed when running GPTune 
 ################################### 
@@ -38,14 +39,17 @@ CPP=/usr/local/Cellar/gcc/10.2.0/bin/g++-10
 ###################################
 brew install wget
 brew install python@3.7
-alias python=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3
+alias python=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3  # this makes sure virtualenv uses the correct python version
 alias pip=/usr/local/Cellar/python@3.7/3.7.9_2/bin/pip3
 
-python -m pip install virtualenv
+python -m pip install virtualenv 
 python -m venv env
 source env/bin/activate
 
-pip install cloudpickle
+unalias pip  # this makes sure virtualenv install packages at its own site-packages directory
+unalias python
+
+pip install --force-reinstall cloudpickle
 brew reinstall tbb
 brew reinstall pagmo
 brew reinstall pybind11
@@ -181,7 +185,7 @@ make test
 cd $GPTUNEROOT
 python --version
 pip --version
-pip install --upgrade -r requirements_mac.txt
+pip install --force-reinstall --upgrade -r requirements_mac.txt
 #env CC=$MPICC pip install --upgrade --user -r requirements.txt
 cp patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
 
@@ -203,7 +207,6 @@ git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
 python setup.py install
-# env CC=mpicc pip install --user -e .
 
 cd $GPTUNEROOT
 rm -rf autotune
