@@ -81,7 +81,7 @@ class GPTune(object):
         if self.history_db.machine_deps["cores"] == "Unknown":
             self.history_db.machine_deps["cores"] = self.computer.cores
 
-    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", model_uids = None, **kwargs):
+    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", update = 0, model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
         stats = {
             "time_total": 0,
@@ -166,6 +166,7 @@ class GPTune(object):
                     **kwargs)
 
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
+        model_reupdate = 0
         optiter = 0
         NSmin = min(map(len, self.data.P))
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
@@ -187,6 +188,7 @@ class GPTune(object):
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
             print("MLA iteration: ",optiter)
             optiter = optiter + 1
+            model_reupdate = model_reupdate + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
                 tmpdata = copy.deepcopy(self.data)
@@ -210,6 +212,26 @@ class GPTune(object):
                 for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
                     tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
+
+                if model_reupdate == update:
+                    # print(tmpdata.P[0])
+                    #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
+                    if (kwargs["model_class"] == "Model_LCM"):
+                        (bestxopt, neg_log_marginal_likelihood,
+                                gradients, iteration) = \
+                            modelers[o].train(data = tmpdata, **kwargs)
+                        self.history_db.update_model_LCM(
+                                o,
+                                self.problem,
+                                self.data.I,
+                                bestxopt,
+                                neg_log_marginal_likelihood,
+                                gradients,
+                                iteration)
+                        #stats["modeling_iteration"][optiter-1] += iteration
+                    else:
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    model_reupdate = 0
 
             t2 = time.time_ns()
             time_model = time_model + (t2-t1)/1e9
