@@ -62,7 +62,7 @@ def plot(data1, data2, args):
     nrun = args.nrun
     ntask = len(data1)
     font_mag=matplotlib.font_manager.FontProperties(family=font['family'], weight=font['weight'], size=font['size'])
-
+ 
     
     p1 = len([x for x in data1 if x >= 1])
     p2 = len([x for x in data2 if x >= 1])

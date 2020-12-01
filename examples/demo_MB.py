@@ -150,11 +150,11 @@ if __name__ == '__main__':
 
     os.environ['TUNER_NAME'] = 'GPTune'
     
-    giventask = [[1]]
+    giventask = [[1],[2]]
     # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=6	    
+    NS=4	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 

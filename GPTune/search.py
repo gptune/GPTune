@@ -38,7 +38,7 @@ from model import Model
 
 from pathlib import Path
 import importlib
-
+from sys import platform as _platform
 
 class Search(abc.ABC):
 
@@ -56,7 +56,7 @@ class Search(abc.ABC):
         if (tids is None):
             tids = list(range(data.NI))
 
-        if (kwargs['distributed_memory_parallelism'] and i_am_manager):
+        if ((kwargs['distributed_memory_parallelism'] or _platform == "darwin") and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned 
             nproc = min(kwargs['search_multitask_processes'],data.NI)
             npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
             mpi_comm = self.computer.spawn(__file__, nproc=nproc, nthreads=kwargs['search_multitask_threads'], npernode=npernode, kwargs=kwargs) # XXX add args and kwargs

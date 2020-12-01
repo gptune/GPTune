@@ -28,6 +28,7 @@ from data import Data
 from data import Categoricalnorm
 from options import Options
 from computer import Computer
+import argparse
 import sys
 import os
 import mpi4py
@@ -58,6 +59,23 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 # Argmin{x} objectives(t,x), for x in [0., 1.]
 
 
+
+def parse_args():
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
+    parser.add_argument('-cores', type=int, default=2,help='Number of cores per machine node')
+    parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
+    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
+    parser.add_argument('-plot', type=int, default=0, help='Whether to plot the objective function')
+    parser.add_argument('-nrep', type=int, default=1, help='Number of times to repeat a tuning exp')
+    parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')
+
+
+    args = parser.parse_args()
+
+    return args
 def objectives(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
@@ -96,7 +114,7 @@ def models(point):
     c = a * x
     d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
-    f = d * e
+    f = d * e + 1
     # print('dd',test)
 
     """
@@ -110,21 +128,23 @@ def models(point):
     return [f*(1+np.random.uniform()*0.1)]
 
 
-""" Plot the objective function for t=1,2,3,4,5,6 """
-def annot_min(x,y, ax=None):
-    xmin = x[np.argmin(y)]
-    ymin = y.min()
-    text= "x={:.3f}, y={:.3f}".format(xmin, ymin)
-    if not ax:
-        ax=plt.gca()
-    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-    arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=60")
-    kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
-    ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
 
+def main():
+    global nodes
+    global cores
 
-if __name__ == '__main__':
+    # Parse command line arguments
+    args = parse_args()
 
+    ntask = args.ntask
+    nodes = args.nodes
+    cores = args.cores
+    machine = args.machine
+    perfmodel = args.perfmodel
+    plot = args.plot    
+    nrep = args.nrep    
+
+    os.environ['MACHINE_NAME'] = machine   
     input_space = Space([Real(0., 10., transform="normalize", name="t")])
     parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
@@ -132,12 +152,14 @@ if __name__ == '__main__':
 
     output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
-    # problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-    problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+    if(perfmodel==1):    
+        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+    else:    
+        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
-    computer = Computer(nodes=1, cores=16, hosts=None)
+    computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
-    options['model_restarts'] = 10
+    options['model_restarts'] = 1
 
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
@@ -158,7 +180,7 @@ if __name__ == '__main__':
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_GPy_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
@@ -177,8 +199,8 @@ if __name__ == '__main__':
 
     NI=len(giventask)
     # NS=80	    
-    NREP=10
-    NSS=[10, 20, 40, 80, 160]
+    NREP=nrep
+    NSS=[10, 20, 40]
 
     for TUNER_NAME in ['GPTune','hpbandster','opentuner']:
         t1 = time.time_ns()
@@ -199,7 +221,7 @@ if __name__ == '__main__':
                     """ Print all input and parameter samples """
                     for tid in range(NI):
                         print("tid: %d" % (tid))
-                        print("    t:%d " % (data.I[tid][0]))
+                        print("    t:%f " % (data.I[tid][0]))
                         print("    Ps ", data.P[tid])
                         print("    Os ", data.O[tid].tolist())
                         print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -212,7 +234,7 @@ if __name__ == '__main__':
                     """ Print all input and parameter samples """
                     for tid in range(NI):
                         print("tid: %d" % (tid))
-                        print("    t:%d " % (data.I[tid][0]))
+                        print("    t:%f " % (data.I[tid][0]))
                         print("    Ps ", data.P[tid])
                         print("    Os ", data.O[tid].tolist())
                         print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -223,7 +245,7 @@ if __name__ == '__main__':
                     """ Print all input and parameter samples """
                     for tid in range(NI):
                         print("tid: %d" % (tid))
-                        print("    t:%d " % (data.I[tid][0]))
+                        print("    t:%f " % (data.I[tid][0]))
                         print("    Ps ", data.P[tid])
                         print("    Os ", data.O[tid].tolist())
                         print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -266,54 +288,30 @@ if __name__ == '__main__':
     # allmaxs=[array([1.    , 0.9998, 0.9344, 0.9853, 0.771 ]), array([1.    , 1.    , 0.9994, 0.9883, 0.8733]), array([1.    , 0.9999, 0.9896, 0.7418, 0.6798])]
     # allmins=[array([0.7417, 0.6782, 0.627 , 0.5558, 0.6149]), array([0.6552, 0.6425, 0.5887, 0.5657, 0.5109]), array([0.5947, 0.6055, 0.7051, 0.5272, 0.5109])]
 
+    if(plot==1):
+        fontsize=24
+        fig = plt.figure(figsize=[12.8, 9.6])
 
-    fontsize=24
-    fig = plt.figure(figsize=[12.8, 9.6])
+        plt.rcParams.update({'font.size': fontsize})
 
-    plt.rcParams.update({'font.size': fontsize})
+        plt.errorbar(np.array(NSS)-0.3, allavrs[0], yerr=[allavrs[0]-allmins[0],allmaxs[0]-allavrs[0]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='GPTune')
+        plt.errorbar(np.array(NSS), allavrs[1], yerr=[allavrs[1]-allmins[1],allmaxs[1]-allavrs[1]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='hpbandster')
+        plt.errorbar(np.array(NSS)+0.3, allavrs[2], yerr=[allavrs[2]-allmins[2],allmaxs[2]-allavrs[2]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='opentuner')
+        plt.plot([NSS[0]-5,NSS[-1]+5], [0.510885, 0.510885], c='black', linestyle=':')  # t=6
+        # plt.plot([NSS[0]-5,NSS[-1]+5], [0.735, 0.735], c='black', linestyle=':')  # t=1
+        # plt.plot([NSS[0]-5,NSS[-1]+5], [0.61012, 0.61012], c='black', linestyle=':') # t=3
+        # plt.plot([NSS[0]-5,NSS[-1]+5], [0.59020, 0.59020], c='black', linestyle=':') # t=4
 
-    plt.errorbar(np.array(NSS)-1, allavrs[0], yerr=[allavrs[0]-allmins[0],allmaxs[0]-allavrs[0]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='GPTune')
-    plt.errorbar(np.array(NSS), allavrs[1], yerr=[allavrs[1]-allmins[1],allmaxs[1]-allavrs[1]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='hpbandster')
-    plt.errorbar(np.array(NSS)+1, allavrs[2], yerr=[allavrs[2]-allmins[2],allmaxs[2]-allavrs[2]], capsize=10, elinewidth=2, markeredgewidth=5, fmt='o', label='opentuner')
-    plt.plot([NSS[0]-5,NSS[-1]+5], [0.510885, 0.510885], c='black', linestyle=':')  # t=6
-    # plt.plot([NSS[0]-5,NSS[-1]+5], [0.735, 0.735], c='black', linestyle=':')  # t=1
-    # plt.plot([NSS[0]-5,NSS[-1]+5], [0.61012, 0.61012], c='black', linestyle=':') # t=3
-    # plt.plot([NSS[0]-5,NSS[-1]+5], [0.59020, 0.59020], c='black', linestyle=':') # t=4
-
-    plt.xlabel('NS',fontsize=fontsize+2)
-    plt.ylabel('f_min',fontsize=fontsize+2)
-    plt.legend(loc='upper right')
-    plt.show()
-    # plt.show(block=False)
-    fig.savefig('fmins_t%d.eps'%int(giventask[0][0]))     
-
-
-    plot=0
-    if plot==1:
-        x = np.arange(0., 1., 0.00001)
-        Nplot=6
-        for t in range(1,Nplot+1):
-            fig = plt.figure(figsize=[12.8, 9.6])
-            I_orig=[t]
-            kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}
-
-            y=np.zeros([len(x),1])
-            for i in range(len(x)):
-                P_orig=[x[i]]
-                kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
-                kwargs.update(kwargst)
-                y[i]=objectives(kwargs) 
-            fontsize=30
-            plt.rcParams.update({'font.size': 21})
-            plt.plot(x, y, 'b')
-            plt.xlabel('x',fontsize=fontsize+2)
-            plt.ylabel('y(t,x)',fontsize=fontsize+2)
-            plt.title('t=%d'%t,fontsize=fontsize+2)
-            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
-        
-            annot_min(x,y)
-            # plt.show()
-            # plt.show(block=False)
-            fig.savefig('obj_t_%d.eps'%t)  
+        plt.xlabel('NS',fontsize=fontsize+2)
+        plt.ylabel('f_min',fontsize=fontsize+2)
+        plt.legend(loc='upper right')
+        plt.show(block=False)
+        plt.pause(0.5)
+        input("Press [enter] to continue.")    
+        fig.savefig('fmins_t%d.eps'%int(giventask[0][0]))     
 
 
+
+
+if __name__ == "__main__":
+    main()

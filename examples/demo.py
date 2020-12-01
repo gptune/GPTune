@@ -34,7 +34,7 @@ from data import Data
 from data import Categoricalnorm
 from options import Options
 from computer import Computer
-
+import argparse
 from mpi4py import MPI
 import numpy as np
 import time
@@ -57,6 +57,23 @@ from callhpbandster import HpBandSter
 
 # Argmin{x} objectives(t,x), for x in [0., 1.]
 
+
+def parse_args():
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
+    parser.add_argument('-cores', type=int, default=2,help='Number of cores per machine node')
+    parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
+    parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-ntask', type=int, default=1, help='Number of tasks')
+    parser.add_argument('-nruns', type=int, default=20, help='Number of runs per task')
+    parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')    
+
+
+    args = parser.parse_args()
+
+    return args
 
 def objectives(point):
     """
@@ -96,7 +113,7 @@ def models(point):
     c = a * x
     d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
     e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
-    f = d * e
+    f = d * e + 1
     # print('dd',test)
 
     """
@@ -110,22 +127,26 @@ def models(point):
     return [f*(1+np.random.uniform()*0.1)]
 
 
-""" Plot the objective function for t=1,2,3,4,5,6 """
-def annot_min(x,y, ax=None):
-    xmin = x[np.argmin(y)]
-    ymin = y.min()
-    text= "x={:.3f}, y={:.3f}".format(xmin, ymin)
-    if not ax:
-        ax=plt.gca()
-    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-    arrowprops=dict(arrowstyle="-",connectionstyle="angle,angleA=0,angleB=60")
-    kw = dict(xycoords='data',textcoords="offset points",arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
-    ax.annotate(text, xy=(xmin, ymin), xytext=(210,5), **kw)
 
-
-if __name__ == '__main__':
+def main():
     
     import matplotlib.pyplot as plt
+    global nodes
+    global cores
+
+    # Parse command line arguments
+    args = parse_args()
+
+    ntask = args.ntask
+    nodes = args.nodes
+    cores = args.cores
+    machine = args.machine
+    nruns = args.nruns
+    TUNER_NAME = args.optimization
+    perfmodel = args.perfmodel
+
+    os.environ['MACHINE_NAME'] = machine
+    os.environ['TUNER_NAME'] = TUNER_NAME    
 
     input_space = Space([Real(0., 10., transform="normalize", name="t")])
     parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
@@ -134,10 +155,12 @@ if __name__ == '__main__':
 
     output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
-    # problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-    problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+    if(perfmodel==1):
+        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+    else:    
+        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
-    computer = Computer(nodes=1, cores=16, hosts=None)
+    computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
     options['model_restarts'] = 1
 
@@ -167,13 +190,13 @@ if __name__ == '__main__':
 
     options.validate(computer=computer)
 
-    os.environ['TUNER_NAME'] = 'GPTune'
     
-    giventask = [[6],[6.5]]
-    # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
+   # giventask = [[6],[6.5]]
+    giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    print(giventask,'ggg')
 
     NI=len(giventask)
-    NS=100	    
+    NS=nruns	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 
@@ -186,7 +209,7 @@ if __name__ == '__main__':
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
+            print("    t:%f " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -199,7 +222,7 @@ if __name__ == '__main__':
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
+            print("    t:%f " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -210,7 +233,7 @@ if __name__ == '__main__':
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
-            print("    t:%d " % (data.I[tid][0]))
+            print("    t:%f " % (data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
@@ -218,31 +241,5 @@ if __name__ == '__main__':
 
 
 
-    plot=0
-    if plot==1:
-        x = np.arange(0., 1., 0.00001)
-        Nplot=9.5
-        for t in np.linspace(0,Nplot,20):
-            fig = plt.figure(figsize=[12.8, 9.6])
-            I_orig=[t]
-            kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}
-
-            y=np.zeros([len(x),1])
-            for i in range(len(x)):
-                P_orig=[x[i]]
-                kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
-                kwargs.update(kwargst)
-                y[i]=objectives(kwargs) 
-            fontsize=30
-            plt.rcParams.update({'font.size': 21})
-            plt.plot(x, y, 'b')
-            plt.xlabel('x',fontsize=fontsize+2)
-            plt.ylabel('y(t,x)',fontsize=fontsize+2)
-            plt.title('t=%d'%t,fontsize=fontsize+2)
-            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
-        
-            annot_min(x,y)
-            # plt.show()
-            # plt.show(block=False)
-            fig.savefig('obj_t_%d.eps'%t)                
-
+if __name__ == "__main__":
+    main()

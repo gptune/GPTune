@@ -667,6 +667,7 @@ class GPTune(object):
                     tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
                     tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
                 # print(tmpdata.P[0])
+
                 if (kwargs["model_class"] == "Model_LCM"):
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
@@ -674,6 +675,12 @@ class GPTune(object):
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     modelers[o].train(data = tmpdata, **kwargs)
+                if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
+                    C = modelers[o].M.kern.get_correlation_metric()
+                    print("The correlation matrix C is \n", C)
+                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                    C = modelers[o].get_correlation_metric(len(self.data.I))
+                    print("The correlation matrix C is \n", C)
 
             t2 = time.time_ns()
             stats["modeling_time"].append((t2-t1)/1e9)

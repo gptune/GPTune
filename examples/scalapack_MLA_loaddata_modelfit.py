@@ -167,8 +167,8 @@ def objectives(point):
     q = int(nproc / p)
     params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
 
-
-    print_model_predication(point)
+    if(perfmodel==1):
+        print_model_predication(point)
 
     elapsedtime = pdqrdriver(params, niter=3, JOBID=JOBID)
     print(params, ' scalapack time: ', elapsedtime)
@@ -184,6 +184,7 @@ def main():
     global JOBID
     global nprocmax
     global nprocmin
+    global perfmodel
 
     # Parse command line arguments
     args = parse_args()
@@ -199,6 +200,7 @@ def main():
     truns = args.truns
     JOBID = args.jobid
     TUNER_NAME = args.optimization
+    perfmodel = args.perfmodel
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -225,9 +227,10 @@ def main():
     cst3 = "nproc >= p"
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     print(IS, PS, OS, constraints)
-
-    problem = TuningProblem(IS, PS, OS, objectives, constraints, models) # use performance models
-    # problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+    if(perfmodel==1):
+       problem = TuningProblem(IS, PS, OS, objectives, constraints, models) # use performance models
+    else:
+        problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """
@@ -255,16 +258,17 @@ def main():
         giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
         
 
-    # giventask = [[5000, 5000]]
+    giventask = [[mmax, mmax]]
     # # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
 
     # # the following will use only task lists stored in the pickle file
     # data = Data(problem,D=[{'c0': 0, 'c1': 0,'c2': 0,'c3': 0,'c4': 0}]*len(giventask))
 
     if(TUNER_NAME=='GPTune'):
-
-        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__),models_update=models_update)
-
+        if(perfmodel==1):
+            gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__),models_update=models_update)
+        else: 
+            gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__),models_update=None)
         """ Building MLA with NI random tasks """
         NI = ntask
         NS = nruns
@@ -333,6 +337,7 @@ def parse_args():
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
     parser.add_argument('-stepid', type=int, default=-1, help='step ID')
     parser.add_argument('-phase', type=int, default=0, help='phase')
+    parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use a performance model')
 
     args = parser.parse_args()
 
