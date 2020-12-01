@@ -95,15 +95,19 @@ class Model_GPy_LCM(Model):
                 self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+            for qq in range(model_latent):
+                self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
         else:
             K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
             else:
                 self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
+            self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
 
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
+
 
         resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
@@ -128,12 +132,17 @@ class Model_GPy_LCM(Model):
                 kappa = kappa + q.values.tolist() 
             for qq in range(data.NI):
                 q = self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq]
-                sigma = sigma + q.values.tolist()                                                  
-            # print(theta,'theta')
-            # print(var,'var')
-            # print(kappa,'kappa')           
-            # print(ws,'ws')           
-            # print(sigma,'sigma')   
+                sigma = sigma + q.values.tolist()
+
+            if(kwargs['verbose']==True):
+                print('theta:',theta)
+                print('var:',var)
+                print('kappa:',kappa)
+                print('WS:',ws)            
+                print('sigma:',sigma)
+
+
+
             params = theta+var+kappa+sigma+ws        
         return
 

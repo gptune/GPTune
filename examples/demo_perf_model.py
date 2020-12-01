@@ -208,7 +208,7 @@ def main():
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
-    output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
+    output_space = Space([Real(float('-Inf'), float('Inf'), transform="normalize", name="time")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
     if(perfmodel==1):
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
@@ -227,7 +227,7 @@ def main():
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
 
-    options['model_processes'] = 1
+    # options['model_processes'] = 1
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
 
@@ -239,7 +239,7 @@ def main():
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['verbose'] = False
+    options['verbose'] = True
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
 
@@ -294,11 +294,12 @@ def main():
 
 
     if plot==1:
+        fig = plt.figure(figsize=[12.8, 9.6])
         x = np.arange(0., 1., 0.0001)
         for tid in range(len(data.I)):
+            # fig = plt.figure(figsize=[12.8, 9.6])
             p = data.I[tid]
             t = p[0]
-            fig = plt.figure(figsize=[12.8, 9.6])
             I_orig=p
             kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}
             y=np.zeros([len(x),1])
@@ -327,13 +328,13 @@ def main():
             plt.title('t=%f'%t,fontsize=fontsize+2)
             print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
             # legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
-            legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
+            # legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
             annot_min(x,y)
             # plt.show()
             plt.show(block=False)
             plt.pause(0.5)
             input("Press [enter] to continue.")                
-            fig.savefig('obj_t_%f.eps'%t)        
+            fig.savefig('obj_t_%f.pdf'%t)        
 
 
 if __name__ == "__main__":
