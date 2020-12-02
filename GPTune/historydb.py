@@ -257,9 +257,22 @@ class HistoryDB(dict):
                                     if self.is_parameter_duplication(problem, PS_history, func_eval["P"]):
                                         continue
                                     else:
-                                        PS_history[task_id].append(\
-                                            [func_eval["P"][problem.PS[k].name] \
-                                            for k in range(len(problem.PS))])
+                                        parameter_arr = []
+                                        for k in range(len(problem.PS)):
+                                            if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                                                print ("param: " + str(problem.PS[k].name) + " is categorical")
+                                                #parameter_arr.append(str(func_eval["P"][problem.PS[k].name]))
+                                                parameter_arr.append(str(func_eval["P"][problem.PS[k].name]))
+                                            elif type(problem.PS[k]).__name__ == "Integer":
+                                                parameter_arr.append(int(func_eval["P"][problem.PS[k].name]))
+                                            elif type(problem.PS[k]).__name__ == "Real":
+                                                parameter_arr.append(float(func_eval["P"][problem.PS[k].name]))
+                                            else:
+                                                parameter_arr.append(func_eval["P"][problem.PS[k].name])
+                                        PS_history[task_id].append(parameter_arr)
+                                        #PS_history[task_id].append(\
+                                        #    [func_eval["P"][problem.PS[k].name] \
+                                        #    for k in range(len(problem.PS))])
                                         OS_history[task_id].append(\
                                             [func_eval["O"][problem.OS[k].name] \
                                             for k in range(len(problem.OS))])
@@ -604,20 +617,33 @@ class HistoryDB(dict):
 
         space_len = len(space)
 
+        print (space)
+
         for i in range(space_len):
             dict_ = {}
 
-            lower_bound, upper_bound = space.bounds[i]
+            space_type_name = type(space[i]).__name__
 
-            dict_["lower_bound"] = lower_bound
-            dict_["upper_bound"] = upper_bound
-
-            if space.is_real == True:
+            if space_type_name == "Real":
                 dict_["type"] = "real"
-            elif space.is_categorical == True:
-                dict_["type"] = "categorical"
-            else:
+
+                lower_bound, upper_bound = space.bounds[i]
+                dict_["lower_bound"] = lower_bound
+                dict_["upper_bound"] = upper_bound
+
+            elif space_type_name == "Integer":
                 dict_["type"] = "int"
+
+                lower_bound, upper_bound = space.bounds[i]
+                dict_["lower_bound"] = lower_bound
+                dict_["upper_bound"] = upper_bound
+
+            elif space_type_name == "Categoricalnorm":
+                dict_["type"] = "categorical"
+                dict_["categories"] = space[i].bounds
+
+            else:
+                print ("space type unknown")
 
             dict_arr.append(dict_)
 
@@ -640,21 +666,24 @@ class HistoryDB(dict):
 
             now = time.localtime()
 
-            from scipy.stats.mstats import gmean
-            from scipy.stats.mstats import hmean
+            #from scipy.stats.mstats import gmean
+            #from scipy.stats.mstats import hmean
             model_stats = {}
             model_stats["log_likelihood"] = -1.0 * neg_log_marginal_likelihood
             model_stats["neg_log_likelihood"] = neg_log_marginal_likelihood
             model_stats["gradients"] = gradients.tolist()
-            model_stats["gradients_sum_abs"] = np.sum(np.absolute(gradients))
-            model_stats["gradients_average_abs"] = np.average(np.absolute(gradients))
-            model_stats["gradients_hmean_abs"] = hmean(np.absolute(gradients))
-            model_stats["gradients_gmean_abs"] = gmean(np.absolute(gradients))
+            #model_stats["gradients_sum_abs"] = np.sum(np.absolute(gradients))
+            #model_stats["gradients_average_abs"] = np.average(np.absolute(gradients))
+            #model_stats["gradients_hmean_abs"] = hmean(np.absolute(gradients))
+            #model_stats["gradients_gmean_abs"] = gmean(np.absolute(gradients))
             model_stats["iteration"] = iteration
 
             gradients_list = gradients.tolist()
 
             problem_space = {}
+            print (problem.IS)
+            print (problem.PS)
+            print (problem.OS)
             problem_space["IS"] = self.problem_space_to_dict(problem.IS)
             problem_space["PS"] = self.problem_space_to_dict(problem.PS)
             problem_space["OS"] = self.problem_space_to_dict(problem.OS)
