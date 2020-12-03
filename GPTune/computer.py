@@ -17,20 +17,23 @@
 # other to do so.
 #
 
-import numpy as np
-from problem import Problem
-from data import Data
-from typing import Collection, Callable
-import mpi4py
-from mpi4py import MPI
-import os
-import sys
-import concurrent
-from concurrent import futures
 
+from typing import Collection, Callable
+import numpy as np
 from pathlib import Path
 import importlib
 import inspect
+import sys
+import os
+
+import concurrent
+from concurrent import futures
+import mpi4py
+from mpi4py import MPI
+
+from problem import Problem
+from data import Data
+
 
 class Computer(object):
 
@@ -220,3 +223,4 @@ if __name__ == '__main__':
     tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
     res = mpi_comm.gather(tmpdata, root=0)
     mpi_comm.Disconnect()
+

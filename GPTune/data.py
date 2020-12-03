@@ -14,13 +14,17 @@
 # derivative works, and perform publicly and display publicly, and to permit
 # other to do so.
 #
-import numpy as np
-from problem import Problem
+
+
 from typing import Collection
+import math
+import numpy as np
 
 import skopt.space
 from skopt.space import *
-import math
+
+from problem import Problem
+
 
 class Categoricalnorm(Categorical):
     def transform(self, X):
@@ -52,6 +56,7 @@ class Categoricalnorm(Categorical):
     @property
     def transformed_size(self):
         return 1
+
 
 class Data(object):
     # To GPTune I is 2D numpy array. To user I is a list of lists

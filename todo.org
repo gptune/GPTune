@@ -1,15 +1,15 @@
+In ROOT directory:
+_ create CONFIG or INSTALL or MAKE.INC directory and copy all config* files in it.
+_ create TEST directory and copy all run* files in it.
+_ create TRAVIS directory and copy all travis* files in it.
+_ create ext or lib directory to add the external libraries as git subrepositores or to download them in.
 
-_ implement the allreduce_best(self.M.param_array[:], resopt) routine in common.py
-_ Add a user guide (in addition to the README), that will explain, among other things, the use of the common autotuning interface
-_ copy and adapt the ztune examples
+In ROOT/example directory:
+_ create demo, scalapack, superlu, hypre, strumpack and butterflypack directories
+_ copy their related *py in them.
+_ copy their related *driver forlders and make the git repos git sub-repositories.
+_ the postprocess folder should move out of the master branch and move to a TAG or special git branch.
 
+In ROOT/GPTune directory:
+_ move every class in sample.py, model.py and search.py in a separate file.
 
-
-
-
-
-
-        t1 = time.time()
-        t2 = time.time()
-        if (verbose and self.mpi_rank == 0):
-            print("Search time: %f s"%(t2 - t1))

@@ -15,15 +15,17 @@
 # other to do so.
 #
 
+
 import abc
 from typing import Callable
-import numpy as np
 import math
-import skopt.space
-from skopt.space import *
+import numpy as np
 import time
 
+import skopt.space
+from skopt.space import *
 from autotune.space import Space
+
 
 class Sample(abc.ABC):
 
@@ -89,8 +91,6 @@ class Sample(abc.ABC):
 
     def sample_parameters(self, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
-
-
         P = []
         for t in I:
             # print('before inverse_transform:',np.array(t, ndmin=2))
@@ -102,83 +102,5 @@ class Sample(abc.ABC):
             xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
             P.append(xs)
 
-
-
         return P
-
-
-import lhsmdu
-
-class SampleLHSMDU(Sample):
-
-    def __init__(self):
-
-        super().__init__()
-
-        self.cached_n_samples = None
-        self.cached_space     = None
-        self.cached_algo      = None
-
-    def sample(self, n_samples : int, space : Space, **kwargs):
-
-        kwargs = kwargs['kwargs']
-
-        if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
-
-            lhs = lhsmdu.resample()
-
-        else:
-
-            self.cached_n_samples = n_samples
-            self.cached_space     = space
-            self.cached_algo      = kwargs['sample_algo']
-
-            if (kwargs['sample_algo'] == 'LHS-MDU'):
-                lhs = lhsmdu.sample(len(space), n_samples)
-            elif (kwargs['sample_algo'] == 'MCS'):
-                lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)
-            else:
-                raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
-
-        lhs = np.array(list(zip(*[np.array(lhs[k])[0] for k in range(len(lhs))])))
-        # print(lhs,'normalized',n_samples)
-
-        return lhs
-
-
-import openturns as ot
-
-class SampleOpenTURNS(Sample):
-
-    """
-    XXX: This class, together with the underlying OpenTURNS only works on Intel and AMD CPUs.
-    The reason is that OpenTURNS requires the Intel 'Thread Building Block' library to compile and execute.
-    """
-
-    def __init__(self):
-
-        super().__init__()
-
-        self.cached_space        = None
-        self.cached_distribution = None
-
-    def sample(self, n_samples : int, space : Space, **kwargs):
-
-        if (self.cached_space is not None and space == self.cached_space):
-            distribution = self.cached_distribution
-        else:
-            distributions = [ot.Uniform(*d.transformed_bounds) for d in space.dimensions]
-            distribution  = ot.ComposedDistribution(distributions)
-            # Caching space and distribution to speed-up future samplings, especially if invoked by the sample_constrained method.
-            self.cached_space = space
-            self.cached_distribution = distribution
-
-        lhs = ot.LHSExperiment(distribution, n_samples)
-        lhs.setAlwaysShuffle(True) # randomized
-
-        S = lhs.generate()
-        S = np.array(S)
-        S.reshape((n_samples, len(space)))
-
-        return S
 

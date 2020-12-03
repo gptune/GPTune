@@ -16,34 +16,26 @@
 #
 
 
-import abc
-from typing import Collection, Tuple
+import math
 import numpy as np
+import copy
+import functools
+import time
+import mpi4py
+from mpi4py import MPI
+
+from autotune.problem import TuningProblem
 
 from problem import Problem
 from computer import Computer
 from data import Data
+from options import Options
+from sample import *
+from model import *
+from search import *
 
 
-class Model(abc.ABC):
+def TLA2(): # co-Kriging
 
-    def __init__(self, problem : Problem, computer : Computer, **kwargs):
-
-        self.problem = problem
-        self.computer = computer
-
-    @abc.abstractmethod
-    def train(self, data : Data, **kwargs):
-
-        raise Exception("Abstract method")
-
-    @abc.abstractmethod
-    def update(self, newdata : Data, do_train: bool = False, **kwargs):
-
-        raise Exception("Abstract method")
-
-    @abc.abstractmethod
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
-
-        raise Exception("Abstract method")
+    pass
 
