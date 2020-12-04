@@ -29,9 +29,9 @@ for ex in test
 do
 if [ $ex = 'test' ];then
     cd examples
-    $RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py 
-    $RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 1300 -nmax 1300 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine mymachine -jobid 0
-    $RUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_single.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine mymachine
+    $RUN --allow-run-as-root --oversubscribe -n 1 python ./demo.py 
+    $RUN --allow-run-as-root --oversubscribe -n 1 python ./scalapack_MLA_loaddata.py -mmax 1300 -nmax 1300 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine mymachine -jobid 0
+    $RUN --allow-run-as-root --oversubscribe -n 1 python ./superlu_single.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine mymachine
 
 elif [ $ex = 'Fig.2' ];then
     cd $GPTUNEROOT/examples/postprocess/demo/
@@ -68,7 +68,7 @@ elif [ $ex = 'Fig.5' ];then
 elif [ $ex = 'Fig.5_exp' ];then
 # This example autotunes the runtime of SCALPACK PDGEQRF for $\delta=2$ randomly generated-sized matrices with m,n<=2000 with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each PDGEQRF run will use at most 3 MPI ranks. Run the following configurations and check the "Popt  [x, x, x] Oopt  x" for best tuning parameters and runtime for the two matrices.
     cd $GPTUNEROOT/examples 
-    $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine mymachine -optimization GPTune | tee a.out_qr_MLA
+    $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./scalapack_MLA_loaddata.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine mymachine -optimization GPTune | tee a.out_qr_MLA
     
 elif [ $ex = 'Fig.6' ];then
     cd $GPTUNEROOT/examples/postprocess/scalapack/
@@ -80,7 +80,7 @@ elif [ $ex = 'Fig.6_exp' ];then
     cd $GPTUNEROOT/examples
     for tuner in GPTune hpbandster opentuner 
     do
-        $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA_loaddata.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine mymachine -optimization ${tuner} | tee a.out_qr_${tuner}
+        $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./scalapack_MLA_loaddata.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 20 -machine mymachine -optimization ${tuner} | tee a.out_qr_${tuner}
     done
 
 # this example autotunes the runtime or memory of the numerical factorization of superlu_dist using a small matrix "big.rua" with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. Run the following configurations with setting -obj to 'time' or 'memory', and -optimization to 'GPTune', 'hpbandster' or 'opentuner' 
@@ -97,13 +97,13 @@ elif [ $ex = 'Fig.7' ];then
 elif [ $ex = 'Fig.7_exp' ];then
 # this example demonstrates the multi-objective (runtime and memory) tuning of the numerical factorization of superlu_dist using three small matrices "big.rua", "g4.rua", "g20.rua" using $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. The Pareto optima for each matrix are shown in "Popts" and "Oopts" at the bottom of the runlog.   
     cd $GPTUNEROOT/examples
-    $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 3 -nrun 10 -machine mymachine | tee a.out_superlu_multiobj
+    $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 3 -nrun 10 -machine mymachine | tee a.out_superlu_multiobj
 elif [ $ex = 'Tab.4_exp' ];then
 # this example autotunes the runtime for solving the 3D Poisson equation discretized on a nx x ny x nz grid using hypre with $\epsilon=10$ samples. The grid size is randomly generated with nx,ny,nz<=40. Suppose that your machine has 1 node with 4 cores, each hypre run will use at most 3 MPI ranks. Run the following configurations with setting -optimization to 'GPTune', 'hpbandster' or 'opentuner' 
     cd $GPTUNEROOT/examples
     for tuner in GPTune hpbandster opentuner 
     do    
-        $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./hypre.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -machine mymachine -optimization ${tuner} | tee a.out_hypre_${tuner} 
+        $MPIRUN --allow-run-as-root --oversubscribe -n 1 python ./hypre.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -machine mymachine -optimization ${tuner} | tee a.out_hypre_${tuner} 
     done
 fi
 done
