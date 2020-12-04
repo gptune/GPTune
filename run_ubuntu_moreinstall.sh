@@ -1,30 +1,28 @@
-#!/bin/zsh
+#!/bin/bash
 
 export GPTUNEROOT=$PWD
 export PATH=$GPTUNEROOT/env/bin/:$PATH
-export PATH=$GPTUNEROOT/openmpi-4.0.1/bin:$PATH
-export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$DYLD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/
-export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
-export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
-export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
-export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
-export PYTHONPATH=$PYTHONPATH:$PWD/examples/scalapack-driver/spt/
+# export BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
+# export LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPTune/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/scalapack-driver/spt/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
 export PYTHONWARNINGS=ignore
-
 export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
 export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
 export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
 export MPIRUN="$GPTUNEROOT/openmpi-4.0.1/bin/mpirun"
-
-CCC=$MPICC
-CCCPP=$MPICXX
-FTN=$MPIF90
+export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
+# export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
+export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
 RUN=$MPIRUN
 
+export OMPI_MCA_btl="^vader"  # disable vader, this causes runtime error when run in docker
 
 for ex in test
 # for ex in test Fig.2 Fig.3 Fig.3_exp Fig.4 Fig.4_exp Fig.5 Fig.5_exp Fig.6 Fig.6_exp Fig.7 Fig.7_exp Tab.4_exp 

@@ -294,10 +294,10 @@ def main():
 
 
     if plot==1:
-        fig = plt.figure(figsize=[12.8, 9.6])
+        # fig = plt.figure(figsize=[12.8, 9.6])
         x = np.arange(0., 1., 0.0001)
         for tid in range(len(data.I)):
-            # fig = plt.figure(figsize=[12.8, 9.6])
+            fig = plt.figure(figsize=[12.8, 9.6])
             p = data.I[tid]
             t = p[0]
             I_orig=p

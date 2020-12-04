@@ -193,7 +193,6 @@ def main():
     
    # giventask = [[6],[6.5]]
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
-    print(giventask,'ggg')
 
     NI=len(giventask)
     NS=nruns	    
