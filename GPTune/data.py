@@ -19,6 +19,8 @@
 from typing import Collection
 import math
 import numpy as np
+import copy
+import itertools
 
 import skopt.space
 from skopt.space import *
@@ -134,6 +136,40 @@ class Data(object):
 
         pass
 
+    def normalized(self):
+
+        # Returns a copy of the normalized data (self must be originalized)
+
+        if (self.I is None):
+            I = None
+        else:
+            I = np.array(self.problem.IS.transform(self.I), ndmin=2)
+        if (self.P is None):
+            P = None
+        else:
+            P = [np.array(self.problem.PS.transform(x), ndmin=2) for x in self.P]
+        O = copy.copy(self.O)
+        dataNorm = Data(problem = self.problem, I = I, P = P, O = O)
+
+        return dataNorm
+
+    def originalized(self):
+
+        # Returns a copy of the originalized data (self must be normalized)
+
+        if (self.I is None):
+            I = None
+        else:
+            I = np.array(self.problem.IS.inverse_transform(self.I), ndmin=2)
+        if (self.P is None):
+            P = None
+        else:
+            P = [np.array(self.problem.PS.inverse_transform(x), ndmin=2) for x in self.P]
+        O = copy.copy(self.O)
+        dataOrig = Data(problem = self.problem, I = I, P = P, O = O)
+
+        return dataOrig
+
     # TODO
     def merge(self, newdata):
 
@@ -148,31 +184,54 @@ class Data(object):
         self.P = [np.concatenate((self.P[i], newdata.P[i])) for i in range(len(self.P))]
         self.O = [np.concatenate((self.O[i], newdata.O[i])) for i in range(len(self.O))]
 
-#    def insert(I = None: np.ndarray, P = None : Collection[np.ndarray], O = None : Collection[np.ndarray]):
-#
-#        if (I is not None):
-#            if (I.ndim == 1):
-#                assert(I.shape[0] == self.problem.DI)
-#            elif (I.ndim == 2):
-#                assert(I.shape[1] == self.problem.DI)
-#            else:
-#                raise Exception("")
-#            self.I.append(I)
+    def fusion(self, newdata):
 
-class HistoricData(Data):
+        # similar to merge, but tasks can be different
 
-    def __init__(self, data, computer, options):
+        if (self.P is None and newdata.P is not None and len(newdata.P) > 0):
+            self.P = []#[None for tid in range(len(self.I))]
+        if (self.O is None and newdata.O is not None and len(newdata.O) > 0):
+            self.O = []#[None for tid in range(len(self.I))]
+        for i, t in enumerate(newdata.I):
+            idt = np.where((self.I == t).all(axis=1))[0] if self.I is not None else []
+            if (len(idt) > 0):
+                idt = idt[0]
+                for j, x in enumerate(newdata.P[i]):
+                    idx = np.where((self.P[idt] == x).all(axis=1))[0]
+                    if (len(idx) == 0):
+                        if (self.P[idt] is not None):
+                            self.P[idt] = np.concatenate((self.P[idt], x.reshape((1, self.problem.DP))))
+                        else:
+                            self.P[idt] = x.reshape((1, self.problem.DP))
+                        if (newdata.O is not None):
+                            y = newdata.O[i][j]
+                            if (self.O[idt] is not None):
+                                self.O[idt] = np.concatenate((self.O[idt], y.reshape((1, self.problem.DO))))
+                            else:
+                                self.O[idt] = y.reshape((1, self.problem.DO))
+                    else:
+                        # x already in self.P, we chose not to update it or add another entry
+                        pass
+            else:
+                if self.I is None:
+                    self.I = t.reshape((1, self.problem.DI))
+                else:
+                    self.I = np.concatenate((self.I, t.reshape((1, self.problem.DI))))
+                self.P.append(np.array(newdata.P[i], ndmin=2))#.reshape((newdata.P[i].shape[0], self.problem.DP)))
+                if (newdata.O is not None):
+                    self.O.append(np.array(newdata.O[i], ndmin=2))
 
-        self.data     = data
-        self.computer = computer
-        self.options  = options
+    def PO2XY(self):
 
-#   @staticmethod
-#   def load():
-#
-#    pass
-#
-#   def save(self):
-#
-#    pass
+        X = self.P[0]
+        Y = self.O[0]
+
+        return (X, Y)
+
+    def IPO2XY(self):
+
+        X = np.array([np.concatenate((self.I[i], self.P[i][j])) for i in range(len(self.I)) for j in range(self.P[i].shape[0])])
+        Y = np.array(list(itertools.chain.from_iterable(self.O)))
+
+        return (X, Y)
 

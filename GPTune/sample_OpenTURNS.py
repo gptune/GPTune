@@ -47,7 +47,7 @@ class SampleOpenTURNS(Sample):
 
     def sample(self, n_samples : int, space : Space, **kwargs):
 
-        if (self.cached_space is not None and space == self.cached_space):
+        if (self.cached_space is not None and space is self.cached_space):
             distribution = self.cached_distribution
         else:
             distributions = [ot.Uniform(*d.transformed_bounds) for d in space.dimensions]

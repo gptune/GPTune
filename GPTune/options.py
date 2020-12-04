@@ -70,8 +70,11 @@ class Options(dict):
         search_pop_size = 1000 # Population size in pgymo
         search_gen = 1000  # Number of evolution generations in pgymo
         search_evolve = 10  # Number of times migration in pgymo
-        search_max_iters = 10  # Max number of searches to get results respecting the constraints
-        search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
+        search_max_iters = 10  # Max number of searches to get results respecting the constraints 
+        search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm 
+        search_strategy = "independant_multitask" # "continuous_correlated_multitask"
+        search_correlated_multitask_NX = 50
+        search_correlated_multitask_NA = 50
 
 
         """ Options for the multi-arm bandit algorithm """

@@ -58,8 +58,9 @@ class GPTune(object):
             options = Options()
         self.options  = options
 
-        # Imported methods
-        from mla  import MLA
-        from tla1 import TLA1
-        from tla2 import TLA2
+    # Imported methods
+    from mla  import MLA
+    from mla2 import MLA2
+    from tla1 import TLA1
+    from tla2 import TLA2
 

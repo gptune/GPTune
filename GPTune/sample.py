@@ -20,6 +20,7 @@ import abc
 from typing import Callable
 import math
 import numpy as np
+import functools
 import time
 
 import skopt.space
@@ -54,7 +55,9 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 # t1 = time.time_ns()
-                S2 = self.sample(n_samples, space, kwargs=kwargs)
+#                S2 = self.sample(n_samples, space, kwargs=kwargs)
+                S2 = self.sample(int(n_samples * 2**n_itr), space, **kwargs)
+                print(n_samples, n_itr, len(S2))
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
 
@@ -99,8 +102,24 @@ class Sample(abc.ABC):
             # print('after inverse_transform I_orig:',I_orig)
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
-            xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
+            mn_min = min(I_orig[0], I_orig[1])+1
+            print(mn_min)
+            nb  = Integer(1, mn_min, transform="normalize", name="nb")
+            ib  = Integer(1, mn_min, transform="normalize", name="ib")
+            PS2 = Space([nb, ib])
+#            xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
+            xs = self.sample_constrained(n_samples, PS2, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
+            xs *= mn_min/1000.
             P.append(xs)
 
         return P
+
+    def sample_fusion(self, n_samples : int, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
+
+        check_constraints_inputs = functools.partial(check_constraints, inputs_only = True)
+        I = self.sample_inputs(n_samples, IS, check_constraints_inputs, check_constraints_kwargs, **kwargs)
+        check_constraints_parameters = functools.partial(check_constraints, inputs_only = False)
+        P = self.sample_parameters(1, I, IS, PS, check_constraints_parameters, check_constraints_kwargs, **kwargs)
+
+        return (I, P)
 

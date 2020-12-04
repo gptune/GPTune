@@ -89,7 +89,7 @@ def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
         self.data.I = self.problem.IS.transform(self.data.I)
 
     if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
-        self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)		
+        self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)
             
 
 #        if (self.mpi_rank == 0):

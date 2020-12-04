@@ -37,61 +37,135 @@ class Model_DGP(Model):
 
     def train(self, data : Data, **kwargs):
 
-        multitask = len(self.I) > 1
+        self.data = data
 
+        #--------- Data preparation ----------#
+
+        multitask = len(data.I) > 1
         if (multitask):
-            X = np.array([np.concatenate((self.I[i], self.P[i][j])) for i in range(len(self.I)) for j in range(self.P[i].shape[0])])
+            (X, Y) = data.IPO2XY()
         else:
-            X = self.P[0]
-        Y = np.array(list(itertools.chain.from_iterable(self.O)))
+            (X, Y) = data.PO2XY()
 
-        #--------- Model Construction ----------#
-        model_n_layers = 2
-        # Define what kernels to use per layer
-        kerns = [GPy.kern.RBF(input_dim=Q, ARD=True) + GPy.kern.Bias(input_dim=Q) for lev in range(model_n_layers)]
-        kerns.append(GPy.kern.RBF(input_dim=X.shape[1], ARD=True) + GPy.kern.Bias(input_dim=X.shape[1]))
-        # Number of inducing points to use
-        if (num_inducing is None):
-            if (multitask):
-                lenx = sum([len(X) for X in self.P])
-            else:
-                lenx = len(self.P)
-#            num_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
-            num_inducing = lenx
+        #--------- Parameter selection ----------#
+
+        # Model parameters
+
+        model_layers = kwargs['model_layers']
+        if (kwargs['model_latent'] is not None):
+            Q = kwargs['model_latent']
+        else:
+            #Q = 2
+            Q = self.problem.DI + self.problem.DP
+        nDims = [Y.shape[1]] + model_layers * [Q] + [X.shape[1]]
+        if (kwargs['model_inducing'] is not None):
+            num_inducing = kwargs['model_inducing']
+        else:
+            #num_inducing = X.shape[0]
+            #num_inducing = int(X.shape[0] / math.log(X.shape[0], 10) if X.shape[0] > 0 else X.shape[0])
+            num_inducing = int(5 * np.sqrt(X.shape[0]))
+            print('num_inducing', num_inducing)
         # Whether to use back-constraint for variational posterior
         back_constraint = False
+        #back_constraint = True
         # Dimensions of the MLP back-constraint if set to true
-        encoder_dims=[[X.shape[0]],[X.shape[0]],[X.shape[0]]]
+        encoder_dims = None
+        #encoder_dims = [[X.shape[0]],[X.shape[0]],[X.shape[0]]]
 
-        nDims = [Y.shape[1]] + model_n_layers * [Q] + [X.shape[1]]
-#        self.M = deepgp.DeepGP(nDims, Y, X=X, num_inducing=num_inducing, likelihood = None, inits='PCA', name='deepgp', kernels=kerns, obs_data='cont', back_constraint=True, encoder_dims=encoder_dims, mpi_comm=mpi_comm, self.mpi_root=0, repeatX=False, inference_method=None)#, **kwargs):
-        self.M = deepgp.DeepGP(nDims, Y, X=X, num_inducing=num_inducing, likelihood = None, inits='PCA', name='deepgp', kernels=kerns, obs_data='cont', back_constraint=False, encoder_dims=None, mpi_comm=None, mpi_root=0, repeatX=False, inference_method=None)#, **kwargs):
-#        self.M = deepgp.DeepGP([Y.shape[1], Q, Q, X.shape[1]], Y, X=X, kernels=[kern1, kern2, kern3], num_inducing=num_inducing, back_constraint=back_constraint)
+        # Optimization parameters
+
+        num_restarts  = kwargs['model_restarts']
+        verbose       = kwargs['verbose']
+        num_processes = kwargs['model_processes']
+        max_iters     = kwargs['model_max_iters']
+
+        #--------- Model Construction ----------#
+
+#        self.M = RegressionModel()
+
+        kerns = [GPy.kern.RBF(input_dim=Q, ARD=True) + GPy.kern.Bias(input_dim=Q) for lev in range(model_layers)]
+        kerns.append(GPy.kern.RBF(input_dim=X.shape[1], ARD=True) + GPy.kern.Bias(input_dim=X.shape[1]))
+        self.M = deepgp.DeepGP\
+                (
+                        nDims,
+                        Y,
+                        X = X,
+                        num_inducing = num_inducing,
+                        likelihood = None,
+                        inits = 'PCA',
+                        name = 'deepgp',
+                        kernels = kerns,
+                        obs_data = 'cont',
+                        back_constraint = back_constraint,
+                        encoder_dims = encoder_dims,
+                        mpi_comm = kwargs['mpi_comm'],
+                        mpi_root = 0,
+                        repeatX = False,
+                        inference_method = None
+                )#, **kwargs)
 
         #--------- Optimization ----------#
-        # Make sure initial noise variance gives a reasonable signal to noise ratio.
-        # Fix to that value for a few iterations to avoid early local minima
+
+#        # Make sure initial noise variance gives a reasonable signal to noise ratio.
+#        # Fix to that value for a few iterations to avoid early local minima
+#
         for i in range(len(self.M.layers)):
             output_var = self.M.layers[i].Y.var() if i==0 else self.M.layers[i].Y.mean.var()
             self.M.layers[i].Gaussian_noise.variance = output_var*0.01
             self.M.layers[i].Gaussian_noise.variance.fix()
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        self.M.optimize(messages = True, max_iters = 100)
+#        
+#        # Unfix noise variance now that we have initialized the model
+#        for i in range(len(self.M.layers)):
+#            self.M.layers[i].Gaussian_noise.variance.unfix()
 
-        # Unfix noise variance now that we have initialized the model
-        for i in range(len(self.M.layers)):
-            self.M.layers[i].Gaussian_noise.variance.unfix()
+#        self.M.obslayer.likelihood.variance[:] = Y.var()*0.01
+#        for layer in self.M.layers:
+#            layer.kern.rbf.variance.fix(warning=False)
+#            layer.likelihood.variance.fix(warning=False)
+#
+#        self.M.optimize(messages = True, max_iters = 100)
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        for layer in self.M.layers:
+            layer.kern.rbf.variance.constrain_positive(warning=False)
+
+        self.M.optimize(messages = True, max_iters = 100)
+
+        for layer in self.M.layers:
+            layer.likelihood.variance.constrain_positive(warning=False)
+
+        #self.M.optimize(messages = True, max_iters = max_iters)
+        self.M.optimize_restarts\
+                (
+                        num_restarts = num_restarts,
+                        robust = True,
+                        verbose = verbose,
+                        parallel = (num_processes is not None and num_processes > 1),
+                        num_processes = num_processes,
+                        messages = True,
+                        optimizer = 'lbfgs',
+                        start = None,
+                        max_iters = max_iters,
+                        ipython_notebook = False,
+                        clear_after_finish = True
+                )
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
-        #XXX TODO
-        self.train(newdata, **kwargs)
+        if (do_train):
+            self.train(newdata, **kwargs)
+        else:
+            (X, Y) = newdata.IPO2XY()
+            self.M.append_XY(Y, X)
 
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        (mu, var) = self.M.predict(np.concatenate((self.I[tid], x)).reshape((1, self.DT + self.DI)))
+        multitask = len(self.data.I) > 1
+        if (multitask):
+            (mu, var) = self.M.predict(np.concatenate((self.data.I[tid], points)).reshape((1, self.problem.DI + self.problem.DP)))
+        else:
+            (mu, var) = self.M.predict(points.reshape((1, self.problem.DP)))
 
         return (mu, var)
 

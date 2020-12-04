@@ -35,7 +35,46 @@ from model import *
 from search import *
 
 
-def TLA2(): # co-Kriging
+def TLA2(self, Tnew, modelers, **kwargs):
 
-    pass
+    stats = {
+        "time_total": 0,
+        "time_search": 0,
+        "time_fun": 0
+    }
+
+    t0=time.time_ns()
+
+    Tnew = self.problem.IS.transform(Tnew)
+
+    aprxopts = []
+    O = []
+
+    kwargs = copy.deepcopy(self.options)
+    kwargs['search_acq'] = 'mean'
+
+    searcher =  eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
+
+    for t in Tnew:
+
+        newdata = Data(self.problem, I = [t], P = [], O = [], D = [{}])
+
+        t1=time.time_ns()
+        res = searcher.search(data = newdata, models = modelers, tid = 0, **kwargs)[1]
+        t2=time.time_ns()
+        stats["time_search"] += (t2 - t1)/1e9
+        
+        newdata.P = [res]
+        aprxopts += newdata.P
+
+        t1=time.time_ns()
+        newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, options = kwargs)
+        O += newdata.O
+        t2 = time.time_ns()
+        stats["time_fun"] += (t2 - t1)/1e9
+
+    t3 = time.time_ns()
+    stats["time_total"] += (t3 - t0)/1e9
+
+    return (aprxopts, O, stats)
 
