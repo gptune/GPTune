@@ -50,6 +50,8 @@ apt-get install zlib1g-dev -y
 apt-get install wget -y
 apt-get install libsm6 -y
 apt-get install libbz2-dev -y
+apt-get install libsqlite3-dev -y
+
 
 cd $GPTUNEROOT
 rm -rf Python-3.7.9
