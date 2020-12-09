@@ -23,8 +23,15 @@ from computer import Computer
 from data import Data
 from options import Options
 from sample import *
+from sample_LHSMDU import *
+from sample_OpenTURNS import *
 from model import *
+from model_GPy import *
+from model_cLCM import *
+from model_PyDeepGP import *
+from model_sghmc_dgp import *
 from search import *
+from search_PyGMO import *
 
 
 class GPTune(object):
@@ -60,6 +67,7 @@ class GPTune(object):
 
     # Imported methods
     from mla  import MLA
+    from mla1 import MLA1
     from mla2 import MLA2
     from tla1 import TLA1
     from tla2 import TLA2

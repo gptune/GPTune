@@ -31,8 +31,15 @@ from computer import Computer
 from data import Data
 from options import Options
 from sample import *
+from sample_LHSMDU import *
+from sample_OpenTURNS import *
 from model import *
+from model_GPy import *
+from model_cLCM import *
+from model_PyDeepGP import *
+from model_sghmc_dgp import *
 from search import *
+from search_PyGMO import *
 
 
 def TLA1(self, Tnew, NS):
@@ -94,7 +101,7 @@ def TLA1(self, Tnew, NS):
         K = GPy.kern.RBF(input_dim=self.problem.DI)
         M = GPy.models.GPRegression(INorms, PSoptNorms[k], K)
         # M.optimize_restarts(num_restarts = 10, robust=True, verbose=False, parallel=False, num_processes=None, messages="False")
-        M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+        M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] is not None and kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
         MSopt.append(M)
 
     aprxoptsNorm=np.hstack([MSopt[k].predict_noiseless(InewNorms)[0] for k in range(self.problem.DP)])  # the index [0] is the mean value, [1] is the variance

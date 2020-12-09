@@ -215,7 +215,7 @@ set_target_properties(_gptuneclcm PROPERTIES
 
 
 
-set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/scalapack-driver/src/")
+set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/scalapack/scalapack-driver/src/")
 include_directories(${SOURCE_DIR_SCALAPACK_EX})
 #set(sources_scalapack_example "${SOURCE_DIR_SCALAPACK_EX}/pdqrdriver.f ${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f")
 set(sources_scalapack_example 

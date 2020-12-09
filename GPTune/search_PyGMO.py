@@ -38,7 +38,14 @@ import pygmo as pg
 from problem import Problem
 from computer import Computer
 from data import Data
+from sample import *
+from sample_LHSMDU import *
+from sample_OpenTURNS import *
 from model import Model
+from model_GPy import *
+from model_cLCM import *
+from model_PyDeepGP import *
+from model_sghmc_dgp import *
 from search import Search
 
 
@@ -106,7 +113,8 @@ class SurrogateProblem(object):
         """ Mean prediction """
 
         #return [self.models[o].predict(x, tid=self.tid)[0] for o in range(self.problem.DO)]
-        mu, var = self.models[0].predict(x, tid=self.tid)
+#        mu, var = self.models[0].predict(x, tid=self.tid)
+        mu, var = mymodel.predict(x, tid=self.tid)
 
         return mu[0] + np.sqrt(var[0])
 
@@ -252,7 +260,7 @@ class SurrogateProblemContinuousMultiTask(object):
 #                    pass
 #                print('likelihood', layer.likelihood)
                 print(sigma2Lp1, lLp1, sigma2L, keff)
-                keff =  sigma2Lp1 / (sqrt(1. + 2. * lLp1**-2 * (sigma2L - keff)))
+                keff =  sigma2Lp1 / (np.sqrt(1. + 2. * lLp1**-2 * (sigma2L - keff)))
 
             #return keff[0]
             return keff
@@ -357,7 +365,7 @@ class SearchPyGMO(Search):
     """
     # YL: TBB works also on AMD processors
 
-    def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+    def search(self, data : Data, models : Collection[Model], tid : int, sampler : Sample = None, **kwargs) -> np.ndarray:
 
         global mymodel
 #        kwargs = kwargs['kwargs']
@@ -402,7 +410,13 @@ class SearchPyGMO(Search):
                     if (champions_f[idx] < float('Inf')):
                         cond = True
                         # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
-                        bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
+                        if (tid is None):
+#                            bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DI + self.problem.DP))
+                            xtilda = champions_x[idx]
+                            xtilda[self.problem.DI:] *= min(xtilda[0], xtilda[1])
+                            bestX.append(np.array(xtilda).reshape(1, self.problem.DI + self.problem.DP))
+                        else:
+                            bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
                         break
                 cpt += 1
         else:                   # multi objective

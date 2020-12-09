@@ -36,7 +36,14 @@ from mpi4py import futures
 from problem import Problem
 from computer import Computer
 from data import Data
+from sample import *
+from sample_LHSMDU import *
+from sample_OpenTURNS import *
 from model import Model
+from model_GPy import *
+from model_cLCM import *
+from model_PyDeepGP import *
+from model_sghmc_dgp import *
 
 
 class Search(abc.ABC):
@@ -46,7 +53,7 @@ class Search(abc.ABC):
         self.computer = computer
 
     @abc.abstractmethod
-    def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+    def search(self, data : Data, models : Collection[Model], tid : int, sampler : Sample = None, **kwargs) -> np.ndarray:
 
         raise Exception("Abstract method")
 
@@ -77,10 +84,10 @@ class Search(abc.ABC):
                 # res = list(executor.map(fun, tids, timeout=None, chunksize=1))
 
                 def fun(tid):
-                    return self.search(data=data,models = models, tid =tid, kwargs = kwargs)
+                    return self.search(data=data,models = models, tid =tid, **kwargs)
                 res = list(executor.map(fun, tids, timeout=None, chunksize=1))
         else:
-            fun = functools.partial(self.search, data, models, kwargs = kwargs)
+            fun = functools.partial(self.search, data, models, **kwargs)
             res = list(map(fun, tids))
         # print(res)
         res.sort(key = lambda x : x[0])
