@@ -4,8 +4,8 @@
 ################################### 
 export GPTUNEROOT=$PWD
 export PATH=$GPTUNEROOT/env/bin/:$PATH
-export BLAS_LIB=update-alternatives --list libblas.so
-export LAPACK_LIB=update-alternatives --list liblapack.so
+export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
@@ -49,10 +49,8 @@ apt-get install gcc-9 g++-9 gfortran-9 -y
 apt-get install libffi-dev -y
 apt-get install libssl-dev -y
 
-apt-get install libblas-dev  -y
-apt-get install liblapack-dev -y
-export BLAS_LIB=update-alternatives --list libblas.so
-export LAPACK_LIB=update-alternatives --list liblapack.so
+# apt-get install libblas-dev  -y
+# apt-get install liblapack-dev -y
 apt-get install cmake -y
 apt-get install git -y
 apt-get install vim -y
@@ -89,6 +87,11 @@ source env/bin/activate
 
 # manually install dependencies from cmake and make
 ###################################
+cd $GPTUNEROOT
+git clone https://github.com/xianyi/OpenBLAS
+make PREFIX=. FC=$FTN install -j32
+
+
 cd $GPTUNEROOT
 wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
 bzip2 -d openmpi-4.0.1.tar.bz2
