@@ -95,8 +95,8 @@ source env/bin/activate
 cd $GPTUNEROOT
 git clone https://github.com/xianyi/OpenBLAS
 cd OpenBLAS
-make PREFIX=. FC=$FTN -j32
-make PREFIX=. FC=$FTN install -j32
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN -j32
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
 
 
 cd $GPTUNEROOT
