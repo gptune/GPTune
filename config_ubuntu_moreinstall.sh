@@ -23,20 +23,29 @@ export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRAR
 export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
 
-CC=gcc-10
-FTN=gfortran-10
-CPP=g++-10
+CC=gcc-9
+FTN=gfortran-9
+CPP=g++-9
+
+# CC=gcc-10
+# FTN=gfortran-10
+# CPP=g++-10
 
 
 # install dependencies using apt-get and virtualenv
 ###################################
 
-apt-get update
-apt-get install dialog apt-utils -y
-apt-get install build-essential software-properties-common -y
-add-apt-repository ppa:ubuntu-toolchain-r/test -y
-apt-get update
-apt-get install gcc-10 g++-10 gfortran-10 -y
+apt-get update -y 
+apt-get upgrade -y 
+apt-get dist-upgrade -y  
+apt-get install dialog apt-utils -y 
+apt-get install build-essential software-properties-common -y 
+add-apt-repository ppa:ubuntu-toolchain-r/test -y 
+apt-get update -y 
+apt-get install gcc-9 g++-9 gfortran-9 -y  
+# apt-get install gcc-10 g++-10 gfortran-10 -y  
+
+
 apt-get install libffi-dev -y
 apt-get install libssl-dev -y
 
@@ -101,7 +110,7 @@ cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
+	-DCMAKE_Fortran_FLAGS="" \
 	-DCMAKE_INSTALL_PREFIX=./install \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -122,7 +131,7 @@ rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="" \
 	-DCMAKE_C_FLAGS="-fopenmp" \
-	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
+	-DCMAKE_Fortran_FLAGS="-fopenmp " \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
@@ -165,7 +174,7 @@ rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRelease" \
-	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
+	-DCMAKE_Fortran_FLAGS="" \
 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
