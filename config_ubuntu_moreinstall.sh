@@ -23,9 +23,13 @@ export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRAR
 export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
 
-CC=gcc-9
-FTN=gfortran-9
-CPP=g++-9
+CC=gcc-8
+FTN=gfortran-8
+CPP=g++-8
+
+# CC=gcc-9
+# FTN=gfortran-9
+# CPP=g++-9
 
 # CC=gcc-10
 # FTN=gfortran-10
@@ -42,7 +46,8 @@ apt-get install dialog apt-utils -y
 apt-get install build-essential software-properties-common -y 
 add-apt-repository ppa:ubuntu-toolchain-r/test -y 
 apt-get update -y 
-apt-get install gcc-9 g++-9 gfortran-9 -y  
+apt-get install gcc-8 g++-8 gfortran-8 -y  
+# apt-get install gcc-9 g++-9 gfortran-9 -y  
 # apt-get install gcc-10 g++-10 gfortran-10 -y  
 
 
@@ -89,6 +94,8 @@ source env/bin/activate
 ###################################
 cd $GPTUNEROOT
 git clone https://github.com/xianyi/OpenBLAS
+cd OpenBLAS
+make PREFIX=. FC=$FTN -j32
 make PREFIX=. FC=$FTN install -j32
 
 

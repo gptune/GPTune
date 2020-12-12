@@ -1,4 +1,5 @@
-FROM ubuntu:16.04
+# FROM ubuntu:16.04
+FROM debian:stable
 # FROM ubuntu:18.04
 
 WORKDIR /app
