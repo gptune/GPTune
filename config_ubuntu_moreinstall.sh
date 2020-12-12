@@ -4,8 +4,8 @@
 ################################### 
 export GPTUNEROOT=$PWD
 export PATH=$GPTUNEROOT/env/bin/:$PATH
-export BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
-export LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
+export BLAS_LIB=update-alternatives --list libblas.so
+export LAPACK_LIB=update-alternatives --list liblapack.so
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
@@ -51,6 +51,8 @@ apt-get install libssl-dev -y
 
 apt-get install libblas-dev  -y
 apt-get install liblapack-dev -y
+export BLAS_LIB=update-alternatives --list libblas.so
+export LAPACK_LIB=update-alternatives --list liblapack.so
 apt-get install cmake -y
 apt-get install git -y
 apt-get install vim -y
