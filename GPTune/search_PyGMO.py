@@ -191,6 +191,9 @@ class SurrogateProblemContinuousMultiTask(object):
         self.Ad  = self.sampler.sample_parameters(n_samples = self.NA, I = self.Xmc, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
         print('!!!!!!!!!!!! generate_Monte_Carlo_samples')
 
+        Ad_new = np.broadcast_to(self.Ad, (self.Xmc.shape[0], self.Ad.shape[0]))
+        self.XmcAd = np.concatenate((self.Xmc, Ad_new), axis=1)
+
     def pre_compute_mu_sigma(self):
 
         global mymodel
@@ -198,18 +201,20 @@ class SurrogateProblemContinuousMultiTask(object):
 #        self.Xtilda = np.vstack([np.vstack([[x, a] for a in self.Ad[i]]) for i, x in enumerate(self.Xmc)])#.reshape((ntso,self.problem.DI))
 #        self.Ytilda = self.models[0].M.predict(self.Xtilda)
 #        (self.mutilda, self.vartilda) = 
-        self.mu = []
-        self.sigma = []
-        for i, x in enumerate(self.Xmc):
-            mu1 = []
-            sigma1 = []
-            for j, a in enumerate(self.Ad[i]):
-#                mu2, var2 = self.models[0].M.predict(np.concatenate((x, a)).reshape((1, self.problem.DI + self.problem.DP)))
-                (mu2, var2) = mymodel.M.predict(np.concatenate((x, a)).reshape((1, self.problem.DI + self.problem.DP)))
-                mu1.append(-mu2[0][0])
-                sigma1.append(np.math.sqrt(var2[0][0]))
-            self.mu.append(mu1)
-            self.sigma.append(sigma1)
+
+#        self.mu = []
+#        self.sigma = []
+#        for i, x in enumerate(self.Xmc):
+#            mu1 = []
+#            sigma1 = []
+#            for j, a in enumerate(self.Ad[i]):
+##                mu2, var2 = self.models[0].M.predict(np.concatenate((x, a)).reshape((1, self.problem.DI + self.problem.DP)))
+#                (mu2, var2) = mymodel.M.predict(np.concatenate((x, a)).reshape((1, self.problem.DI + self.problem.DP)))
+#                mu1.append(-mu2[0][0])
+#                sigma1.append(np.math.sqrt(var2[0][0]))
+#            self.mu.append(mu1)
+#            self.sigma.append(sigma1)
+        self.mu, self.sigma = mymodel.M.predict(self.XmcAd)
         print('!!!!!!!!!!!! pre_compute_mu_sigma')
         self.cpt1 = 0
         self.cpt2 = 0
@@ -334,17 +339,15 @@ class SurrogateProblemContinuousMultiTask(object):
         xOrig = self.problem.IS.inverse_transform(np.array(x, ndmin=2))[0]
         aOrig = self.problem.PS.inverse_transform(np.array(a, ndmin=2))[0]
 
-        cond = False
+        cond = True
 
         idx = np.where(xOrig in self.dataOrig.I)[0]
         if (len(idx) > 0):
-#            print(idx, type(idx))
-#            print(idx[0], type(idx[0]))
             ida = np.where(aOrig in self.dataOrig.P[idx[0]])[0]
             if (len(ida) > 0):
-                cond = True
+                cond = False
 
-        if (not cond):
+        if (cond):
             point  = {self.problem.IS[k].name: x[k] for k in range(self.problem.DI)}
             point2 = {self.problem.PS[k].name: a[k] for k in range(self.problem.DP)}
             point.update(point2)
@@ -355,6 +358,149 @@ class SurrogateProblemContinuousMultiTask(object):
             return self.REVI(xtilda)
         else:
             return [float("Inf")]* self.problem.DO  
+
+    def batch_REVI(self, xtildas):
+
+        global mymodel
+
+        def sigmatilda(xtildas):
+
+            # Equation (28) in "INTERPRETABLE DEEP GAUSSIAN PROCESSES WITH MOMENTS" from Chi-Ken Lu, Scott Cheng-Hsin Yang, Xiaoran Hao, Patrick Shafto
+
+            if (False):
+                layers = self.models[0].M.layers
+                keff = layers[-1].kern.rbf.K(self.XmcAd, xtildas)[0][0]
+                # loop over layers starting from second to last all the way to the first
+                for i, layer in enumerate(layers[slice(-2, -(len(layers) + 1), -1)]):
+                    sigma2Lp1 = layer.kern.rbf.variance
+                    sigma2L   = layers[i-1].kern.rbf.variance
+                    lLp1      = np.linalg.norm(layer.kern.rbf.lengthscale)
+            else:
+                kernels = mymodel.M.model.kernels
+                keff = kernels[-1].K(self.XmcAd, xtildas)[0][0]
+                # loop over layers starting from second to last all the way to the first
+                for i, kernel in enumerate(kernels[slice(-2, -(len(kernels) + 1), -1)]):
+                    sigma2Lp1 = kernel.variance
+                    sigma2L   = kernels[i-1].variance
+                    lLp1      = np.linalg.norm(kernel.lengthscales)
+                    keff      =  sigma2Lp1 / (np.sqrt(1. + 2. * lLp1**-2 * (sigma2L - keff)))
+                sess = mymodel.M.model.session
+                keff = sess.run((keff))
+
+            return keff
+
+        def KG(mus, sigmas):
+
+            # Remove dominated pairs from μ and σ
+            musigma = np.vstack((mus, sigmas)).T
+#            print('musigma', musigma)
+            if(self.problem.DI + self.problem.DP == 2):
+                front = pg.non_dominated_front_2d(musigma)
+            else:
+                ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(musigma)
+                front = ndf[0]
+            musigma = musigma[front]
+#            print('musigma[front]', musigma)
+            # Sort the elements of μ and σ in order of increasing σ
+            dtype = [('mu', float), ('sigma', float)]
+            musigma = np.array(musigma, dtype = dtype)
+            musigma.sort(order = 'sigma')
+            musigma.dtype = np.float
+            musigma = musigma[:,(1,2)]
+#            print('musigma.sort', musigma)
+            # Initialize μ ← μ − max{μ}, I ← [1, 2], Z̃ ← [−∞, (μ1 - μ2)/(σ2 − σ1)]
+            maxmu = max(musigma[:,0])
+            mu = musigma[:,0] - maxmu
+            sigma = musigma[:,1]
+            I = [0]
+#            print('mu', mu, 'sigma', sigma)
+            Ztilda = [float('-inf')]
+            if (len(mu) > 1):
+                I.append(1)
+                Ztilda.append((mu[0] - mu[1])/(sigma[1] - sigma[0] + 1e-12))
+#            print('Ztilda', Ztilda)
+            for i in range(2,len(mu)):
+                cond = True
+                while (cond):
+                    j = I[-1]
+                    z = (mu[i] - mu[j])/(sigma[j] - sigma[i] + 1e-12)
+#                    print('z', z)
+                    if (z < Ztilda[-1]):
+                        I.pop()
+                        Ztilda.pop()
+#                        print('Ztilda', Ztilda)
+                    else:
+                        cond = False
+                I.append(i)
+                Ztilda.append(z)
+#                print('Ztilda.append', Ztilda)
+            Ztilda.append(float('inf'))
+            res = sum([mu[I[i]] * (sp.stats.norm.cdf(Ztilda[i+1]) - sp.stats.norm.cdf(Ztilda[i])) + sigmas[I[i]] * (sp.stats.norm.pdf(Ztilda[i]) - sp.stats.norm.pdf(Ztilda[i+1])) for i in range(len(I))])
+
+            return res
+
+        t1 = time.time_ns()
+        batch_sigmas = sigmatilda(xtildas)
+        revis = []
+        for batch_id in range(batch_sigmas.shape[1])
+            revi = 0.
+            idx = 0
+            for i, xi in enumerate(self.Xmc):
+                s = slice(idx, idx + len(self.Ad[i]))
+                revi += KG(self.mu[s], batch_sigmas[s, batch_id])
+                idx += len(self.Ad[i])
+            revi /= self.NX
+            revis.append(revi)
+        t2 = time.time_ns()
+        self.cpt1 += 1
+        print('%d %d REVI %f time %f'%(self.cpt1, self.cpt2, revis, (t2-t1)/1e9))
+
+        return (- revis) # XXX -revis because we want to maximize
+
+    def batch_fitness(self, dvs):
+
+        m = dvs.shape[0]
+        n = self.problem.DI + self.problem.DP
+        xtildas = dvs.reshape((m / n, n))
+        xss = xtildas[:, :self.problem.DI]
+        ass = xtildas[:, self.problem.DI:]
+        for i in range(m):
+            ass[i] *= min(xss[i, 0], xss[i, 1]) #XXX min
+        xssOrig = self.problem.IS.inverse_transform(xss)
+        assOrig = self.problem.PS.inverse_transform(ass)
+        xtildasOrig = np.concatenate((xssOrig, assOrig))
+
+        # Check if points are already in the database
+        (X, _) = self.dataOrig.IPO2XY()
+        conds = [np.any([np.array_equal(aa, bb) for bb in X]) for aa in xtildasOrig]
+
+#        mask = np.full((m,), False)
+#        for i, x in enumerate(xssOrig):
+#            idx = np.where([np.array_equal(aa, bb) for bb in self.dataOrig.I])[0]
+#            if (len(idx) > 0):
+#            a = assOrig[i]
+#            mask[i] = np.any([np.array_equal(aa, bb) for bb in self.dataOrig.P[idx]])[0]
+
+#        xmask = [np.where([np.array_equal(aa, bb) for bb in self.dataOrig.I]) for aa in xssOrig] #XXX replace array_equal by allclose
+#        amask = [np.any([np.array_equal(aa, bb) for bb in self.dataOrig.P[idx[0]]]) for aa in assOrig]
+#        cond = not ((len(idx) > 0) and (len(ida) > 0))
+
+        # Check if points respect the constraints
+        points = []
+        idx = np.where(np.logical_not(conds))
+        for i in idx:
+            point  = {self.problem.IS[k].name: xss[i][k] for k in range(self.problem.DI)}
+            point2 = {self.problem.PS[k].name: ass[i][k] for k in range(self.problem.DP)}
+            point.update(point2)
+            points.append(point)
+        conds[idx] = self.computer.evaluate_constraints(self.problem, points)
+
+        self.cpt2 += 1
+        res = np.full((m, self.problem.DO), np.inf)
+        idx = np.where(np.logical_not(conds))
+        res[idx] = self.batch_REVI(xtildas[idx])
+
+        return res
 
 
 class SearchPyGMO(Search):
