@@ -40,6 +40,7 @@ elif [ $ex = 'Fig.2' ];then
 elif [ $ex = 'Fig.3' ];then
     cd $GPTUNEROOT/examples/postprocess/demo/
     matlab -r parallel_model_search_cori
+# the plot is $GPTUNEROOT/examples/postprocess/demo/parallel_model_search.eps    
 elif [ $ex = 'Fig.3_exp' ];then
 # this example performs one MLA iteration using $\epsilon=80$ and $\delta=20$ samples of the analytical function (see Table 2). Suppose your machine has 1 node with 16 cores, run the following two configurations and compare 'time_search':xxx and 'time_model':xxx from the runlogs.    
     cd $GPTUNEROOT/examples
@@ -48,8 +49,10 @@ elif [ $ex = 'Fig.3_exp' ];then
 elif [ $ex = 'Fig.4' ];then
     cd $GPTUNEROOT/examples/postprocess/demo/
     bash parse_plot.sh
+#the plot is $GPTUNEROOT/examples/postprocess/demo/plots/models_demo_nodes1_ntask20.pdf        
     cd $GPTUNEROOT/examples/postprocess/scalapack/
     bash parse_plot_perfmodel.sh
+#the plot is $GPTUNEROOT/examples/postprocess/scalapack/plots/models_scalapack_mmax20000_nmax20000_nodes16_ntask5.pdf        
 elif [ $ex = 'Fig.4_exp' ];then
 # this example autotunes the analytical function using $\epsilon=20$ and $\delta=2$ with and without a performance model. Suppose your machine has 1 node with 4 cores, run the following two configuratoins and check the difference in "Oopt" and in the plots. You will notice a better optimum is found by using the performance model.  
     cd $GPTUNEROOT/examples
@@ -64,7 +67,9 @@ elif [ $ex = 'Fig.4_exp' ];then
 elif [ $ex = 'Fig.5' ];then
     cd $GPTUNEROOT/examples/postprocess/scalapack/
     matlab -r plot_optimum_MLAvsSingle_QR_40000_10tasks_10samples
+# the plot is $GPTUNEROOT/examples/postprocess/scalapack/scalapack_qr_MLA_optimum_64nodes.eps        
     matlab -r plot_optimum_MLA_SYEVX
+# the plot is $GPTUNEROOT/examples/postprocess/scalapack/scalapack_syevx_MLA_optimum_time.eps        
 
 elif [ $ex = 'Fig.5_exp' ];then
 # This example autotunes the runtime of SCALPACK PDGEQRF for $\delta=2$ randomly generated-sized matrices with m,n<=2000 with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each PDGEQRF run will use at most 3 MPI ranks. Run the following configurations and check the "Popt  [x, x, x] Oopt  x" for best tuning parameters and runtime for the two matrices.
@@ -74,8 +79,10 @@ elif [ $ex = 'Fig.5_exp' ];then
 elif [ $ex = 'Fig.6' ];then
     cd $GPTUNEROOT/examples/postprocess/scalapack/
     bash parse_plot_tunercompare.sh
+# the plot is $GPTUNEROOT/examples/postprocess/scalapack/plots/tuners_scalapack_mmax40000_nmax40000_nodes64_ntask10_nrun10.pdf        
     cd $GPTUNEROOT/examples/postprocess/superlu_dist/
     bash parse_plot.sh
+# the plot is $GPTUNEROOT/examples/postprocess/superlu_dist/plots/tuners_superlu_dist_nodes32_ntask7_nrun20.pdf         
 elif [ $ex = 'Fig.6_exp' ];then
 # This example autotunes the runtime of SCALPACK PDGEQRF for $\delta=2$ randomly generated-sized matrices with m,n<=2000 with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each PDGEQRF run will use at most 3 MPI ranks. Run the following configurations using the three tuners by setting -optimization to 'GPTune', 'hpbandster' or 'opentuner', check the "Popt  [x, x, x] Oopt  x" for best tuning parameters and runtime for the two matrices. 
     cd $GPTUNEROOT/examples
@@ -93,7 +100,9 @@ elif [ $ex = 'Fig.6_exp' ];then
 
 elif [ $ex = 'Fig.7' ];then
     cd $GPTUNEROOT/examples/postprocess/superlu_dist/
+# the plot is $GPTUNEROOT/examples/postprocess/superlu_dist/pareto_superlu.eps        
     matlab -r plot_pareto
+# the plot is $GPTUNEROOT/examples/postprocess/superlu_dist/pareto_superlu_MLA.eps        
     matlab -r plot_pareto_MLA
 elif [ $ex = 'Fig.7_exp' ];then
 # this example demonstrates the multi-objective (runtime and memory) tuning of the numerical factorization of superlu_dist using three small matrices "big.rua", "g4.rua", "g20.rua" using $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. The Pareto optima for each matrix are shown in "Popts" and "Oopts" at the bottom of the runlog.   
