@@ -54,137 +54,178 @@ nprocmin_pernode=32  # nprocmin_pernode=cores means flat MPI
 # test hypredriver, the following calling sequence will first dump the data to file when using GPTune, then read data when using opentuner or hpbandster to make sure they use the same tasks as GPTune
 cd examples
 
-#
-nrun=100
+################
+firstrun=100
 mkdir hypre_loadmodel_eval
 
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${firstrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${firstrun}
 
-cp hypre.json hypre_loadmodel_eval/hypre.first.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.first.csv
+cp hypre.json hypre_loadmodel_eval/hypre.first_nrun${firstrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.first_nrun${firstrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval/hypre.first.json hypre.json
 
-nrun=100
+nrun=1
+cp hypre_loadmodel_eval/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_history_db
 
-cp hypre.json hypre_loadmodel_eval/hypre.history_db.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.history_db.csv
+cp hypre.json hypre_loadmodel_eval/hypre.history_db_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.history_db_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval/hypre.first.json hypre.json
 
-nrun=100
+nrun=1
+cp hypre_loadmodel_eval/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel
 
-cp hypre.json hypre_loadmodel_eval/hypre.loadmodel.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.loadmodel.csv
+cp hypre.json hypre_loadmodel_eval/hypre.loadmodel_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.loadmodel_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
 
-nrun=200
-
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_singlerun
-
-cp hypre.json hypre_loadmodel_eval/hypre.singlerun.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval/modeling_stat_hypre.singlerun.csv
-
-rm hypre.json
-rm modeling_stat_hypre.csv
-
-
-##
-nrun=50
+################
+firstrun=50
 mkdir hypre_loadmodel_eval2
 
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${firstrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${firstrun}
 
-cp hypre.json hypre_loadmodel_eval2/hypre.first.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.first.csv
+cp hypre.json hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.first_nrun${firstrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval2/hypre.first.json hypre.json
 
-nrun=50
+nrun=1
+cp hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_history_db
 
-cp hypre.json hypre_loadmodel_eval2/hypre.history_db.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.history_db.csv
+cp hypre.json hypre_loadmodel_eval2/hypre.history_db_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.history_db_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval2/hypre.first.json hypre.json
 
-nrun=50
+nrun=1
+cp hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel
 
-cp hypre.json hypre_loadmodel_eval2/hypre.loadmodel.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.loadmodel.csv
-
-rm hypre.json
-rm modeling_stat_hypre.csv
-
-nrun=100
-
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_singlerun
-
-cp hypre.json hypre_loadmodel_eval2/hypre.singlerun.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.singlerun.csv
+cp hypre.json hypre_loadmodel_eval2/hypre.loadmodel_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.loadmodel_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
 
 
+firstrun=50
+nrun=25
+cp hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json hypre.json
 
-##
-nrun=20
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_history_db
+
+cp hypre.json hypre_loadmodel_eval2/hypre.history_db_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.history_db_nrun${nrun}.csv
+
+rm hypre.json
+rm modeling_stat_hypre.csv
+
+firstrun=50
+nrun=25
+cp hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json hypre.json
+
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -update -1 -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel_update
+
+cp hypre.json hypre_loadmodel_eval2/hypre.loadmodel_nrun${nrun}_update.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.loadmodel_nrun${nrun}_update.csv
+
+rm hypre.json
+rm modeling_stat_hypre.csv
+
+firstrun=50
+nrun=25
+cp hypre_loadmodel_eval2/hypre.first_nrun${firstrun}.json hypre.json
+
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -update 5 -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval2/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel_update5
+
+cp hypre.json hypre_loadmodel_eval2/hypre.loadmodel_nrun${nrun}_update5.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval2/modeling_stat_hypre.loadmodel_nrun${nrun}_update5.csv
+
+rm hypre.json
+rm modeling_stat_hypre.csv
+
+################
+firstrun=20
 mkdir hypre_loadmodel_eval3
 
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${firstrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${firstrun}
 
-cp hypre.json hypre_loadmodel_eval3/hypre.first.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.first.csv
+cp hypre.json hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.first_nrun${firstrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval3/hypre.first.json hypre.json
 
-nrun=20
+nrun=1
+cp hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_history_db
 
-cp hypre.json hypre_loadmodel_eval3/hypre.history_db.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.history_db.csv
+cp hypre.json hypre_loadmodel_eval3/hypre.history_db_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.history_db_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
-cp hypre_loadmodel_eval3/hypre.first.json hypre.json
 
-nrun=20
+nrun=1
+cp hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json hypre.json
 
 mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel
 
-cp hypre.json hypre_loadmodel_eval3/hypre.loadmodel.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.loadmodel.csv
+cp hypre.json hypre_loadmodel_eval3/hypre.loadmodel_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.loadmodel_nrun${nrun}.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv
 
-nrun=40
 
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_singlerun
+firstrun=20
+nrun=10
+cp hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json hypre.json
 
-cp hypre.json hypre_loadmodel_eval3/hypre.singlerun.json
-cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.singlerun.csv
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_historydb.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_history_db
+
+cp hypre.json hypre_loadmodel_eval3/hypre.history_db_nrun${nrun}.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.history_db_nrun${nrun}.csv
+
+rm hypre.json
+rm modeling_stat_hypre.csv
+
+firstrun=20
+nrun=10
+cp hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json hypre.json
+
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -update -1 -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel_update
+
+cp hypre.json hypre_loadmodel_eval3/hypre.loadmodel_nrun${nrun}_update.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.loadmodel_nrun${nrun}_update.csv
+
+rm hypre.json
+rm modeling_stat_hypre.csv
+
+firstrun=20
+nrun=10
+cp hypre_loadmodel_eval3/hypre.first_nrun${firstrun}.json hypre.json
+
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_loadmodel.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -update 5 -machine cori -jobid 0 2>&1 | tee hypre_loadmodel_eval3/a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_loadmodel_update5
+
+cp hypre.json hypre_loadmodel_eval3/hypre.loadmodel_nrun${nrun}_update5.json
+cp modeling_stat_hypre.csv hypre_loadmodel_eval3/modeling_stat_hypre.loadmodel_nrun${nrun}_update5.csv
 
 rm hypre.json
 rm modeling_stat_hypre.csv

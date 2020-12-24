@@ -152,6 +152,7 @@ def main():
     nruns = args.nruns
     JOBID = args.jobid
     TUNER_NAME = args.optimization
+    update = args.update
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -240,7 +241,7 @@ def main():
     """ Building MLA with the given list of tasks """
     NI = len(giventask)
     NS = nruns
-    (data, model, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask)
+    (data, model, stats) = gt.MLA_LoadModel(NS=NS, Igiven=giventask, update=update)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -273,6 +274,7 @@ def parse_args():
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
     parser.add_argument('-stepid', type=int, default=-1, help='step ID')
     parser.add_argument('-phase', type=int, default=0, help='phase')
+    parser.add_argument('-update', type=int, default=0, help='model update after loading model')
 
     args = parser.parse_args()
 

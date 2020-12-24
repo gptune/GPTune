@@ -87,7 +87,9 @@ class GPTune(object):
             "time_total": 0,
             "time_fun": 0,
             "time_search": 0,
-            "time_model": 0
+            "time_model": 0,
+            "modeling_time":[],
+            "modeling_iteration":[]
         }
         time_fun=0
         time_search=0
@@ -167,6 +169,9 @@ class GPTune(object):
 
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
         model_reupdate = 0
+        if update == -1: # search one sample without updating model; then search next with updating model.
+            model_reupdate = -1
+            update = 1
         optiter = 0
         NSmin = min(map(len, self.data.P))
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
@@ -187,6 +192,7 @@ class GPTune(object):
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
             print("MLA iteration: ",optiter)
+            stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             model_reupdate = model_reupdate + 1
             t1 = time.time_ns()
@@ -228,12 +234,17 @@ class GPTune(object):
                                 neg_log_marginal_likelihood,
                                 gradients,
                                 iteration)
-                        #stats["modeling_iteration"][optiter-1] += iteration
+                        stats["modeling_iteration"][optiter-1] += iteration
                     else:
                         modelers[o].train(data = tmpdata, **kwargs)
+                        stats["modeling_iteration"][optiter-1] += 0
                     model_reupdate = 0
+                else:
+                    if (kwargs["model_class"] == "Model_LCM"):
+                        stats["modeling_iteration"][optiter-1] += 0
 
             t2 = time.time_ns()
+            stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
