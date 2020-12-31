@@ -3,6 +3,9 @@ import os.path as osp
 import argparse
 import pickle 
 import matplotlib
+# matplotlib.rcParams['text.usetex'] = True
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
