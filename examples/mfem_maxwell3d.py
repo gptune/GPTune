@@ -60,13 +60,15 @@ import math
 
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
-	extra=0
+	extra=1
 	mesh = point['mesh']
 	omega = point['omega']
-	sp_reordering_method = point['sp_reordering_method']
+	# sp_reordering_method = point['sp_reordering_method']
+	sp_reordering_method = 'metis'
 	sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
 	sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
-	hodlr_rel_tol = 10.0**point['hodlr_rel_tol']
+	# hodlr_rel_tol = 10.0**point['hodlr_rel_tol']
+	hodlr_rel_tol = 1e-6
 	hodlr_leaf_size = 2**point['hodlr_leaf_size']
 	hodlr_knn = 2**point['hodlr_knn']
 	hodlr_knn_hodlrbf = hodlr_knn
@@ -75,7 +77,7 @@ def objectives(point):                  # should always use this name for user-d
 
 	# extra_str=['--sp_compression','HODLR','--hodlr_butterfly_levels', '100', '--sp_print_root_front_stats', '--sp_maxit', '1000', '--hodlr_verbose']
 
-	extra_str=['--sp_compression','HODLR','--hodlr_butterfly_levels', '100', '--sp_print_root_front_stats', '--sp_maxit', '1000', '--hodlr_verbose']
+	extra_str=['--sp_compression','HODLR','--hodlr_butterfly_levels', '100', '--sp_print_root_front_stats', '--sp_maxit', '1000']
 
 	if(sp_reordering_method == 'metis'):
 		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
@@ -84,17 +86,17 @@ def objectives(point):                  # should always use this name for user-d
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 
-	# sp_reordering_method='parmetis'
-	# sp_compression_min_sep_size=2000
-	# sp_compression_min_front_size=4000
-	# hodlr_rel_tol=0.001
+	# sp_reordering_method='scotch'
+	# sp_compression_min_sep_size=6000
+	# sp_compression_min_front_size=8000
+	# hodlr_rel_tol=1e-6
 	# hodlr_leaf_size=64
-	# hodlr_knn_hodlrbf=512
-	# hodlr_knn_lrbf=1024
-	# hodlr_BF_sampling_parameter=5.01824
-	# nproc=16
+	# hodlr_knn_hodlrbf=256
+	# hodlr_knn_lrbf=512
+	# hodlr_BF_sampling_parameter=3.9336
+	# nproc=512
 	# nthreads=1
-	# npernode=16
+	# npernode=32
 
 	
 	params = ['mesh', mesh, 'omega', omega, 'sp_reordering_method', sp_reordering_method,'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'hodlr_rel_tol',hodlr_rel_tol, 'hodlr_leaf_size', hodlr_leaf_size, 'hodlr_knn_hodlrbf', hodlr_knn_hodlrbf, 'hodlr_knn_lrbf', hodlr_knn_lrbf, 'hodlr_BF_sampling_parameter', hodlr_BF_sampling_parameter, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
@@ -163,19 +165,21 @@ def main():
 	omega = Real(16.0, 32.0, transform="normalize", name="omega")
 
 	# Tuning parameters
-	sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
-	npernode     = Integer     (0, 5, transform="normalize", name="npernode")
-	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
-	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
+	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
+	npernode     = Integer     (int(np.log2(nprocmin_pernode)), 4, transform="normalize", name="npernode")
+	sp_compression_min_sep_size     = Integer     (5, 9, transform="normalize", name="sp_compression_min_sep_size")
+	sp_compression_min_front_size     = Integer     (8, 12, transform="normalize", name="sp_compression_min_front_size")
 	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
-	hodlr_rel_tol     = Integer(-6, -5, transform="normalize", name="hodlr_rel_tol")
+	# hodlr_rel_tol     = Integer(-6, -5, transform="normalize", name="hodlr_rel_tol")
 	hodlr_knn    = Integer(5, 9, transform="normalize", name="hodlr_knn")
-	hodlr_BF_sampling_parameter    = Real(2.0, 8.0, transform="normalize", name="hodlr_BF_sampling_parameter")
+	# hodlr_BF_sampling_parameter    = Real(2.0, 8.0, transform="normalize", name="hodlr_BF_sampling_parameter")
+	hodlr_BF_sampling_parameter    = Integer(2, 5, transform="normalize", name="hodlr_BF_sampling_parameter")
 
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 
 	IS = Space([mesh,omega])
-	PS = Space([sp_reordering_method,npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size,hodlr_rel_tol, hodlr_knn,hodlr_BF_sampling_parameter])
+	# PS = Space([sp_reordering_method,npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size,hodlr_rel_tol, hodlr_knn,hodlr_BF_sampling_parameter])
+	PS = Space([npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size, hodlr_knn,hodlr_BF_sampling_parameter])
 	OS = Space([result])
 	constraints = {}
 	models = {}
@@ -205,7 +209,10 @@ def main():
 	# """ Building MLA with the given list of tasks """
 	giventask = [["escher",16.0]]		
 	data = Data(problem)
-
+	
+	data.I = giventask
+	Pdefault = [2,7,9,7,6,2]
+	data.P = [[Pdefault]] * ntask
 
 	if(TUNER_NAME=='GPTune'):
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
