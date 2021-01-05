@@ -3,8 +3,9 @@ import os.path as osp
 import argparse
 import pickle 
 import matplotlib
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['text.usetex'] = True
+# matplotlib.rcParams['pdf.fonttype'] = 42
+# matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -72,9 +73,9 @@ def plot(data1, data2, data3, args):
     fig, ax = plt.subplots()
     # ax.bar(x - width/2, data1, width, label=f'OpenTuner/GPTune, {p1}(>=1), {p3}(<0.5)')
     # ax.bar(x + width/2, data2, width, label=f'HpBandster/GPTune, {p2}(>=1), {p4}(<0.5)')
-    ax.bar(x - width, data1, width, color='tab:blue', label=f'NS={args.nrun1}, {p1}(>=1)')
-    ax.bar(x , data2, width, color='tab:orange', label=f'NS={args.nrun2}, {p2}(>=1)')
-    ax.bar(x + width, data3, width, color='tab:brown', label=f'NS={args.nrun3}, {p3}(>=1)')
+    ax.bar(x - width, data1, width, color='tab:blue', label=r'$\epsilon_{tot}$'+f'={args.nrun1}, {p1}($\ge$1)')
+    ax.bar(x , data2, width, color='tab:orange', label=r'$\epsilon_{tot}$'+f'={args.nrun2}, {p2}($\ge$1)')
+    ax.bar(x + width, data3, width, color='tab:brown', label=r'$\epsilon_{tot}$'+f'={args.nrun3}, {p3}($\ge$1)')
     ax.plot([1- width*3/2,ntask+width*3/2], [1, 1], c='black', linestyle=':')
     # ax.plot([0,ntask+1], [0.5, 0.5], linestyle=':', linewidth=1)
     ax.set_ylabel('Ratio of objective minimum',fontdict=font)
