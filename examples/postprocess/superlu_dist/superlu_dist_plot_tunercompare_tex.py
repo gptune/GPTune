@@ -3,8 +3,9 @@ import os.path as osp
 import argparse
 import pickle 
 import matplotlib
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['text.usetex'] = True
+# matplotlib.rcParams['pdf.fonttype'] = 42
+# matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -76,13 +77,13 @@ def plot(data1, data2, args):
     fig, ax = plt.subplots()
     # ax.bar(x - width/2, data1, width, label=f'OpenTuner/GPTune, {p1}(>=1), {p3}(<0.5)')
     # ax.bar(x + width/2, data2, width, label=f'HpBandster/GPTune, {p2}(>=1), {p4}(<0.5)')
-    ax.bar(x - width/2, data1, width, color='tab:blue', label=f'OpenTuner/GPTune, {p1}(>=1)')
-    ax.bar(x + width/2, data2, width, color='tab:orange', label=f'HpBandster/GPTune, {p2}(>=1)')
+    ax.bar(x - width/2, data1, width, color='tab:blue', label=f'OpenTuner/GPTune, {p1}($\ge$1)')
+    ax.bar(x + width/2, data2, width, color='tab:orange', label=f'HpBandster/GPTune, {p2}($\ge$1)')
     ax.plot([1- width*3/2,ntask+width*3/2], [1, 1], c='black', linestyle=':')
     # ax.plot([0,ntask+1], [0.5, 0.5], linestyle=':', linewidth=1)
     ax.set_ylabel('Ratio of best runtime',fontdict=font)
     ax.set_xlabel('Task ID',fontdict=font)
-    ax.set_title(f'PARSEC matrices, NS = {nrun}',fontdict=font)   
+    ax.set_title(f'PARSEC matrices, '+r'$\epsilon_{tot}$'+f' = {nrun}',fontdict=font)   
     ax.set_xticks(x)
     ax.set_xticklabels(x,fontdict=font)
     ax.legend(prop=font_mag)
@@ -117,7 +118,7 @@ def plot_histogram(data1, data2, args):
     ax2.plot([1, 1], [0, n.max()*1.2], c='black', linestyle=':')
     ax1.legend(prop=font_mag)
     ax2.legend(prop=font_mag)
-    ax1.set_title(f'NS = {nrun}',fontdict=font)
+    ax1.set_title(r'$\epsilon_{tot}$'+f' = {nrun}',fontdict=font)
     ax1.set_ylabel('Fraction',fontdict=font)
     ax2.set_ylabel('Fraction',fontdict=font)
     ax2.set_xlabel('Ratio of objective minimum',fontdict=font)

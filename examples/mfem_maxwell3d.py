@@ -18,7 +18,7 @@
 ################################################################################
 """
 Example of invocation of this script:
-python superlu.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
+python mfem_maxwell3d.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
 
 where:
     -nodes is the number of compute nodes
@@ -53,27 +53,58 @@ from gptune import GPTune
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
+
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
 
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
-    
-	model = point['model']
-	freq = point['freq']*1e5
-	nproc     = 32
-	# nthreads  =1 
-	npernode =  math.ceil(float(nproc)/nodes)  
+	extra=1
+	mesh = point['mesh']
+	omega = point['omega']
+	# sp_reordering_method = point['sp_reordering_method']
+	sp_reordering_method = 'metis'
+	sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
+	sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
+	# hodlr_rel_tol = 10.0**point['hodlr_rel_tol']
+	hodlr_rel_tol = 1e-6
+	hodlr_leaf_size = 2**point['hodlr_leaf_size']
+	hodlr_knn = 2**point['hodlr_knn']
+	hodlr_knn_hodlrbf = hodlr_knn
+	hodlr_knn_lrbf = hodlr_knn*2
+	hodlr_BF_sampling_parameter = point['hodlr_BF_sampling_parameter']
+
+	# extra_str=['--sp_compression','HODLR','--hodlr_butterfly_levels', '100', '--sp_print_root_front_stats', '--sp_maxit', '1000', '--hodlr_verbose']
+
+	extra_str=['--sp_compression','HODLR','--hodlr_butterfly_levels', '100', '--sp_print_root_front_stats', '--sp_maxit', '1000']
+
+	if(sp_reordering_method == 'metis'):
+		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
+
+	npernode = 2**point['npernode']
+	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 
-	params = [model, 'freq', freq]
-	RUNDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_RF_cavity/build/EXAMPLE"
-	INPUTDIR = "/project/projectdirs/m2957/liuyangz/my_research/ButterflyPACK_hss_factor_acc/EXAMPLE/EM3D_DATA/preprocessor_3dmesh"
+	# sp_reordering_method='scotch'
+	# sp_compression_min_sep_size=6000
+	# sp_compression_min_front_size=8000
+	# hodlr_rel_tol=1e-6
+	# hodlr_leaf_size=64
+	# hodlr_knn_hodlrbf=256
+	# hodlr_knn_lrbf=512
+	# hodlr_BF_sampling_parameter=3.9336
+	# nproc=512
+	# nthreads=1
+	# npernode=32
+
+	
+	params = ['mesh', mesh, 'omega', omega, 'sp_reordering_method', sp_reordering_method,'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'hodlr_rel_tol',hodlr_rel_tol, 'hodlr_leaf_size', hodlr_leaf_size, 'hodlr_knn_hodlrbf', hodlr_knn_hodlrbf, 'hodlr_knn_lrbf', hodlr_knn_lrbf, 'hodlr_BF_sampling_parameter', hodlr_BF_sampling_parameter, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
+	
+	RUNDIR = os.path.abspath(__file__ + "/../mfem/mfem-build/examples/")
+	INPUTDIR = os.path.abspath(__file__ + "/../mfem/data/")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
-
 
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
@@ -83,18 +114,21 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/ie3dporteigen"%(RUNDIR), args=['-quant', '--data_dir', '%s/%s'%(INPUTDIR,model), '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--which', 'LM','--nev', '20', '--postprocess', '0', '--cmmode', '0','-option', '--tol_comp', '1d-4','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--knn','100','--verbosity', '0'], maxprocs=nproc,info=info)
+	print('exec', "%s/ex3p_indef"%(RUNDIR), 'args', ['-m', '%s/%s.mesh'%(INPUTDIR,mesh), '-x', '%s'%(extra), '-sp', '--omega', '%s'%(omega),'-sp', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--hodlr_rel_tol','%s'%(hodlr_rel_tol), '--hodlr_leaf_size', '%s'%(hodlr_leaf_size),'--hodlr_knn_hodlrbf', '%s'%(hodlr_knn_hodlrbf),'--hodlr_knn_lrbf', '%s'%(hodlr_knn_lrbf),'--hodlr_BF_sampling_parameter', '%s'%(hodlr_BF_sampling_parameter)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
 
-	""" gather the return value using the inter-communicator """							
-	tmpdata = np.array([0, 0],dtype=np.float64)
+	comm = MPI.COMM_SELF.Spawn("%s/ex3p_indef"%(RUNDIR), args=['-m', '%s/%s.mesh'%(INPUTDIR,mesh), '-x', '%s'%(extra), '-sp', '--omega', '%s'%(omega),'-sp', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--hodlr_rel_tol','%s'%(hodlr_rel_tol), '--hodlr_leaf_size', '%s'%(hodlr_leaf_size),'--hodlr_knn_hodlrbf', '%s'%(hodlr_knn_hodlrbf),'--hodlr_knn_lrbf', '%s'%(hodlr_knn_lrbf),'--hodlr_BF_sampling_parameter', '%s'%(hodlr_BF_sampling_parameter)]+extra_str, maxprocs=nproc,info=info)
+
+	""" gather the return value using the inter-communicator """																	
+	tmpdata = np.array([0],dtype=np.float64)
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
-	if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-		tmpdata[0]=1e2
-	print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
 
-	return [tmpdata[0]] 
+	retval = tmpdata[0]
+	print(params, ' mfem time: ', retval)
 
+
+	return [retval] 
+	
 	
 def main():
 
@@ -105,15 +139,12 @@ def main():
 	global nprocmax
 	global nprocmin
 
-	
 	# Parse command line arguments
 
 	args   = parse_args()
 
 	# Extract arguments
 
-	# mmax = args.mmax
-	# nmax = args.nmax
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
@@ -128,33 +159,28 @@ def main():
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
 	
-	
-	nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-	nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
-
-
-	
-
 	# Task parameters
-	geomodels = ["cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko"]
-	# geomodels = ["cavity_wakefield_4K_feko"]
-	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
+	meshes = ["escher", "fichera", "periodic-cube", "amr-hex", "inline-tet"]
+	mesh    = Categoricalnorm (meshes, transform="onehot", name="mesh")    
+	omega = Real(16.0, 32.0, transform="normalize", name="omega")
 
+	# Tuning parameters
+	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
+	npernode     = Integer     (int(np.log2(nprocmin_pernode)), 4, transform="normalize", name="npernode")
+	sp_compression_min_sep_size     = Integer     (5, 9, transform="normalize", name="sp_compression_min_sep_size")
+	sp_compression_min_front_size     = Integer     (8, 12, transform="normalize", name="sp_compression_min_front_size")
+	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
+	# hodlr_rel_tol     = Integer(-6, -5, transform="normalize", name="hodlr_rel_tol")
+	hodlr_knn    = Integer(5, 9, transform="normalize", name="hodlr_knn")
+	# hodlr_BF_sampling_parameter    = Real(2.0, 8.0, transform="normalize", name="hodlr_BF_sampling_parameter")
+	hodlr_BF_sampling_parameter    = Integer(2, 5, transform="normalize", name="hodlr_BF_sampling_parameter")
 
-	# Input parameters  # the frequency resolution is 100Khz
-	freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	# freq      = Integer     (6320, 6430, transform="normalize", name="freq")
-	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
-	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
-	# freq      = Integer     (500, 900, transform="normalize", name="freq")
-	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
-	result2   = Real        (float("-Inf") , float("Inf"),name="r2")
-	
-	IS = Space([model])
-	PS = Space([freq])
-	# OS = Space([result1,result2])
-	OS = Space([result1])
+	result   = Real        (float("-Inf") , float("Inf"),name="r")
 
+	IS = Space([mesh,omega])
+	# PS = Space([sp_reordering_method,npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size,hodlr_rel_tol, hodlr_knn,hodlr_BF_sampling_parameter])
+	PS = Space([npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size, hodlr_knn,hodlr_BF_sampling_parameter])
+	OS = Space([result])
 	constraints = {}
 	models = {}
 
@@ -177,32 +203,16 @@ def main():
 	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 
-	# options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	# options['search_pop_size'] = 1000 # 1000
-	# options['search_gen'] = 10
-
 	options.validate(computer = computer)
 	
-
-
-	# """ Intialize the tuner with existing data stored as last check point"""
-	# try:
-	# 	data = pickle.load(open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, geomodels, machine), 'rb'))
-	# 	giventask = data.I
-	# except (OSError, IOError) as e:
-	# 	data = Data(problem)
-	# 	giventask = [[np.random.choice(geomodels,size=1)[0]] for i in range(ntask)]
-
-
+	
 	# """ Building MLA with the given list of tasks """
-	# giventask = [["big.rua"]]		
-	# giventask = [["pillbox_4000"]]		
-	# giventask = [["cavity_5cell_30K_feko"]]		
-	giventask = [["cavity_rec_17K_feko"]]		
-	# giventask = [["cavity_wakefield_4K_feko"]]		
+	giventask = [["escher",16.0]]		
 	data = Data(problem)
-
-
+	
+	data.I = giventask
+	Pdefault = [2,7,9,7,6,2]
+	data.P = [[Pdefault]] * ntask
 
 	if(TUNER_NAME=='GPTune'):
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
@@ -212,32 +222,13 @@ def main():
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
 		print("stats: ", stats)
 
-
-		# """ Dump the data to file as a new check point """
-		# pickle.dump(data, open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
-		# """ Dump the tuner to file for TLA use """
-		# pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			
-
-			OL=np.asarray([o[0] for o in data.O[tid]], dtype=np.float64)
-			np.set_printoptions(suppress=False,precision=8)	
-			print("    Os ", OL)
+			print("    Os ", data.O[tid])
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-			# ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			# front = ndf[0]
-			# # print('front id: ',front)
-			# fopts = data.O[tid][front]
-			# xopts = [data.P[tid][i] for i in front]
-			# print('    Popts ', xopts)		
-			# print('    Oopts ', fopts)
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
@@ -267,16 +258,13 @@ def main():
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
-
-
-
 def parse_args():
 
 	parser = argparse.ArgumentParser()
 
 	# Problem related arguments
-	parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-	parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
+	# parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
+	# parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
 	# Machine related arguments
 	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
 	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
@@ -289,8 +277,8 @@ def parse_args():
 	parser.add_argument('-truns', type=int, help='Time of runs')
 	# Experiment related arguments
 	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
-	parser.add_argument('-stepid', type=int, default=-1, help='step ID')
-	parser.add_argument('-phase', type=int, default=0, help='phase')
+	# parser.add_argument('-stepid', type=int, default=-1, help='step ID')
+	# parser.add_argument('-phase', type=int, default=0, help='phase')
 
 	args   = parser.parse_args()
 	return args
