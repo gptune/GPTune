@@ -64,22 +64,16 @@ class GPTune(object):
 
         if (history_db is None):
             history_db = HistoryDB()
-            # if history db setting is given by CK-GPTune automatically
+            # if history db mode is requested by CK-GPTune
             if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
                 import ast
                 history_db.history_db = 1
-                history_db.application_name = os.environ.get('CKGPTUNE_APPLICATION_NAME','Unknown')
-                history_db.machine_name = os.environ.get('CKGPTUNE_MACHINE_NAME','Unknown')
-                history_db.compile_deps = ast.literal_eval(os.environ.get('CKGPTUNE_COMPILE_DEPS','{}'))
+                history_db.tuning_problem_name = os.environ.get('CKGPTUNE_APPLICATION_NAME','Unknown')
+                history_db.machine_configuration = os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION','Unknown')
+                history_db.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
                 if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
-                    history_db.load_model = 1
+                    history_db.load_model = True
         self.history_db = history_db
-
-        # TODO: nodes/cores in computer module can be different with the application's nodes/cores?
-        if self.history_db.machine_deps["nodes"] == "Unknown":
-            self.history_db.machine_deps["nodes"] = self.computer.nodes
-        if self.history_db.machine_deps["cores"] == "Unknown":
-            self.history_db.machine_deps["cores"] = self.computer.cores
 
     def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", update = 0, model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))

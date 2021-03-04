@@ -146,63 +146,63 @@ def main():
 
     # setting to invoke history database
     history_db = HistoryDB()
-    history_db.history_db = 1
-    history_db.application_name = 'scalapack-pdqrdriver'
 
-    history_db.machine_deps = {
-                "machine":machine,
-                "nodes":nodes,
-                "cores":cores
-            }
+    history_db.tuning_problem_name = 'ScaLAPACK-PDGEQRF'
 
-    history_db.compile_deps = {
-                "openmpi":{
-                    "version":"4.0.0",
-                    "version_split":[4,0,0],
-                    "tags":"lib,mpi,openmpi"
-                },
-                "scalapack":{
-                    "version":"2.1.0",
-                    "version_split":[2,1,0],
-                    "tags":"lib,scalapack"
-                }
-            }
-    history_db.runtime_deps = {}
+    history_db.machine_configuration = {
+        "machine_name":"cori",
+        "haswell": {
+            "nodes":nodes,
+            "cores":cores
+        },
+        "knl": {
+            "nodes":0,
+            "cores":0
+        }
+    }
 
-    # setting options for loading previous data
-    # for now, task parameter has to be the same.
-    history_db.load_deps = {
-                #"machine_deps": {
-                #    "machine":[machine,'cori'],
-                #    "nodes":[nodes],
-                #    "cores":[i for i in range(cores-1, cores+2, 1)]
-                #},
-                "machine_deps": {
-                    "machine":['cori'],
-                    "nodes":[nodes],
-                    "cores":[cores]
-                },
-                "software_deps": {
-                    "compile_deps": {
-                        "mpi":[
-                            {
-                                "name":"openmpi",
-                                "version_from":[4,0,0],
-                                "version_to":[5,0,0]
-                            }
-                        ],
-                        "scalapack":[
-                            {
-                                "name":"scalapack",
-                                "version":[2,1,0]
-                            }
-                        ]
-                    },
-                    "runtime_deps": {}
-                }
+    history_db.software_configuration = {
+        "openmpi":{
+            "version_number": 4.0,
+            "version_split": [4,0,0],
+            "tags": "lib,mpi,openmpi"
+        },
+        "scalapack":{
+            "version_number": 2.1,
+            "version_split": [2,1,0],
+            "tags": "lib,scalapack"
+        }
+    }
+
+    history_db.loadable_machine_configurations = {
+        "cori" : {
+            "haswell": {
+                "nodes":[nodes],
+                "cores":[cores]
+            },
+            "knl": {
+                "nodes":0,
+                "cores":0
             }
+        }
+    }
+
+    history_db.loadable_software_configurations = {
+        "openmpi":[
+            {
+                "version_split_from":[4,0,0],
+                "version_split_to":[5,0,0]
+            }
+        ],
+        "scalapack":[
+            {
+                "version_split":[2,1,0]
+            }
+        ]
+    }
 
     giventask = [[1024,1024],[2048,2048],[4096,4096],[8192,8192],[16384,16384]]
+    #giventask = [[16384,16384]]
 
     gt = GPTune(problem, computer=computer, data=data, options=options, history_db=history_db)
 

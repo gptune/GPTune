@@ -30,91 +30,90 @@ class HistoryDB(dict):
 
     def __init__(self, **kwargs):
 
-        """ Options for the history database """
-        self.history_db = 0
-        self.history_db_path = "./"
-        self.application_name = None
+        self.tuning_problem_name = None
 
-        self.load_model = 0
+        """ Options """
+        self.load_func_eval = True
+        self.load_model = False
+
+        """ Path to JSON data files """
+        self.history_db_path = "./"
 
         """ Pass machine-related information """
-        self.machine_deps = {
+        self.machine_configuration = {
                     "machine":"Unknown",
                     "nodes":"Unknown",
                     "cores":"Unknown"
                 }
 
-        """ Pass software-related information as dictionaries """
-        self.compile_deps = {}
-        self.runtime_deps = {}
+        """ Pass software-related information """
+        self.software_configuration = {}
 
-        """ Pass load options """
-        self.load_deps = {
-                    "machine_deps":{},
-                    "software_deps":{
-                        "compile_deps":{},
-                        "runtime_deps":{}
-                    }
-                }
+        """ Loadable machine configurations """
+        self.loadable_machine_configurations = {}
 
-        self.verbose_history_db = 1
+        """ Loadable software configurations """
+        self.loadable_software_configurations = {}
 
-        """ list of UID of function evaluation data """
+        """ Verbose debug message """
+        self.verbose = 1
+
+        """ list of UIDs of function evaluation results """
         self.uids = []
 
     def check_load_deps(self, func_eval):
         ''' check machine dependencies '''
-        machine_deps = self.load_deps['machine_deps']
-        machine_parameter = func_eval['machine_deps']
+        loadable_machine_configurations = self.loadable_machine_configurations
+        machine_parameter = func_eval['machine_configuration']
 
         ''' check machine configuration dependencies '''
-        for dep_name in machine_deps:
-            if not machine_parameter[dep_name] in machine_deps[dep_name]:
+        for dep_name in loadable_machine_configurations:
+            if not machine_parameter[dep_name] in loadable_machine_configurations[dep_name]:
                 print (dep_name+": " + machine_parameter[dep_name] +
-                       " is not in load_deps: " + str(machine_deps[dep_name]))
+                       " is not in load_deps: " + str(loadable_machine_configurations[dep_name]))
                 return False
 
         ''' check compile-level software dependencies '''
-        compile_deps = self.load_deps['software_deps']['compile_deps']
-        compile_parameter = func_eval['compile_deps']
-        for dep_name in compile_deps.keys():
+        loadable_software_configurations = self.loadable_loadable_software_configurationss
+        software_configuration = func_eval['software_configuration']
+        for dep_name in loadable_software_configurations.keys():
             deps_passed = False
-            for option in range(len(compile_deps[dep_name])):
-                software_name = compile_deps[dep_name][option]['name']
-                if software_name in compile_parameter.keys():
-                    version_split = compile_parameter[software_name]['version_split']
+            for option in range(len(loadable_software_configurations[dep_name])):
+                software_name = loadable_software_configurations[dep_name][option]['name']
+                if software_name in software_configuration.keys():
+                    version_split = software_configuration[software_name]['version_split']
                     version_value = version_split[0]*100+version_split[1]*10+version_split[2]
                     #print ("software_name: " + software_name + " version_value: " + str(version_value))
 
-                    if 'version' in compile_deps[dep_name][option].keys():
-                        version_dep_split = compile_deps[dep_name][option]['version']
+                    if 'version' in loadable_software_configurations[dep_name][option].keys():
+                        version_dep_split = loadable_software_configurations[dep_name][option]['version']
                         version_dep_value = version_dep_split[0]*100+version_dep_split[1]*10+version_dep_split[2]
 
                         if version_dep_value == version_value:
                             deps_passed = True
 
-                    if 'version_from' in compile_deps[dep_name][option].keys() and \
-                       'version_to' not in compile_deps[dep_name][option].keys():
-                        version_dep_from_split = compile_deps[dep_name][option]['version_from']
+                    if 'version_from' in loadable_software_configurations[dep_name][option].keys() and \
+                       'version_to' not in loadable_software_configurations[dep_name][option].keys():
+                        version_dep_from_split = loadable_software_configurations[dep_name][option]['version_from']
                         version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
 
                         if version_dep_from_value <= version_value:
                             deps_passed = True
 
-                    if 'version_from' not in compile_deps[dep_name][option].keys() and \
-                       'version_to' in compile_deps[dep_name][option].keys():
-                        version_dep_to_split = compile_deps[dep_name][option]['version_to']
+                    if 'version_from' not in loadable_software_configurations[dep_name][option].keys() and \
+                       'version_to' in loadable_software_configurations[dep_name][option].keys():
+                        version_dep_to_split = loadable_software_configurations[dep_name][option]['version_to']
                         version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
 
                         if version_dep_to_value >= version_value:
                             deps_passed = True
 
-                    if 'version_from' in compile_deps[dep_name][option].keys() and \
-                       'version_to' in compile_deps[dep_name][option].keys():
-                        version_dep_from_split = compile_deps[dep_name][option]['version_from']
+                    if 'version_from' in loadable_software_configurations[dep_name][option].keys() and \
+                       'version_to' in loadable_software_configurations[dep_name][option].keys():
+                        version_dep_from_split = loadable_software_configurations[dep_name][option]['version_from']
                         version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
 
-                        version_dep_to_split = compile_deps[dep_name][option]['version_to']
+                        version_dep_to_split = loadable_software_configurations[dep_name][option]['version_to']
                         version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
 
                         if version_dep_from_value <= version_value and \
@@ -122,86 +121,11 @@ class HistoryDB(dict):
                             deps_passed = True
 
             if (deps_passed == False):
-                if (self.verbose_history_db):
+                if (self.verbose):
                     print ("deps_passed failed: " + str(option) + " " + str(software_name))
                 return False
 
-        # not yet consider runtime-level software dependencies yet
-        runtime_deps = self.load_deps['software_deps']['runtime_deps']
-
         return True
-
-    """ load_db do not work currently since database format has been changed [TODO: remove] """
-    def load_db(self, data : Data, problem : Problem):
-
-        """ Init history database JSON file """
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
-            if os.path.exists(json_data_path):
-                # Load previous history data
-                # [TODO] Need to deal with new problems not in the history database
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "r") as f_in:
-                        #self.data = Data(self.problem)
-
-                        print ("Found a history database")
-
-                        print ("machine_deps historydb ", self.machine_deps)
-                        history_data = json.load(f_in)
-
-                        num_tasks = len(history_data["perf_data"])
-                        IS_history = []
-                        for t in range(num_tasks):
-                            input_dict = history_data["perf_data"][t]["I"]
-                            IS_history.append(\
-                                    np.array([input_dict[problem.IS[k].name] \
-                                    for k in range(len(problem.IS))]))
-
-                        num_loaded_data = 0
-                        PS_history = []
-                        OS_history = []
-                        for t in range(num_tasks):
-                            PS_history_t = []
-                            OS_history_t = []
-                            num_evals = len(history_data["perf_data"][t]["func_eval"])
-                            for i in range(num_evals):
-                                func_eval = history_data["perf_data"][t]["func_eval"][i]
-                                if (self.check_load_deps(func_eval)):
-                                    PS_history_t.append(\
-                                            [func_eval["P"][problem.PS[k].name] \
-                                            for k in range(len(problem.PS))])
-                                    OS_history_t.append(\
-                                            [func_eval["O"][problem.OS[k].name] \
-                                            for k in range(len(problem.OS))])
-                                    num_loaded_data += 1
-                                else:
-                                    print ("failed to load")
-                            PS_history.append(PS_history_t)
-                            OS_history.append(OS_history_t)
-
-                        # [TODO] quick implementation to avoid setting data class
-                        # if no data has been loaded
-                        # otherwise, that leads to a problem in gptune.py (line 125)
-                        if (num_loaded_data > 0):
-                            data.I = IS_history
-                            data.P = PS_history
-                            data.O = np.array(OS_history)
-                            #print ("data.I: " + str(data.I))
-                            #print ("data.P: " + str(data.P))
-                            #print ("data.O: " + str(data.O))
-                        else:
-                            print ("no prev data has been loaded")
-            else:
-                print ("Create a JSON file at " + json_data_path)
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "w") as f_out:
-                        json_data = {}
-                        json_data["name"] = self.application_name
-                        json_data["model_data"] = []
-                        #json_data["perf_data"] = []
-                        json_data["func_eval"] = []
-
-                        json.dump(json_data, f_out, indent=2)
 
     def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Igiven : np.ndarray):
         task_id = -1
@@ -234,12 +158,12 @@ class HistoryDB(dict):
 
     def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray):
         """ Init history database JSON file """
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
-                        print ("Found a history database")
+                        print ("[HistoryDB] Found a history database file")
                         history_data = json.load(f_in)
                         num_tasks = len(Igiven)
 
@@ -254,27 +178,23 @@ class HistoryDB(dict):
                                 if (task_id != -1):
                                     # current policy: skip loading the func eval result
                                     # if the same parameter data has been loaded once (duplicated)
-                                    if self.is_parameter_duplication(problem, PS_history, func_eval["P"]):
+                                    if self.is_parameter_duplication(problem, PS_history, func_eval["tuning_parameter"]):
                                         continue
                                     else:
                                         parameter_arr = []
                                         for k in range(len(problem.PS)):
                                             if type(problem.PS[k]).__name__ == "Categoricalnorm":
                                                 print ("param: " + str(problem.PS[k].name) + " is categorical")
-                                                #parameter_arr.append(str(func_eval["P"][problem.PS[k].name]))
-                                                parameter_arr.append(str(func_eval["P"][problem.PS[k].name]))
+                                                parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
                                             elif type(problem.PS[k]).__name__ == "Integer":
-                                                parameter_arr.append(int(func_eval["P"][problem.PS[k].name]))
+                                                parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
                                             elif type(problem.PS[k]).__name__ == "Real":
-                                                parameter_arr.append(float(func_eval["P"][problem.PS[k].name]))
+                                                parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
                                             else:
-                                                parameter_arr.append(func_eval["P"][problem.PS[k].name])
+                                                parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
                                         PS_history[task_id].append(parameter_arr)
-                                        #PS_history[task_id].append(\
-                                        #    [func_eval["P"][problem.PS[k].name] \
-                                        #    for k in range(len(problem.PS))])
                                         OS_history[task_id].append(\
-                                            [func_eval["O"][problem.OS[k].name] \
+                                            [func_eval["evaluation_result"][problem.OS[k].name] \
                                             for k in range(len(problem.OS))])
                                         num_loaded_data += 1
 
@@ -288,71 +208,22 @@ class HistoryDB(dict):
                         else:
                             print ("no history data has been loaded")
             else:
-                print ("Create a JSON file at " + json_data_path)
+                print ("[HistoryDB] Create a JSON file at " + json_data_path)
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "w") as f_out:
                         json_data = {}
-                        json_data["name"] = self.application_name
+                        json_data["tuning_problem_name"] = self.tuning_problem_name
                         json_data["model_data"] = []
                         json_data["func_eval"] = []
 
                         json.dump(json_data, f_out, indent=2)
 
-    def update_IS(self, problem : Problem, I : np.ndarray = None):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
-            if not os.path.exists(json_data_path):
-                print ("Create a JSON file at " + json_data_path)
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "w") as f_out:
-                        json_data = {}
-                        json_data["name"] = self.application_name
-                        json_data["perf_data"] = []
-                        json.dump(json_data, f_out, indent=2)
-
-            with FileLock(json_data_path+".lock"):
-                with open(json_data_path, "r") as f_in:
-                    json_data = json.load(f_in)
-
-                    O = []
-                    num_tasks = len(I)
-                    for i in range(num_tasks):
-                        t = I[i]
-                        I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-                        I_orig_list = np.array(I_orig).tolist()
-
-                        input_exist = False
-                        for k in range(len(json_data["perf_data"])):
-                            compare_all_elems = True
-                            for l in range(len(problem.IS)):
-                                name = problem.IS[l].name
-                                if (json_data["perf_data"][k]["I"][problem.IS[l].name] != I_orig_list[l]):
-                                    compare_all_elems = False
-                                    break
-
-                            if compare_all_elems == True:
-                                #print ("input task already exists")
-                                input_exist = True
-                                break
-
-                        if input_exist == False:
-                            json_data["perf_data"].append({
-                                    "I":{problem.IS[k].name:I_orig_list[k] for k in range(len(problem.IS))},
-                                    "func_eval":[]
-                                    })
-
-            with FileLock(json_data_path+".lock"):
-                with open(json_data_path, "w") as f_out:
-                    json.dump(json_data, f_out, indent=2)
-
-        return
-
     def update_func_eval(self, problem : Problem,\
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
@@ -374,14 +245,13 @@ class HistoryDB(dict):
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
                 json_data["func_eval"].append({
-                        "I":{problem.IS[k].name:task_parameter_orig_list[k]
+                        "task_parameter":{problem.IS[k].name:task_parameter_orig_list[k]
                             for k in range(len(problem.IS))},
-                        "P":{problem.PS[k].name:tuning_parameter_orig_list[k]
+                        "tuning_parameter":{problem.PS[k].name:tuning_parameter_orig_list[k]
                             for k in range(len(problem.PS))},
-                        "machine_deps":self.machine_deps,
-                        "compile_deps":self.compile_deps,
-                        "runtime_deps":self.runtime_deps,
-                        "O":{problem.OS[k].name:evaluation_result_orig_list[k]
+                        "machine_configuration":self.machine_configuration,
+                        "software_configuration":self.software_configuration,
+                        "evaluation_result":{problem.OS[k].name:evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))},
                         "time":{
                             "tm_year":now.tm_year,
@@ -405,9 +275,7 @@ class HistoryDB(dict):
 
     def is_model_problem_match(self, model_data : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
         model_task_parameters = model_data["task_parameters"]
-        input_task_parameters = input_given #np.array(problem.IS.inverse_transform(np.array(input_given, ndmin=2))).tolist()
-        #print ("model_task_parameters: ", model_task_parameters)
-        #print ("input_task_parameters: ", input_task_parameters)
+        input_task_parameters = input_given
         if len(model_task_parameters) != len(input_task_parameters):
             return False
         num_tasks = len(input_task_parameters)
@@ -418,7 +286,7 @@ class HistoryDB(dict):
                 if model_task_parameters[i][j] != input_task_parameters[i][j]:
                     return False
 
-        IS_model = model_data["problem_space"]["IS"]
+        IS_model = model_data["problem_space"]["input_space"]
         IS_given = self.problem_space_to_dict(tuningproblem.input_space)
         if len(IS_model) != len(IS_given):
             return False
@@ -430,7 +298,7 @@ class HistoryDB(dict):
             if IS_model[i]["type"] != IS_given[i]["type"]:
                 return False
 
-        PS_model = model_data["problem_space"]["PS"]
+        PS_model = model_data["problem_space"]["parameter_space"]
         PS_given = self.problem_space_to_dict(tuningproblem.parameter_space)
         if len(PS_model) != len(PS_given):
             return False
@@ -442,7 +310,7 @@ class HistoryDB(dict):
             if PS_model[i]["type"] != PS_given[i]["type"]:
                 return False
 
-        OS_model = model_data["problem_space"]["OS"]
+        OS_model = model_data["problem_space"]["output_space"]
         OS_given = self.problem_space_to_dict(tuningproblem.output_space)
         if len(OS_model) != len(OS_given):
             return False
@@ -464,8 +332,8 @@ class HistoryDB(dict):
         if tuningproblem == "None" or Igiven == "None":
             return ret
 
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -484,8 +352,8 @@ class HistoryDB(dict):
 
     def load_MLE_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -510,8 +378,8 @@ class HistoryDB(dict):
 
     def load_AIC_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -541,8 +409,8 @@ class HistoryDB(dict):
             input_given : np.ndarray, objective : int, modeler : str):
         import math
 
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -570,8 +438,8 @@ class HistoryDB(dict):
 
     def load_max_evals_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -597,8 +465,8 @@ class HistoryDB(dict):
         return hyperparameters
 
     def load_model_hyperparameters_by_uid(self, model_uid):
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -658,8 +526,8 @@ class HistoryDB(dict):
             gradients : np.ndarray,\
             iteration : int):
 
-        if (self.history_db == 1 and self.application_name is not None):
-            json_data_path = self.history_db_path+self.application_name+".json"
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
@@ -684,9 +552,9 @@ class HistoryDB(dict):
             print (problem.IS)
             print (problem.PS)
             print (problem.OS)
-            problem_space["IS"] = self.problem_space_to_dict(problem.IS)
-            problem_space["PS"] = self.problem_space_to_dict(problem.PS)
-            problem_space["OS"] = self.problem_space_to_dict(problem.OS)
+            problem_space["input_space"] = self.problem_space_to_dict(problem.IS)
+            problem_space["parameter_space"] = self.problem_space_to_dict(problem.PS)
+            problem_space["output_space"] = self.problem_space_to_dict(problem.OS)
 
             task_parameter_orig = problem.IS.inverse_transform(np.array(input_given, ndmin=2))
             task_parameter_orig_list = np.array(task_parameter_orig).tolist()
@@ -694,7 +562,6 @@ class HistoryDB(dict):
             json_data["model_data"].append({
                     "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
-                    "iteration":iteration,
                     "func_eval":self.uids,
                     "task_parameters":task_parameter_orig_list,
                     "problem_space":problem_space,
@@ -721,4 +588,3 @@ class HistoryDB(dict):
                     json.dump(json_data, f_out, indent=2)
 
         return
-

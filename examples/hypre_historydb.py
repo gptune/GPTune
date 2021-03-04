@@ -209,25 +209,38 @@ def main():
 
     # history database
     history_db = HistoryDB()
-    history_db.history_db = 1
-    history_db.application_name = 'hypre'
-    history_db.machine_deps = {
-        "machine":machine,
-        "nodes":nodes,
-        "cores":cores
-    }
-    history_db.compile_deps = {}
-    history_db.runtime_deps = {}
-    history_db.load_deps = {
-        "machine_deps": {
-            "machine":[machine],
-            "nodes":[nodes],
-            "cores":[cores]
+
+    history_db.tuning_problem_name = 'hypre-ij'
+
+    history_db.machine_configuration = {
+        "machine_name":"cori",
+        "haswell": {
+            "nodes":nodes,
+            "cores":cores
         },
-        "software_deps": {
-            "compile_deps":{},
-            "runtime_deps":{}
+        "knl": {
+            "nodes":0,
+            "cores":0
         }
+    }
+
+    history_db.software_configuration = {
+    }
+
+    history_db.loadable_machine_configurations = {
+        "cori" : {
+            "haswell": {
+                "nodes":[nodes],
+                "cores":[cores]
+            },
+            "knl": {
+                "nodes":0,
+                "cores":0
+            }
+        }
+    }
+
+    history_db.loadable_software_configurations = {
     }
 
     #giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
