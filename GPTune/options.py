@@ -57,7 +57,7 @@ class Options(dict):
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 
-
+        model_update_no_train_iters = 1 # Number of iterations of MLA2 where the model data is updated but the model is not (or lightly) retrained
 
         """ Options for the search phase """
         search_class = 'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
@@ -73,6 +73,7 @@ class Options(dict):
         search_max_iters = 10  # Max number of searches to get results respecting the constraints 
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm 
         search_strategy = "independant_multitask" # "continuous_correlated_multitask"
+        search_batch = True # BATCH evaluations in search or use of archipelagio
         search_correlated_multitask_NX = 50
         search_correlated_multitask_NA = 50
 

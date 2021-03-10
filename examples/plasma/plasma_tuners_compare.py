@@ -18,7 +18,7 @@ colored_traceback.add_hook(always=True)
 import sys
 import os
 
-GPTUNEDIR = os.path.abspath(__file__ + "/../../GPTune/")
+GPTUNEDIR = os.path.abspath(__file__ + "/../../../GPTune/")
 sys.path.insert(0, GPTUNEDIR)
 TESTDIR = os.path.abspath(__file__ + "./plasma-driver/plasma/test/")
 
@@ -31,6 +31,8 @@ from data import Data
 from options import Options
 from computer import Computer
 from sample import *
+from sample_LHSMDU import *
+from sample_OpenTURNS import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 
@@ -151,15 +153,20 @@ def chose_options(args):
     options['model_inducing'] = None
     options['model_layers'] = 2
 
+    options['shared_memory_parallelism'] = True
+    options['search_multitask_threads'] = 40
     options['search_threads'] = 1
     options['search_class'] = 'SearchPyGMO'
-    options['search_algo'] = 'pso'
+    options['search_algo'] = 'pso_gen'
     options['search_udi'] = 'thread_island'
-    options['search_pop_size'] = 1000
+    options['search_pop_size'] = 100
     options['search_gen'] = 10
-    options['search_evolve'] = 10
+    options['search_evolve'] = 1
     options['search_max_iters'] = 100
     options['search_more_samples'] = 1
+    options['search_batch'] = False
+
+    options['PLASMA'] = True # XXX hack specifically for PLASMA
 
     # Validate options
 #    options.validate(computer=computer)
@@ -317,10 +324,9 @@ def main():
 
         dgpiid_data = copy.deepcopy(common_train_data)
         options['model_class'] = 'Model_SGHMC_DGP' # 'Model_DGP'
-        options['model_max_iters'] = 20000
+        options['model_max_iters'] = 50000
         options['search_strategy'] = 'independant_multitask'
-        options['shared_memory_parallelism'] = True
-        options['search_multitask_threads'] = 30
+        options['search_batch'] = True
         dgpiid_gt = GPTune(tuning_problem, computer=computer, data=dgpiid_data, options=options)
         (dgpiid_data, dgpiid_model, dgpiid_stats) = dgpiid_gt.MLA(NS=NS, NI=Ntr, Igiven=None, NS1=0)
         dgpiid_MLA_filename = 'dgpiid_MLA.pkl'
@@ -328,15 +334,17 @@ def main():
             #pickle.dump((dgpiid_gt, dgpiid_data, dgpiid_model, dgpiid_stats), f)
             pickle.dump((dgpiid_gt, dgpiid_data, dgpiid_stats), f)
 #        with open(dgpiid_MLA_filename, 'rb') as f: 
-#           (dgpiid_gt, dgpiid_data, dgpiid_model, dgpiid_stats) =  pickle.load(f)
+#           #(dgpiid_gt, dgpiid_data, dgpiid_model, dgpiid_stats) =  pickle.load(f)
+#           (dgpiid_gt, dgpiid_data, dgpiid_stats) =  pickle.load(f)
+##           dgpiid_gt = GPTune(tuning_problem, computer=computer, data=dgpiid_data, options=options)
+##           (_, dgpiid_model, _) = dgpiid_gt.MLA(NS=0, NI=Ntr, Igiven=None, NS1=0)
 
         (dgpiid_aprxopts, dgpiid_objval, dgpiid_stats) = dgpiid_gt.TLA1(I[idx_ts], NS=None)
         dgpiid_TLA1_filename = 'dgpiid_TLA1.pkl'
         with open(dgpiid_TLA1_filename, 'wb') as f: 
             pickle.dump((dgpiid_gt, I[idx_ts], dgpiid_aprxopts, dgpiid_objval, dgpiid_stats), f)
 
-#        dgpiid_gt.options['search_pop_size'] = 1000
-        (dgpiid_aprxopts, dgpiid_objval, dgpiid_stats) = dgpiid_gt.TLA2(I[idx_ts], dgpiid_model)
+        (dgpiid_aprxopts, dgpiid_objval, dgpiid_stats) = dgpiid_gt.TLA2(I[idx_ts], modelers=None)#dgpiid_model)
         dgpiid_TLA2_filename = 'dgpiid_TLA2.pkl'
         with open(dgpiid_TLA2_filename, 'wb') as f: 
             pickle.dump((dgpiid_gt, I[idx_ts], dgpiid_aprxopts, dgpiid_objval, dgpiid_stats), f)
@@ -345,17 +353,19 @@ def main():
 
         dgpcor_data = Data(problem)
         options['model_class'] = 'Model_SGHMC_DGP' # 'Model_DGP'
-        options['model_max_iters'] = 20000
+        options['model_max_iters'] = 10000
         options['search_strategy'] = 'continuous_correlated_multitask'
-        options['shared_memory_parallelism'] = True
+        #options['shared_memory_parallelism'] = True
         #options['search_multitask_threads'] = 30
-        options['search_threads'] = 40
+        options['search_threads'] = 1#40
         options['model_update_no_train_iters'] = Ntr
         options['search_correlated_multitask_NX'] = NI
         options['search_correlated_multitask_NA'] = NS
-#        options['search_threads'] = 1
+        options['search_pop_size'] = 100
+        options['search_gen'] = 10
+        options['search_more_samples'] = 1#Ntr
         N1 = Ntr * NS1        #= args.ntr
-        N2 = Ntr * (NS - NS1) #= args.nruns
+        N2 = (NS - NS1) #= args.nruns
 
         dgpcor_phase1_MLA2_filename = 'dgpcor_phase1_MLA2.pkl'
         if (not os.path.exists(dgpcor_phase1_MLA2_filename)):
@@ -374,14 +384,18 @@ def main():
             #pickle.dump((dgpcor_phase2_gt, dgpcor_phase2_data, dgpcor_phase2_model, dgpcor_phase2_stats), f)
             pickle.dump((dgpcor_phase2_gt, dgpcor_phase2_data, dgpcor_phase2_stats), f)
 #        with open(dgpcor_phase2_MLA2_filename, 'rb') as f: 
-#           (dgpcor_phase2_gt, dgpcor_phase2_data, dgpcor_phase2_model, dgpcor_phase2_stats) = pickle.load(f)
-
+#           #(dgpcor_phase2_gt, dgpcor_phase2_data, dgpcor_phase2_model, dgpcor_phase2_stats) = pickle.load(f)
+#           (dgpcor_phase2_gt, dgpcor_phase2_data, dgpcor_phase2_stats) = pickle.load(f)
+#
         (dgpcor_aprxopts, dgpcor_objval, dgpcor_stats) = dgpcor_phase2_gt.TLA1(I[idx_ts], NS=None)
         dgpcor_TLA1_filename = 'dgpcor_TLA1.pkl'
         with open(dgpcor_TLA1_filename, 'wb') as f: 
             pickle.dump((dgpcor_phase2_gt, I[idx_ts], dgpcor_aprxopts, dgpcor_objval, dgpcor_stats), f)
 
-#        dgpcor_phase2_gt.options['search_pop_size'] = 1000
+        dgpcor_phase2_gt.options['search_pop_size'] = 1000
+        dgpcor_phase2_gt.options['search_gen'] = 10
+        dgpcor_phase2_gt.options['search_more_samples'] = 1
+        dgpcor_phase2_model = None
         (dgpcor_aprxopts, dgpcor_objval, dgpcor_stats) = dgpcor_phase2_gt.TLA2(I[idx_ts], dgpcor_phase2_model)
         dgpcor_TLA2_filename = 'dgpcor_TLA2.pkl'
         with open(dgpcor_TLA2_filename, 'wb') as f: 

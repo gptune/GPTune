@@ -69,16 +69,20 @@ def MLA2(self, N1, N2, **kwargs):
     
     # sample()
 
+    N3 = 50
     check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, kwargs = kwargs)
     t1=time.time_ns()
     (I, P) = sampler.sample_fusion(n_samples = N1, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+    (I2, P2) = sampler.sample_fusion(n_samples = N3, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
     t2=time.time_ns()
     stats["time_sample_init"] += (t2 - t1)/1e9
     t1=time.time_ns()
     O = self.computer.evaluate_objective(self.problem, I, P, None, options = kwargs) 
+    O2 = self.computer.evaluate_objective(self.problem, I2, P2, None, options = kwargs) 
     t2=time.time_ns()
     stats["time_fun"] += (t2 - t1)/1e9
     newdata = Data(problem = self.problem, I = I, P = P, O = O)
+    testdata = Data(problem = self.problem, I = I2, P = P2, O = O2)
     self.data.fusion(newdata)
 
     for optiter in range(N2):
@@ -100,9 +104,14 @@ def MLA2(self, N1, N2, **kwargs):
                 tmpdata = copy.deepcopy(newdata)
                 tmpdata.O = [copy.deepcopy(newdata.O[i][:,o].reshape((-1,1))) for i in range(len(newdata.I))]
                 t1=time.time_ns()
-                modelers[o].update(tmpdata, do_train=False)
+                modelers[o].update(tmpdata, do_train=False, **kwargs)
                 t2=time.time_ns()
                 stats["time_model"] += (t2 - t1)/1e9
+        Xts, Yts = testdata.IPO2XY()
+        for o in range(self.problem.DO):
+            mu, var = modelers[o].M.predict(Xts)
+            print('RMSE', np.linalg.norm(mu - Yts))
+            print('VAR', np.linalg.norm(var))
 
         # search()
 
@@ -110,7 +119,7 @@ def MLA2(self, N1, N2, **kwargs):
         res = searcher.search(data = self.data, models = modelers, tid = None, sampler = sampler, **kwargs)[1]
         t2=time.time_ns()
         stats["time_search"] += (t2 - t1)/1e9
-        
+
         newdata = Data(problem = self.problem)
         newdata.I = [x[0][:self.problem.DI] for x in res]
         newdata.P = [np.array(x[0][self.problem.DI:], ndmin=2) for x in res]

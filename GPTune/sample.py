@@ -54,25 +54,22 @@ class Sample(abc.ABC):
             cpt = 0
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
-                # t1 = time.time_ns()
+#                t1 = time.time_ns()
 #                S2 = self.sample(n_samples, space, kwargs=kwargs)
                 S2 = self.sample(int(n_samples * 2**n_itr), space, **kwargs)
-                print(n_samples, n_itr, len(S2))
-                # t2 = time.time_ns()
-                # print('sample_para:',(t2-t1)/1e9)
+#                print(n_samples, n_itr, len(S2))
+#                t2 = time.time_ns()
+#                print('sample_para:',(t2-t1)/1e9)
 
                 for s_norm in S2:
-                    # print("jiji",s_norm)
                     s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
-                    # print("dfdfdfdfd",kwargs2)
                     kwargs2.update(check_constraints_kwargs)
                     if (check_constraints(kwargs2)):
                         S.append(s_norm)
                         cpt += 1
                         if (cpt >= n_samples):
                             break
-                # print('input',S,space[0],isinstance(space[0], Categorical))
 
                 n_itr += 1
                 if(n_itr%1000==0 and n_itr>=1000):
@@ -96,20 +93,18 @@ class Sample(abc.ABC):
 
         P = []
         for t in I:
-            # print('before inverse_transform:',np.array(t, ndmin=2))
             I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
-            # I_orig = t
-            # print('after inverse_transform I_orig:',I_orig)
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
-            mn_min = min(I_orig[0], I_orig[1])+1
-            print(mn_min)
-            nb  = Integer(1, mn_min, transform="normalize", name="nb")
-            ib  = Integer(1, mn_min, transform="normalize", name="ib")
-            PS2 = Space([nb, ib])
-#            xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
-            xs = self.sample_constrained(n_samples, PS2, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
-            xs *= mn_min/1000.
+            if ('PLASMA' in kwargs):
+                mn_min = min(I_orig[0], I_orig[1]) + 1
+                nb  = Integer(1, mn_min, transform="normalize", name="nb")
+                ib  = Integer(1, mn_min, transform="normalize", name="ib")
+                PS2 = Space([nb, ib])
+                xs = self.sample_constrained(n_samples, PS2, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
+                xs *= mn_min/min(IS[0].bounds[1], IS[1].bounds[1])
+            else:
+                xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
             P.append(xs)
 
         return P

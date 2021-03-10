@@ -48,8 +48,13 @@ class Model_SGHMC_DGP(Model):
 #        pickle.dump((X,Y), open('dataset.pkl', 'wb'))
         self.M = RegressionModel()
         self.M.ARGS.iterations = kwargs['model_max_iters']
-#        self.M.ARGS.num_inducing = 100
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', sum(len(p) for p in self.data.P))
+        self.M.ARGS.num_inducing = sum(len(p) for p in self.data.P)
+        import time
+        t1 = time.time()
         self.M.fit(X, Y)
+        t2 = time.time()
+        print('Train time: ', (t2-t1))
 #        print(self.M.predict([[1., 1, 0.    , .128 ,0.064]]))
 
 #        saver = tf.train.Saver()
@@ -65,18 +70,26 @@ class Model_SGHMC_DGP(Model):
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
 #        if (do_train):
-            self.train(newdata, **kwargs)
+            self.data.fusion(newdata)
+            self.train(self.data, **kwargs)
 #        else:
 #            (X, Y) = newdata.IPO2XY()
 #            X = np.concatenate((self.M.X, X))
 #            Y = np.concatenate((self.M.Y, Y))
 #            self.M.reset(X, Y)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], I = None, tid : int = None, **kwargs) -> Collection[Tuple[float, float]]:
 
         multitask = len(self.data.I) > 1
         if (multitask):
-            X = np.concatenate((self.data.I[tid], points)).reshape((1, self.problem.DI + self.problem.DP))
+#            X = np.concatenate((self.data.I[tid], points)).reshape((1, self.problem.DI + self.problem.DP))
+            if (tid is not None):
+                I = np.array(self.data.I[tid], ndmin=2)
+            else:
+                I = np.array(I, ndmin=2)
+            points = np.array(points, ndmin=2)
+            Inew = np.broadcast_to(I, (points.shape[0], I.shape[1] if len(I.shape) > 1 else 1))
+            X = np.concatenate((Inew, points), axis=1)
         else:
             X = points.reshape((1, self.problem.DP))
 

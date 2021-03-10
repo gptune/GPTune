@@ -5,11 +5,35 @@ _ create TRAVIS directory and copy all travis* files in it.
 _ create ext or lib directory to add the external libraries as git subrepositores or to download them in.
 
 In ROOT/example directory:
-_ create demo, scalapack, superlu, hypre, strumpack and butterflypack directories
+_ create test, demo, scalapack, superlu, hypre, strumpack and butterflypack directories
 _ copy their related *py in them.
 _ copy their related *driver forlders and make the git repos git sub-repositories.
 _ the postprocess folder should move out of the master branch and move to a TAG or special git branch.
 
 In ROOT/GPTune directory:
 _ move every class in sample.py, model.py and search.py in a separate file.
+
+In ROOT/GPTune/model*:
+_ update predict for batch mode
+
+In ROOT/GPTune/model_sgd_hmc.py:
+_ tensorflow save/restore model
+_ don't create a new RegressionModel object at every call to train, which would allow for the update function to work
+
+_ Sample:
+    _ user-defined sampling function
+
+_ Model:
+    _ single task and multitask
+    _ merged spaces and separate spaces
+
+_ Search:
+    _ merge search problems in single class
+    _ make all aquisition functions run for batch and no-batch
+    
+sghmc_dgp/model.py:
+_ add nuber of layers in ARGS
+
+sghmc_dgp/sghmc_dgp.py:
+_ modify init function of DGP class to take a computer object as parameter and use its number of cores in the creation of the tensorflow Config object
 

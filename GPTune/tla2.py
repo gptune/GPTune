@@ -60,6 +60,13 @@ def TLA2(self, Tnew, modelers, **kwargs):
     kwargs = copy.deepcopy(self.options)
     kwargs['search_acq'] = 'mean'
 
+    modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')] * self.problem.DO
+    self.data = self.data.normalized()
+    o = 0
+    tmpdata = copy.deepcopy(self.data)
+    tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+    t1=time.time_ns()
+    modelers[o].train(tmpdata, **kwargs)
     searcher =  eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
 
     for t in Tnew:
