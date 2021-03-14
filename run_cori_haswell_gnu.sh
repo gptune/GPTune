@@ -17,6 +17,12 @@ export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONPATH=$PYTHONPATH:$PWD/examples/scalapack-driver/spt/
 export PYTHONWARNINGS=ignore
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/STRUMPACK/install/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/build/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/arpack-ng/build/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/superlu_dist/parmetis-4.0.3/install/lib/
+export PYTHONPATH=$PYTHONPATH:$PWD/examples/STRUMPACK/install/include/python/
+
 CCC=mpicc
 CCCPP=mpicxx
 FTN=mpif90
@@ -32,3 +38,6 @@ mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --m
 mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0
 
 mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_TLA.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
+mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine cori 
+
+

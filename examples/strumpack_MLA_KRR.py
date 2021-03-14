@@ -18,7 +18,8 @@
 ################################################################################
 """
 Example of invocation of this script:
-python superlu.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
+mpirun -n 1 python ./strumpack_MLA_KRR.py -nodes 1 -cores 32 -ntask 1 -nrun 20 -machine cori -nprocmin_pernode 32
+
 
 where:
     -nodes is the number of compute nodes
@@ -61,50 +62,36 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
-	gridsize = point['gridsize']
-	sp_reordering_method = point['sp_reordering_method']
-	sp_compression = point['sp_compression']
-	sp_compression1 = sp_compression
-	sp_nd_param = point['sp_nd_param']
-	sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
-	sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
-	sp_compression_leaf_size = 2**point['sp_compression_leaf_size']
-	sp_compression_rel_tol = 10.0**point['sp_compression_rel_tol']
-	
-	if(sp_compression == 'hss'):
-		extra_str=['--hss_rel_tol', '%s'%(sp_compression_rel_tol)]
-	elif(sp_compression == 'blr'):
-		extra_str=['--blr_rel_tol', '%s'%(sp_compression_rel_tol)]
-	elif(sp_compression == 'hodlr'):
-		extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '0']
-	elif(sp_compression == 'hodbf'):
-		extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '100']
-		sp_compression1 = 'hodlr'
-	elif(sp_compression == 'none'):
-		extra_str=[' ']
+	datafile = point['datafile']
+	h = 10**point['h']
+	Lambda = 10**point['Lambda']
 
-	if(sp_reordering_method == 'metis'):
-		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
-
-	npernode = 2**point['npernode']
+	# npernode = 2**point['npernode']
+	npernode = nprocmin_pernode 
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	
-	params = ['gridsize', gridsize, 'sp_reordering_method', sp_reordering_method,'sp_compression', sp_compression1, 'sp_nd_param', sp_nd_param, 'sp_compression_min_sep_size', sp_compression_min_sep_size, 'sp_compression_min_front_size', sp_compression_min_front_size, 'sp_compression_leaf_size', sp_compression_leaf_size, 'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]+extra_str
-	RUNDIR = os.path.abspath(__file__ + "/../STRUMPACK/build/examples")
+	params = ['datafile', datafile, 'h', h,'Lambda', Lambda,'nthreads', nthreads, 'npernode', npernode, 'nproc',nproc]
+	RUNDIR = os.path.abspath(__file__ + "/../STRUMPACK/examples")
+	INPUTDIR = os.path.abspath(__file__ + "/../STRUMPACK/examples")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
 
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
 	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
+	print('OMP_NUM_THREADS=%d\n' %(nthreads))   
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
     
+	# datafile = "data/susy_10Kn"
+	# h = 0.1
+	# Lambda = 3.11
+	degree = 1	# only used when kernel=ANOVA (degree<=d) in KernelRegressionMPI.py 
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
-	comm = MPI.COMM_SELF.Spawn("%s/testPoisson3dMPIDist"%(RUNDIR), args=['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, maxprocs=nproc,info=info)
+	# print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
+	comm = MPI.COMM_SELF.Spawn("%s/KernelRegressionMPI.py"%(RUNDIR), args=['%s/%s'%(INPUTDIR,datafile), '%s'%(h),'%s'%(Lambda),'%s'%(degree)], maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator """																	
 	tmpdata = np.array([0],dtype=np.float64)
@@ -112,10 +99,10 @@ def objectives(point):                  # should always use this name for user-d
 	comm.Disconnect()	
 
 	retval = tmpdata[0]
-	print(params, ' strumpack time: ', retval)
+	print(params, ' krr prediction accuracy (%): ', retval)
 
 
-	return [retval] 
+	return [-retval] 
 	
 	
 def main():
@@ -126,6 +113,7 @@ def main():
 	global target
 	global nprocmax
 	global nprocmin
+	global nprocmin_pernode
 
 	# Parse command line arguments
 
@@ -142,41 +130,28 @@ def main():
 	machine = args.machine
 	optimization = args.optimization
 	nruns = args.nruns
-	truns = args.truns
+	# truns = args.truns
 	# JOBID = args.jobid
 	
 	TUNER_NAME = args.optimization
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
-	
-	
-	# nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-	# nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
-
-	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
-	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
-
-	# Task parameters
-	gridsize = Integer     (30, 100, transform="normalize", name="gridsize")
-
-	# Input parameters
-	sp_reordering_method   = Categoricalnorm (['metis','parmetis','geometric'], transform="onehot", name="sp_reordering_method")
-	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
-	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
-	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
-	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
-	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
-	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
-	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
-	sp_compression_leaf_size     = Integer     (5, 9, transform="normalize", name="sp_compression_leaf_size")
-	sp_compression_rel_tol     = Integer(-6, -1, transform="normalize", name="sp_compression_rel_tol")
 
 
-	result   = Real        (float("-Inf") , float("Inf"),name="r")
-	IS = Space([gridsize])
-	PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,npernode])
+	datafiles = ["data/susy_10Kn"]
+
+	# Task input parameters
+	datafile    = Categoricalnorm (datafiles, transform="onehot", name="datafile")
+
+	# Tuning parameters
+	h =  Real(-10, 10, transform="normalize", name="h")
+	Lambda =  Real(-10, 10, transform="normalize", name="Lambda")
+	# npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+
+	result   = Real        (0 , float("Inf"),name="r")
+	IS = Space([datafile])
+	# PS = Space([h,Lambda,npernode])
+	PS = Space([h,Lambda])
 	OS = Space([result])
 	constraints = {}
 	models = {}
@@ -204,7 +179,7 @@ def main():
 	
 	
 	# """ Building MLA with the given list of tasks """
-	giventask = [[80]]		
+	giventask = [["data/susy_10Kn"]]		
 	data = Data(problem)
 
 
@@ -222,8 +197,8 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+			print("    Os ", -data.O[tid])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='opentuner'):
 		NI = ntask
@@ -236,8 +211,8 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+			print("    Os ", -data.O[tid])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
 		NI = ntask
@@ -249,8 +224,8 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+			print("    Os ", -data.O[tid])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 
@@ -261,8 +236,7 @@ def parse_args():
 	parser = argparse.ArgumentParser()
 
 	# Problem related arguments
-	parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
-	parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')
+
 	# Machine related arguments
 	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
 	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
@@ -272,11 +246,8 @@ def parse_args():
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nruns', type=int, help='Number of runs per task')
-	parser.add_argument('-truns', type=int, help='Time of runs')
-	# Experiment related arguments
-	parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job') #0 means interactive execution (not batch)
-	parser.add_argument('-stepid', type=int, default=-1, help='step ID')
-	parser.add_argument('-phase', type=int, default=0, help='phase')
+	# parser.add_argument('-truns', type=int, help='Time of runs')
+
 
 	args   = parser.parse_args()
 	return args
