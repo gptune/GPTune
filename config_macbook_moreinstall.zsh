@@ -8,7 +8,7 @@
 export GPTUNEROOT=$PWD
 export PATH=/usr/local/Cellar/python@3.7/3.7.9_2/bin/:$PATH
 export PATH=$GPTUNEROOT/env/bin/:$PATH
-export BLAS_LIB=/usr/local/Cellar/openblas/0.3.12_1/lib/libblas.dylib
+export BLAS_LIB=/usr/local/Cellar/openblas/0.3.13/lib/libblas.dylib
 export LAPACK_LIB=/usr/local/Cellar/lapack/3.9.0_1/lib/liblapack.dylib
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/pygmo/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
@@ -30,9 +30,9 @@ export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
 
-CC=/usr/local/Cellar/gcc/10.2.0/bin/gcc-10
-FTN=/usr/local/Cellar/gcc/10.2.0/bin/gfortran-10
-CPP=/usr/local/Cellar/gcc/10.2.0/bin/g++-10
+CC=/usr/local/Cellar/gcc/10.2.0_4/bin/gcc-10
+FTN=/usr/local/Cellar/gcc/10.2.0_4/bin/gfortran-10
+CPP=/usr/local/Cellar/gcc/10.2.0_4/bin/g++-10
 
 
 
