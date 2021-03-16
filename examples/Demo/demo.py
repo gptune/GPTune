@@ -130,7 +130,7 @@ def models(point):
 
 
 def main():
-    
+
     import matplotlib.pyplot as plt
     global nodes
     global cores

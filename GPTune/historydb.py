@@ -32,9 +32,9 @@ class HistoryDB(dict):
 
         self.tuning_problem_name = None
 
-        self.history_db = 1
-
         """ Options """
+        self.save_func_eval = True
+        self.save_model = True
         self.load_func_eval = True
         self.load_model = False
 

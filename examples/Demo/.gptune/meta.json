@@ -1,5 +1,5 @@
 {
-    "tuning_problem_name": "PDGEQRF",
+    "tuning_problem_name": "GPTune-Demo",
     "machine_configuration": {
         "machine_name": "iMac",
         "intel": {
@@ -9,7 +9,7 @@
     },
     "software_configuration": {
         "openmpi": {
-            "version_split": [4,0,0]
+            "version_split": [4,0,1]
         },
         "scalapack": {
             "version_split": [2,1,0]
@@ -26,7 +26,7 @@
     "loadable_software_configurations": {
         "openmpi":[
             {
-                "version_split_from":[4,0,0],
+                "version_split_from":[4,0,1],
                 "version_split_to":[5,0,0]
             }
         ],

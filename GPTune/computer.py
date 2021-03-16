@@ -100,10 +100,11 @@ class Computer(object):
             tmp = np.array(O2).reshape((len(O2), problem.DO))
             O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
-            history_db.update_func_eval(problem = problem,\
-                    task_parameter = I[i], \
-                    tuning_parameter = P[i],\
-                    evaluation_result = tmp)
+            if history_db is not None:
+                history_db.update_func_eval(problem = problem,\
+                        task_parameter = I[i], \
+                        tuning_parameter = P[i],\
+                        evaluation_result = tmp)
 
         return O
 
