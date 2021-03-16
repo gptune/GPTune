@@ -1,0 +1,39 @@
+{
+    "tuning_problem_name": "PDGEQRF",
+    "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+            "nodes": 1,
+            "cores": 1
+        }
+    },
+    "software_configuration": {
+        "openmpi": {
+            "version_split": [4,0,0]
+        },
+        "scalapack": {
+            "version_split": [2,1,0]
+        }
+    },
+    "loadable_machine_configurations": {
+        "iMac" : {
+            "intel": {
+                "nodes":1,
+                "cores":1
+            }
+        }
+    },
+    "loadable_software_configurations": {
+        "openmpi":[
+            {
+                "version_split_from":[4,0,0],
+                "version_split_to":[5,0,0]
+            }
+        ],
+        "scalapack":[
+            {
+                "version_split":[2,1,0]
+            }
+        ]
+    }
+}

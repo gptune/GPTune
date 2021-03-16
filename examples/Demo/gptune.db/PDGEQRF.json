@@ -1,0 +1,1722 @@
+{
+  "tuning_problem_name": "PDGEQRF",
+  "model_data": [
+    {
+      "hyperparameters": [
+        0.1362115834363495,
+        1.0,
+        0.43877143572493216,
+        1e-05,
+        0.5434236870397541
+      ],
+      "model_stats": {
+        "log_likelihood": -5.289502473508932,
+        "neg_log_likelihood": 5.289502473508932,
+        "gradients": [
+          -9.379249377716725e-07,
+          0.0,
+          4.335386905029992e-08,
+          0.0034399002563918787,
+          5.8357522592089595e-08
+        ],
+        "iteration": 40
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 23,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6b285906-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.12310277342580181,
+        1.0,
+        0.7126098860351371,
+        1e-05,
+        0.13581760503528473
+      ],
+      "model_stats": {
+        "log_likelihood": -5.133488543011218,
+        "neg_log_likelihood": 5.133488543011218,
+        "gradients": [
+          5.041345255572763e-07,
+          0.0,
+          -4.917915816804452e-07,
+          0.0170110765299192,
+          -2.5460753505512912e-08
+        ],
+        "iteration": 42
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 27,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6dcc83d0-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.12446197424803451,
+        1.0,
+        0.9283167819926071,
+        1e-05,
+        0.18341685210655673
+      ],
+      "model_stats": {
+        "log_likelihood": -4.4546775235067475,
+        "neg_log_likelihood": 4.4546775235067475,
+        "gradients": [
+          -3.9610540625290014e-08,
+          0.0,
+          -3.2345042200176977e-09,
+          0.024034172107481155,
+          -2.3439383767254185e-10
+        ],
+        "iteration": 16
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 31,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "701d6dfc-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06507830192780062,
+        1.0,
+        0.874557844539613,
+        1e-05,
+        0.096362860822353
+      ],
+      "model_stats": {
+        "log_likelihood": -11.1067526911942,
+        "neg_log_likelihood": 11.1067526911942,
+        "gradients": [
+          -7.242046606847907e-06,
+          0.0,
+          8.782899385550991e-07,
+          0.0962666931002712,
+          1.8650879951565003e-08
+        ],
+        "iteration": 30
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 35,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "727c2a84-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.12398685391550195,
+        1.0,
+        1.3094994821378798,
+        1e-05,
+        0.06352517062211746
+      ],
+      "model_stats": {
+        "log_likelihood": -21.699669144754488,
+        "neg_log_likelihood": 21.699669144754488,
+        "gradients": [
+          2.994741028911321e-05,
+          0.0,
+          7.643365049325723e-06,
+          19.07721033551451,
+          4.7106960384540875e-08
+        ],
+        "iteration": 69
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 39,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "74e74150-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06422580217486683,
+        1.0,
+        0.7657599008017303,
+        1e-10,
+        0.18245482363317217
+      ],
+      "model_stats": {
+        "log_likelihood": -6.825269270476326,
+        "neg_log_likelihood": 6.825269270476326,
+        "gradients": [
+          7.696135071455501e-06,
+          0.0,
+          -3.3049582270905375e-07,
+          -4.0110193706391924e-05,
+          -2.8735485102515668e-08
+        ],
+        "iteration": 60
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2",
+        "7636e4d4-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 43,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7740b382-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06440994348713391,
+        1.0,
+        0.7545750458434248,
+        1e-10,
+        0.0035603388729141144
+      ],
+      "model_stats": {
+        "log_likelihood": -7.187653793567932,
+        "neg_log_likelihood": 7.187653793567932,
+        "gradients": [
+          4.1884561241535775e-06,
+          0.0,
+          6.331988684493695e-07,
+          -3.912800770407346e-05,
+          2.1273424665455617e-11
+        ],
+        "iteration": 74
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2",
+        "7636e4d4-8612-11eb-9ba7-a860b6063aa2",
+        "78986f22-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 47,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "799f1cc2-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06481144492328948,
+        1.0,
+        0.4584301143895062,
+        1e-10,
+        0.5148120232318939
+      ],
+      "model_stats": {
+        "log_likelihood": -7.4351209280234,
+        "neg_log_likelihood": 7.4351209280234,
+        "gradients": [
+          3.978653936170806e-08,
+          0.0,
+          1.9231009207310024e-07,
+          -3.313062695826754e-05,
+          2.2236145902354565e-07
+        ],
+        "iteration": 59
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2",
+        "7636e4d4-8612-11eb-9ba7-a860b6063aa2",
+        "78986f22-8612-11eb-9ba7-a860b6063aa2",
+        "7b08403e-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 51,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7c425d7c-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06561077427706669,
+        1.0,
+        0.5727784715324832,
+        1e-10,
+        0.4549997557038838
+      ],
+      "model_stats": {
+        "log_likelihood": -6.702353648118121,
+        "neg_log_likelihood": 6.702353648118121,
+        "gradients": [
+          -6.418176398681474e-08,
+          0.0,
+          1.1575632896665411e-08,
+          -4.237826036918445e-05,
+          8.380666827179084e-09
+        ],
+        "iteration": 69
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2",
+        "7636e4d4-8612-11eb-9ba7-a860b6063aa2",
+        "78986f22-8612-11eb-9ba7-a860b6063aa2",
+        "7b08403e-8612-11eb-9ba7-a860b6063aa2",
+        "7dbe8658-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 55,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7ecae8d4-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "hyperparameters": [
+        0.06537246280605087,
+        1.0,
+        0.00821185658877543,
+        1e-05,
+        0.8880139025105803
+      ],
+      "model_stats": {
+        "log_likelihood": -5.128859474651069,
+        "neg_log_likelihood": 5.128859474651069,
+        "gradients": [
+          8.295200416341686e-06,
+          0.0,
+          4.2656154164433246e-08,
+          0.47365940523454925,
+          8.192371751647443e-06
+        ],
+        "iteration": 53
+      },
+      "func_eval": [
+        "6a219946-8612-11eb-9ba7-a860b6063aa2",
+        "6a219d74-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a094-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a36e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a652-8612-11eb-9ba7-a860b6063aa2",
+        "6a21a918-8612-11eb-9ba7-a860b6063aa2",
+        "6a21abd4-8612-11eb-9ba7-a860b6063aa2",
+        "6a21ae5e-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b0de-8612-11eb-9ba7-a860b6063aa2",
+        "6a21b368-8612-11eb-9ba7-a860b6063aa2",
+        "6cac9e2c-8612-11eb-9ba7-a860b6063aa2",
+        "6f1711f6-8612-11eb-9ba7-a860b6063aa2",
+        "717a31f8-8612-11eb-9ba7-a860b6063aa2",
+        "73dc0070-8612-11eb-9ba7-a860b6063aa2",
+        "7636e4d4-8612-11eb-9ba7-a860b6063aa2",
+        "78986f22-8612-11eb-9ba7-a860b6063aa2",
+        "7b08403e-8612-11eb-9ba7-a860b6063aa2",
+        "7dbe8658-8612-11eb-9ba7-a860b6063aa2",
+        "806a3c62-8612-11eb-9ba7-a860b6063aa2"
+      ],
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "problem_space": {
+        "input_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 10.0
+          }
+        ],
+        "parameter_space": [
+          {
+            "type": "real",
+            "lower_bound": 0.0,
+            "upper_bound": 1.0
+          }
+        ],
+        "output_space": [
+          {
+            "type": "real",
+            "lower_bound": -Infinity,
+            "upper_bound": Infinity
+          }
+        ]
+      },
+      "modeler": "Model_LCM",
+      "objective_id": 0,
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 46,
+        "tm_sec": 0,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "81aae0c2-8612-11eb-9ba7-a860b6063aa2"
+    }
+  ],
+  "func_eval": [
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.4292756893747732
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.2926096894372758
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a219946-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.37143819974375164
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.190738493236605
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a219d74-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.7383361975896996
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.008962049635102
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21a094-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.1373767490283549
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.2635980144923629
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21a36e-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.8737268059086276
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.8888670397237481
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21a652-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.6883503450051406
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.0239461998996093
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21a918-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.22949940813305691
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.958847716326088
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21abd4-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.9928510371190123
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.9155636853254617
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21ae5e-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.5820810773644522
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.8379030133225783
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21b0de-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.06845748881725026
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.4533257768219545
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6a21b368-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.8302814250806466
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.9438948213540193
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 25,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6cac9e2c-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.9375793913104767
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.77232254331846
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 29,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "6f1711f6-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.9432536984620187
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.7410813670351217
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 33,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "717a31f8-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.0005044044892929278
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 1.0163132614489478
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 37,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "73dc0070-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.9505882139596465
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.7103115078200708
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 41,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7636e4d4-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.5203243306380598
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.6542229393739931
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 45,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "78986f22-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.2963182598842477
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.9140318424978385
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 49,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7b08403e-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.5405470126717369
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.5371661379190023
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 54,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "7dbe8658-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.5440281300812017
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.5439366455220263
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 45,
+        "tm_sec": 58,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "806a3c62-8612-11eb-9ba7-a860b6063aa2"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.5437034576104236
+      },
+      "machine_configuration": {
+        "machine_name": "iMac",
+        "intel": {
+          "nodes": 1,
+          "cores": 1
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            4,
+            0,
+            0
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 0.5430092139239752
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 15,
+        "tm_hour": 21,
+        "tm_min": 46,
+        "tm_sec": 3,
+        "tm_wday": 0,
+        "tm_yday": 74,
+        "tm_isdst": 1
+      },
+      "uid": "832e7a9e-8612-11eb-9ba7-a860b6063aa2"
+    }
+  ]
+}

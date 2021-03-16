@@ -32,6 +32,8 @@ class HistoryDB(dict):
 
         self.tuning_problem_name = None
 
+        self.history_db = 1
+
         """ Options """
         self.load_func_eval = True
         self.load_model = False
@@ -159,7 +161,7 @@ class HistoryDB(dict):
     def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -223,7 +225,7 @@ class HistoryDB(dict):
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
@@ -333,7 +335,7 @@ class HistoryDB(dict):
             return ret
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -353,7 +355,7 @@ class HistoryDB(dict):
     def load_MLE_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -379,7 +381,7 @@ class HistoryDB(dict):
     def load_AIC_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -410,7 +412,7 @@ class HistoryDB(dict):
         import math
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -439,7 +441,7 @@ class HistoryDB(dict):
     def load_max_evals_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -466,7 +468,7 @@ class HistoryDB(dict):
 
     def load_model_hyperparameters_by_uid(self, model_uid):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
@@ -527,7 +529,7 @@ class HistoryDB(dict):
             iteration : int):
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+self.tuning_problem_name+".json"
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             with FileLock(json_data_path+".lock"):
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)

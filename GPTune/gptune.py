@@ -36,6 +36,8 @@ import mpi4py
 from mpi4py import MPI
 import numpy as np
 
+import json
+
 class GPTune(object):
 
     def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, history_db : HistoryDB = None, driverabspath=None, models_update=None, **kwargs):
@@ -73,6 +75,33 @@ class GPTune(object):
                 history_db.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
                 if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
                     history_db.load_model = True
+            # when GPTune is called through Reverse Communication Interface
+            elif (os.environ.get('GPTUNE_RCI') == 'yes'):
+                history_db.history_db = 1
+                with open("./.gptune/meta.json") as f_in:
+                    gptune_metadata = json.load(f_in)
+
+                    if "tuning_problem_name" in gptune_metadata:
+                        history_db.tuning_problem_name = gptune_metadata["tuning_problem_name"]
+                    else:
+                        history_db.tuning_problem_name = "Unknown"
+
+                    if "history_db_path" in gptune_metadata:
+                        history_db.history_db_path = gptune_metadata["history_db_path"]
+                    else:
+                        os.system("mkdir -p ./gptune.db")
+                        history_db.history_db_path = "./gptune.db"
+
+                    if "machine_configuration" in gptune_metadata:
+                        history_db.machine_configuration = gptune_metadata["machine_configuration"]
+                    if "software_configuration" in gptune_metadata:
+                        history_db.software_configuration = gptune_metadata["software_configuration"]
+                    if "loadable_machine_configurations" in gptune_metadata:
+                        history_db.loadable_machine_configurations = gptune_metadata["loadable_machine_configurations"]
+                    if "loadable_software_configurations" in gptune_metadata:
+                        history_db.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
+
+
         self.history_db = history_db
 
     def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", update = 0, model_uids = None, **kwargs):
