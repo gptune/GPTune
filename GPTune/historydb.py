@@ -64,63 +64,89 @@ class HistoryDB(dict):
         self.uids = []
 
     def check_load_deps(self, func_eval):
-        ''' check machine dependencies '''
-        loadable_machine_configurations = self.loadable_machine_configurations
-        machine_parameter = func_eval['machine_configuration']
 
         ''' check machine configuration dependencies '''
-        for dep_name in loadable_machine_configurations:
-            if not machine_parameter[dep_name] in loadable_machine_configurations[dep_name]:
-                print (dep_name+": " + machine_parameter[dep_name] +
-                       " is not in load_deps: " + str(loadable_machine_configurations[dep_name]))
-                return False
+        loadable_machine_configurations = self.loadable_machine_configurations
+        machine_configuration = func_eval['machine_configuration']
+        machine_name = machine_configuration['machine_name']
+        processor_list = list(machine_configuration.keys())
+        processor_list.remove("machine_name")
+        if not machine_name in loadable_machine_configurations.keys():
+            print (machine_name+": " + machine_name + " is not in load_deps: " + str(loadable_machine_configurations.keys()))
+            return False
+        else:
+            for processor in processor_list:
+                if not processor in loadable_machine_configurations[machine_name]:
+                    return False
+                else:
+                    num_nodes = machine_configuration[processor]["nodes"]
+                    num_nodes_loadable = loadable_machine_configurations[machine_name][processor]["nodes"]
+                    if type(num_nodes_loadable) == list:
+                        if num_nodes not in num_nodes_loadable:
+                            return False
+                    elif type(num_nodes_loadable) == int:
+                        if num_nodes != num_nodes_loadable:
+                            return False
+                    else:
+                        return False
+
+                    num_cores = machine_configuration[processor]["cores"]
+                    num_cores_loadable = loadable_machine_configurations[machine_name][processor]["cores"]
+                    if type(num_cores_loadable) == list:
+                        if num_cores not in num_cores_loadable:
+                            return False
+                    elif type(num_cores_loadable) == int:
+                        if num_cores != num_cores_loadable:
+                            return False
+                    else:
+                        return False
 
         ''' check compile-level software dependencies '''
-        loadable_software_configurations = self.loadable_loadable_software_configurationss
+        loadable_software_configurations = self.loadable_software_configurations
         software_configuration = func_eval['software_configuration']
-        for dep_name in loadable_software_configurations.keys():
+        for software_name in loadable_software_configurations.keys():
             deps_passed = False
-            for option in range(len(loadable_software_configurations[dep_name])):
-                software_name = loadable_software_configurations[dep_name][option]['name']
-                if software_name in software_configuration.keys():
-                    version_split = software_configuration[software_name]['version_split']
-                    version_value = version_split[0]*100+version_split[1]*10+version_split[2]
-                    #print ("software_name: " + software_name + " version_value: " + str(version_value))
 
-                    if 'version' in loadable_software_configurations[dep_name][option].keys():
-                        version_dep_split = loadable_software_configurations[dep_name][option]['version']
-                        version_dep_value = version_dep_split[0]*100+version_dep_split[1]*10+version_dep_split[2]
+            #software_name = loadable_software_configurations[software_name][option]['name']
+            if software_name in software_configuration.keys():
+                version_split = software_configuration[software_name]['version_split']
+                version_value = version_split[0]*100+version_split[1]*10+version_split[2]
+                #print ("software_name: " + software_name + " version_value: " + str(version_value))
 
-                        if version_dep_value == version_value:
-                            deps_passed = True
+                if 'version_split' in loadable_software_configurations[software_name].keys():
+                    version_dep_split = loadable_software_configurations[software_name]['version_split']
+                    version_dep_value = version_dep_split[0]*100+version_dep_split[1]*10+version_dep_split[2]
 
-                    if 'version_from' in loadable_software_configurations[dep_name][option].keys() and \
-                       'version_to' not in loadable_software_configurations[dep_name][option].keys():
-                        version_dep_from_split = loadable_software_configurations[dep_name][option]['version_from']
-                        version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    if version_dep_value == version_value:
+                        deps_passed = True
 
-                        if version_dep_from_value <= version_value:
-                            deps_passed = True
+                if 'version_from' in loadable_software_configurations[software_name].keys() and \
+                   'version_to' not in loadable_software_configurations[software_name].keys():
+                    version_dep_from_split = loadable_software_configurations[software_name]['version_from']
+                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
 
-                    if 'version_from' not in loadable_software_configurations[dep_name][option].keys() and \
-                       'version_to' in loadable_software_configurations[dep_name][option].keys():
-                        version_dep_to_split = loadable_software_configurations[dep_name][option]['version_to']
-                        version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
+                    if version_dep_from_value <= version_value:
+                        deps_passed = True
 
-                        if version_dep_to_value >= version_value:
-                            deps_passed = True
+                if 'version_from' not in loadable_software_configurations[software_name].keys() and \
+                   'version_to' in loadable_software_configurations[software_name].keys():
+                    version_dep_to_split = loadable_software_configurations[software_name]['version_to']
+                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
 
-                    if 'version_from' in loadable_software_configurations[dep_name][option].keys() and \
-                       'version_to' in loadable_software_configurations[dep_name][option].keys():
-                        version_dep_from_split = loadable_software_configurations[dep_name][option]['version_from']
-                        version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    if version_dep_to_value >= version_value:
+                        deps_passed = True
 
-                        version_dep_to_split = loadable_software_configurations[dep_name][option]['version_to']
-                        version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
+                if 'version_from' in loadable_software_configurations[software_name].keys() and \
+                   'version_to' in loadable_software_configurations[software_name].keys():
+                    version_dep_from_split = loadable_software_configurations[software_name]['version_from']
+                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
 
-                        if version_dep_from_value <= version_value and \
-                           version_dep_to_value >= version_value:
-                            deps_passed = True
+                    version_dep_to_split = loadable_software_configurations[software_name]['version_to']
+                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
+
+                    if version_dep_from_value <= version_value and \
+                       version_dep_to_value >= version_value:
+                        deps_passed = True
 
             if (deps_passed == False):
                 if (self.verbose):
@@ -135,7 +161,7 @@ class HistoryDB(dict):
         for i in range(len(Igiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
-                if (func_eval["I"][problem.IS[j].name] != Igiven[i][j]):
+                if (func_eval["task_parameter"][problem.IS[j].name] != Igiven[i][j]):
                     compare_all_elems = False
                     break
             if compare_all_elems == True:
@@ -487,8 +513,6 @@ class HistoryDB(dict):
 
         space_len = len(space)
 
-        print (space)
-
         for i in range(space_len):
             dict_ = {}
 
@@ -551,9 +575,6 @@ class HistoryDB(dict):
             gradients_list = gradients.tolist()
 
             problem_space = {}
-            print (problem.IS)
-            print (problem.PS)
-            print (problem.OS)
             problem_space["input_space"] = self.problem_space_to_dict(problem.IS)
             problem_space["parameter_space"] = self.problem_space_to_dict(problem.PS)
             problem_space["output_space"] = self.problem_space_to_dict(problem.OS)
