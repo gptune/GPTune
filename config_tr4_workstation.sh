@@ -11,6 +11,8 @@ module load cmake/3.19.2
 SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
+GPTUNEROOT=$PWD
+
 
 #shopt -s expand_aliases
 #alias python='python3.7'
@@ -23,6 +25,16 @@ export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
+
+export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
+export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
+export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
+export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
+export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
+export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
+export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
+
 
 CCC=$MPICC
 CCCPP=$MPICXX
@@ -56,10 +68,10 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make
 cp lib_gptuneclcm.so ../.
-cp pdqrdriver ../
+# cp pdqrdriver ../
 
 
-cd ../examples/
+cd $GPTUNEROOT/examples/SuperLU_DIST
 git clone https://github.com/xiaoyeli/superlu_dist.git
 cd superlu_dist
 
@@ -73,10 +85,6 @@ make install > make_parmetis_install.log 2>&1
 cd ../
 cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
 cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
-METIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include"
-PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
-METIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libmetis.a
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -100,7 +108,7 @@ cmake .. \
 make pddrive_spawn
 make pzdrive_spawn
 
-cd ../../
+cd $GPTUNEROOT/examples/Hypre
 rm -rf hypre
 git clone https://github.com/hypre-space/hypre.git
 cd hypre/src/
@@ -111,7 +119,7 @@ make test
 
 
 
-cd ../../
+cd $GPTUNEROOT/examples/ButterflyPACK
 rm -rf ButterflyPACK
 git clone https://github.com/liuyangzhuan/ButterflyPACK.git
 cd ButterflyPACK
@@ -158,12 +166,11 @@ make install -j32
 
 
 
-cd ../../
+cd $GPTUNEROOT/examples/STRUMPACK
 rm -rf scotch_6.1.0
 wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
 tar -xf scotch_6.1.0.tar.gz
 cd ./scotch_6.1.0
-export SCOTCH_DIR=`pwd`/install
 mkdir install
 cd ./src
 cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
@@ -190,9 +197,7 @@ cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/.
 mkdir build
 cd build
 
-export METIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
-export ParMETIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
-export ButterflyPACK_DIR=$PWD/../../ButterflyPACK/build/lib/cmake/ButterflyPACK
+
 
 cmake ../ \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -215,10 +220,10 @@ cmake ../ \
 
 make install -j32
 make examples -j32
-export STRUMPACK_DIR=$PWD/../install
 
 
-cd ../../
+cd $GPTUNEROOT/examples/MFEM
+cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
 git clone https://github.com/mfem/mfem.git
 cd mfem
 cp ../mfem-driver/src/CMakeLists.txt ./examples/.

@@ -183,7 +183,7 @@
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
   make &>>build_gptune.log
   cp lib_gptuneclcm.so ../.
-  cp pdqrdriver ../
+  # cp pdqrdriver ../
 
 
 

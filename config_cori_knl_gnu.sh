@@ -81,7 +81,7 @@ cmake .. \
 
 make
 cp lib_gptuneclcm.so ../.
-cp pdqrdriver ../
+# cp pdqrdriver ../
 
 
 # -DTPL_SCALAPACK_LIBRARIES="${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.so;${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.so"

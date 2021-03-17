@@ -97,7 +97,7 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES=${SCALAPACK_LIB}
 make
 cp lib_gptuneclcm.so ../.
-cp pdqrdriver ../
+# cp pdqrdriver ../
 
 
 
