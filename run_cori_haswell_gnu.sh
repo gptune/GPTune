@@ -21,7 +21,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/STRUMPACK/STRUMPACK/instal
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/ButterflyPACK/build/lib   # needed by strumpack_MLA_KRR.py
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/ButterflyPACK/arpack-ng/build/lib   # needed by strumpack_MLA_KRR.py
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-export PYTHONPATH=$PYTHONPATH:$PWD/examples/STRUMPACK/STRUMPACK/install/include/python/
+export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/lib/:$LD_LIBRARY_PATH
+export PYTHONPATH=$PWD/examples/STRUMPACK/STRUMPACK/install/include/python/:$PYTHONPATH
 export GPTUNEROOT=$PWD
 
 MPICC=mpicc
@@ -39,7 +40,13 @@ mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --m
 mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0
 cd $GPTUNEROOT/examples/SuperLU_DIST
 mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_TLA.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
-cd $GPTUNEROOT/examples/STRUMPACK
-mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine cori 
+
+# cd $GPTUNEROOT/examples/STRUMPACK
+# mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_Poisson3d.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine cori 
+
+
+###### the one has a segmentation fault when running on Cori
+# cd $GPTUNEROOT/examples/STRUMPACK
+# mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine cori 
 
 
