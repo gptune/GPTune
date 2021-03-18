@@ -32,11 +32,11 @@ MPICXX=$MPICXX
 MPIF90=$MPIF90
 MPIRUN=$MPIRUN
 
-cd $GPTUNEROOT/examples/GPTune-Demo
-$MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
-
 # cd $GPTUNEROOT/examples/GPTune-Demo
-# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_perf_model.py -nrun 20 -machine tr4 -nodes 1 -cores 16 -ntask 5 -perfmodel 0 -plot 0 -optimization GPTune 
+# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
+
+cd $GPTUNEROOT/examples/GPTune-Demo
+$MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_perf_model.py -nrun 20 -machine tr4 -nodes 1 -cores 16 -ntask 5 -perfmodel 0 -plot 0 -optimization GPTune 
 
 # cd $GPTUNEROOT/examples/GPTune-Demo
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_perf_model.py -nrun 20 -machine tr4 -nodes 1 -cores 16 -ntask 5 -perfmodel 1 -plot 0 -optimization GPTune 
