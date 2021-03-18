@@ -100,7 +100,7 @@ class LCM(GPy.kern.Kern):
             B[:, :, i] = np.outer(Wq, Wq) + np.diag(Kappa_q)
             # print("In model.py, i = ", i)
             # print(B[:, :, i])
-            
+
         # return C_{i, i'}
         C = np.zeros((delta, delta))
         for i in range(delta):
@@ -232,7 +232,7 @@ class LCM(GPy.kern.Kern):
             x2 = np.log10(x0)
             # x2[list(range(len(self.theta)+len(self.var)+len(self.kappa)+len(self.sigma),len(x0)))] = ws
             return x2
-            
+
 
 
         def transform_gradient(x, grad):  # YL: Why is this needed?
@@ -247,12 +247,13 @@ class LCM(GPy.kern.Kern):
         # Gradient-based optimization
 
         gradients = np.zeros(len(self.theta) + len(self.var) + len(self.kappa) + len(self.sigma) + len(self.WS))
+        iteration = [0] #np.array([0])
 
         history_xs = [None]
         history_fs = [float('Inf')]
 
         def fun(x, *args):
-            
+
             # print(np.power(10,x),'hp')
             t3 = time.time_ns()
             x2 = transform_x(x)
@@ -263,6 +264,10 @@ class LCM(GPy.kern.Kern):
             (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
             # print("@@@@")
             # print(x2,neg_log_marginal_likelihood)
+            #print ("g: ", g)
+            #print ("iteration: " + str(iteration[0]))
+
+            iteration[0] += 1
 
             gradients[:] = g[:]
             if (kwargs['verbose']):
@@ -276,16 +281,16 @@ class LCM(GPy.kern.Kern):
             return (neg_log_marginal_likelihood)
 
         def grad(x, *args):
-            # x = np.insert(x,len(self.theta), np.ones(len(self.var))) # fix self.var to 1   
+            # x = np.insert(x,len(self.theta), np.ones(len(self.var))) # fix self.var to 1
             grad = - gradients
             grad = transform_gradient(x, grad)
-            
+
             # grad = np.delete(grad,list(range(len(self.theta),len(self.theta)+len(self.var)))) # fix self.var to 1
             return (grad)
 
         x0 = self.get_param_array()
         x0_log = inverse_transform_x(x0)
-        
+
         # x0_log[0]=0
         x0_log[list(range(len(self.theta),len(self.theta)+len(self.var)))]=0
         # x0_log[2]=0
@@ -300,8 +305,8 @@ class LCM(GPy.kern.Kern):
         # print(bounds)
 
         # sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad)
-        sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad, bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})        
-        
+        sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad, bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
+
         # print(sol.x,'after')
         # print(transform_x(sol.x),'after exp')  # sol.x is not yet transformed
 
@@ -323,6 +328,8 @@ class LCM(GPy.kern.Kern):
     #            fopt = sol.fun
         xopt = history_xs[history_fs.index(min(history_fs))] # history_xs is already transformed
         fopt = min(history_fs)
+        #print ("gradients: ", str(gradients))
+        #print ("iteration: " + str(iteration[0]))
 
         if(xopt is None):
             raise Exception(f"L-BFGS failed: consider reducing options['model_latent'] !")
@@ -348,7 +355,8 @@ class LCM(GPy.kern.Kern):
         _ = mpi_comm.bcast(("end", None), root=mpi4py.MPI.ROOT)
 
         mpi_comm.Disconnect()
-        return (xopt, fopt)
+
+        return (xopt, fopt, gradients, iteration[0])
 
 if __name__ == "__main__":
 

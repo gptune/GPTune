@@ -85,7 +85,7 @@ class Model_GPy_LCM(Model):
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
         GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
-        
+
         if (multitask):
             kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
@@ -185,7 +185,7 @@ class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
 
-        self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
+        return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
     def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
 
@@ -230,7 +230,6 @@ class Model_LCM(Model):
                 # np.random.seed(restart_iter)
                 np.random.seed()
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
-                # print('I am here')
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))
 
@@ -238,7 +237,11 @@ class Model_LCM(Model):
             return res
 
         kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
-        bestxopt = min(res, key = lambda x: x[1])[0]
+        best_result = min(res, key = lambda x: x[1])
+        bestxopt = best_result[0]
+        neg_log_marginal_likelihood = best_result[1]
+        gradients = best_result[2]
+        iteration = best_result[3]
         kern.set_param_array(bestxopt)
         if(kwargs['verbose']==True):
             # print('hyperparameters:', kern.get_param_array())
@@ -251,11 +254,23 @@ class Model_LCM(Model):
 
 
 
-        # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8   
+        # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
-        
-        return
+
+        #print ("kernel: " + str(kern))
+        #print ("bestxopt:" + str(bestxopt))
+        #print ("neg_log_marginal_likelihood:" + str(neg_log_marginal_likelihood))
+        #print ("gradients: " + str(gradients))
+        #print ("iteration: " + str(iteration))
+        #for i in range(data.NI):
+        #    print ("i: " + str(i))
+        #    print ("sigma: " + str(kern.sigma[i]))
+        #    print ("likelihoods_list: " + str(likelihoods_list[i].to_dict()))
+        #print ("likelihoods_list_len: " + str(data.NI))
+        #print ("self.M: " + str(self.M))
+
+        return (bestxopt, neg_log_marginal_likelihood, gradients, iteration)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
@@ -268,10 +283,24 @@ class Model_LCM(Model):
         x = np.empty((1, points.shape[0] + 1))
         x[0,:-1] = points
         x[0,-1] = tid
-        (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py. 
+        (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
 
         return (mu, var)
 
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
+        if (kwargs['model_latent'] is None):
+            Q = data.NI
+        else:
+            Q = kwargs['model_latent']
+
+        kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
+        #print ("received hyperparameters: " + str(hyperparameters))
+        kern.set_param_array(hyperparameters)
+
+        likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
+        self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
+
+        return
 
 class Model_DGP(Model):
 

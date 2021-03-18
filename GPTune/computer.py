@@ -20,6 +20,7 @@
 import numpy as np
 from problem import Problem
 from data import Data
+from historydb import HistoryDB
 from typing import Collection, Callable
 import mpi4py
 from mpi4py import MPI
@@ -84,7 +85,7 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, options: dict=None):  # P and I are in the normalized space
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None):  # P and I are in the normalized space
         O = []
         for i in range(len(I)):
             t = I[i]
@@ -99,14 +100,13 @@ class Computer(object):
             tmp = np.array(O2).reshape((len(O2), problem.DO))
             O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
+            if history_db is not None:
+                history_db.update_func_eval(problem = problem,\
+                        task_parameter = I[i], \
+                        tuning_parameter = P[i],\
+                        evaluation_result = tmp)
+
         return O
-
-    # def evaluate_models_onepoint(self, problem : Problem, point: dict):  # a simple wrapper for problem.models, point is in the original space
-    #     print('nani')
-    #     O= problem.models(point)
-    #     return O
-
-
 
     def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, D2 : dict=None, options:dict=None):  # P2 is in the normalized space
 

@@ -79,6 +79,15 @@ class Options(dict):
         budget_max = 1 # maximum budget
         budget_base = 2 # the number of arms is floor{log_{budget_base}{budget_max/budget_min}}+1
 
+        """ Options for the history database """
+        history_db = 0
+        history_db_path = "./"
+        application_name = None
+
+        self.update(locals())
+        self.update(kwargs)
+        self.pop('self')
+
         self.update(locals())
         self.update(kwargs)
         self.pop('self')
@@ -153,9 +162,6 @@ class Options(dict):
             self['objective_multisample_processes'] = 1
 
 
-
-
-
         print('\n\n------Validating the options')
         print("  ")
         print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
@@ -210,5 +216,4 @@ class Options(dict):
                 raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")
             if ((computer.cores*computer.nodes)<ncore_obj):
                 raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
-
 
