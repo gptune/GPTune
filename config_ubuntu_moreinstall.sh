@@ -10,8 +10,8 @@ export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPTune/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/scalapack-driver/spt/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
+# export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/scalapack-driver/spt/
+# export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
 export PYTHONWARNINGS=ignore
 export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
 export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
@@ -22,6 +22,18 @@ export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.
 export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
+
+export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
+export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
+export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
+export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
+export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
+export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
+export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
+
+
+
 
 CC=gcc-8
 FTN=gfortran-8
@@ -159,8 +171,7 @@ cp lib_gptuneclcm.so ../.
 
 
 
-cd $GPTUNEROOT
-cd examples/
+cd $GPTUNEROOT/examples/SuperLU_DIST
 rm -rf superlu_dist
 git clone https://github.com/xiaoyeli/superlu_dist.git
 cd superlu_dist
@@ -174,8 +185,6 @@ make install -j32
 
 cd ../
 cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
-PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
-PARMETIS_LIBRARIES="$PWD/parmetis-4.0.3/install/lib/libparmetis.so"
 
 mkdir -p build
 cd build
@@ -201,8 +210,7 @@ cmake .. \
 make pddrive_spawn
 make pzdrive_spawn
 
-cd $GPTUNEROOT
-cd examples/
+cd $GPTUNEROOT/examples/Hypre
 rm -rf hypre
 git clone https://github.com/hypre-space/hypre.git
 cd hypre/src/
@@ -213,6 +221,142 @@ make test
 
 
 
+cd $GPTUNEROOT/examples/ButterflyPACK
+rm -rf ButterflyPACK
+git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+cd ButterflyPACK
+git clone https://github.com/opencollab/arpack-ng.git
+cd arpack-ng
+git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-fopenmp" \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DMPI=ON \
+	-DEXAMPLES=ON \
+	-DCOVERALLS=ON 
+make
+cd ../../
+mkdir build
+cd build
+cmake .. \
+	-DCMAKE_Fortran_FLAGS=""\
+	-DCMAKE_CXX_FLAGS="" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+make -j32
+make install -j32
+
+
+
+
+cd $GPTUNEROOT/examples/STRUMPACK
+rm -rf scotch_6.1.0
+wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+tar -xf scotch_6.1.0.tar.gz
+cd ./scotch_6.1.0
+mkdir install
+cd ./src
+cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+sed -i "s/CCD/#CCD/" Makefile.inc
+printf "CCD = $MPICC\n" >> Makefile.inc
+sed -i "s/CCP/#CCP/" Makefile.inc
+printf "CCP = $MPICC\n" >> Makefile.inc
+sed -i "s/CCS/#CCS/" Makefile.inc
+printf "CCS = $MPICC\n" >> Makefile.inc
+cat Makefile.inc
+make ptscotch 
+make prefix=../install install
+
+
+cd ../../
+rm -rf STRUMPACK
+git clone https://github.com/pghysels/STRUMPACK.git
+cd STRUMPACK
+#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
+cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
+chmod +x examples/KernelRegressionMPI.py
+mkdir build
+cd build
+
+
+
+cmake ../ \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DSTRUMPACK_COUNT_FLOPS=ON \
+	-DSTRUMPACK_TASK_TIMERS=ON \
+	-DTPL_ENABLE_SCOTCH=ON \
+	-DTPL_ENABLE_ZFP=OFF \
+	-DTPL_ENABLE_PTSCOTCH=ON \
+	-DTPL_ENABLE_PARMETIS=ON \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+
+make install -j32
+make examples -j32
+
+
+cd $GPTUNEROOT/examples/MFEM
+cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
+git clone https://github.com/mfem/mfem.git
+cd mfem
+cp ../mfem-driver/src/CMakeLists.txt ./examples/.
+cp ../mfem-driver/src/ex3p_indef.cpp ./examples/.
+rm -rf mfem-build
+mkdir mfem-build
+cd mfem-build
+cmake .. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_CXX_FLAGS="-std=c++11" \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DBUILD_SHARED_LIBS=ON \
+	-DMFEM_USE_MPI=YES \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	-DMFEM_USE_METIS_5=YES \
+	-DMFEM_USE_OPENMP=YES \
+	-DMFEM_THREAD_SAFE=ON \
+	-DMFEM_USE_STRUMPACK=YES \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DMETIS_DIR=${METIS_INCLUDE_DIRS} \
+	-DMETIS_LIBRARIES="${METIS_LIBRARIES}" \
+	-DSTRUMPACK_INCLUDE_DIRS="${STRUMPACK_DIR}/include;${METIS_INCLUDE_DIRS};${PARMETIS_INCLUDE_DIRS};${SCOTCH_DIR}/include" \
+	-DSTRUMPACK_LIBRARIES="${STRUMPACK_DIR}/lib/libstrumpack.so;${ButterflyPACK_DIR}/../../../lib/libdbutterflypack.so;${ButterflyPACK_DIR}/../../../lib/libzbutterflypack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libparpack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libarpack.so;${PARMETIS_LIBRARIES};${SCALAPACK_LIB}"
+make -j32 VERBOSE=1
+make install
+make ex3p_indef
 
 # manually install dependencies from python
 ###################################

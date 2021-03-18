@@ -36,16 +36,16 @@ export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
 
 
-CCC=$MPICC
-CCCPP=$MPICXX
-FTN=$MPIF90
+MPICC=$MPICC
+MPICXX=$MPICXX
+MPIF90=$MPIF90
 RUN=$MPIRUN
 
 python --version
 pip --version
 
 pip install --upgrade --user -r requirements.txt
-#env CC=$CCC pip install --upgrade --user -r requirements.txt
+#env CC=$MPICC pip install --upgrade --user -r requirements.txt
 
 mkdir -p build
 cd build
@@ -58,9 +58,9 @@ cmake .. \
 	-DCMAKE_CXX_FLAGS="" \
 	-DCMAKE_C_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
@@ -79,7 +79,7 @@ wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
 tar -xf parmetis-4.0.3.tar.gz
 cd parmetis-4.0.3/
 mkdir -p install
-make config shared=1 cc=$CCC cxx=$CCCPP prefix=$PWD/install
+make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 make install > make_parmetis_install.log 2>&1
 
 cd ../
@@ -96,9 +96,9 @@ cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
@@ -112,7 +112,7 @@ cd $GPTUNEROOT/examples/Hypre
 rm -rf hypre
 git clone https://github.com/hypre-space/hypre.git
 cd hypre/src/
-./configure CC=$CCC CXX=$CCCPP FC=$FTN CFLAGS="-DTIMERUSEMPI" --enable-shared
+./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
 make
 cp ../../hypre-driver/src/ij.c ./test/.
 make test
@@ -130,8 +130,8 @@ mkdir -p build
 cd build
 cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_INSTALL_PREFIX=. \
 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -150,9 +150,9 @@ cmake .. \
 	-DCMAKE_Fortran_FLAGS=""\
 	-DCMAKE_CXX_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_Fortran_COMPILER=$FTN \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_INSTALL_PREFIX=. \
 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -177,11 +177,11 @@ cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
 sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
 sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
 sed -i "s/CCD/#CCD/" Makefile.inc
-printf "CCD = $CCC\n" >> Makefile.inc
+printf "CCD = $MPICC\n" >> Makefile.inc
 sed -i "s/CCP/#CCP/" Makefile.inc
-printf "CCP = $CCC\n" >> Makefile.inc
+printf "CCP = $MPICC\n" >> Makefile.inc
 sed -i "s/CCS/#CCS/" Makefile.inc
-printf "CCS = $CCC\n" >> Makefile.inc
+printf "CCS = $MPICC\n" >> Makefile.inc
 cat Makefile.inc
 make ptscotch 
 make prefix=../install install
@@ -194,6 +194,7 @@ cd STRUMPACK
 #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
 cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
 cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
+sudo chmod +x examples/KernelRegressionMPI.py
 mkdir build
 cd build
 
@@ -204,9 +205,9 @@ cmake ../ \
 	-DCMAKE_INSTALL_PREFIX=../install \
 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DSTRUMPACK_COUNT_FLOPS=ON \
 	-DSTRUMPACK_TASK_TIMERS=ON \
 	-DTPL_ENABLE_SCOTCH=ON \
@@ -233,9 +234,9 @@ mkdir mfem-build
 cd mfem-build
 cmake .. \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_CXX_FLAGS="-std=c++11" \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DBUILD_SHARED_LIBS=ON \
 	-DMFEM_USE_MPI=YES \
 	-DCMAKE_INSTALL_PREFIX=../install \
@@ -256,24 +257,24 @@ make ex3p_indef
 
 
 
-cd ../../../
+cd $GPTUNEROOT
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
-python setup.py build --mpicc="$CCC -shared"
+python setup.py build --mpicc="$MPICC -shared"
 python setup.py install
 # env CC=mpicc pip install --user -e .
 
 
 
-cd ../
+cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
 pip install --user -e .
  
  
-cd ../
+cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
