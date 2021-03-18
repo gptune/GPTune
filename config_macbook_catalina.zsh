@@ -1,40 +1,35 @@
 #!/bin/zsh
 
-# rm -rf ~/.local/lib
-# rm -rf /usr/local/lib/python3.7/site-packages
+rm -rf ~/.local/lib
 
-#define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.7.10_2
-gccversion=10.2.0_4
-openblasversion=0.3.13
-lapackversion=3.9.0_1
 
-#set up environment variables, these are also needed when running GPTune 
-################################### 
-export GPTUNEROOT=$PWD
-export PATH=/usr/local/Cellar/python@3.7/$pythonversion/bin/:$PATH
-export PATH=$GPTUNEROOT/env/bin/:$PATH
-export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
-export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/pygmo/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPTune/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/scalapack-driver/spt/
-export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
+###################################
+# The following loads preinstalled compiler, openmpi, and python, make sure to change them to the correct paths on your machine
+source /usr/local/Cellar/modules/4.3.0/init/zsh
+module load gcc/9.2.0
+module load openmpi/gcc-9.2.0/4.0.1
+alias python=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3
+alias pip=/usr/local/Cellar/python@3.7/3.7.9_2/bin/pip3
+
+# set the PATH to your python installation
+export PATH=$PATH:/usr/local/Cellar/python@3.7/3.7.9_2/bin
+GPTUNEROOT=$PWD
+
+
+
+# set the path to blas,lapack
+BLAS_LIB=/usr/local/Cellar/openblas/0.3.12_1/lib/libblas.dylib
+LAPACK_LIB=/usr/local/Cellar/lapack/3.9.0_1/lib/liblapack.dylib
+SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.dylib  
+
+###################################
+
+
+export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
+export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
+export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
-export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
-export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
-export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
-export MPIRUN="$GPTUNEROOT/openmpi-4.0.1/bin/mpirun"
-export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
-export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.dylib
-export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
-export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
 export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
@@ -47,84 +42,22 @@ export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.a;$ParMETIS_DIR/lib/lib
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
 
 
-
-
-
-CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-10
-FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-10
-CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-10
-
+# set the compiler wrappers
+MPICC=$MPICC
+MPICXX=$MPICXX
+MPIF90=$MPIF90
+MPIRUN=$MPIRUN
 
 
 
 
-# install dependencies using homebrew and virtualenv
-###################################
-brew install wget
-brew install python@3.7
+python --version
+pip --version
+
+pip install --upgrade --user -r requirements_mac.txt
+#env CC=$MPICC pip install --upgrade --user -r requirements.txt
 
 
-if [ ! -d "/usr/local/Cellar/python@3.7/$pythonversion" ] 
-then
-    echo "pythonversion=$pythonversion not working, change it to the correct one." 
-    exit 
-fi
-
-alias python=/usr/local/Cellar/python@3.7/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=/usr/local/Cellar/python@3.7/$pythonversion/bin/pip3
-
-python -m pip install virtualenv 
-rm -rf env
-python -m venv env
-source env/bin/activate
-
-unalias pip  # this makes sure virtualenv install packages at its own site-packages directory
-unalias python
-
-pip install --force-reinstall cloudpickle
-brew reinstall tbb
-brew reinstall pagmo
-brew reinstall pybind11
-
-brew install gcc
-brew upgrade gcc   
-if [ ! -d "/usr/local/Cellar/gcc/$gccversion" ] 
-then
-    echo "gccversion=$gccversion not working, change it to the correct one." 
-    exit 
-fi
-
-
-brew install openblas
-brew upgrade openblas  
-if [ ! -d "/usr/local/Cellar/openblas/$openblasversion" ] 
-then
-    echo "openblasversion=$openblasversion not working, change it to the correct one." 
-    exit 
-fi
-
-brew install lapack
-brew upgrade lapack   
-if [ ! -d "/usr/local/Cellar/lapack/$lapackversion" ] 
-then
-    echo "lapackversion=$lapackversion not working, change it to the correct one." 
-    exit 
-fi
-
-
-# manually install dependencies from cmake and make
-###################################
-cd $GPTUNEROOT
-wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-bzip2 -d openmpi-4.0.1.tar.bz2
-tar -xvf openmpi-4.0.1.tar 
-cd openmpi-4.0.1/ 
-./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
-make -j8
-make install
-
-
-cd $GPTUNEROOT
 wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
 tar -xf scalapack-2.1.0.tgz
 cd scalapack-2.1.0
@@ -136,7 +69,6 @@ cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
 	-DCMAKE_INSTALL_PREFIX=./install \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -156,14 +88,14 @@ rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="" \
-	-DCMAKE_C_FLAGS="-fopenmp" \
-	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
+	-DCMAKE_C_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-fopenmp" \
 	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
 	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
 	-DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
@@ -172,9 +104,7 @@ cp lib_gptuneclcm.dylib ../.
 # cp pdqrdriver ../
 
 
-
 cd $GPTUNEROOT/examples/SuperLU_DIST
-rm -rf superlu_dist
 git clone https://github.com/xiaoyeli/superlu_dist.git
 cd superlu_dist
 
@@ -188,6 +118,8 @@ make install > make_parmetis_install.log 2>&1
 cd ../
 cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
 
+
+
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -197,7 +129,6 @@ rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRelease" \
-	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 	-DBUILD_SHARED_LIBS=OFF \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
@@ -222,6 +153,7 @@ cp ../../hypre-driver/src/ij.c ./test/.
 make test
 
 
+
 cd $GPTUNEROOT/examples/ButterflyPACK
 rm -rf ButterflyPACK
 git clone https://github.com/liuyangzhuan/ButterflyPACK.git
@@ -239,7 +171,7 @@ cmake .. \
 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
+	-DCMAKE_Fortran_FLAGS="-fopenmp" \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DMPI=ON \
@@ -250,7 +182,7 @@ cd ../../
 mkdir build
 cd build
 cmake .. \
-	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch"\
+	-DCMAKE_Fortran_FLAGS=""\
 	-DCMAKE_CXX_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
@@ -297,7 +229,7 @@ cd STRUMPACK
 #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
 cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
 cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
-chmod +x examples/KernelRegressionMPI.py
+sudo chmod +x examples/KernelRegressionMPI.py
 mkdir build
 cd build
 
@@ -312,7 +244,6 @@ cmake ../ \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DSTRUMPACK_COUNT_FLOPS=ON \
-	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch" \
 	-DSTRUMPACK_TASK_TIMERS=ON \
 	-DTPL_ENABLE_SCOTCH=ON \
 	-DTPL_ENABLE_ZFP=OFF \
@@ -340,7 +271,6 @@ cmake .. \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_CXX_FLAGS="-std=c++11" \
-	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch" \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DBUILD_SHARED_LIBS=ON \
 	-DMFEM_USE_MPI=YES \
@@ -360,25 +290,22 @@ make -j4 VERBOSE=1
 make install
 make ex3p_indef
 
-# manually install dependencies from python
-###################################
-cd $GPTUNEROOT
-python --version
-pip --version
-pip install --force-reinstall --upgrade -r requirements_mac.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
-cp patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
+
+# # pip install pygmo doesn't work, build from source
+# brew install pagmo
+# brew install boost
+# brew install boost-python3
+# rm -rf pagmo2
 
 
-# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang, this may cause segfault at the search phase
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
-make -j8
+# install pygmo from conda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+zsh ~/miniconda.sh -b -p $HOME/miniconda
+source ~/miniconda/bin/activate
+conda init zsh
+conda config --add channels conda-forge
+conda install -y pygmo
+
 
 
 cd $GPTUNEROOT
@@ -387,15 +314,25 @@ git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
 python setup.py install
+# env CC=mpicc pip install --user -e .
+
+
+
+cd $GPTUNEROOT
+rm -rf scikit-optimize
+git clone https://github.com/scikit-optimize/scikit-optimize.git
+cd scikit-optimize/
+pip install --user -e .
+
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-pip install -e .
+pip install --user -e .
 
 
-
-
+cp ../patches/opentuner/manipulator.py  /usr/local/lib/python3.7/site-packages/opentuner/search/.
+cp ../patches/opentuner/manipulator.py  ~/Library/Python/3.7/lib/python/site-packages/opentuner/search/.
 
 
