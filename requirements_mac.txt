@@ -10,6 +10,3 @@ ipyparallel
 opentuner
 hpbandster
 scikit-optimize
-open-mpi
-mpi4py
-openblas
