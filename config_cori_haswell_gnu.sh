@@ -8,10 +8,12 @@ module unload cmake
 module load cmake/3.14.4
 
 module swap PrgEnv-intel PrgEnv-gnu
+GPTUNEROOT=$PWD
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
+SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
 
 # module use /global/common/software/m3169/cori/modulefiles
 # module unload openmpi
@@ -23,13 +25,22 @@ export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
-CCC=mpicc
-CCCPP=mpicxx
-FTN=mpif90
+export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
+export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
+export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
+export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
+export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
+export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
+export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
+
+MPICC=mpicc
+MPICXX=mpicxx
+MPIF90=mpif90
 
 #pip uninstall -r requirements.txt
-#env CC=$CCC pip install --upgrade --user -r requirements.txt
-env CC=$CCC pip install --user -r requirements.txt
+#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+env CC=$MPICC pip install --user -r requirements.txt
 
 
 
@@ -42,8 +53,8 @@ mkdir -p build
 cd build
 cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_C_COMPILER=$CCC \
-    -DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
     -DCMAKE_INSTALL_PREFIX=. \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
@@ -51,11 +62,8 @@ cmake .. \
 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
 	-DLAPACK_LIBRARIES="${LAPACK_LIB}"
 make -j32 
-cd ../../
-export SCALAPACK_LIB="$PWD/scalapack-2.1.0/build/lib/libscalapack.so" 
 
-
-
+cd $GPTUNEROOT
 mkdir -p build
 cd build
 export CRAYPE_LINK_TYPE=dynamic
@@ -68,9 +76,9 @@ cmake .. \
 	-DCMAKE_CXX_FLAGS="" \
 	-DCMAKE_C_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
@@ -82,7 +90,7 @@ cp lib_gptuneclcm.so ../.
 
 
 
-cd ../examples/
+cd $GPTUNEROOT/examples/SuperLU_DIST
 git clone https://github.com/xiaoyeli/superlu_dist.git
 cd superlu_dist
 
@@ -90,16 +98,12 @@ wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
 tar -xf parmetis-4.0.3.tar.gz
 cd parmetis-4.0.3/
 mkdir -p install
-make config shared=1 cc=$CCC cxx=$CCCPP prefix=$PWD/install
+make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 make install > make_parmetis_install.log 2>&1
 
-cd ../ 
+cd ../
 cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
 cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
-METIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include"
-PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
-METIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libmetis.a
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -111,9 +115,9 @@ cmake .. \
 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 	-DBUILD_SHARED_LIBS=OFF \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
@@ -124,12 +128,12 @@ make pddrive_spawn
 make pzdrive_spawn
 
 
-cd ../../
+cd $GPTUNEROOT/examples/Hypre
 rm -rf hypre
 git clone https://github.com/hypre-space/hypre.git
 cd hypre/src/
-# ./configure CC=$CCC CXX=$CCCPP FC=$FTN CFLAGS="-DTIMERUSEMPI -g -O0 -v -Q"
-./configure CC=$CCC CXX=$CCCPP FC=$FTN CFLAGS="-DTIMERUSEMPI" --enable-shared
+# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI -g -O0 -v -Q"
+./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
 make
 cp ../../hypre-driver/src/ij.c ./test/.
 make test
@@ -138,7 +142,7 @@ make test
 
 
 
-cd ../../
+cd $GPTUNEROOT/examples/ButterflyPACK
 rm -rf ButterflyPACK
 git clone https://github.com/liuyangzhuan/ButterflyPACK.git
 cd ButterflyPACK
@@ -149,8 +153,8 @@ mkdir -p build
 cd build
 cmake .. \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_INSTALL_PREFIX=. \
 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -169,9 +173,9 @@ cmake .. \
 	-DCMAKE_Fortran_FLAGS="-I${MKLROOT}/include"\
 	-DCMAKE_CXX_FLAGS="" \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_Fortran_COMPILER=$FTN \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_INSTALL_PREFIX=. \
 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -185,23 +189,22 @@ make install -j32
 
 
 
-cd ../../
+cd $GPTUNEROOT/examples/STRUMPACK
 rm -rf scotch_6.1.0
 wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
 tar -xf scotch_6.1.0.tar.gz
 cd ./scotch_6.1.0
-export SCOTCH_DIR=`pwd`/install
 mkdir install
 cd ./src
 cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
 sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
 sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
 sed -i "s/CCD/#CCD/" Makefile.inc
-printf "CCD = $CCC\n" >> Makefile.inc
+printf "CCD = $MPICC\n" >> Makefile.inc
 sed -i "s/CCP/#CCP/" Makefile.inc
-printf "CCP = $CCC\n" >> Makefile.inc
+printf "CCP = $MPICC\n" >> Makefile.inc
 sed -i "s/CCS/#CCS/" Makefile.inc
-printf "CCS = $CCC\n" >> Makefile.inc
+printf "CCS = $MPICC\n" >> Makefile.inc
 cat Makefile.inc
 make ptscotch 
 make prefix=../install install
@@ -214,21 +217,20 @@ cd STRUMPACK
 #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
 cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
 cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
+chmod +x examples/KernelRegressionMPI.py
 mkdir build
 cd build
 
-export METIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
-export ParMETIS_DIR=$PWD/../../superlu_dist/parmetis-4.0.3/install
-export ButterflyPACK_DIR=$PWD/../../ButterflyPACK/build/lib/cmake/ButterflyPACK
+
 
 cmake ../ \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=../install \
 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
 	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
-	-DCMAKE_C_COMPILER=$CCC \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DSTRUMPACK_COUNT_FLOPS=ON \
 	-DSTRUMPACK_TASK_TIMERS=ON \
 	-DTPL_ENABLE_SCOTCH=ON \
@@ -242,10 +244,10 @@ cmake ../ \
 
 make install -j32
 make examples -j32
-export STRUMPACK_DIR=$PWD/../install
 
 
-cd ../../
+cd $GPTUNEROOT/examples/MFEM
+cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
 git clone https://github.com/mfem/mfem.git
 cd mfem
 cp ../mfem-driver/src/CMakeLists.txt ./examples/.
@@ -255,9 +257,9 @@ mkdir mfem-build
 cd mfem-build
 cmake .. \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_CXX_COMPILER=$CCCPP \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_CXX_FLAGS="-std=c++11" \
-	-DCMAKE_Fortran_COMPILER=$FTN \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DBUILD_SHARED_LIBS=ON \
 	-DMFEM_USE_MPI=YES \
 	-DCMAKE_INSTALL_PREFIX=../install \
@@ -277,18 +279,17 @@ make install
 make ex3p_indef
 
 
-# make CC=$CCC
-cd ../../../
+cd $GPTUNEROOT
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
-python setup.py build --mpicc="$CCC -shared"
+python setup.py build --mpicc="$MPICC -shared"
 python setup.py install --user
 # env CC=mpicc pip install --user -e .								  
 
 
 
-cd ../
+cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
@@ -298,11 +299,11 @@ python setup.py install --user
 
 
 
-cd ../
+cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-env CC=$CCC pip install --user -e .
+env CC=$MPICC pip install --user -e .
 
 
 cp ../patches/opentuner/manipulator.py  ~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/opentuner/search/.
