@@ -3,13 +3,19 @@
 # rm -rf ~/.local/lib
 # rm -rf /usr/local/lib/python3.7/site-packages
 
+#define package version numbers from homebrew, this may need to be changed according to your system 
+pythonversion=3.7.10_2
+gccversion=10.2.0_4
+openblasversion=0.3.13
+lapackversion=3.9.0_1
+
 #set up environment variables, these are also needed when running GPTune 
 ################################### 
 export GPTUNEROOT=$PWD
-export PATH=/usr/local/Cellar/python@3.7/3.7.9_2/bin/:$PATH
+export PATH=/usr/local/Cellar/python@3.7/$pythonversion/bin/:$PATH
 export PATH=$GPTUNEROOT/env/bin/:$PATH
-export BLAS_LIB=/usr/local/Cellar/openblas/0.3.13/lib/libblas.dylib
-export LAPACK_LIB=/usr/local/Cellar/lapack/3.9.0_1/lib/liblapack.dylib
+export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
+export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/pygmo/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
@@ -30,9 +36,24 @@ export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
 
-CC=/usr/local/Cellar/gcc/10.2.0_4/bin/gcc-10
-FTN=/usr/local/Cellar/gcc/10.2.0_4/bin/gfortran-10
-CPP=/usr/local/Cellar/gcc/10.2.0_4/bin/g++-10
+export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
+export METIS_DIR=$ParMETIS_DIR
+export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
+export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
+export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
+export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.a;$ParMETIS_DIR/lib/libmetis.a"
+export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.a
+
+
+
+
+
+CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-10
+FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-10
+CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-10
+
 
 
 
@@ -41,8 +62,16 @@ CPP=/usr/local/Cellar/gcc/10.2.0_4/bin/g++-10
 ###################################
 brew install wget
 brew install python@3.7
-alias python=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=/usr/local/Cellar/python@3.7/3.7.9_2/bin/pip3
+
+
+if [ ! -d "/usr/local/Cellar/python@3.7/$pythonversion" ] 
+then
+    echo "pythonversion=$pythonversion not working, change it to the correct one." 
+    exit 
+fi
+
+alias python=/usr/local/Cellar/python@3.7/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
+alias pip=/usr/local/Cellar/python@3.7/$pythonversion/bin/pip3
 
 python -m pip install virtualenv 
 rm -rf env
@@ -58,13 +87,29 @@ brew reinstall pagmo
 brew reinstall pybind11
 
 brew install gcc
-brew upgrade gcc   # assuming 10.2.0
+brew upgrade gcc   
+if [ ! -d "/usr/local/Cellar/gcc/$gccversion" ] 
+then
+    echo "gccversion=$gccversion not working, change it to the correct one." 
+    exit 
+fi
+
 
 brew install openblas
-brew upgrade openblas  # assuming 0.3.12_1
+brew upgrade openblas  
+if [ ! -d "/usr/local/Cellar/openblas/$openblasversion" ] 
+then
+    echo "openblasversion=$openblasversion not working, change it to the correct one." 
+    exit 
+fi
 
 brew install lapack
-brew upgrade lapack   # assuming 3.9.0_1
+brew upgrade lapack   
+if [ ! -d "/usr/local/Cellar/lapack/$lapackversion" ] 
+then
+    echo "lapackversion=$lapackversion not working, change it to the correct one." 
+    exit 
+fi
 
 
 # manually install dependencies from cmake and make
@@ -128,8 +173,7 @@ cp lib_gptuneclcm.dylib ../.
 
 
 
-cd $GPTUNEROOT
-cd examples/
+cd $GPTUNEROOT/examples/SuperLU_DIST
 rm -rf superlu_dist
 git clone https://github.com/xiaoyeli/superlu_dist.git
 cd superlu_dist
@@ -143,8 +187,6 @@ make install > make_parmetis_install.log 2>&1
 
 cd ../
 cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.a $PWD/parmetis-4.0.3/install/lib/.
-PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
-PARMETIS_LIBRARIES="$PWD/parmetis-4.0.3/install/lib/libparmetis.a;$PWD/parmetis-4.0.3/install/lib/libmetis.a"
 
 mkdir -p build
 cd build
@@ -170,8 +212,7 @@ cmake .. \
 make pddrive_spawn
 make pzdrive_spawn
 
-cd $GPTUNEROOT
-cd examples/
+cd $GPTUNEROOT/examples/Hypre
 rm -rf hypre
 git clone https://github.com/hypre-space/hypre.git
 cd hypre/src/
@@ -181,7 +222,143 @@ cp ../../hypre-driver/src/ij.c ./test/.
 make test
 
 
+cd $GPTUNEROOT/examples/ButterflyPACK
+rm -rf ButterflyPACK
+git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+cd ButterflyPACK
+git clone https://github.com/opencollab/arpack-ng.git
+cd arpack-ng
+git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-fopenmp -fallow-argument-mismatch" \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DMPI=ON \
+	-DEXAMPLES=ON \
+	-DCOVERALLS=ON 
+make
+cd ../../
+mkdir build
+cd build
+cmake .. \
+	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch"\
+	-DCMAKE_CXX_FLAGS="" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.dylib;$PWD/../arpack-ng/build/lib/libparpack.dylib"
+make -j4
+make install -j4
 
+
+
+cd $GPTUNEROOT/examples/STRUMPACK
+rm -rf scotch_6.1.0
+wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+tar -xf scotch_6.1.0.tar.gz
+cd ./scotch_6.1.0
+mkdir install
+cd ./src
+cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+sed -i "s/CCD/#CCD/" Makefile.inc
+printf "CCD = $MPICC\n" >> Makefile.inc
+sed -i "s/CCP/#CCP/" Makefile.inc
+printf "CCP = $MPICC\n" >> Makefile.inc
+sed -i "s/CCS/#CCS/" Makefile.inc
+printf "CCS = $MPICC\n" >> Makefile.inc
+cat Makefile.inc
+make ptscotch 
+make prefix=../install install
+
+
+cd ../../
+rm -rf STRUMPACK
+git clone https://github.com/pghysels/STRUMPACK.git
+cd STRUMPACK
+#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
+cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
+chmod +x examples/KernelRegressionMPI.py
+mkdir build
+cd build
+
+
+
+cmake ../ \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DSTRUMPACK_COUNT_FLOPS=ON \
+	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch" \
+	-DSTRUMPACK_TASK_TIMERS=ON \
+	-DTPL_ENABLE_SCOTCH=ON \
+	-DTPL_ENABLE_ZFP=OFF \
+	-DTPL_ENABLE_PTSCOTCH=ON \
+	-DTPL_ENABLE_PARMETIS=ON \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+
+make install -j4
+make examples -j4
+
+
+cd $GPTUNEROOT/examples/MFEM
+cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
+git clone https://github.com/mfem/mfem.git
+cd mfem
+cp ../mfem-driver/src/CMakeLists.txt ./examples/.
+cp ../mfem-driver/src/ex3p_indef.cpp ./examples/.
+rm -rf mfem-build
+mkdir mfem-build
+cd mfem-build
+cmake .. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_CXX_FLAGS="-std=c++11" \
+	-DCMAKE_Fortran_FLAGS=" -fallow-argument-mismatch" \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DBUILD_SHARED_LIBS=ON \
+	-DMFEM_USE_MPI=YES \
+	-DCMAKE_INSTALL_PREFIX=../install \
+	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	-DMFEM_USE_METIS_5=YES \
+	-DMFEM_USE_OPENMP=YES \
+	-DMFEM_THREAD_SAFE=ON \
+	-DMFEM_USE_STRUMPACK=YES \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DMETIS_DIR=${METIS_INCLUDE_DIRS} \
+	-DMETIS_LIBRARIES="${METIS_LIBRARIES}" \
+	-DSTRUMPACK_INCLUDE_DIRS="${STRUMPACK_DIR}/include;${METIS_INCLUDE_DIRS};${PARMETIS_INCLUDE_DIRS};${SCOTCH_DIR}/include" \
+	-DSTRUMPACK_LIBRARIES="${STRUMPACK_DIR}/lib/libstrumpack.dylib;${ButterflyPACK_DIR}/../../../lib/libdbutterflypack.dylib;${ButterflyPACK_DIR}/../../../lib/libzbutterflypack.dylib;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libparpack.dylib;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libarpack.dylib;${PARMETIS_LIBRARIES};${SCALAPACK_LIB}"
+make -j4 VERBOSE=1
+make install
+make ex3p_indef
 
 # manually install dependencies from python
 ###################################
