@@ -171,16 +171,16 @@ class HistoryDB(dict):
         return task_id
 
     def is_parameter_duplication(self, problem : Problem, PS_history, parameter):
-        for i in range(len(PS_history)):
-            for j in range(len(PS_history[i])):
-                compare_all_elems = True
-                for k in range(len(problem.PS)):
-                    if (parameter[problem.PS[k].name] != PS_history[i][j][k]):
-                        compare_all_elems = False
-                        break
-                if compare_all_elems == True:
-                    print ("found a duplication of parameter set")
-                    return True
+        # for i in range(len(PS_history)):
+        for j in range(len(PS_history)):
+            compare_all_elems = True
+            for k in range(len(problem.PS)):
+                if (parameter[problem.PS[k].name] != PS_history[j][k]):
+                    compare_all_elems = False
+                    break
+            if compare_all_elems == True:
+                print ("found a duplication of parameter set: ", parameter)
+                return True
 
         return False
 
@@ -206,7 +206,8 @@ class HistoryDB(dict):
                                 if (task_id != -1):
                                     # current policy: skip loading the func eval result
                                     # if the same parameter data has been loaded once (duplicated)
-                                    if self.is_parameter_duplication(problem, PS_history, func_eval["tuning_parameter"]):
+                                    # YL: only need to search in PS_history[task_id], not PS_history
+                                    if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
                                         continue
                                     else:
                                         parameter_arr = []
@@ -229,10 +230,15 @@ class HistoryDB(dict):
                         if (num_loaded_data > 0):
                             data.I = Igiven #IS_history
                             data.P = PS_history
-                            data.O = np.array(OS_history)
+                            data.O=[] # YL: OS is a list of 2D numpy arrays
+                            for i in range(len(OS_history)):
+                                if(len(OS_history[i])==0):
+                                    data.O.append(np.empty( shape=(0, problem.DO)))
+                                else:
+                                    data.O.append(np.array(OS_history[i]))
                             print ("data.I: " + str(data.I))
                             print ("data.P: " + str(data.P))
-                            print ("data.O: " + str(data.O))
+                            print ("data.O: " + str(OS_history))
                         else:
                             print ("no history data has been loaded")
             else:

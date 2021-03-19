@@ -333,15 +333,20 @@ class GPTune(object):
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
+        NSmax=0
         if (self.data.P is not None):
             NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
+            NSmax = max(map(len, self.data.P)) 
 
-        """ Set (additional) number of samples for autotuning """
-        NS = NSmin + NS
+        # """ Set (additional) number of samples for autotuning """
+        # NS = NSmin + NS
+        if(NSmax>0):
+            if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
+                print('\ndatabase file has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
+                return (copy.deepcopy(self.data), None,stats)
+            else:            
+                print('\ndatabase file has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
-            print('NSmin>=NS, no need to run MLA. Returning...')
-            return (copy.deepcopy(self.data), None,stats)
 
         t3 = time.time_ns()
 
@@ -355,7 +360,7 @@ class GPTune(object):
         if (NS1 is not None and NS1>NS):
             raise Exception("NS1>NS")
         if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # General heuristic rule in the litterature
+            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
 
         if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Igiven
@@ -364,8 +369,11 @@ class GPTune(object):
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
             tmp=[]
             for x in self.data.P:
-                xNorm = self.problem.PS.transform(x)
-                tmp.append(xNorm)
+                if(len(x)>0):
+                    xNorm = self.problem.PS.transform(x)
+                    tmp.append(xNorm)
+                else:
+                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
             self.data.P=tmp
         if self.data.I is not None: # from a list of lists to a 2D numpy array
             self.data.I = self.problem.IS.transform(self.data.I)
@@ -393,7 +401,7 @@ class GPTune(object):
         if (NSmin<NS1):
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-            if (NSmin>0):
+            if(self.data.P is not None):
                 for i in range(len(self.data.P)):
                     NSi = self.data.P[i].shape[0]
                     tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
@@ -407,10 +415,10 @@ class GPTune(object):
         t1 = time.time_ns()
         if (NSmin<NS1):
             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.history_db, options = kwargs)
-            if(NSmin==0): # no existing tuning data is available
+            if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
-            else:
+            else:                
                 for i in range(len(self.data.P)):
                     self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
                     self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
@@ -482,6 +490,13 @@ class GPTune(object):
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     modelers[o].train(data = tmpdata, **kwargs)
+                
+                if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
+                    C = modelers[o].M.kern.get_correlation_metric()
+                    print("The correlation matrix C is \n", C)
+                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                    C = modelers[o].get_correlation_metric(len(self.data.I))
+                    print("The correlation matrix C is \n", C)
 
             t2 = time.time_ns()
             stats["modeling_time"].append((t2-t1)/1e9)

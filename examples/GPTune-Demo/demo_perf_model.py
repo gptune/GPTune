@@ -128,7 +128,7 @@ def objectives(point):
     # x = point['x']
     # f = 20*x**2+t
     # time.sleep(1.0)
-
+    print('t',t,'x',x,'f',f)
     return [f]
 
 
@@ -248,7 +248,7 @@ def main():
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['verbose'] = True
+    options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
 

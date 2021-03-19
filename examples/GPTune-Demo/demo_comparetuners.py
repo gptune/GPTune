@@ -228,6 +228,7 @@ def main():
             opts=np.zeros(NREP)
             for ii in range(NREP):
                 if(TUNER_NAME=='GPTune'):
+                    os.system("rm -rf ./gptune.db/*.json") ## YL: do not reuse database if NREP>1  
                     data = Data(problem)
                     gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
                     (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))

@@ -1,10 +1,10 @@
 {
     "tuning_problem_name": "GPTune-Demo",
     "machine_configuration": {
-        "machine_name": "iMac",
-        "intel": {
+        "machine_name": "tr4",
+        "amd": {
             "nodes": 1,
-            "cores": 1
+            "cores": 16
         }
     },
     "software_configuration": {
@@ -16,10 +16,10 @@
         }
     },
     "loadable_machine_configurations": {
-        "iMac" : {
-            "intel": {
+        "tr4" : {
+            "amd": {
                 "nodes":1,
-                "cores":1
+                "cores":16
             }
         }
     },
