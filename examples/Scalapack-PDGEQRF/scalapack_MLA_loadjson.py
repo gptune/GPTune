@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
+python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nruns 800 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -11,7 +11,7 @@ where:
     -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task 
+    -nruns is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
 """

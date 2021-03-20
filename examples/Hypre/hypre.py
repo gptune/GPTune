@@ -210,18 +210,11 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
     
-    
-    """ Intialize the tuner with existing data stored as last check point"""
-    try:
-        data = pickle.load(open('Data_nodes_%d_cores_%d_nxmax_%d_nymax_%d_nzmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, nxmax, nymax, nzmax, machine, JOBID), 'rb'))
-        giventask = data.I
-    except (OSError, IOError) as e:
-        data = Data(problem)
-        giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
 
+    giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
     # giventask = [[50, 60, 80], [60, 80, 100]]
     # # the following will use only task lists stored in the pickle file
-    # data = Data(problem)
+    data = Data(problem)
 
 
     if(TUNER_NAME=='GPTune'):
@@ -232,13 +225,6 @@ def main():
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
         print("stats: ", stats)
         
-        """ Dump the data to file as a new check point """
-        pickle.dump(data, open('Data_nodes_%d_cores_%d_nxmax_%d_nymax_%d_nzmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, nxmax, nymax, nzmax, machine, JOBID), 'wb'))
-        
-        """ Dump the tuner to file for TLA use """
-        pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nxmax_%d_nymax_%d_nzmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, nxmax, nymax, nzmax, machine, JOBID), 'wb'))
-
-
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
@@ -260,7 +246,7 @@ def main():
 
     
     if(TUNER_NAME=='opentuner'):
-        NI = ntask
+        NI = len(giventask)
         NS = nruns
         (data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
@@ -274,7 +260,7 @@ def main():
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='hpbandster'):
-        NI = ntask
+        NI = len(giventask)
         NS = nruns
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)

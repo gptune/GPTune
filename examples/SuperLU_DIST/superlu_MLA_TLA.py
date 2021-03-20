@@ -178,23 +178,14 @@ def main():
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
 	options['model_class '] = 'Model_LCM'
-	options['verbose'] = True
+	options['verbose'] = False
 	options.validate(computer = computer)
-
-	""" Intialize the tuner with existing data stored as last check point"""
-	try:
-		data = pickle.load(open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'rb'))
-		giventask = data.I
-	except (OSError, IOError) as e:
-		data = Data(problem)
-		giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-
-
 
 
 	# """ Building MLA with the given list of tasks """	
-	# giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
-	# data = Data(problem)
+	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
+	giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
+	data = Data(problem)
 
 
 	if(TUNER_NAME=='GPTune'):
@@ -204,13 +195,6 @@ def main():
 		NS = nruns
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
 		print("stats: ", stats)
-
-
-		""" Dump the data to file as a new check point """
-		pickle.dump(data, open('Data_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
-
-		""" Dump the tuner to file for TLA use """
-		pickle.dump(gt, open('MLA_nodes_%d_cores_%d_nprocmin_pernode_%d_tasks_%s_machine_%s.pkl' % (nodes, cores, nprocmin_pernode, matrices, machine), 'wb'))
 
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
@@ -234,7 +218,7 @@ def main():
 
 
 	if(TUNER_NAME=='opentuner'):
-		NI = ntask
+		NI = len(giventask)
 		NS = nruns
 		(data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
 		print("stats: ", stats)
@@ -248,7 +232,7 @@ def main():
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
 
 	if(TUNER_NAME=='hpbandster'):
-		NI = ntask
+		NI = len(giventask)
 		NS = nruns
 		(data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
 		print("stats: ", stats)

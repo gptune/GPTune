@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python scalapack_MLA_loaddata.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 5 -nrun 10 -machine cori -jobid 0
+mpirun -n 1 python scalapack_MLA_loaddata.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 5 -nruns 10 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -11,7 +11,7 @@ where:
     -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task 
+    -nruns is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
 """
@@ -108,8 +108,8 @@ def main():
     nprocmax = nodes*cores
 
     bunit=8     # the block size is multiple of bunit
-    mmin=128
-    nmin=128
+    mmin=1280
+    nmin=1280
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
@@ -144,9 +144,9 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
 
-    # giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+    giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # # giventask = [[2000, 2000]]
-    giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
+    # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
     # giventask = [[177, 1303],[367, 381]]
     ntask=len(giventask)
     
@@ -175,12 +175,6 @@ def main():
         NS = nruns
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
-        
-        
-        """ Dump the data to file as a new check point """
-        pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
-        
-        
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
@@ -194,11 +188,6 @@ def main():
         NS = nruns
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
-        
-        # """ Dump the data to file as a new check point """
-        # pickle.dump(data, open('Data_nodes_%d_cores_%d_mmax_%d_nmax_%d_machine_%s_jobid_%d.pkl' % (nodes, cores, mmax, nmax, machine, JOBID), 'wb'))
-        
-        
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
