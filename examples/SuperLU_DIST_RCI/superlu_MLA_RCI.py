@@ -18,7 +18,7 @@
 ################################################################################
 """
 Example of invocation of this script:
-mpirun -n 1 python superlu_single.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -obj time
+mpirun -n 1 python superlu_MLA_RCI.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -obj time
 
 where:
     -nodes is the number of compute nodes
@@ -60,60 +60,14 @@ from callhpbandster import HpBandSter
 import math
 
 ################################################################################
-def objectives(point):                  # should always use this name for user-defined objective function
-    
-	matrix = point['matrix']
-	COLPERM = point['COLPERM']
-	LOOKAHEAD = point['LOOKAHEAD']
-	nprows = point['nprows']
-	
-	npernode = 2**point['npernode']
-	nproc = nodes*npernode
-	nthreads = int(cores / npernode)
-
-
-	NSUP = point['NSUP']
-	NREL = point['NREL']
-	npcols     = int(nproc / nprows)
-	params = [matrix, 'COLPERM', COLPERM, 'LOOKAHEAD', LOOKAHEAD, 'nthreads', nthreads, 'npernode', npernode, 'nprows', nprows, 'npcols', npcols, 'NSUP', NSUP, 'NREL', NREL]
-	RUNDIR = os.path.abspath(__file__ + "/../superlu_dist/build/EXAMPLE")
-	INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
-	TUNER_NAME = os.environ['TUNER_NAME']
-	nproc     = int(nprows * npcols)
-
-	""" pass some parameters through environment variables """	
-	info = MPI.Info.Create()
-	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
-	envstr+= 'NREL=%d\n' %(NREL)   
-	envstr+= 'NSUP=%d\n' %(NSUP)   
-	info.Set('env',envstr)
-	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-    
-
-	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
-	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
-
-	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
-	tmpdata = array('f', [0,0])
-	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	comm.Disconnect()	
-
-	if(target=='time'):	
-		retval = tmpdata[0]
-		print(params, ' superlu time: ', retval)
-
-	if(target=='memory'):	
-		retval = tmpdata[1]
-		print(params, ' superlu memory: ', retval)
-
-	return [retval] 
+def objectives(point):                          
+	print('objective is not needed when options["RCI_mode"]=True')
 	
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
 def cst2(npernode,nprows):
 	return nodes * 2**npernode >= nprows
-			
+
 def main():
 
 	global ROOTDIR
@@ -136,18 +90,18 @@ def main():
 	optimization = args.optimization
 	nruns = args.nruns
 	obj = args.obj
-	
-	TUNER_NAME = args.optimization
+	target=obj
+
+	TUNER_NAME = 'GPTune'
 	os.environ['MACHINE_NAME'] = machine
-	os.environ['TUNER_NAME'] = TUNER_NAME
-	
+
 	
 	nprocmax = nodes*cores
 
 
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
-	matrices = ["big.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
+	matrices = ["big.rua","g20.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
@@ -158,8 +112,13 @@ def main():
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
 	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
-	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	result   = Real        (float("-Inf") , float("Inf"),name="r")
+	NREL      = Integer     (10, 40, transform="normalize", name="NREL")
+
+	if(target=='time'):			
+		result   = Real        (float("-Inf") , float("Inf"),name="time")
+	if(target=='memory'):	
+		result   = Real        (float("-Inf") , float("Inf"),name="memory")
+
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
 	OS = Space([result])
@@ -167,10 +126,10 @@ def main():
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
 
-	""" Print all input and parameter samples """	
-	print(IS, PS, OS, constraints, models)
+	# """ Print all input and parameter samples """	
+	# print(IS, PS, OS, constraints, models)
 
-	target=obj
+
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -178,6 +137,7 @@ def main():
 
 	""" Set and validate options """	
 	options = Options()
+	options['RCI_mode'] = True
 	options['model_processes'] = 1
 	# options['model_threads'] = 1
 	options['model_restarts'] = 1
@@ -192,7 +152,7 @@ def main():
 	
 	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-	giventask = [["big.rua"]]		
+	giventask = [["big.rua"],["g20.rua"]]		
 	# giventask = [["Si2.bin"]]	
 	# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
 	data = Data(problem)
@@ -214,37 +174,6 @@ def main():
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-
-	if(TUNER_NAME=='opentuner'):
-		NI = len(giventask)
-		NS = nruns
-		(data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
-		print("stats: ", stats)
-
-		""" Print all input and parameter samples """
-		for tid in range(NI):
-			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
-			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid].tolist())
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-	if(TUNER_NAME=='hpbandster'):
-		NI = len(giventask)
-		NS = nruns
-		(data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
-		print("stats: ", stats)
-		""" Print all input and parameter samples """
-		for tid in range(NI):
-			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
-			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid].tolist())
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-
-
 
 
 def parse_args():

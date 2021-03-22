@@ -22,6 +22,7 @@ class Options(dict):
     def __init__(self, **kwargs):
 
         """ Options for GPTune """
+        RCI_mode = False         # whether the reverse communication mode will be used
         mpi_comm = None          # The mpi communicator that invokes gptune if mpi4py is installed
         distributed_memory_parallelism = False   # Using distributed_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
         shared_memory_parallelism      = False   # Using shared_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
@@ -96,6 +97,9 @@ class Options(dict):
     def validate(self, computer, **kwargs):
 
         """  modify the options as needed """
+        if (self['model_class']=='Model_LCM' and self['RCI_mode']==True):
+            self['model_class']='Model_GPy_LCM'
+
         if (self['distributed_memory_parallelism'] and self['shared_memory_parallelism']):
             self['shared_memory_parallelism']=False
 
@@ -161,37 +165,41 @@ class Options(dict):
             self['objective_multisample_threads'] = 1
             self['objective_multisample_processes'] = 1
 
-
-        print('\n\n------Validating the options')
-        print("  ")
-        print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
-        print("   ---> distributed_memory_parallelism:", self['distributed_memory_parallelism'])
-        print("   ---> shared_memory_parallelism:", self['shared_memory_parallelism'])
-        print("   ---> objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])
+        if(self['verbose']==True):
+            print('\n\n------Validating the options')
+            print("  ")
+            print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
+            print("   ---> distributed_memory_parallelism:", self['distributed_memory_parallelism'])
+            print("   ---> shared_memory_parallelism:", self['shared_memory_parallelism'])
+            print("   ---> objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])
 
 
         if(self['distributed_memory_parallelism']):
             ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_processes']+1
         else:
             ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_threads']
-        print("  ")
-        print("  total core counts for modeling:", ncore_model)
-        print("   ---> model_processes:", self['model_processes'])
-        print("   ---> model_threads:", self['model_threads'])
-        print("   ---> model_restart_processes:", self['model_restart_processes'])
-        print("   ---> model_restart_threads:", self['model_restart_threads'])
+
+        if(self['verbose']==True):    
+            print("  ")
+            print("  total core counts for modeling:", ncore_model)
+            print("   ---> model_processes:", self['model_processes'])
+            print("   ---> model_threads:", self['model_threads'])
+            print("   ---> model_restart_processes:", self['model_restart_processes'])
+            print("   ---> model_restart_threads:", self['model_restart_threads'])
 
 
         if(self['distributed_memory_parallelism']):
             ncore_search = self['search_threads']*self['search_multitask_processes']+1
         else:
             ncore_search = self['search_threads']*(self['search_multitask_threads'])
-        print("  ")
-        print("  total core counts for search:", ncore_search)
-        print("   ---> search_processes:", self['search_processes'])
-        print("   ---> search_threads:", self['search_threads'])
-        print("   ---> search_multitask_processes:", self['search_multitask_processes'])
-        print("   ---> search_multitask_threads:", self['search_multitask_threads'])
+
+        if(self['verbose']==True):        
+            print("  ")
+            print("  total core counts for search:", ncore_search)
+            print("   ---> search_processes:", self['search_processes'])
+            print("   ---> search_threads:", self['search_threads'])
+            print("   ---> search_multitask_processes:", self['search_multitask_processes'])
+            print("   ---> search_multitask_threads:", self['search_multitask_threads'])
 
         if(self['distributed_memory_parallelism']):
             if(self['objective_evaluation_parallelism']==True):
@@ -200,11 +208,12 @@ class Options(dict):
                 ncore_obj = (self['objective_nprocmax']+1)
         else:
             ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)
-        print("  ")
-        print("  total core counts for objective function evaluation:", ncore_obj)
-        print("   ---> core counts in a single application run:", self['objective_nprocmax'])
-        print("   ---> objective_multisample_processes:", self['objective_multisample_processes'])
-        print("   ---> objective_multisample_threads:", self['objective_multisample_threads'])
+        if(self['verbose']==True):        
+            print("  ")
+            print("  total core counts for objective function evaluation:", ncore_obj)
+            print("   ---> core counts in a single application run:", self['objective_nprocmax'])
+            print("   ---> objective_multisample_processes:", self['objective_multisample_processes'])
+            print("   ---> objective_multisample_threads:", self['objective_multisample_threads'])
 
         if(self['oversubscribe']==False):
             if (computer.cores*computer.nodes<=1):

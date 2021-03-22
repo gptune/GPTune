@@ -18,7 +18,7 @@
 ################################################################################
 """
 Example of invocation of this script:
-python superlu_MLA_TLA.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -obj time
+mpirun -n 1 python superlu_MLA_TLA.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -obj time -tla 0
 
 where:
     -nodes is the number of compute nodes
@@ -27,9 +27,10 @@ where:
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -machine is the name of the machine
-	-obj is the tuning objective: "time" or "memory"	
+	-obj is the tuning objective: "time" or "memory"
+	-tla is whether to perform TLA after MLA
 """
- 
+
 ################################################################################
 
 import sys
@@ -60,17 +61,18 @@ from callhpbandster import HpBandSter
 import math
 
 ################################################################################
-
-
 def objectives(point):                  # should always use this name for user-defined objective function
     
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
 	nprows = point['nprows']
+
 	npernode = 2**point['npernode']
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
+
+
 	NSUP = point['NSUP']
 	NREL = point['NREL']
 	npcols     = int(nproc / nprows)
@@ -87,7 +89,7 @@ def objectives(point):                  # should always use this name for user-d
 	envstr+= 'NSUP=%d\n' %(NSUP)   
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-   
+
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
 	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
@@ -112,8 +114,6 @@ def cst1(NSUP,NREL):
 def cst2(npernode,nprows):
 	return nodes * 2**npernode >= nprows
 			
-	
-	
 def main():
 
 	global ROOTDIR
@@ -126,6 +126,7 @@ def main():
 	args   = parse_args()
 
 	# Extract arguments
+	tla = args.tla
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
@@ -134,15 +135,17 @@ def main():
 	optimization = args.optimization
 	nruns = args.nruns
 	obj = args.obj
+	target=obj
 	TUNER_NAME = args.optimization
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
 
 
 	nprocmax = nodes*cores
-	matrices = ["big.rua", "g4.rua", "g20.rua"]
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb","H2O.rb"]
 	# matrices = ["Si2.rb", "SiH4.rb", "SiNa.rb", "Na5.rb", "benzene.rb", "Si10H16.rb", "Si5H12.rb", "SiO.rb", "Ga3As3H12.rb", "GaAsH6.rb", "H2O.rb"]
+	matrices = ["big.rua","g20.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 	# Input parameters
@@ -152,17 +155,19 @@ def main():
 	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"),name="r")
+	if(target=='time'):			
+		result   = Real        (float("-Inf") , float("Inf"),name="time")
+	if(target=='memory'):	
+		result   = Real        (float("-Inf") , float("Inf"),name="memory")
+
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
-	OS = Space([runtime])
+	OS = Space([result])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
-
-	target=obj
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
@@ -177,14 +182,14 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class '] = 'Model_LCM'
+	options['model_class '] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 	options.validate(computer = computer)
 
-
-	# """ Building MLA with the given list of tasks """	
+	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-	giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]	
+	giventask = [["big.rua"], ["g4.rua"], ["g20.rua"]]
+	# giventask = [["big.rua"]]	
 	data = Data(problem)
 
 
@@ -201,20 +206,21 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print("    Os ", data.O[tid].tolist())
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-		""" Call TLA for a new task using the constructed LCM model"""    
-		newtask = [["big.rua"]]
-		# newtask = [["H2O.rb"]]
-		(aprxopts,objval,stats) = gt.TLA1(newtask, NS=None)
-		print("stats: ",stats)
+		if(tla==1):
+			""" Call TLA for a new task using the constructed LCM model"""    
+			newtask = [["big.rua"]]
+			# newtask = [["H2O.rb"]]
+			(aprxopts,objval,stats) = gt.TLA1(newtask, NS=None)
+			print("stats: ",stats)
 
-		""" Print the optimal parameters and function evaluations"""	
-		for tid in range(len(newtask)):
-			print("new task: %s"%(newtask[tid]))
-			print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
-			
+			""" Print the optimal parameters and function evaluations"""	
+			for tid in range(len(newtask)):
+				print("new task: %s"%(newtask[tid]))
+				print('    predicted Popt: ', aprxopts[tid], ' objval: ',objval[tid]) 	
+				
 
 
 	if(TUNER_NAME=='opentuner'):
@@ -228,8 +234,8 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print("    Os ", data.O[tid].tolist())
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
 		NI = len(giventask)
@@ -241,13 +247,13 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
-			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0])
+			print("    Os ", data.O[tid].tolist())
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 
 
-  
+
 def parse_args():
 
 	parser = argparse.ArgumentParser()
@@ -263,9 +269,10 @@ def parse_args():
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-tla', type=int, default=0, help='Whether to perform TLA after MLA')
 
 	args   = parser.parse_args()
 	return args
-	
+
 if __name__ == "__main__":
 	main()

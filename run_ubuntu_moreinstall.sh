@@ -33,7 +33,7 @@ if [ $ex = 'test' ];then
     cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
     $RUN --allow-run-as-root --oversubscribe -n 1 python ./scalapack_MLA_loaddata.py -mmax 1300 -nmax 1300 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine mymachine -jobid 0
     cd $GPTUNEROOT/examples/SuperLU_DIST
-    $RUN --allow-run-as-root --oversubscribe -n 1 python ./superlu_single.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine mymachine
+    $RUN --allow-run-as-root --oversubscribe -n 1 python ./superlu_MLA_TLA.py  -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine mymachine
 
 elif [ $ex = 'Fig.2' ];then
     cd $GPTUNEROOT/examples/postprocess/demo/
@@ -96,7 +96,7 @@ elif [ $ex = 'Fig.6_exp' ];then
     cd $GPTUNEROOT/examples/SuperLU_DIST
     for tuner in GPTune hpbandster opentuner 
     do
-        $MPIRUN --allow-run-as-root --oversubscribe -n 1 python superlu_single.py -nodes 1 -cores 4 -ntask 1 -nrun 10 -obj time -optimization ${tuner} -machine mymachine | tee a.out_superlu_${tuner}
+        $MPIRUN --allow-run-as-root --oversubscribe -n 1 python superlu_MLA_TLA.py -nodes 1 -cores 4 -ntask 1 -nrun 10 -obj time -optimization ${tuner} -machine mymachine | tee a.out_superlu_${tuner}
     done
 
 elif [ $ex = 'Fig.7' ];then

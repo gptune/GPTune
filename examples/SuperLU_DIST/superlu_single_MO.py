@@ -18,7 +18,7 @@
 ################################################################################
 """
 Example of invocation of this script:
-python superlu_single_MO.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori 
+python superlu_single_MO.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
 
 where:
     -nodes is the number of compute nodes
@@ -117,7 +117,6 @@ def main():
 	global target
 	global nprocmax
 
-
 	# Parse command line arguments
 	args   = parse_args()
 
@@ -125,7 +124,7 @@ def main():
 	ntask = args.ntask
 	nodes = args.nodes
 	cores = args.cores
-	nprocmin_pernode = args.nprocmin_pernode	
+	nprocmin_pernode = args.nprocmin_pernode
 	machine = args.machine
 	optimization = args.optimization
 	nruns = args.nruns
@@ -135,7 +134,6 @@ def main():
 
 
 	nprocmax = nodes*cores
-	
 	matrices = ["big.rua", "g4.rua", "g20.rua"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
@@ -148,11 +146,11 @@ def main():
 	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
-	runtime   = Real        (float("-Inf") , float("Inf"), name="runtime")
+	time   = Real        (float("-Inf") , float("Inf"), name="time")
 	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 	IS = Space([matrix])
 	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
-	OS = Space([runtime, memory])
+	OS = Space([time, memory])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
 

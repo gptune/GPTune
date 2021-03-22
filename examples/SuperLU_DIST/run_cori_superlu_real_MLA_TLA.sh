@@ -31,6 +31,5 @@ FTN=mpif90
 cd -
 
 tuner='GPTune'
-# mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_single.py  -nodes 2 -cores 32 -nprocmin_pernode 1 -ntask 1 -nrun 40 -machine cori -optimization ${tuner}
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_TLA.py  -nodes 2 -cores 32 -nprocmin_pernode 1 -ntask 1 -nrun 40 -machine cori -optimization ${tuner}
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_TLA.py  -nodes 2 -cores 32 -nprocmin_pernode 1 -ntask 1 -tla 1 -nrun 40 -machine cori -optimization ${tuner}
 # mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca routed radix  -n 1 python ./superlu_MLA_MO_complex.py  -nodes 128 -cores 2 -ntask 1 -nrun 40 -machine cori

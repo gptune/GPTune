@@ -65,6 +65,7 @@
 *
 *  =====================================================================
 *
+include "mpif.h"
 *     .. Parameters ..
       INTEGER            BLOCK_CYCLIC_2D, CSRC_, CTXT_, DLEN_, DTYPE_,
      $                   LLD_, MB_, M_, NB_, N_, RSRC_
@@ -883,8 +884,10 @@
 *      
   100 CONTINUE
 *
-	  call MPI_BARRIER(master,ierr) 
-	  call MPI_COMM_DISCONNECT(master, ierr)  ! YL: this is needed if this function is spawned by a master process	
+      IF(master .NE. MPI_COMM_NULL) THEN
+         call MPI_BARRIER(master,ierr) 
+         call MPI_COMM_DISCONNECT(master, ierr)  ! YL: this is needed if this function is spawned by a master process
+      END IF	
 	  CALL BLACS_EXIT( 1 )
 	  call MPI_Finalize(ierr)
 

@@ -96,15 +96,23 @@ class Computer(object):
                 D2 = D[i]
             else:
                 D2 = None
-            O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-            tmp = np.array(O2).reshape((len(O2), problem.DO))
-            O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
-
+            if(options['RCI_mode']==False):    
+                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+                tmp = np.array(O2).reshape((len(O2), problem.DO))
+                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+            else:
+                tmp = np.empty( shape=(len(P2), problem.DO))
+                tmp[:] = np.NaN
+                O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
+            
             if history_db is not None:
                 history_db.update_func_eval(problem = problem,\
                         task_parameter = I[i], \
                         tuning_parameter = P[i],\
                         evaluation_result = tmp)
+
+        if(options['RCI_mode']==True):
+            exit()
 
         return O
 

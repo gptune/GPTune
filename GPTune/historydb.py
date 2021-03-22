@@ -236,9 +236,13 @@ class HistoryDB(dict):
                                     data.O.append(np.empty( shape=(0, problem.DO)))
                                 else:
                                     data.O.append(np.array(OS_history[i]))
-                            print ("data.I: " + str(data.I))
-                            print ("data.P: " + str(data.P))
-                            print ("data.O: " + str(OS_history))
+                                    if(any(ele==[None] for ele in OS_history[i])):
+                                        print ("history data contains null function values")
+                                        exit()
+                            # print ("data.I: " + str(data.I))
+                            # print ("data.P: " + str(data.P))
+                            # print ("data.O: " + str(OS_history))
+                            
                         else:
                             print ("no history data has been loaded")
             else:
@@ -285,7 +289,7 @@ class HistoryDB(dict):
                             for k in range(len(problem.PS))},
                         "machine_configuration":self.machine_configuration,
                         "software_configuration":self.software_configuration,
-                        "evaluation_result":{problem.OS[k].name:evaluation_result_orig_list[k]
+                        "evaluation_result":{problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))},
                         "time":{
                             "tm_year":now.tm_year,
