@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python scalapack_MLA_perfmodel.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -nruns1 400 -perfmodel 1 -machine cori -jobid 0
+mpirun -n 1 python scalapack_MLA_perfmodel.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -nrun1 400 -perfmodel 1 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -12,7 +12,7 @@ where:
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -nruns1 is the number of initial samples per task 
+    -nrun1 is the number of initial samples per task 
     -perfmodel is whether a coarse performance model is used
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
@@ -213,7 +213,9 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
     nrun = args.nrun
-    nruns1 = args.nruns1
+    nrun1 = args.nrun1
+    if(nrun1 is None):
+        nrun1=max(nrun//2, 1)
     truns = args.truns
     JOBID = args.jobid
     TUNER_NAME = args.optimization
@@ -281,7 +283,7 @@ def main():
         """ Building MLA with NI random tasks """
         NI = ntask
         NS = nrun
-        NS1 = nruns1
+        NS1 = nrun1
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS1)
         print("stats: ", stats)
 
@@ -335,7 +337,7 @@ def parse_args():
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
-    parser.add_argument('-nruns1', type=int, help='Number of intial runs per task')
+    parser.add_argument('-nrun1', type=int, help='Number of intial runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
     # Experiment related arguments
     # 0 means interactive execution (not batch)
