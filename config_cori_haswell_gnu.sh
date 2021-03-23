@@ -1,7 +1,7 @@
 #!/bin/bash
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
-  
+
 module load python/3.7-anaconda-2019.10
 module unload cray-mpich
 module unload cmake

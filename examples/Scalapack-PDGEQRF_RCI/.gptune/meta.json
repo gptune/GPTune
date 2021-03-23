@@ -1,7 +1,7 @@
 {
     "tuning_problem_name": "PDGEQRF",
     "machine_configuration": {
-        "machine_name": "tr4",
+        "machine_name": "mymachine",
         "amd": {
             "nodes": 1,
             "cores": 16
@@ -16,7 +16,7 @@
         }
     },
     "loadable_machine_configurations": {
-        "tr4" : {
+        "mymachine" : {
             "amd": {
                 "nodes":1,
                 "cores":16
