@@ -213,7 +213,6 @@ class HistoryDB(dict):
                                         parameter_arr = []
                                         for k in range(len(problem.PS)):
                                             if type(problem.PS[k]).__name__ == "Categoricalnorm":
-                                                print ("param: " + str(problem.PS[k].name) + " is categorical")
                                                 parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
                                             elif type(problem.PS[k]).__name__ == "Integer":
                                                 parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
