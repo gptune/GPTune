@@ -1,9 +1,22 @@
 #!/bin/bash
 
-module load gcc/9.1.0
-module load openmpi/gcc-9.1.0/4.0.1
-module load scalapack-netlib/gcc-9.1.0/2.0.2
-module load python/gcc-9.1.0/3.7.4
+# module load gcc/9.1.0
+# module load openmpi/gcc-9.1.0/4.0.1
+# module load scalapack-netlib/gcc-9.1.0/2.0.2
+# module load python/gcc-9.1.0/3.7.4
+
+
+
+module load python/3.7-anaconda-2019.10
+module unload cray-mpich
+module swap PrgEnv-intel PrgEnv-gnu
+export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+module load openmpi/4.0.1
+export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+
+
+
 
 
 cd ../../
@@ -18,10 +31,10 @@ cd -
 
 
 nodes=1
-cores=16
+cores=32
 ntask=1
 nrun=4
-machine=tr4
+machine=cori
 obj1=time    # name of the objective defined in the python file
 obj2=memory    # name of the objective defined in the python file
 

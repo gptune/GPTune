@@ -1,10 +1,20 @@
 #!/bin/bash
 
-module load gcc/9.1.0
-module load openmpi/gcc-9.1.0/4.0.1
-module load scalapack-netlib/gcc-9.1.0/2.0.2
-module load python/gcc-9.1.0/3.7.4
 
+# module load gcc/9.1.0
+# module load openmpi/gcc-9.1.0/4.0.1
+# module load scalapack-netlib/gcc-9.1.0/2.0.2
+# module load python/gcc-9.1.0/3.7.4
+
+
+
+module load python/3.7-anaconda-2019.10
+module unload cray-mpich
+module swap PrgEnv-intel PrgEnv-gnu
+export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+module load openmpi/4.0.1
+export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 
 cd ../../
 
@@ -18,9 +28,9 @@ cd -
 
 
 nodes=1                 # number of compute nodes
-cores=16                # number of cores per compute node
-nrun=40                # number of samples per task
-machine=tr4             # name of your machine, this should match .gptune/meta.json
+cores=32                # number of cores per compute node
+nrun=20                 # number of samples per task
+machine=cori             # name of your machine, this should match .gptune/meta.json
 obj=r                   # name of the objective defined in the python file
 nprocmin_pernode=1      # minimum number of mpi count per node
 niter=2                 # number of repeating each application run

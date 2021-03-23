@@ -1,10 +1,10 @@
 {
     "tuning_problem_name": "SuperLU_DIST",
     "machine_configuration": {
-        "machine_name": "mymachine",
+        "machine_name": "cori",
         "intel": {
             "nodes": 1,
-            "cores": 16
+            "cores": 32
         }
     },
     "software_configuration": {
@@ -16,10 +16,10 @@
         }
     },
     "loadable_machine_configurations": {
-        "mymachine" : {
+        "cori" : {
             "intel": {
                 "nodes":1,
-                "cores":16
+                "cores":32
             }
         }
     },
