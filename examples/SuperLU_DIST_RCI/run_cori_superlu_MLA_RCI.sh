@@ -1,22 +1,32 @@
 #!/bin/bash
 
+############### Yang's tr4 machine
 # module load gcc/9.1.0
 # module load openmpi/gcc-9.1.0/4.0.1
 # module load scalapack-netlib/gcc-9.1.0/2.0.2
 # module load python/gcc-9.1.0/3.7.4
+###############
 
 
+# ############### Cori Haswell Openmpi+GNU
+# module load python/3.7-anaconda-2019.10
+# module unload cray-mpich
+# module swap PrgEnv-intel PrgEnv-gnu
+# export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+# module load openmpi/4.0.1
+# export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+# ###############
 
+
+############### Cori Haswell CrayMPICH+GNU
 module load python/3.7-anaconda-2019.10
-module unload cray-mpich
+module swap cray-mpich cray-mpich/7.7.12
 module swap PrgEnv-intel PrgEnv-gnu
 export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
-module load openmpi/4.0.1
 export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-
-
-
+###############
 
 
 cd ../../
@@ -47,6 +57,7 @@ do
 
 # call GPTune and ask for the next sample point
 python ./superlu_MLA_RCI.py  -nodes $nodes -cores $cores -ntask $ntask -nrun $nrun -machine $machine -obj $obj
+exit
 
 # check whether GPTune needs more data
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
@@ -94,8 +105,16 @@ npcols=$(($nproc / $nprows))
 RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
-echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
-mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix > a.out
+
+# ############ openmpi
+# echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
+# mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix > a.out
+
+
+############ craympich
+echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
+srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
+
 
 
 # get the result (for this example: search the runlog)
@@ -115,6 +134,8 @@ idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | 
 
 #############################################################################
 #############################################################################
+
+
 
 done
 done

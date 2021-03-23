@@ -8,8 +8,8 @@
         }
     },
     "software_configuration": {
-        "openmpi": {
-            "version_split": [4,0,1]
+        "cray-mpich": {
+            "version_split": [7,7,10]
         },
         "scalapack": {
             "version_split": [2,1,0]
@@ -24,9 +24,9 @@
         }
     },
     "loadable_software_configurations": {
-        "openmpi": {
-            "version_from":[4,0,1],
-            "version_to":[5,0,0]
+        "craympich": {
+            "version_from":[6,0,0],
+            "version_to":[8,0,0]
         },
         "scalapack":{
             "version_split":[2,1,0]
