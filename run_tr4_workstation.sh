@@ -32,43 +32,55 @@ MPICXX=$MPICXX
 MPIF90=$MPIF90
 MPIRUN=$MPIRUN
 
-# cd $GPTUNEROOT/examples/GPTune-Demo
-# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
+cd $GPTUNEROOT/examples/GPTune-Demo
+rm -rf gptune.db/*.json
+$MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo.py
 
 # cd $GPTUNEROOT/examples/GPTune-Demo
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_perf_model.py -nrun 20 -machine tr4 -nodes 1 -cores 16 -ntask 5 -perfmodel 0 -plot 0 -optimization GPTune 
 
 # cd $GPTUNEROOT/examples/GPTune-Demo
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_perf_model.py -nrun 20 -machine tr4 -nodes 1 -cores 16 -ntask 5 -perfmodel 1 -plot 0 -optimization GPTune 
 
 # cd $GPTUNEROOT/examples/GPTune-Demo
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_comparetuners.py -machine tr4 -nodes 1 -cores 16 -ntask 1 -perfmodel 0 -plot 0 -nrep 2
 
 # cd $GPTUNEROOT/examples/GPTune-Demo
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./demo_parallelperformance.py -nrun 100 -machine tr4 -nodes 1 -cores 16 -ntask 1 -perfmodel 0 -distparallel 1
 
 
 cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
+rm -rf gptune.db/*.json
 $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0
-# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0 -tla 1
+$MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./scalapack_MLA.py -mmax 2000 -nmax 2000 -nodes 1 -cores 4 -ntask 2 -nrun 40 -machine tr4 -jobid 0 -tla 1
+
 
 
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_single_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine tr4
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine tr4
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_MO_complex.py  -nodes 1 -cores 4 -ntask 1 -nrun 10 -machine tr4
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST
-# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA_TLA.py   -tla 1 -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4
+# rm -rf gptune.db/*.json
+# $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./superlu_MLA.py -tla 1 -nodes 1 -cores 4 -ntask 1 -nrun 20 -machine tr4
 
 
 
 # cd $GPTUNEROOT/examples/Hypre
+# rm -rf gptune.db/*.json
 # $MPIRUN --allow-run-as-root --use-hwthread-cpus -n 1 python ./hypre.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 6 -nxmax 40 -nymax 40 -nzmax 40 -machine tr4
 
 # cd $GPTUNEROOT/examples/ButterflyPACK

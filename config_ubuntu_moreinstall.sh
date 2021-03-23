@@ -78,6 +78,7 @@ apt-get install wget -y
 apt-get install libsm6 -y
 apt-get install libbz2-dev -y
 apt-get install libsqlite3-dev -y
+apt-get install jq -y
 
 
 cd $GPTUNEROOT

@@ -127,7 +127,7 @@ def main():
 	nprocmin_pernode = args.nprocmin_pernode
 	machine = args.machine
 	optimization = args.optimization
-	nruns = args.nruns
+	nrun = args.nrun
 	TUNER_NAME = args.optimization
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
@@ -185,7 +185,7 @@ def main():
 
 		#""" Building MLA with NI random tasks """
 		#NI = ntask
-		#NS = nruns
+		#NS = nrun
 		#(data, model,stats) = gt.MLA(NS=NS, NI=NI, NS1 = max(NS//2,1))
 		#print("stats: ",stats)
 
@@ -196,7 +196,7 @@ def main():
 		# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"], ["SiO.bin"]]	
 
 		NI = len(giventask)
-		NS = nruns
+		NS = nrun
 		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
 		print("stats: ",stats)
 
@@ -229,7 +229,7 @@ def parse_args():
 	# Algorithm related arguments
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 
 	args   = parser.parse_args()
 	return args

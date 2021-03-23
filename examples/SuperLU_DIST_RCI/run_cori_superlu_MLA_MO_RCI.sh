@@ -20,7 +20,7 @@ cd -
 nodes=1
 cores=16
 ntask=1
-nruns=4
+nrun=4
 machine=tr4
 obj1=time    # name of the objective defined in the python file
 obj2=memory    # name of the objective defined in the python file
@@ -35,7 +35,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./superlu_MLA_MO_RCI.py  -nodes $nodes -cores $cores -ntask $ntask -nruns $nruns -machine $machine 
+python ./superlu_MLA_MO_RCI.py  -nodes $nodes -cores $cores -ntask $ntask -nrun $nrun -machine $machine 
 
 # check whether GPTune needs more data
 idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )

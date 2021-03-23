@@ -30,16 +30,16 @@ FTN=mpif90
 cd -
 
 
-# mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA_loaddata.py -mmax 5000 -nmax 5000 -nodes 128 -cores 4 -ntask 20 -nruns 20 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m5000_n5000_nodes128_core4_ntask20_nrun20
+# mpirun --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 5000 -nmax 5000 -nodes 128 -cores 4 -ntask 20 -nrun 20 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m5000_n5000_nodes128_core4_ntask20_nrun20
 # -N: number of ranks per node
-# mpirun -N 32 --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA_loaddata.py -mmax 20000 -nmax 20000 -nodes 256 -cores 2 -ntask 20 -nruns 20 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m20000_n20000_nodes256_core2_ntask50_nrun20
-# mpirun -N 32 -map-by node:PE=1 --bind-to core --rank-by socket:span --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA_loaddata.py -mmax 20000 -nmax 20000 -nodes 256 -cores 2 -ntask 1 -nruns 40 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m20000_n20000_nodes256_core2_ntask50_nrun20
+# mpirun -N 32 --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 20000 -nmax 20000 -nodes 256 -cores 2 -ntask 20 -nrun 20 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m20000_n20000_nodes256_core2_ntask50_nrun20
+# mpirun -N 32 -map-by node:PE=1 --bind-to core --rank-by socket:span --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 20000 -nmax 20000 -nodes 256 -cores 2 -ntask 1 -nrun 40 -machine cori1 -jobid 0 | tee a.out_scalapck_ML_m20000_n20000_nodes256_core2_ntask50_nrun20
 
 
 mmax=10000
 nmax=10000
 ntask=10
-nruns=20
+nrun=20
 nodes=16
 cores=32
 nprocmin_pernode=4  # nprocmin_pernode=cores means flat MPI 
@@ -48,8 +48,8 @@ nprocmin_pernode=4  # nprocmin_pernode=cores means flat MPI
 
 rm -rf gptune.db/PDGEQRF.json
 tuner='opentuner'
-mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nruns ${nruns} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nruns}_${tuner}_oversubscribe
+mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_${tuner}_oversubscribe
 tuner='hpbandster'
-mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nruns ${nruns} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nruns}_${tuner}_oversubscribe
+mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_${tuner}_oversubscribe
 tuner='GPTune'
-mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nruns ${nruns} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nruns}_${tuner}_oversubscribe
+mpirun --oversubscribe --mca oob_tcp_listen_mode listen_thread --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax ${mmax} -nmax ${nmax} -nodes ${nodes} -cores ${cores} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -machine cori1 -jobid 0 -optimization ${tuner}| tee a.out_scalapck_ML_m${mmax}_n${nmax}_nodes${nodes}_core${cores}_ntask${ntask}_nrun${nrun}_${tuner}_oversubscribe

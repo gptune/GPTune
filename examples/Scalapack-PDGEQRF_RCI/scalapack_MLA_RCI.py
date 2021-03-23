@@ -3,13 +3,13 @@
 """
 Example of invocation of this script:
 
-python scalapack_MLA_RCI.py -nodes 1 -cores 32 -nprocmin_pernode 1 -nruns 10 -machine cori -jobid 0 -bunit 8
+python scalapack_MLA_RCI.py -nodes 1 -cores 32 -nprocmin_pernode 1 -nrun 10 -machine cori -jobid 0 -bunit 8
 
 where:
     -nodes is the number of compute nodes
     -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
-    -nruns is the number of calls per task 
+    -nrun is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
     -tla is whether TLA is used after MLA
@@ -70,7 +70,7 @@ def main():
     bunit = args.bunit
     nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
-    nruns = args.nruns
+    nrun = args.nrun
     tla = args.tla
     JOBID = args.jobid
     TUNER_NAME = args.optimization
@@ -135,7 +135,7 @@ def main():
 
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
-        NS = nruns
+        NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
         print("stats: ", stats)
 
@@ -172,7 +172,7 @@ def parse_args():
     # Algorithm related arguments    
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-tla', type=int, default=0, help='Whether perform TLA after MLA when optimization is GPTune')    
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
+    parser.add_argument('-nrun', type=int, help='Number of runs per task')
     # Experiment related arguments
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')

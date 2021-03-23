@@ -149,7 +149,7 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
     ntask = args.ntask
-    nruns = args.nruns
+    nrun = args.nrun
     JOBID = args.jobid
     TUNER_NAME = args.optimization
 
@@ -252,7 +252,7 @@ def main():
 
     """ Building MLA with the given list of tasks """
     NI = len(giventask)
-    NS = nruns
+    NS = nrun
     (data, model, stats) = gt.MLA_HistoryDB(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
     print("stats: ", stats)
 
@@ -283,7 +283,7 @@ def parse_args():
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, default=-1, help='Number of runs per task')
+    parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
     # parser.add_argument('-truns', type=int, default=-1, help='Time of runs')
     # Experiment related arguments
     # 0 means interactive execution (not batch)

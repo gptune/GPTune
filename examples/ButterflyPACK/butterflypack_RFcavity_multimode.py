@@ -170,7 +170,7 @@ def main():
 	nthreads = args.nthreads
 	machine = args.machine
 	optimization = args.optimization
-	nruns = args.nruns
+	nrun = args.nrun
 	
 	TUNER_NAME = args.optimization
 	os.environ['MACHINE_NAME'] = machine
@@ -247,7 +247,7 @@ def main():
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 		
 		NI = len(giventask)
-		NS = max(nruns//2, 1)
+		NS = max(nrun//2, 1)
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS)
 		
 		(Pall,Oall) = readdata(giventask[0][0])
@@ -311,7 +311,7 @@ def parse_args():
 	# Algorithm related arguments
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-	parser.add_argument('-nruns', type=int, help='Number of runs per task')
+	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 
 	args   = parser.parse_args()
 	return args

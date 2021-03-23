@@ -129,7 +129,7 @@ The files `scalapack_*.py` in the `examples` folder shows how to tune the parall
 cd $GPTUNEROOT/examples
 cp ../build/pdqrdriver ../.
 export PYTHONPATH=$PYTHONPATH:$PWD/scalapack-driver/spt/
-$MPIRUN -n 1  python ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine yourmachine -optimization 'GPTune'
+$MPIRUN -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine yourmachine -optimization 'GPTune'
 ```
 ### SuperLU_DIST
 First, SuperLU_DIST needs to be installed with the same OpenMPI and BLAS/LAPACK as the above.

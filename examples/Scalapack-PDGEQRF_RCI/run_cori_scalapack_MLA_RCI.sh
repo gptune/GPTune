@@ -19,7 +19,7 @@ cd -
 
 nodes=1                 # number of compute nodes
 cores=16                # number of cores per compute node
-nruns=40                # number of samples per task
+nrun=40                # number of samples per task
 machine=tr4             # name of your machine, this should match .gptune/meta.json
 obj=r                   # name of the objective defined in the python file
 nprocmin_pernode=1      # minimum number of mpi count per node
@@ -35,7 +35,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./scalapack_MLA_RCI.py -nodes $nodes -cores $cores -nruns $nruns -machine $machine -bunit $bunit -nprocmin_pernode $nprocmin_pernode
+python ./scalapack_MLA_RCI.py -nodes $nodes -cores $cores -nrun $nrun -machine $machine -bunit $bunit -nprocmin_pernode $nprocmin_pernode
 
 # check whether GPTune needs more data
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )

@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nruns 800 -machine cori -jobid 0
+python scalapack.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -11,7 +11,7 @@ where:
     -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
-    -nruns is the number of calls per task 
+    -nrun is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
 """
@@ -92,7 +92,7 @@ def main():
     cores = args.cores
     nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
-    nruns = args.nruns
+    nrun = args.nrun
     truns = args.truns
     JOBID = args.jobid
     TUNER_NAME = args.optimization
@@ -186,7 +186,7 @@ def main():
 
         """ Building MLA with NI random tasks """
         NI = ntask
-        NS = nruns
+        NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
         print("stats: ", stats)
 
@@ -200,7 +200,7 @@ def main():
 
     if(TUNER_NAME=='opentuner'):
         NI = ntask
-        NS = nruns
+        NS = nrun
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -213,7 +213,7 @@ def main():
 
     if(TUNER_NAME=='hpbandster'):
         NI = ntask
-        NS = nruns
+        NS = nrun
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -268,7 +268,7 @@ def parse_args():
     # Algorithm related arguments
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, help='Number of runs per task')
+    parser.add_argument('-nrun', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
     # Experiment related arguments
     # 0 means interactive execution (not batch)

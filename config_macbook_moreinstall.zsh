@@ -111,6 +111,8 @@ then
     exit 
 fi
 
+brew install jq
+
 
 # manually install dependencies from cmake and make
 ###################################

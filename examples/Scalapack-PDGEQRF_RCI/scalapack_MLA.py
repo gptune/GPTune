@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 5 -nrun 10 -machine cori -jobid 0 -tla 0
+mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 5 -nrun 10 -machine cori -jobid 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -14,7 +14,6 @@ where:
     -nrun is the number of calls per task 
     -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
-    -tla is whether TLA is used after MLA
 """
 
 ################################################################################
@@ -44,7 +43,8 @@ import math
 ################################################################################
 
 ''' The objective function required by GPTune. '''
-# should always use this name for user-defined objective function
+
+
 def objectives(point):
     m = point['m']
     n = point['n']
@@ -53,7 +53,7 @@ def objectives(point):
     p = point['p']
     npernode = 2**point['npernode']
     nproc = nodes*npernode
-    nthreads = int(cores / npernode)  
+    nthreads = int(cores / npernode)    
 
     # this becomes useful when the parameters returned by TLA1 do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
@@ -98,7 +98,6 @@ def main():
     machine = args.machine
     nrun = args.nrun
     truns = args.truns
-    tla = args.tla
     JOBID = args.jobid
     TUNER_NAME = args.optimization
 
@@ -109,8 +108,8 @@ def main():
     nprocmax = nodes*cores
 
     bunit=8     # the block size is multiple of bunit
-    mmin=128
-    nmin=128
+    mmin=1280
+    nmin=1280
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
@@ -157,8 +156,8 @@ def main():
 
         gt = GPTune(problem, computer=computer, data=data, options=options)
 
-        """ Building MLA with the given list of tasks """
-        NI = len(giventask)
+        """ Building MLA with NI random tasks """
+        NI = ntask
         NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
         print("stats: ", stats)
@@ -170,21 +169,9 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-        if(tla==1):
-            """ Call TLA for 2 new tasks using the constructed LCM model"""
-            newtask = [[400, 500], [800, 600]]
-            (aprxopts, objval, stats) = gt.TLA1(newtask, NS=None)
-            print("stats: ", stats)
-
-            """ Print the optimal parameters and function evaluations"""
-            for tid in range(len(newtask)):
-                print("new task: %s" % (newtask[tid]))
-                print('    predicted Popt: ', aprxopts[tid], ' objval: ', objval[tid])
-
 
     if(TUNER_NAME=='opentuner'):
-        NI = len(giventask)
+        NI = ntask
         NS = nrun
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
@@ -197,7 +184,7 @@ def main():
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='hpbandster'):
-        NI = len(giventask)
+        NI = ntask
         NS = nrun
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
@@ -221,17 +208,16 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=1,help='Number of cores per machine node')
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
-    # Algorithm related arguments    
+    # Algorithm related arguments
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
-    parser.add_argument('-tla', type=int, default=0, help='Whether perform TLA after MLA when optimization is GPTune')    
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
     # Experiment related arguments
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
-
-
+    parser.add_argument('-stepid', type=int, default=-1, help='step ID')
+    parser.add_argument('-phase', type=int, default=0, help='phase')
 
     args = parser.parse_args()
 

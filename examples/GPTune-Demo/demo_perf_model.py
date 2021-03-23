@@ -84,7 +84,7 @@ def parse_args():
     parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, default=20, help='Number of runs per task')
+    parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-plot', type=int, default=0, help='Whether to plot the objective function')
     parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')
 
@@ -204,7 +204,7 @@ def main():
     nodes = args.nodes
     cores = args.cores
     machine = args.machine
-    nruns = args.nruns
+    nrun = args.nrun
     TUNER_NAME = args.optimization
     perfmodel = args.perfmodel
     plot = args.plot
@@ -259,7 +259,7 @@ def main():
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=nruns	    
+    NS=nrun	    
     
     TUNER_NAME = os.environ['TUNER_NAME']
 

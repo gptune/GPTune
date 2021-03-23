@@ -152,7 +152,7 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     machine = args.machine
     ntask = args.ntask
-    nruns = args.nruns
+    nrun = args.nrun
     JOBID = args.jobid
     TUNER_NAME = args.optimization
     TLA = False
@@ -221,7 +221,7 @@ def main():
         gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
-        NS = nruns
+        NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
         print("stats: ", stats)
         
@@ -247,7 +247,7 @@ def main():
     
     if(TUNER_NAME=='opentuner'):
         NI = len(giventask)
-        NS = nruns
+        NS = nrun
         (data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
         print("stats: ", stats)
 
@@ -261,7 +261,7 @@ def main():
 
     if(TUNER_NAME=='hpbandster'):
         NI = len(giventask)
-        NS = nruns
+        NS = nrun
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -288,7 +288,7 @@ def parse_args():
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
-    parser.add_argument('-nruns', type=int, default=-1, help='Number of runs per task')
+    parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
     # parser.add_argument('-truns', type=int, default=-1, help='Time of runs')
     # Experiment related arguments
     # 0 means interactive execution (not batch)
