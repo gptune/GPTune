@@ -179,8 +179,6 @@ class Model_GPy_LCM(Model):
                 C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
         return C
 
-from lcm import LCM
-
 class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
@@ -188,6 +186,9 @@ class Model_LCM(Model):
         return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
     def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
+
+        if (kwargs['RCI_mode'] is False):
+            from lcm import LCM
 
         if (kwargs['model_latent'] is None):
             Q = data.NI
@@ -288,6 +289,9 @@ class Model_LCM(Model):
         return (mu, var)
 
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
+        if (kwargs['RCI_mode'] is False):
+            from lcm import LCM
+
         if (kwargs['model_latent'] is None):
             Q = data.NI
         else:

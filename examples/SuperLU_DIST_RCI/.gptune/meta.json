@@ -11,8 +11,8 @@
         "cray-mpich": {
             "version_split": [7,7,10]
         },
-        "scalapack": {
-            "version_split": [2,1,0]
+        "libsci": {
+            "version_split": [19,6,1]
         }
     },
     "loadable_machine_configurations": {
@@ -24,12 +24,12 @@
         }
     },
     "loadable_software_configurations": {
-        "craympich": {
-            "version_from":[6,0,0],
+        "cray-mpich": {
+            "version_from":[7,7,10],
             "version_to":[8,0,0]
         },
-        "scalapack":{
-            "version_split":[2,1,0]
+        "libsci":{
+            "version_split":[19,6,1]
         }
     }
 }

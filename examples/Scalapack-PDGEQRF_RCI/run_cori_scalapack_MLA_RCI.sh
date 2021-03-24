@@ -1,27 +1,109 @@
 #!/bin/bash
 
+# ModuleEnv='yang-tr4-openmpi-gnu'
+# ModuleEnv='cori-haswell-craympich-intel'
+# ModuleEnv='cori-haswell-craympich-intel'
+ModuleEnv='cori-haswell-openmpi-gnu'
+# ModuleEnv='cori-haswell-openmpi-intel'
+# ModuleEnv='cori-knl-openmpi-gnu'
+# ModuleEnv='cori-knl-openmpi-intel'
 
-# module load gcc/9.1.0
-# module load openmpi/gcc-9.1.0/4.0.1
-# module load scalapack-netlib/gcc-9.1.0/2.0.2
-# module load python/gcc-9.1.0/3.7.4
 
 
+############### Yang's tr4 machine
+if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
+    module load gcc/9.1.0
+    module load openmpi/gcc-9.1.0/4.0.1
+    module load scalapack-netlib/gcc-9.1.0/2.0.2
+    module load python/gcc-9.1.0/3.7.4
+fi
+###############
 
-module load python/3.7-anaconda-2019.10
-module unload cray-mpich
-module swap PrgEnv-intel PrgEnv-gnu
-export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
-module load openmpi/4.0.1
-export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 
+############### Cori Haswell Openmpi+GNU
+if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
+    module load python/3.7-anaconda-2019.10
+    module unload cray-mpich
+    module swap PrgEnv-intel PrgEnv-gnu
+    export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi    
+###############
+
+############### Cori Haswell Openmpi+Intel
+if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
+    module load python/3.7-anaconda-2019.10
+    module unload cray-mpich
+    module swap PrgEnv-gnu PrgEnv-intel 
+    module swap intel intel/19.0.3.199 
+    export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi    
+###############
+
+############### Cori Haswell CrayMPICH+GNU
+if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
+    module load python/3.7-anaconda-2019.10
+    module swap PrgEnv-intel PrgEnv-gnu
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi
+###############
+
+############### Cori Haswell CrayMPICH+Intel
+if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
+    module load python/3.7-anaconda-2019.10
+    module swap PrgEnv-gnu PrgEnv-intel 
+    module swap intel intel/19.0.3.199 
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi
+###############
+
+############### Cori KNL Openmpi+GNU
+if [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
+	module unload darshan
+	module swap craype-haswell craype-mic-knl
+	module load craype-hugepages2M
+	module unload cray-libsci
+	module unload cray-mpich
+	module swap PrgEnv-intel PrgEnv-gnu
+	module load openmpi/4.0.1
+    export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi    
+###############
+
+
+############### Cori KNL Openmpi+Intel
+if [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
+	module unload darshan
+	module swap craype-haswell craype-mic-knl
+	module load craype-hugepages2M
+	module unload cray-libsci
+	module unload cray-mpich
+	module swap PrgEnv-gnu PrgEnv-intel 
+    module swap intel intel/19.0.3.199 
+	module load openmpi/4.0.1
+    export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi    
+###############
 cd ../../
 
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
+export PYTHONPATH=$PYTHONPATH:$PWD/GPy/
 export PYTHONWARNINGS=ignore
 
 cd -
@@ -93,10 +175,16 @@ RUNDIR=./scalapack-driver/exp/$machine/GPTune/$jobid/
 # call the python wrapper to dump parameters to an input file
 python ./scalapack-driver/spt/pdqrdriver_in_out.py -machine $machine -jobid $jobid -niter $niter -mode 'in' -m $m -n $n -nodes $nodes -cores $cores -mb $mb -nb $nb -nthreads $OMP_NUM_THREADS -nproc $nproc -p $p -q $q -npernode $npernode
 
-
 # call the application, read data from the input file, dump results to an output file 
-echo "mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR"
-mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR 
+if [[ $ModuleEnv == *"openmpi"* ]]; then
+############ openmpi
+    echo "mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR"
+    mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR 
+else 
+############ craympich
+    echo "srun -n $nproc $BINDIR/pdqrdriver $RUNDIR"
+    srun -n $nproc $BINDIR/pdqrdriver $RUNDIR 
+fi
 
 # call the python wrapper to read results from the output file and print it out
 python ./scalapack-driver/spt/pdqrdriver_in_out.py -machine $machine -jobid $jobid -niter $niter -mode 'out' -m $m -n $n -nodes $nodes -cores $cores -mb $mb -nb $nb -nthreads $OMP_NUM_THREADS -nproc $nproc -p $p -q $q -npernode $npernode | tee a.out

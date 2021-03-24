@@ -153,7 +153,7 @@ class HistoryDB(dict):
 
             if (deps_passed == False):
                 if (self.verbose):
-                    print ("deps_passed failed: " + str(option) + " " + str(software_name))
+                    print ("deps_passed failed: "  + " " + str(software_name)) 
                 return False
 
         return True
