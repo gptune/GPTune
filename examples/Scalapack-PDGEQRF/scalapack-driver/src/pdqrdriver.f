@@ -65,7 +65,7 @@
 *
 *  =====================================================================
 *
-include "mpif.h"
+      include "mpif.h"
 *     .. Parameters ..
       INTEGER            BLOCK_CYCLIC_2D, CSRC_, CTXT_, DLEN_, DTYPE_,
      $                   LLD_, MB_, M_, NB_, N_, RSRC_
