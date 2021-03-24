@@ -25,7 +25,7 @@ from problem import Problem
 from computer import Computer
 from data import Data
 from options import Options
-from historydb import HistoryDB
+from historydb import *
 from sample import *
 from model import *
 from search import *

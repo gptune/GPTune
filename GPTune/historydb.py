@@ -26,6 +26,49 @@ from autotune.problem import TuningProblem
 import uuid
 import time
 
+def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
+    import ast
+
+    print ("Get Machine Configuration")
+
+    machine_name = "none"
+    processor_model = "none"
+    nodes = 0
+    cores = 0
+
+    if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+        try:
+            machine_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION', '{}'))
+            machine_name = machine_configuration['machine_name']
+            processor_list = list(machine_configuration.keys())
+            processor_list.remove('machine_name')
+            # YC: we currently assume the application uses only one processor type
+            processor_model = processor_list[0]
+            nodes = machine_configuration[processor_model]['nodes']
+            cores = machine_configuration[processor_model]['cores']
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    elif os.path.exists(meta_description_path):
+        try:
+            with open(meta_description_path) as f_in:
+                gptune_metadata = json.load(f_in)
+                machine_configuration = gptune_metadata['machine_configuration']
+                machine_name = machine_configuration['machine_name']
+                processor_list = list(machine_configuration.keys())
+                processor_list.remove('machine_name')
+                # YC: we currently assume the application uses only one processor type
+                processor_model = processor_list[0]
+                nodes = machine_configuration[processor_model]['nodes']
+                cores = machine_configuration[processor_model]['cores']
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    else:
+        print ("[HistoryDB] not able to get machine configuration")
+
+    return (machine_name, processor_model, nodes, cores)
+
 class HistoryDB(dict):
 
     def __init__(self, **kwargs):
