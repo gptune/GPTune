@@ -289,7 +289,7 @@ class Model_LCM(Model):
         return (mu, var)
 
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
-        if (kwargs['RCI_mode']):
+        if (kwargs['RCI_mode'] is False):
             from lcm import LCM
 
         if (kwargs['model_latent'] is None):
