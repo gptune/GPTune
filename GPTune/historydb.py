@@ -63,6 +63,10 @@ class HistoryDB(dict):
         """ list of UIDs of function evaluation results """
         self.uids = []
 
+        """ File synchronization options """
+        self.file_synchronization_method = 'rsync'
+        #self.file_synchronization_method = 'filelock'
+
     def check_load_deps(self, func_eval):
 
         ''' check machine configuration dependencies '''
@@ -189,71 +193,91 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "r") as f_in:
-                        print ("[HistoryDB] Found a history database file")
+                print ("[HistoryDB] Found a history database file")
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
                         history_data = json.load(f_in)
-                        num_tasks = len(Igiven)
+                else:
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
 
-                        num_loaded_data = 0
+                num_tasks = len(Igiven)
 
-                        PS_history = [[] for i in range(num_tasks)]
-                        OS_history = [[] for i in range(num_tasks)]
+                num_loaded_data = 0
 
-                        for func_eval in history_data["func_eval"]:
-                            if (self.check_load_deps(func_eval)):
-                                task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
-                                if (task_id != -1):
-                                    # current policy: skip loading the func eval result
-                                    # if the same parameter data has been loaded once (duplicated)
-                                    # YL: only need to search in PS_history[task_id], not PS_history
-                                    if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
-                                        continue
+                PS_history = [[] for i in range(num_tasks)]
+                OS_history = [[] for i in range(num_tasks)]
+
+                for func_eval in history_data["func_eval"]:
+                    if (self.check_load_deps(func_eval)):
+                        task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                        if (task_id != -1):
+                            # current policy: skip loading the func eval result
+                            # if the same parameter data has been loaded once (duplicated)
+                            # YL: only need to search in PS_history[task_id], not PS_history
+                            if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+                                continue
+                            else:
+                                parameter_arr = []
+                                for k in range(len(problem.PS)):
+                                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                                        parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                    elif type(problem.PS[k]).__name__ == "Integer":
+                                        parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                    elif type(problem.PS[k]).__name__ == "Real":
+                                        parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
                                     else:
-                                        parameter_arr = []
-                                        for k in range(len(problem.PS)):
-                                            if type(problem.PS[k]).__name__ == "Categoricalnorm":
-                                                print ("param: " + str(problem.PS[k].name) + " is categorical")
-                                                parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                            elif type(problem.PS[k]).__name__ == "Integer":
-                                                parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                            elif type(problem.PS[k]).__name__ == "Real":
-                                                parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                            else:
-                                                parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
-                                        PS_history[task_id].append(parameter_arr)
-                                        OS_history[task_id].append(\
-                                            [func_eval["evaluation_result"][problem.OS[k].name] \
-                                            for k in range(len(problem.OS))])
-                                        num_loaded_data += 1
+                                        parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                                PS_history[task_id].append(parameter_arr)
+                                OS_history[task_id].append(\
+                                    [func_eval["evaluation_result"][problem.OS[k].name] \
+                                    for k in range(len(problem.OS))])
+                                num_loaded_data += 1
 
-                        if (num_loaded_data > 0):
-                            data.I = Igiven #IS_history
-                            data.P = PS_history
-                            data.O=[] # YL: OS is a list of 2D numpy arrays
-                            for i in range(len(OS_history)):
-                                if(len(OS_history[i])==0):
-                                    data.O.append(np.empty( shape=(0, problem.DO)))
-                                else:
-                                    data.O.append(np.array(OS_history[i]))
-                                    if(any(ele==[None] for ele in OS_history[i])):
-                                        print ("history data contains null function values")
-                                        exit()
-                            # print ("data.I: " + str(data.I))
-                            # print ("data.P: " + str(data.P))
-                            # print ("data.O: " + str(OS_history))
-                            
+                if (num_loaded_data > 0):
+                    data.I = Igiven #IS_history
+                    data.P = PS_history
+                    data.O=[] # YL: OS is a list of 2D numpy arrays
+                    for i in range(len(OS_history)):
+                        if(len(OS_history[i])==0):
+                            data.O.append(np.empty( shape=(0, problem.DO)))
                         else:
-                            print ("no history data has been loaded")
+                            data.O.append(np.array(OS_history[i]))
+                            if(any(ele==[None] for ele in OS_history[i])):
+                                print ("history data contains null function values")
+                                exit()
+                    # print ("data.I: " + str(data.I))
+                    # print ("data.P: " + str(data.P))
+                    # print ("data.O: " + str(OS_history))
+                else:
+                    print ("no history data has been loaded")
             else:
                 print ("[HistoryDB] Create a JSON file at " + json_data_path)
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "w") as f_out:
-                        json_data = {}
-                        json_data["tuning_problem_name"] = self.tuning_problem_name
-                        json_data["model_data"] = []
-                        json_data["func_eval"] = []
 
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "model_data":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+                elif self.file_synchronization_method == 'rsync':
+                    with open(json_data_path+".temp", "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "model_data":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                else:
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "model_data":[],
+                            "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
 
     def update_func_eval(self, problem : Problem,\
@@ -262,9 +286,8 @@ class HistoryDB(dict):
             evaluation_result : np.ndarray):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
-            with FileLock(json_data_path+".lock"):
-                with open(json_data_path, "r") as f_in:
-                    json_data = json.load(f_in)
+
+            new_function_evaluation_results = []
 
             now = time.localtime()
 
@@ -282,7 +305,7 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuning_parameter_orig).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
-                json_data["func_eval"].append({
+                new_function_evaluation_results.append({
                         "task_parameter":{problem.IS[k].name:task_parameter_orig_list[k]
                             for k in range(len(problem.IS))},
                         "tuning_parameter":{problem.PS[k].name:tuning_parameter_orig_list[k]
@@ -305,7 +328,37 @@ class HistoryDB(dict):
                         "uid":str(uid)
                     })
 
-            with FileLock(json_data_path+".lock"):
+            if self.file_synchronization_method == 'filelock':
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["func_eval"] += new_function_evaluation_results
+                    with open(json_data_path, "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+            elif self.file_synchronization_method == 'rsync':
+                while True:
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["func_eval"] += new_function_evaluation_results
+                    with open(json_data_path+".temp", "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        existing_uids = [item["uid"] for item in json_data["func_eval"]]
+                        new_uids = [item["uid"] for item in new_function_evaluation_results]
+                        retry = False
+                        for uid in new_uids:
+                            if uid not in existing_uids:
+                                retry = True
+                                break
+                        if retry == False:
+                            break
+            else:
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
+                    json_data["func_eval"] += new_function_evaluation_results
                 with open(json_data_path, "w") as f_out:
                     json.dump(json_data, f_out, indent=2)
 
@@ -373,18 +426,27 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        history_data = json.load(f_in)
+                else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
-                        num_models = len(history_data["model_data"])
 
-                        max_evals = 0
-                        max_evals_index = -1 # TODO: if no model is found?
-                        for i in range(num_models):
-                            model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, Igiven) and
-                                model_data["modeler"] == modeler):
-                                ret.append(model_data)
+                num_models = len(history_data["model_data"])
+
+                max_evals = 0
+                max_evals_index = -1 # TODO: if no model is found?
+                for i in range(num_models):
+                    model_data = history_data["model_data"][i]
+                    if (self.is_model_problem_match(model_data, tuningproblem, Igiven) and
+                        model_data["modeler"] == modeler):
+                        ret.append(model_data)
 
         return ret
 
@@ -393,24 +455,32 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        history_data = json.load(f_in)
+                else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
 
-                        max_mle = -9999
-                        max_mle_index = -1
-                        for i in range(len(history_data["model_data"])):
-                            model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                                    model_data["modeler"] == modeler and
-                                    model_data["objective_id"] == objective):
-                                log_likelihood = model_data["log_likelihood"]
-                                if log_likelihood > max_mle:
-                                    max_mle = log_likelihood
-                                    max_mle_index = i
+                max_mle = -9999
+                max_mle_index = -1
+                for i in range(len(history_data["model_data"])):
+                    model_data = history_data["model_data"][i]
+                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                            model_data["modeler"] == modeler and
+                            model_data["objective_id"] == objective):
+                        log_likelihood = model_data["log_likelihood"]
+                        if log_likelihood > max_mle:
+                            max_mle = log_likelihood
+                            max_mle_index = i
 
-                        hyperparameters =\
-                                history_data["model_data"][max_mle_index]["hyperparameters"]
+                hyperparameters =\
+                        history_data["model_data"][max_mle_index]["hyperparameters"]
 
         return hyperparameters
 
@@ -419,27 +489,34 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        history_data = json.load(f_in)
+                else:
                     with open(json_data_path, "r") as f_in:
-                        print ("Found a history database")
                         history_data = json.load(f_in)
 
-                        min_aic = 99999
-                        min_aic_index = -1
-                        for i in range(len(history_data["model_data"])):
-                            model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                                    model_data["modeler"] == modeler and
-                                    model_data["objective_id"] == objective):
-                                log_likelihood = model_data["log_likelihood"]
-                                num_parameters = len(model_data["hyperparameters"])
-                                AIC = -1.0 * 2.0 * log_likelihood + 2.0 * num_parameters
-                                if AIC < min_aic:
-                                    min_aic = AIC
-                                    min_aic_index = i
+                min_aic = 99999
+                min_aic_index = -1
+                for i in range(len(history_data["model_data"])):
+                    model_data = history_data["model_data"][i]
+                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                            model_data["modeler"] == modeler and
+                            model_data["objective_id"] == objective):
+                        log_likelihood = model_data["log_likelihood"]
+                        num_parameters = len(model_data["hyperparameters"])
+                        AIC = -1.0 * 2.0 * log_likelihood + 2.0 * num_parameters
+                        if AIC < min_aic:
+                            min_aic = AIC
+                            min_aic_index = i
 
-                        hyperparameters =\
-                                history_data["model_data"][min_aic_index]["hyperparameters"]
+                hyperparameters =\
+                        history_data["model_data"][min_aic_index]["hyperparameters"]
 
         return hyperparameters
 
@@ -450,27 +527,35 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        history_data = json.load(f_in)
+                else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
 
-                        min_bic = 99999
-                        min_bic_index = -1
-                        for i in range(len(history_data["model_data"])):
-                            model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                                    model_data["modeler"] == modeler and
-                                    model_data["objective_id"] == objective):
-                                log_likelihood = model_data["log_likelihood"]
-                                num_parameters = len(model_data["hyperparameters"])
-                                num_samples = len(model_data["func_eval"])
-                                BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
-                                if BIC < min_bic:
-                                    min_bic = BIC
-                                    min_bic_index = i
+                min_bic = 99999
+                min_bic_index = -1
+                for i in range(len(history_data["model_data"])):
+                    model_data = history_data["model_data"][i]
+                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                            model_data["modeler"] == modeler and
+                            model_data["objective_id"] == objective):
+                        log_likelihood = model_data["log_likelihood"]
+                        num_parameters = len(model_data["hyperparameters"])
+                        num_samples = len(model_data["func_eval"])
+                        BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
+                        if BIC < min_bic:
+                            min_bic = BIC
+                            min_bic_index = i
 
-                        hyperparameters =\
-                                history_data["model_data"][min_bic_index]["hyperparameters"]
+                hyperparameters =\
+                        history_data["model_data"][min_bic_index]["hyperparameters"]
 
         return hyperparameters
 
@@ -479,26 +564,33 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        history_data = json.load(f_in)
+                else:
                     with open(json_data_path, "r") as f_in:
-                        print ("Found a history database")
                         history_data = json.load(f_in)
 
-                        max_evals = 0
-                        max_evals_index = -1 # TODO: if no model is found?
-                        for i in range(len(history_data["model_data"])):
-                            model_data = history_data["model_data"][i]
-                            if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                                    model_data["modeler"] == modeler and
-                                    model_data["objective_id"] == objective):
-                                num_evals = len(history_data["model_data"][i]["func_eval"])
-                                if num_evals > max_evals:
-                                    max_evals = num_evals
-                                    max_evals_index = i
+                max_evals = 0
+                max_evals_index = -1 # TODO: if no model is found?
+                for i in range(len(history_data["model_data"])):
+                    model_data = history_data["model_data"][i]
+                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
+                            model_data["modeler"] == modeler and
+                            model_data["objective_id"] == objective):
+                        num_evals = len(history_data["model_data"][i]["func_eval"])
+                        if num_evals > max_evals:
+                            max_evals = num_evals
+                            max_evals_index = i
 
-                        hyperparameters =\
-                                history_data["model_data"][max_evals_index]["hyperparameters"]
-                        print ("loaded hyperparameters: ", hyperparameters)
+                hyperparameters =\
+                        history_data["model_data"][max_evals_index]["hyperparameters"]
+                print ("loaded hyperparameters: ", hyperparameters)
 
         return hyperparameters
 
@@ -506,15 +598,23 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
-                with FileLock(json_data_path+".lock"):
-                    with open(json_data_path, "r") as f_in:
-                        print ("Found a history database")
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
                         history_data = json.load(f_in)
-                        model_data = history_data["model_data"]
-                        num_models = len(model_data)
-                        for i in range(num_models):
-                            if model_data[i]["uid"] == model_uid:
-                                return model_data[i]["hyperparameters"]
+                else:
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+
+                model_data = history_data["model_data"]
+                num_models = len(model_data)
+                for i in range(num_models):
+                    if model_data[i]["uid"] == model_uid:
+                        return model_data[i]["hyperparameters"]
 
         return []
 
@@ -564,9 +664,8 @@ class HistoryDB(dict):
 
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
-            with FileLock(json_data_path+".lock"):
-                with open(json_data_path, "r") as f_in:
-                    json_data = json.load(f_in)
+
+            new_surrogate_models = []
 
             now = time.localtime()
 
@@ -592,7 +691,7 @@ class HistoryDB(dict):
             task_parameter_orig = problem.IS.inverse_transform(np.array(input_given, ndmin=2))
             task_parameter_orig_list = np.array(task_parameter_orig).tolist()
 
-            json_data["model_data"].append({
+            new_surrogate_models.append({
                     "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
                     "func_eval":self.uids,
@@ -616,7 +715,37 @@ class HistoryDB(dict):
                     # we might need a nicer way to manage different models
                 })
 
-            with FileLock(json_data_path+".lock"):
+            if self.file_synchronization_method == 'filelock':
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["model_data"] += new_surrogate_models
+                    with open(json_data_path, "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+            elif self.file_synchronization_method == 'rsync':
+                while True:
+                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
+                    with open(json_data_path+".temp", "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["model_data"] += new_surrogate_models
+                    with open(json_data_path+".temp", "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        existing_uids = [item["uid"] for item in json_data["model_data"]]
+                        new_uids = [item["uid"] for item in new_surrogate_models]
+                        retry = False
+                        for uid in new_uids:
+                            if uid not in existing_uids:
+                                retry = True
+                                break
+                        if retry == False:
+                            break
+            else:
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
+                    json_data["model_data"] += new_surrogate_models
                 with open(json_data_path, "w") as f_out:
                     json.dump(json_data, f_out, indent=2)
 
