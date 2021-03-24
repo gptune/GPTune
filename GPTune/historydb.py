@@ -64,8 +64,7 @@ class HistoryDB(dict):
         self.uids = []
 
         """ File synchronization options """
-        self.file_synchronization_method = 'rsync'
-        #self.file_synchronization_method = 'filelock'
+        self.file_synchronization_method = 'filelock'
 
     def check_load_deps(self, func_eval):
 

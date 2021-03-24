@@ -37,6 +37,7 @@ from mpi4py import MPI
 import numpy as np
 
 import json
+from filelock import Timeout, FileLock
 
 class GPTune(object):
 
@@ -72,7 +73,16 @@ class GPTune(object):
             history_db.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
             if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
                 history_db.load_model = True
+            try:
+                with FileLock("test.lock", timeout=5):
+                    print ("[HistoryDB] use filelock for synchronization")
+                    history_db.file_synchronization_method = 'filelock'
+            except Timeout:
+                print ("[HistoryDB] use rsync for synchronization")
+                history_db.file_synchronization_method = 'rsync'
+            os.system("rm test.lock")
             self.history_db = history_db
+
         # if GPTune is called through Reverse Communication Interface
         elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
             with open("./.gptune/meta.json") as f_in:
@@ -99,6 +109,15 @@ class GPTune(object):
                     history_db.loadable_machine_configurations = gptune_metadata["loadable_machine_configurations"]
                 if "loadable_software_configurations" in gptune_metadata:
                     history_db.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
+
+                try:
+                    with FileLock("test.lock", timeout=5):
+                        print ("[HistoryDB] use filelock for synchronization")
+                        history_db.file_synchronization_method = 'filelock'
+                except Timeout:
+                    print ("[HistoryDB] use rsync for synchronization")
+                    history_db.file_synchronization_method = 'rsync'
+                os.system("rm test.lock")
 
                 self.history_db = history_db
         # else: history database is not used.
