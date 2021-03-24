@@ -351,6 +351,7 @@ class HistoryDB(dict):
                     with open(temp_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
                     os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
                         existing_uids = [item["uid"] for item in json_data["func_eval"]]
@@ -362,7 +363,6 @@ class HistoryDB(dict):
                                 break
                         if retry == False:
                             break
-                    os.system("rm " + temp_path)
             else:
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
@@ -752,6 +752,7 @@ class HistoryDB(dict):
                     with open(temp_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
                     os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
                         existing_uids = [item["uid"] for item in json_data["model_data"]]
@@ -763,7 +764,6 @@ class HistoryDB(dict):
                                 break
                         if retry == False:
                             break
-                    os.system("rm " + temp_path)
             else:
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
