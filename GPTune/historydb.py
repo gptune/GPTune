@@ -26,6 +26,47 @@ from autotune.problem import TuningProblem
 import uuid
 import time
 
+def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
+    import ast
+
+    machine_name = "none"
+    processor_model = "none"
+    nodes = 0
+    cores = 0
+
+    if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+        try:
+            machine_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION', '{}'))
+            machine_name = machine_configuration['machine_name']
+            processor_list = list(machine_configuration.keys())
+            processor_list.remove('machine_name')
+            # YC: we currently assume the application uses only one processor type
+            processor_model = processor_list[0]
+            nodes = machine_configuration[processor_model]['nodes']
+            cores = machine_configuration[processor_model]['cores']
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    elif os.path.exists(meta_description_path):
+        try:
+            with open(meta_description_path) as f_in:
+                gptune_metadata = json.load(f_in)
+                machine_configuration = gptune_metadata['machine_configuration']
+                machine_name = machine_configuration['machine_name']
+                processor_list = list(machine_configuration.keys())
+                processor_list.remove('machine_name')
+                # YC: we currently assume the application uses only one processor type
+                processor_model = processor_list[0]
+                nodes = machine_configuration[processor_model]['nodes']
+                cores = machine_configuration[processor_model]['cores']
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    else:
+        print ("[HistoryDB] not able to get machine configuration")
+
+    return (machine_name, processor_model, nodes, cores)
+
 class HistoryDB(dict):
 
     def __init__(self, **kwargs):
@@ -65,6 +106,9 @@ class HistoryDB(dict):
 
         """ File synchronization options """
         self.file_synchronization_method = 'filelock'
+
+        """ Process uid """
+        self.process_uid = str(uuid.uuid1())
 
     def check_load_deps(self, func_eval):
 
@@ -198,9 +242,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -266,12 +312,14 @@ class HistoryDB(dict):
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
                 elif self.file_synchronization_method == 'rsync':
-                    with open(json_data_path+".temp", "w") as f_out:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
                             "model_data":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
-                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
@@ -358,13 +406,15 @@ class HistoryDB(dict):
                         json.dump(json_data, f_out, indent=2)
             elif self.file_synchronization_method == 'rsync':
                 while True:
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         json_data = json.load(f_in)
                         json_data["func_eval"] += new_function_evaluation_results
-                    with open(json_data_path+".temp", "w") as f_out:
+                    with open(temp_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
-                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
                         existing_uids = [item["uid"] for item in json_data["func_eval"]]
@@ -452,9 +502,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -481,9 +533,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -515,9 +569,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -553,9 +609,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -590,9 +648,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -624,9 +684,11 @@ class HistoryDB(dict):
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
                 elif self.file_synchronization_method == 'rsync':
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
@@ -745,13 +807,15 @@ class HistoryDB(dict):
                         json.dump(json_data, f_out, indent=2)
             elif self.file_synchronization_method == 'rsync':
                 while True:
-                    os.system("rsync -a " + json_data_path + " " + json_data_path + ".temp")
-                    with open(json_data_path+".temp", "r") as f_in:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
                         json_data = json.load(f_in)
                         json_data["model_data"] += new_surrogate_models
-                    with open(json_data_path+".temp", "w") as f_out:
+                    with open(temp_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
-                    os.system("rsync -u " + json_data_path + ".temp " + json_data_path)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
                         existing_uids = [item["uid"] for item in json_data["model_data"]]

@@ -80,11 +80,6 @@ class Options(dict):
         budget_max = 1 # maximum budget
         budget_base = 2 # the number of arms is floor{log_{budget_base}{budget_max/budget_min}}+1
 
-        """ Options for the history database """
-        history_db = 0
-        history_db_path = "./"
-        application_name = None
-
         self.update(locals())
         self.update(kwargs)
         self.pop('self')

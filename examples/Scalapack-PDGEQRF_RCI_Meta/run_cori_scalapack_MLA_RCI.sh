@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ModuleEnv='yang-tr4-openmpi-gnu'
-# ModuleEnv='cori-haswell-craympich-gnu'
+# ModuleEnv='cori-haswell-craympich-intel'
 # ModuleEnv='cori-haswell-craympich-intel'
 ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
@@ -111,10 +111,35 @@ export PYTHONWARNINGS=ignore
 cd -
 
 
-nodes=1                 # number of compute nodes
-cores=32                # number of cores per compute node
+# name of your machine which is defined in .gptune/meta.json
+machine=$(python -c "from gptune import *;
+(machine, processor, nodes, cores)=list(GetMachineConfiguration());
+print(machine)")
+echo ${machine}
+
+#nodes=1                 # number of compute nodes
+#cores=32                # number of cores per compute node
+#machine=cori             # name of your machine, this should match .gptune/meta.json
+
+# processor model which is defined in .gptune/meta.json
+processor=$(python -c "from gptune import *;
+(machine, processor, nodes, cores)=list(GetMachineConfiguration());
+print(processor)")
+echo ${processor}
+
+# number of compute nodes
+nodes=$(python -c "from gptune import *;
+(machine, processor, nodes, cores)=list(GetMachineConfiguration());
+print(nodes)")
+echo ${nodes}
+
+# number of cores per compute node
+cores=$(python -c "from gptune import *;
+(machine, processor, nodes, cores)=list(GetMachineConfiguration());
+print(cores)")
+echo ${cores}
+
 nrun=20                 # number of samples per task
-machine=cori             # name of your machine, this should match .gptune/meta.json
 obj=r                   # name of the objective defined in the python file
 nprocmin_pernode=1      # minimum number of mpi count per node
 niter=2                 # number of repeating each application run
