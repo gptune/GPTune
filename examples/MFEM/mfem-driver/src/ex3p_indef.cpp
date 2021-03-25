@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
    double tstop = MPI_Wtime();
    time = tstop-tstart;
    if (myid == 0)
-     cout << "solve time = " << tstop - tstart << std::endl;
+     cout << "MFEM solve time = " << tstop - tstart << std::endl;
 
    // 13. Recover the parallel grid function corresponding to X. This is the
    //     local finite element solution on each processor.

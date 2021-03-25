@@ -1,5 +1,5 @@
 {
-    "tuning_problem_name": "SuperLU_DIST",
+    "tuning_problem_name": "MFEM",
     "machine_configuration": {
         "machine_name": "cori",
         "intel": {

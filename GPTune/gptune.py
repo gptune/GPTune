@@ -361,10 +361,10 @@ class GPTune(object):
         # NS = NSmin + NS
         if(NSmax>0):
             if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
-                print('\ndatabase file has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
+                print('\nexisting data has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
                 return (copy.deepcopy(self.data), None,stats)
             else:            
-                print('\ndatabase file has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
+                print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
 
         t3 = time.time_ns()
@@ -398,7 +398,7 @@ class GPTune(object):
             self.data.I = self.problem.IS.transform(self.data.I)
 
         if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
-            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.history_db, options = kwargs)
 
         sampler = eval(f'{kwargs["sample_class"]}()')
         if (self.data.I is None):

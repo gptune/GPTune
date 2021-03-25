@@ -1,13 +1,13 @@
 #!/bin/bash
 
-
 # ModuleEnv='yang-tr4-openmpi-gnu'
-# ModuleEnv='cori-haswell-craympich-gnu'
+ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
-ModuleEnv='cori-haswell-openmpi-gnu'
+# ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'
+
 
 
 
@@ -112,16 +112,15 @@ export PYTHONWARNINGS=ignore
 cd -
 
 
-nodes=1
+nodes=16
 cores=32
 ntask=1
 nrun=4
 machine=cori
-obj1=time    # name of the objective defined in the python file
-obj2=memory    # name of the objective defined in the python file
+nprocmin_pernode=4
+obj=r
 
-
-database="gptune.db/SuperLU_DIST.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
+database="gptune.db/MFEM.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 rm -rf $database
 
 # start the main loop
@@ -130,10 +129,10 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./superlu_MLA_MO_RCI.py  -nodes $nodes -cores $cores -ntask $ntask -nrun $nrun -machine $machine 
+python ./mfem_maxwell3d_RCI.py  -nodes $nodes -cores $cores -nprocmin_pernode $nprocmin_pernode -ntask $ntask -nrun $nrun -machine $machine 
 
 # check whether GPTune needs more data
-idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 if [ $idx = null ]
 then
 more=0
@@ -154,50 +153,58 @@ declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_param
 #############################################################################
 # Modify the following according to your application !!! 
 
-
 # get the task input parameters, the parameters should follow the sequence of definition in the python file
-matrix=${input_para[0]}
+mesh=${input_para[0]}
+omega=${input_para[1]}
+
 
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
-COLPERM=${tuning_para[0]}
-LOOKAHEAD=${tuning_para[1]}
-npernode=${tuning_para[2]}
-nprows=${tuning_para[3]}
-NSUP=${tuning_para[4]}
-NREL=${tuning_para[5]}
+npernode=$((2**${tuning_para[0]}))
+sp_blr_min_sep_size=$((1000*${tuning_para[1]}))
+sp_hodlr_min_sep_size=$((1000*${tuning_para[2]}))
+blr_leaf_size=$((2**${tuning_para[3]}))
+hodlr_leaf_size=$((2**${tuning_para[4]}))
 
 
-# call the application
-npernode=$((2**$npernode))
+sp_compression_min_front_size=50000000
+sp_compression=BLR_HODLR
+n15=hodlr_enable_BF_entry_n15
+blocksize=64
+tol=1e-5
+extra=0
+sp_reordering_method=metis
+hodlr_butterfly_levels=100
+
+
 export OMP_NUM_THREADS=$(($cores / $npernode))
-export NREL=$NREL
-export NSUP=$NSUP
 nproc=$(($nodes*$npernode))
-npcols=$(($nproc / $nprows))
 
-RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
-INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
+logfile=MFEM_mesh${mesh}_omega${omega}_extra${extra}_nproc${nproc}_omp${OMP_NUM_THREADS}_${sp_compression}_sp_blr_min_sep_size${sp_blr_min_sep_size}_sp_hodlr_min_sep_size${sp_hodlr_min_sep_size}_blr_leaf_size${blr_leaf_size}_hodlr_leaf_size${hodlr_leaf_size}_tol${tol}_${n15}_blocksize${blocksize}.log
+
+
+RUNDIR="../MFEM/mfem/mfem-build/examples/"
+INPUTDIR="../MFEM/mfem/data/"
+
 
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
-    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
-    mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix > a.out
+    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help"
+    mpirun --allow-run-as-root -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
 else 
 ############ craympich
-    echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
-    srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "srun -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help"
+    srun -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
 fi
 
 
 # get the result (for this example: search the runlog)
-result1=$(grep 'Factor time' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-result2=$(grep 'Total MEM' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+result=$(grep 'MFEM solve time =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+# echo $result
+
 
 # write the data back to the database file
-jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $result1 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $result2 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
-
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 #############################################################################
 #############################################################################
 

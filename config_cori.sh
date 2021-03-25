@@ -7,9 +7,9 @@ module load cmake/3.14.4
 
 ##################################################
 
-# ModuleEnv='cori-haswell-craympich-gnu'
+ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
-ModuleEnv='cori-haswell-openmpi-gnu'
+# ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'
@@ -17,7 +17,7 @@ ModuleEnv='cori-haswell-openmpi-gnu'
 ###################################################
 
 # whether to build all examples
-BuildExample=0
+BuildExample=1
 
 
 echo "The ModuleEnv is $ModuleEnv"
@@ -32,7 +32,7 @@ if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
-	# OPENMPFLAG=fopenmp
+	OPENMPFLAG=fopenmp
 fi 
 
 if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
@@ -46,7 +46,7 @@ if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
-	# OPENMPFLAG=qopenmp
+	OPENMPFLAG=qopenmp
 fi 
 
 if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
@@ -64,7 +64,7 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 	MPICC=mpicc
 	MPICXX=mpicxx
 	MPIF90=mpif90
-	# OPENMPFLAG=fopenmp
+	OPENMPFLAG=fopenmp
 fi 
 
 
@@ -84,7 +84,7 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 	MPICC=mpicc
 	MPICXX=mpicxx
 	MPIF90=mpif90
-	# OPENMPFLAG=fopenmp
+	OPENMPFLAG=qopenmp
 fi 
 
 

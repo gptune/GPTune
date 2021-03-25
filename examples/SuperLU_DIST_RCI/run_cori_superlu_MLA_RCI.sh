@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ModuleEnv='yang-tr4-openmpi-gnu'
+ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
-# ModuleEnv='cori-haswell-craympich-intel'
-ModuleEnv='cori-haswell-openmpi-gnu'
+# ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'

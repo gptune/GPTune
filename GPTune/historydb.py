@@ -290,9 +290,31 @@ class HistoryDB(dict):
 
             now = time.localtime()
 
+            # get the types of each parameter
+            task_dtype=''
+            for p in problem.IS.dimensions:                    
+                if (isinstance(p, Real)):
+                    task_dtype=task_dtype+', float64'
+                elif (isinstance(p, Integer)):
+                    task_dtype=task_dtype+', int32'
+                elif (isinstance(p, Categorical)):
+                    task_dtype=task_dtype+', U100'
+            task_dtype=task_dtype[2:]
+            
+            tuning_dtype=''
+            for p in problem.PS.dimensions:                    
+                if (isinstance(p, Real)):
+                    tuning_dtype=tuning_dtype+', float64'
+                elif (isinstance(p, Integer)):
+                    tuning_dtype=tuning_dtype+', int32'
+                elif (isinstance(p, Categorical)):
+                    tuning_dtype=tuning_dtype+', U100'
+            tuning_dtype=tuning_dtype[2:]
+
+
             # transform to the original parameter space
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]
-            task_parameter_orig_list = np.array(task_parameter_orig).tolist()
+            task_parameter_orig_list = np.array(tuple(task_parameter_orig),dtype=task_dtype).tolist()
 
             num_evals = len(tuning_parameter)
             for i in range(num_evals):
@@ -301,7 +323,7 @@ class HistoryDB(dict):
 
                 tuning_parameter_orig = problem.PS.inverse_transform(
                         np.array(tuning_parameter[i], ndmin=2))[0]
-                tuning_parameter_orig_list = np.array(tuning_parameter_orig).tolist()
+                tuning_parameter_orig_list = np.array(tuple(tuning_parameter_orig),dtype=tuning_dtype).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
                 new_function_evaluation_results.append({

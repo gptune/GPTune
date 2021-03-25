@@ -1,0 +1,238 @@
+{
+  "tuning_problem_name": "MFEM",
+  "model_data": [],
+  "func_eval": [
+    {
+      "task_parameter": {
+        "mesh": "inline-tet",
+        "omega": 32
+      },
+      "tuning_parameter": {
+        "npernode": 2,
+        "sp_blr_min_sep_size": 1,
+        "sp_hodlr_min_sep_size": 10,
+        "blr_leaf_size": 8,
+        "hodlr_leaf_size": 8
+      },
+      "machine_configuration": {
+        "machine_name": "cori",
+        "intel": {
+          "nodes": 1,
+          "cores": 32
+        }
+      },
+      "software_configuration": {
+        "gcc": {
+          "version_split": [
+            8,
+            3,
+            0
+          ]
+        },
+        "cray-mpich": {
+          "version_split": [
+            7,
+            7,
+            10
+          ]
+        },
+        "libsci": {
+          "version_split": [
+            19,
+            6,
+            1
+          ]
+        }
+      },
+      "evaluation_result": {
+        "r": 86.8212
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 24,
+        "tm_hour": 21,
+        "tm_min": 17,
+        "tm_sec": 22,
+        "tm_wday": 2,
+        "tm_yday": 83,
+        "tm_isdst": 1
+      },
+      "uid": "ff079b22-8d20-11eb-9845-d36129d772cc"
+    },
+    {
+      "task_parameter": {
+        "mesh": "inline-tet",
+        "omega": 32
+      },
+      "tuning_parameter": {
+        "npernode": 4,
+        "sp_blr_min_sep_size": 9,
+        "sp_hodlr_min_sep_size": 14,
+        "blr_leaf_size": 5,
+        "hodlr_leaf_size": 6
+      },
+      "machine_configuration": {
+        "machine_name": "cori",
+        "intel": {
+          "nodes": 1,
+          "cores": 32
+        }
+      },
+      "software_configuration": {
+        "gcc": {
+          "version_split": [
+            8,
+            3,
+            0
+          ]
+        },
+        "cray-mpich": {
+          "version_split": [
+            7,
+            7,
+            10
+          ]
+        },
+        "libsci": {
+          "version_split": [
+            19,
+            6,
+            1
+          ]
+        }
+      },
+      "evaluation_result": {
+        "r": 58.3226
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 24,
+        "tm_hour": 21,
+        "tm_min": 19,
+        "tm_sec": 17,
+        "tm_wday": 2,
+        "tm_yday": 83,
+        "tm_isdst": 1
+      },
+      "uid": "438bac66-8d21-11eb-8937-73d93769c517"
+    },
+    {
+      "task_parameter": {
+        "mesh": "inline-tet",
+        "omega": 32
+      },
+      "tuning_parameter": {
+        "npernode": 3,
+        "sp_blr_min_sep_size": 7,
+        "sp_hodlr_min_sep_size": 13,
+        "blr_leaf_size": 7,
+        "hodlr_leaf_size": 6
+      },
+      "machine_configuration": {
+        "machine_name": "cori",
+        "intel": {
+          "nodes": 1,
+          "cores": 32
+        }
+      },
+      "software_configuration": {
+        "gcc": {
+          "version_split": [
+            8,
+            3,
+            0
+          ]
+        },
+        "cray-mpich": {
+          "version_split": [
+            7,
+            7,
+            10
+          ]
+        },
+        "libsci": {
+          "version_split": [
+            19,
+            6,
+            1
+          ]
+        }
+      },
+      "evaluation_result": {
+        "r": 61.7448
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 24,
+        "tm_hour": 21,
+        "tm_min": 20,
+        "tm_sec": 57,
+        "tm_wday": 2,
+        "tm_yday": 83,
+        "tm_isdst": 1
+      },
+      "uid": "7f9a4eba-8d21-11eb-a167-affb9a1229f6"
+    },
+    {
+      "task_parameter": {
+        "mesh": "inline-tet",
+        "omega": 32
+      },
+      "tuning_parameter": {
+        "npernode": 2,
+        "sp_blr_min_sep_size": 10,
+        "sp_hodlr_min_sep_size": 40,
+        "blr_leaf_size": 5,
+        "hodlr_leaf_size": 5
+      },
+      "machine_configuration": {
+        "machine_name": "cori",
+        "intel": {
+          "nodes": 1,
+          "cores": 32
+        }
+      },
+      "software_configuration": {
+        "gcc": {
+          "version_split": [
+            8,
+            3,
+            0
+          ]
+        },
+        "cray-mpich": {
+          "version_split": [
+            7,
+            7,
+            10
+          ]
+        },
+        "libsci": {
+          "version_split": [
+            19,
+            6,
+            1
+          ]
+        }
+      },
+      "evaluation_result": {
+        "r": 137.763
+      },
+      "time": {
+        "tm_year": 2021,
+        "tm_mon": 3,
+        "tm_mday": 24,
+        "tm_hour": 21,
+        "tm_min": 22,
+        "tm_sec": 38,
+        "tm_wday": 2,
+        "tm_yday": 83,
+        "tm_isdst": 1
+      },
+      "uid": "bbb5c8de-8d21-11eb-b0a1-e7eeecc2c47a"
+    }
+  ]
+}
