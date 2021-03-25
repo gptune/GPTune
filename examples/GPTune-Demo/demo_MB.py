@@ -23,12 +23,8 @@
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from gptune import GPTune_MB
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from options import Options
-from computer import Computer
 import sys
 import os
 import mpi4py
@@ -103,6 +99,9 @@ def annot_min(x,y, ax=None):
 if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))      
+
 
     input_space = Space([Real(0., 10., transform="normalize", name="t")])
     parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
@@ -114,7 +113,7 @@ if __name__ == '__main__':
     # problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
     problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
-    computer = Computer(nodes=1, cores=16, hosts=None)
+    computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
     options['model_restarts'] = 1
 

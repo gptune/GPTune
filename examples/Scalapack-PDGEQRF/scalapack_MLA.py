@@ -3,16 +3,13 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 5 -nrun 10 -machine cori -jobid 0 -tla 0
+mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nprocmin_pernode 1 -ntask 5 -nrun 10 -jobid 0 -tla 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
     -tla is whether TLA is used after MLA
 """
@@ -27,10 +24,8 @@ from pdqrdriver import pdqrdriver
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
-from options import Options
-from computer import Computer
+from gptune import * # import all
+from data import Categoricalnorm
 import numpy as np
 import argparse
 import pickle
@@ -92,15 +87,15 @@ def main():
     mmax = args.mmax
     nmax = args.nmax
     ntask = args.ntask
-    nodes = args.nodes
-    cores = args.cores
     nprocmin_pernode = args.nprocmin_pernode
-    machine = args.machine
     nrun = args.nrun
     truns = args.truns
     tla = args.tla
     JOBID = args.jobid
     TUNER_NAME = args.optimization
+
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME

@@ -21,14 +21,11 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python ./demo.py -nrun 20 -machine cori -nodes 1 -cores 32 -ntask 5 -perfmodel 0 -optimization GPTune
+mpirun -n 1 python ./demo.py -nrun 20 -ntask 5 -perfmodel 0 -optimization GPTune
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node (e.g., 32 on Cori Haswell)
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
     -perfmodel is whether a coarse performance model is used
     -optimization is the optimization algorithm: GPTune,opentuner,hpbandster 
 """
@@ -39,21 +36,21 @@ import sys
 import os
 import mpi4py
 import logging
+
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 logging.getLogger('matplotlib.font_manager').disabled = True
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from options import Options
-from computer import Computer
+
 import argparse
 from mpi4py import MPI
 import numpy as np
 import time
+
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 
@@ -152,15 +149,13 @@ def main():
 
     # Parse command line arguments
     args = parse_args()
-
     ntask = args.ntask
-    nodes = args.nodes
-    cores = args.cores
-    machine = args.machine
     nrun = args.nrun
     TUNER_NAME = args.optimization
     perfmodel = args.perfmodel
 
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 

@@ -29,11 +29,8 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from options import Options
-from computer import Computer
 import argparse
 from mpi4py import MPI
 import numpy as np
@@ -44,14 +41,11 @@ from callhpbandster import HpBandSter
 """
 Example of invocation of this script:
 
-mpirun -n 1 python ./demo_parallelperformance.py -nrun 100 -machine cori -nodes 1 -cores 32 -ntask 5 -perfmodel 0 -distparallel 1
+mpirun -n 1 python ./demo_parallelperformance.py -nrun 100 -ntask 5 -perfmodel 0 -distparallel 1
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node (e.g., 32 on Cori Haswell)
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
     -perfmodel is whether a coarse performance model is used
     -distparallel is whether distributed-memory parallelism is used inside GPTune
 """
@@ -149,13 +143,11 @@ def main():
     args = parse_args()
 
     ntask = args.ntask
-    nodes = args.nodes
-    cores = args.cores
-    machine = args.machine
     nrun = args.nrun
     perfmodel = args.perfmodel
     distparallel = args.distparallel
-
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = 'GPTune'    
 

@@ -18,15 +18,12 @@
 ################################################################################
 """
 Example of invocation of this script:
-mpirun -n 1 python superlu_MLA.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -obj time -tla 0
+mpirun -n 1 python superlu_MLA.py -nprocmin_pernode 1 -ntask 20 -nrun 800 -obj time -tla 0
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node
 	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
 	-obj is the tuning objective: "time" or "memory"
 	-tla is whether to perform TLA after MLA
 """
@@ -46,11 +43,9 @@ import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from computer import Computer
-from options import Options
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from gptune import GPTune
+
 
 from autotune.problem import *
 from autotune.space import *
@@ -128,15 +123,15 @@ def main():
 	# Extract arguments
 	tla = args.tla
 	ntask = args.ntask
-	nodes = args.nodes
-	cores = args.cores
 	nprocmin_pernode = args.nprocmin_pernode
-	machine = args.machine
 	optimization = args.optimization
 	nrun = args.nrun
 	obj = args.obj
 	target=obj
 	TUNER_NAME = args.optimization
+	(machine, processor, nodes, cores) = GetMachineConfiguration()
+	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
 
