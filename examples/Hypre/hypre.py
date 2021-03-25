@@ -67,11 +67,7 @@ from hypredriver import hypredriver
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
-from data import Categoricalnorm
-from options import Options
-from computer import Computer
+from gptune import *
 import re
 import numpy as np
 import time
@@ -141,16 +137,16 @@ def main():
     global nprocmax
     global nprocmin
 
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
     # Parse command line arguments
     args = parse_args()
 
     nxmax = args.nxmax
     nymax = args.nymax
     nzmax = args.nzmax
-    nodes = args.nodes
-    cores = args.cores
     nprocmin_pernode = args.nprocmin_pernode
-    machine = args.machine
     ntask = args.ntask
     nrun = args.nrun
     JOBID = args.jobid
@@ -211,7 +207,8 @@ def main():
     options.validate(computer=computer)
     
 
-    giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
+    giventask = [[100,100,100]]
+    #giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
     # giventask = [[50, 60, 80], [60, 80, 100]]
     # # the following will use only task lists stored in the pickle file
     data = Data(problem)

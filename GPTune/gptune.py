@@ -23,8 +23,8 @@ from autotune.problem import TuningProblem
 
 from problem import Problem
 from computer import Computer
-from data import Data
 from options import Options
+from data import *
 from historydb import *
 from sample import *
 from model import *
