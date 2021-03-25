@@ -29,8 +29,6 @@ import time
 def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
     import ast
 
-    print ("Get Machine Configuration")
-
     machine_name = "none"
     processor_model = "none"
     nodes = 0
