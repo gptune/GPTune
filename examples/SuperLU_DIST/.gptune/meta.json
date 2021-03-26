@@ -1,64 +1,43 @@
 {
   "tuning_problem_name": "SuperLU_DIST",
   "machine_configuration": {
-    "machine_name": "cori",
-    "haswell": {
-      "nodes": 1,
-      "cores": 32
-    }
+      "machine_name": "Cori",
+      "haswell": {
+          "nodes": 8,
+          "cores": 32
+      }
   },
   "software_configuration": {
-    "openmpi": {
-      "version_split": [
-        4,
-        0,
-        1
-      ]
-    },
-    "scalapack": {
-      "version_split": [
-        2,
-        1,
-        0
-      ]
-    },
-    "gcc": {
-      "version_split": [
-        8,
-        3,
-        0
-      ]
-    }
+      "openmpi": {
+          "version_split": [4,0,1]
+      },
+      "parmetis": {
+          "version_split": [4,0,3]
+      },
+      "superlu_dist": {
+          "version_split": [6,4,0]
+      }
   },
   "loadable_machine_configurations": {
-    "cori": {
-      "haswell": {
-        "nodes": 1,
-        "cores": 32
+      "Cori" : {
+          "haswell": {
+              "nodes":8,
+              "cores":32
+          }
       }
-    }
   },
   "loadable_software_configurations": {
-    "openmpi": {
-      "version_split": [
-        4,
-        0,
-        1
-      ]
-    },
-    "scalapack": {
-      "version_split": [
-        2,
-        1,
-        0
-      ]
-    },
-    "gcc": {
-      "version_split": [
-        8,
-        3,
-        0
-      ]
-    }
+      "openmpi": {
+          "version_from":[4,0,1],
+          "version_to":[5,0,0]
+      },
+      "parmetis": {
+          "version_from": [4,0,3],
+          "version_to":[5,0,0]
+      },
+      "superlu_dist": {
+          "version_from": [6,0,0],
+          "version_to":[7,0,0]
+      }
   }
 }

@@ -135,6 +135,9 @@ def main():
     global nprocmax
     global nprocmin
 
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
     # Parse command line arguments
     args = parse_args()
 
@@ -205,7 +208,8 @@ def main():
     options.validate(computer=computer)
     
 
-    giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
+    giventask = [[100,100,100]]
+    #giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
     # giventask = [[50, 60, 80], [60, 80, 100]]
     # # the following will use only task lists stored in the pickle file
     data = Data(problem)
