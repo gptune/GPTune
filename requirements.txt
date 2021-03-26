@@ -10,4 +10,5 @@ lhsmdu
 ipyparallel
 opentuner
 hpbandster
-pygmo 
+pygmo
+filelock 

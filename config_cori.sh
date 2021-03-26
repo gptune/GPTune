@@ -5,23 +5,23 @@ module load python/3.7-anaconda-2019.10
 module unload cmake
 module load cmake/3.14.4
 
+
+##################################################
+##################################################
+machine=cori
+proc=haswell   # knl,haswell
+mpi=craympich  # openmpi,craympich
+compiler=gnu   # gnu, intel	
+
+
+BuildExample=1 # whether to build all examples
+
+export ModuleEnv=$machine-$proc-$mpi-$compiler
+
+##################################################
 ##################################################
 
-# ModuleEnv='cori-haswell-craympich-gnu'
-# ModuleEnv='cori-haswell-craympich-intel'
-ModuleEnv='cori-haswell-openmpi-gnu'
-# ModuleEnv='cori-haswell-openmpi-intel'
-# ModuleEnv='cori-knl-openmpi-gnu'
-# ModuleEnv='cori-knl-openmpi-intel'
-
-###################################################
-
-# whether to build all examples
-BuildExample=0
-
-
 echo "The ModuleEnv is $ModuleEnv"
-
 if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module swap PrgEnv-intel PrgEnv-gnu
