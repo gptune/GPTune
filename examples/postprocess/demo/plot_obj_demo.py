@@ -13,8 +13,8 @@ from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import GPTune
-from data import Data
-from data import Categoricalnorm
+from data import *
+
 from options import Options
 from computer import Computer
 

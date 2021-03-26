@@ -30,7 +30,7 @@ from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import * # import all
-from data import Categoricalnorm
+
 import argparse
 from mpi4py import MPI
 import numpy as np

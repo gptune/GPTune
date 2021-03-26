@@ -45,7 +45,7 @@ import math
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
 from gptune import * # import all
-from data import Categoricalnorm
+
 
 from autotune.problem import *
 from autotune.space import *

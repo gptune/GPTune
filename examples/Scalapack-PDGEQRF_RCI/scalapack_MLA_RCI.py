@@ -39,7 +39,7 @@ from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import * # import all
-from data import Categoricalnorm
+
 import numpy as np
 import argparse
 import pickle
