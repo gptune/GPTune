@@ -20,14 +20,11 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori -jobid 0
+mpirun -n 1 python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nprocmin_pernode 1 -ntask 20 -nrun 800 -jobid 0
 
 where:
     -nxmax/nymax/nzmax       maximum number of discretization size for each dimension
-    -nodes                   number of compute node
-    -cores                   number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
-    -machine                 name of the machine 
     -ntask                   number of different tasks to be tuned
     -nrun                    number of calls per task
     -jobid                   optional, can always be 0
@@ -67,11 +64,8 @@ from hypredriver import hypredriver
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from options import Options
-from computer import Computer
 import re
 import numpy as np
 import time
@@ -147,15 +141,15 @@ def main():
     nxmax = args.nxmax
     nymax = args.nymax
     nzmax = args.nzmax
-    nodes = args.nodes
-    cores = args.cores
     nprocmin_pernode = args.nprocmin_pernode
-    machine = args.machine
     ntask = args.ntask
     nrun = args.nrun
     JOBID = args.jobid
     TUNER_NAME = args.optimization
     TLA = False
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME

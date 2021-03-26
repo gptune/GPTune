@@ -18,16 +18,13 @@
 ################################################################################
 """
 Example of invocation of this script:
-mpirun -n 1 python ./strumpack_MLA_KRR.py -nodes 1 -cores 32 -ntask 1 -nrun 20 -machine cori -npernode 32
+mpirun -n 1 python ./strumpack_MLA_KRR.py -ntask 1 -nrun 20 -npernode 32
 
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node
 	-npernode is the number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
 """
  
 ################################################################################
@@ -45,11 +42,8 @@ import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from computer import Computer
-from options import Options
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from gptune import GPTune
 
 from autotune.problem import *
 from autotune.space import *
@@ -120,14 +114,14 @@ def main():
 	# Extract arguments
 
 	ntask = args.ntask
-	nodes = args.nodes
-	cores = args.cores
 	npernode = args.npernode
-	machine = args.machine
 	optimization = args.optimization
 	nrun = args.nrun
 	
 	TUNER_NAME = args.optimization
+	(machine, processor, nodes, cores) = GetMachineConfiguration()
+	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
 

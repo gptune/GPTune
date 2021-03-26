@@ -1,13 +1,25 @@
 #!/bin/bash
 
 # ModuleEnv='yang-tr4-openmpi-gnu'
-# ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
-ModuleEnv='cori-haswell-openmpi-gnu'
+# ModuleEnv='cori-haswell-craympich-intel'
+# ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'
 
+
+
+# Get ModuleEnv, nrun and nprocmin_pernode from command line
+while getopts "a:b:c:" opt
+do
+   case $opt in
+      a ) ModuleEnv=$OPTARG ;;
+      b ) nrun=$OPTARG ;;
+      c ) nprocmin_pernode=$OPTARG ;;
+      ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
+   esac
+done
 
 
 ############### Yang's tr4 machine
@@ -16,12 +28,12 @@ if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
     module load python/gcc-9.1.0/3.7.4
-fi
+# fi
 ###############
 
 
 ############### Cori Haswell Openmpi+GNU
-if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module load python/3.7-anaconda-2019.10
     module unload cray-mpich
     module swap PrgEnv-intel PrgEnv-gnu
@@ -30,11 +42,11 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
     module load openmpi/4.0.1
-fi    
+# fi    
 ###############
 
 ############### Cori Haswell Openmpi+Intel
-if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
+elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     module load python/3.7-anaconda-2019.10
     module unload cray-mpich
     module swap PrgEnv-gnu PrgEnv-intel 
@@ -44,30 +56,30 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
     module load openmpi/4.0.1
-fi    
+# fi    
 ###############
 
 ############### Cori Haswell CrayMPICH+GNU
-if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
+elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
     module load python/3.7-anaconda-2019.10
     module swap PrgEnv-intel PrgEnv-gnu
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-fi
+# fi
 ###############
 
 ############### Cori Haswell CrayMPICH+Intel
-if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
+elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
     module load python/3.7-anaconda-2019.10
     module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-fi
+# fi
 ###############
 
 ############### Cori KNL Openmpi+GNU
-if [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	module unload darshan
 	module swap craype-haswell craype-mic-knl
 	module load craype-hugepages2M
@@ -79,12 +91,12 @@ if [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-fi    
+# fi    
 ###############
 
 
 ############### Cori KNL Openmpi+Intel
-if [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
+elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	module unload darshan
 	module swap craype-haswell craype-mic-knl
 	module load craype-hugepages2M
@@ -97,7 +109,11 @@ if [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+else
+    echo "Unsupported ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
+    exit
 fi    
+
 ###############
 cd ../../
 
@@ -110,13 +126,20 @@ export PYTHONWARNINGS=ignore
 
 cd -
 
+# name of your machine, processor model, number of compute nodes, number of cores per compute node, which are defined in .gptune/meta.json
+declare -a machine_info=($(python -c "from gptune import *;
+(machine, processor, nodes, cores)=list(GetMachineConfiguration());
+print(machine, processor, nodes, cores)"))
+machine=${machine_info[0]}
+processor=${machine_info[1]}
+nodes=${machine_info[2]}
+cores=${machine_info[3]}
 
-nodes=1                 # number of compute nodes
-cores=32                # number of cores per compute node
-nrun=20                 # number of samples per task
-machine=cori             # name of your machine, this should match .gptune/meta.json
+# echo "machine: ${machine} processor: ${processor} nodes: ${nodes} cores: ${cores}"
+
+# nrun=20                 # number of samples per task
 obj=r                   # name of the objective defined in the python file
-nprocmin_pernode=1      # minimum number of mpi count per node
+# nprocmin_pernode=1      # minimum number of mpi count per node
 niter=2                 # number of repeating each application run
 bunit=8                 # mb,nb is integer multiple of bunit
 
@@ -129,7 +152,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./scalapack_MLA_RCI.py -nodes $nodes -cores $cores -nrun $nrun -machine $machine -bunit $bunit -nprocmin_pernode $nprocmin_pernode
+python ./scalapack_MLA_RCI.py -nrun $nrun -bunit $bunit -nprocmin_pernode $nprocmin_pernode
 
 # check whether GPTune needs more data
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )

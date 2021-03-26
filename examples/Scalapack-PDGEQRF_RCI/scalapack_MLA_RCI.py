@@ -1,16 +1,30 @@
 #! /usr/bin/env python3
+# GPTune Copyright (c) 2019, The Regents of the University of California,
+# through Lawrence Berkeley National Laboratory (subject to receipt of any
+# required approvals from the U.S.Dept. of Energy) and the University of
+# California, Berkeley.  All rights reserved.
+#
+# If you have questions about your rights to use or distribute this software,
+# please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+#
+# NOTICE. This Software was developed under funding from the U.S. Department
+# of Energy and the U.S. Government consequently retains certain rights.
+# As such, the U.S. Government has been granted for itself and others acting
+# on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
+# the Software to reproduce, distribute copies to the public, prepare
+# derivative works, and perform publicly and display publicly, and to permit
+# other to do so.
+#
+################################################################################
 
 """
 Example of invocation of this script:
 
-python scalapack_MLA_RCI.py -nodes 1 -cores 32 -nprocmin_pernode 1 -nrun 10 -machine cori -jobid 0 -bunit 8
+python scalapack_MLA_RCI.py -nprocmin_pernode 1 -nrun 10 -jobid 0 -bunit 8
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -nrun is the number of calls per task 
-    -machine is the name of the machine
     -jobid is optional. You can always set it to 0.
     -tla is whether TLA is used after MLA
 """
@@ -24,10 +38,8 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import GPTune
-from data import Data
-from options import Options
-from computer import Computer
+from gptune import * # import all
+from data import Categoricalnorm
 import numpy as np
 import argparse
 import pickle
@@ -65,15 +77,15 @@ def main():
     # Parse command line arguments
     args = parse_args()
 
-    nodes = args.nodes
-    cores = args.cores
     bunit = args.bunit
     nprocmin_pernode = args.nprocmin_pernode
-    machine = args.machine
     nrun = args.nrun
     tla = args.tla
     JOBID = args.jobid
     TUNER_NAME = args.optimization
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME

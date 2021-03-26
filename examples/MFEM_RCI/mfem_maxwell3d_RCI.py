@@ -18,15 +18,11 @@
 ################################################################################
 """
 Example of invocation of this script:
-python mfem_maxwell3d_RCI.py -nodes 1 -cores 32 -nprocmin_pernode 1 -ntask 20 -nrun 800 -machine cori
+python mfem_maxwell3d_RCI.py -nprocmin_pernode 1 -nrun 800 
 
 where:
-    -nodes is the number of compute nodes
-    -cores is the number of cores per node
 	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
-    -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-    -machine is the name of the machine
 """
 
 ################################################################################
@@ -44,11 +40,8 @@ import math
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from computer import Computer
-from options import Options
-from data import Data
+from gptune import * # import all
 from data import Categoricalnorm
-from gptune import GPTune
 
 from autotune.problem import *
 from autotune.space import *
@@ -77,14 +70,11 @@ def main():
 
 	# Extract arguments
 
-	ntask = args.ntask
-	nodes = args.nodes
-	cores = args.cores
 	nprocmin_pernode = args.nprocmin_pernode
-	machine = args.machine
 	optimization = args.optimization
 	nrun = args.nrun
-
+	(machine, processor, nodes, cores) = GetMachineConfiguration()
+	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 	TUNER_NAME = 'GPTune'
 	os.environ['MACHINE_NAME'] = machine
 
@@ -137,7 +127,7 @@ def main():
 	
 	data.I = giventask
 	Pdefault = [int(math.log2(nprocmin_pernode)),1,10,8,8]
-	data.P = [[Pdefault]] * ntask
+	data.P = [[Pdefault]]
 
 	if(TUNER_NAME=='GPTune'):
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
@@ -162,13 +152,9 @@ def parse_args():
 
 	# Problem related arguments
 	# Machine related arguments
-	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
 	parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
-	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
 	# Algorithm related arguments
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
-	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 	# Experiment related arguments
 

@@ -7,9 +7,9 @@ module load cmake/3.14.4
 
 ##################################################
 
-ModuleEnv='cori-haswell-craympich-gnu'
+# ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
-# ModuleEnv='cori-haswell-openmpi-gnu'
+ModuleEnv='cori-haswell-openmpi-gnu'
 # ModuleEnv='cori-haswell-openmpi-intel'
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'
@@ -17,7 +17,7 @@ ModuleEnv='cori-haswell-craympich-gnu'
 ###################################################
 
 # whether to build all examples
-BuildExample=1
+BuildExample=0
 
 
 echo "The ModuleEnv is $ModuleEnv"
