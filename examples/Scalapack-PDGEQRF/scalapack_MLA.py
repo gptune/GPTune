@@ -140,8 +140,9 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
 
+    seed(1)
     if ntask == 1:
-        giventask = [[10000,10000]]
+        giventask = [[mmax,nmax]]
     else:
         giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # # giventask = [[2000, 2000]]

@@ -255,12 +255,15 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class '] = 'Model_LCM'
+    options['model_class'] = 'Model_LCM'
     options['verbose'] = False
     options.validate(computer=computer)
 
-
-    giventask = [[mmax, mmax]]
+    seed(1)
+    if ntask == 1:
+        giventask = [[mmax,nmax]]
+    else:
+        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     ntask=len(giventask)
     data = Data(problem,D=[{'bunit':bunit,'nodes':nodes, 'c0': 0, 'c1': 0,'c2': 0,'c3': 0,'c4': 0}]*ntask)
 

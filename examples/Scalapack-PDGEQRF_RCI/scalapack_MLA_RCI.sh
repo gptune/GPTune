@@ -110,7 +110,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 else
-    echo "Unsupported ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
+    echo "Untested ModuleEnv: $ModuleEnv for RCI, please add the corresponding definitions in this file"
     exit
 fi    
 

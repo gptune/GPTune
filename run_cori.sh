@@ -138,6 +138,10 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     machine=cori
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
+
+else
+    echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
+    exit
 fi    
 ###############
 

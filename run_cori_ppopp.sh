@@ -2,8 +2,6 @@
 
 ModuleEnv='cori-haswell-openmpi-gnu'
 
-
-
 ############### Cori Haswell Openmpi+GNU
 if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module load python/3.7-anaconda-2019.10
@@ -19,6 +17,9 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     machine=cori
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+else
+    echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
+    exit
 fi    
 ###############
 

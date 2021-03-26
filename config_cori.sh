@@ -33,9 +33,9 @@ if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
 	MPICXX=CC
 	MPIF90=ftn
 	OPENMPFLAG=fopenmp
-fi 
+# fi 
 
-if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
+elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module swap PrgEnv-gnu PrgEnv-intel 
 	module swap intel intel/19.0.3.199 
@@ -47,9 +47,9 @@ if [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 	MPICXX=CC
 	MPIF90=ftn
 	OPENMPFLAG=qopenmp
-fi 
+# fi 
 
-if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 	module unload cray-mpich
 	module unload openmpi
 	module swap PrgEnv-intel PrgEnv-gnu
@@ -65,10 +65,10 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 	MPICXX=mpicxx
 	MPIF90=mpif90
 	OPENMPFLAG=fopenmp
-fi 
+# fi 
 
 
-if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
+elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 	module unload cray-mpich
 	module unload openmpi
 	module swap PrgEnv-gnu PrgEnv-intel 
@@ -85,10 +85,10 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 	MPICXX=mpicxx
 	MPIF90=mpif90
 	OPENMPFLAG=qopenmp
-fi 
+# fi 
 
 
-if [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	module unload darshan
 	module unload openmpi	
 	module swap craype-haswell craype-mic-knl
@@ -108,9 +108,9 @@ if [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	MPICXX=mpicxx
 	MPIF90=mpif90
 	OPENMPFLAG=fopenmp
-fi 
+# fi 
 
-if [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
+elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	module unload darshan
 	module unload openmpi
 	module swap craype-haswell craype-mic-knl
@@ -131,6 +131,9 @@ if [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	MPICXX=mpicxx
 	MPIF90=mpif90
 	OPENMPFLAG=qopenmp
+else
+    echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
+    exit
 fi 
 
 export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
