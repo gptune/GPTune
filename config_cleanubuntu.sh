@@ -24,6 +24,7 @@ if [ $ModuleEnv = 'cleanubuntu-unknown-openmpi-gnu' ]; then
 	export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
 	export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
 	export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
+	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 	export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
@@ -108,6 +109,19 @@ apt-get install jq -y
 
 
 cd $GPTUNEROOT
+apt purge --auto-remove cmake -y
+version=3.19
+build=1
+wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
+tar -xzvf cmake-$version.$build.tar.gz
+cd cmake-$version.$build/
+./bootstrap
+make -j32
+make install
+export PATH=$GPTUNEROOT/cmake-$version.$build/bin/:$PATH
+
+
+cd $GPTUNEROOT
 rm -rf Python-3.7.9
 wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
 tar -xvf Python-3.7.9.tgz
@@ -151,27 +165,27 @@ make install
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
-	cd $GPTUNEROOT
-	rm -rf scalapack-2.1.0.tgz*
-	wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
-	tar -xf scalapack-2.1.0.tgz
-	cd scalapack-2.1.0
-	rm -rf build
-	mkdir -p build
-	cd build
-	cmake .. \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_INSTALL_PREFIX=. \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_INSTALL_PREFIX=./install \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
-		-DBLAS_LIBRARIES="${BLAS_LIB}" \
-		-DLAPACK_LIBRARIES="${LAPACK_LIB}"
-	make -j32
-	make install
+cd $GPTUNEROOT
+rm -rf scalapack-2.1.0.tgz*
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
+rm -rf build
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=./install \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}"
+make -j32
+make install
 fi
 
 
@@ -269,11 +283,11 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DCMAKE_Fortran_FLAGS="" \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DMPI=ON \
 		-DEXAMPLES=ON \
-		-DCOVERALLS=ON 
+		-DCOVERALLS=OFF 
 	make
 	cd ../../
 	mkdir build

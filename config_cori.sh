@@ -286,11 +286,11 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DCMAKE_Fortran_FLAGS="" \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DMPI=ON \
 		-DEXAMPLES=ON \
-		-DCOVERALLS=ON 
+		-DCOVERALLS=OFF 
 	make
 	cd ../../
 	mkdir build
