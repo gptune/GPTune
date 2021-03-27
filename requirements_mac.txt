@@ -3,11 +3,9 @@ joblib
 scikit-learn >= 0.22
 scipy
 matplotlib
-GPy
 openturns
 lhsmdu
 ipyparallel
 opentuner
 hpbandster
 scikit-optimize
-filelock 

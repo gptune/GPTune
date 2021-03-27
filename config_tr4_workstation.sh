@@ -308,6 +308,7 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --user -e .
 
 cd $GPTUNEROOT

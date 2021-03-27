@@ -174,7 +174,7 @@ def main():
 
 	""" Intialize the tuner with existing data"""		
 	data = Data(problem)
-	gt = GPTune(problem, computer = computer, data = data, options = options)
+	gt = GPTune(problem, computer = computer, data = data, options = options, driverabspath=os.path.abspath(__file__))
 
 	if(TUNER_NAME=='GPTune'):
 		#""" Building MLA with NI random tasks """

@@ -58,6 +58,13 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
+	######################################### 
+	##### constants defined in TuningProblem
+	nodes = point['nodes']
+	cores = point['cores']
+	target = point['target']	
+	#########################################
+
 	matrix = point['matrix']
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
@@ -106,16 +113,10 @@ def objectives(point):                  # should always use this name for user-d
 	return [retval] 
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
-def cst2(npernode,nprows):
+def cst2(npernode,nprows,nodes):
 	return nodes * 2**npernode >= nprows
 			
 def main():
-
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nprocmax
 
 	# Parse command line arguments
 	args   = parse_args()
@@ -160,12 +161,13 @@ def main():
 	OS = Space([result])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
+	constants={"nodes":nodes,"cores":cores,"target":target}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
-
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

@@ -90,6 +90,13 @@ problem_name = "-laplacian " # "-difconv " for convection-diffusion problems to 
 
 # define objective function
 def objectives(point):
+
+######################################### 
+##### constants defined in TuningProblem
+    nodes = point['nodes']
+    cores = point['cores']	
+#########################################
+
     # task params 
     nx = point['nx']
     ny = point['ny']
@@ -129,11 +136,7 @@ def models(): # todo
     pass
 
 def main(): 
-    global nodes
-    global cores
     global JOBID
-    global nprocmax
-    global nprocmin
 
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -190,10 +193,11 @@ def main():
     cst1 = f"Px * Py  <= Nproc"
     cst2 = f"not(coarsen_type=='0' and P_max_elmts==10 and relax_type=='18' and smooth_type=='6' and smooth_num_levels==3 and interp_type=='8' and agg_num_levels==1)"
     constraints = {"cst1": cst1,"cst2": cst2}
+    constants={"nodes":nodes,"cores":cores}
 
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objectives, constraints, None) # no performance model
+    problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants) # no performance model
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     options = Options()
@@ -207,9 +211,11 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
     
-
-    giventask = [[100,100,100]]
-    #giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
+    seed(1)
+    if(ntask==1):
+        giventask = [[nxmax,nymax,nzmax]]
+    else:    
+        giventask = [[randint(nxmin,nxmax),randint(nymin,nymax),randint(nzmin,nzmax)] for i in range(ntask)]
     # giventask = [[50, 60, 80], [60, 80, 100]]
     # # the following will use only task lists stored in the pickle file
     data = Data(problem)

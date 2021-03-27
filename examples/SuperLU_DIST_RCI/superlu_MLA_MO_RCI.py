@@ -57,19 +57,12 @@ def objectives(point):
 	
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
-def cst2(npernode,nprows):
+def cst2(npernode,nprows,nodes):
 	return nodes * 2**npernode >= nprows
 
 def main():
 
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nprocmax
-
 	# Parse command line arguments
-
 	args   = parse_args()
 
 	# Extract arguments
@@ -111,6 +104,7 @@ def main():
 
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
+	constants={"nodes":nodes,"cores":cores}
 
 	# """ Print all input and parameter samples """	
 	# print(IS, PS, OS, constraints, models)
@@ -118,7 +112,7 @@ def main():
 
 
 
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	
