@@ -57,6 +57,14 @@ import math
 
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
+	
+	######################################### 
+	##### constants defined in TuningProblem
+	nodes = point['nodes']
+	cores = point['cores']
+	nthreads = point['nthreads']	
+	#########################################	
+	
 	postprocess=0
 	baca_batch=64
 	knn=0
@@ -144,11 +152,6 @@ def readdata(model):
 	
 def main():
 
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nthreads
 
 
 	
@@ -199,12 +202,13 @@ def main():
 
 	constraints = {}
 	models = {}
+	constants={"nodes":nodes,"cores":cores,"nthreads":nthreads}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
 
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

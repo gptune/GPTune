@@ -33,6 +33,7 @@ class Problem(object):
         self.models_update   = models_update
         self.constraints = tp.constraints
         self.models      = tp.models
+        self.constants      = tp.constants        
 
     @property
     def DI(self):

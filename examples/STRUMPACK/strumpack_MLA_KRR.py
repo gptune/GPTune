@@ -56,6 +56,13 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
+	######################################### 
+	##### constants defined in TuningProblem
+	nodes = point['nodes']
+	cores = point['cores']	
+	npernode = point['npernode']		
+	#########################################
+
 	datafile = point['datafile']
 	h = 10**point['h']
 	Lambda = 10**point['Lambda']
@@ -99,14 +106,6 @@ def objectives(point):                  # should always use this name for user-d
 	
 def main():
 
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nprocmax
-	global nprocmin
-	global npernode
-
 	# Parse command line arguments
 
 	args   = parse_args()
@@ -143,12 +142,13 @@ def main():
 	OS = Space([result])
 	constraints = {}
 	models = {}
+	constants={"nodes":nodes,"cores":cores,"npernode":npernode}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
 
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

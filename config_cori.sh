@@ -158,6 +158,9 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	rm -rf GPy
 	git clone https://github.com/SheffieldML/GPy.git
 	cd GPy
+	cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
+	cp ../patches/GPy/stationary.py ./GPy/kern/src/.
+	cp ../patches/GPy/choleskies.py ./GPy/util/.
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --user
 	cd $GPTUNEROOT
@@ -432,6 +435,7 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --user -e .
 
 

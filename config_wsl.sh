@@ -245,6 +245,7 @@
   rm -rf autotune
   git clone https://github.com/ytopt-team/autotune.git
   cd autotune/
+  cp ../patches/autotune/problem.py autotune/.
   env CC=$MPICC pip3.7 install -e .
   printf "${BLUE} GC; Done installing GPtune from source\n"
 

@@ -1,8 +1,19 @@
 #!/bin/bash
 
+
+BuildExample=0 # whether all the examples have been built
+
+
+
 ##################################################
 ##################################################
 
+# ################ Any mac os machine that has used config_macbook.sh to build GPTune
+export machine=macbook
+export proc=inteli7   
+export mpi=openmpi  
+export compiler=gnu   
+export nodes=1  # number of nodes to be used
 
 # ################ Cori
 # export machine=cori
@@ -12,12 +23,12 @@
 # export nodes=1  # number of nodes to be used
 
 
-################ Yang's tr4 machine
-export machine=yang
-export proc=tr4   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
+# ################ Yang's tr4 machine
+# export machine=yang
+# export proc=tr4   
+# export mpi=openmpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
 
 
 # ################ Any ubuntu machine that has used config_cleanubuntu.sh to build GPTune
@@ -41,13 +52,38 @@ if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
     module load scalapack-netlib/gcc-9.1.0/2.0.2
     module load python/gcc-9.1.0/3.7.4
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/    
-    proc=amd
     cores=16
-    machine=tr4
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
 # fi
 ###############
+
+############### macbook
+elif [ $ModuleEnv = 'macbook-inteli7-openmpi-gnu' ]; then
+    export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/build/
+	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
+	export PATH=$PWD/env/bin/:$PATH
+	export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
+	export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
+
+	export MPIRUN="$PWD/openmpi-4.0.1/bin/mpirun"
+	export PATH=$PATH:$PWD/openmpi-4.0.1/bin
+	export SCALAPACK_LIB=$PWD/scalapack-2.1.0/build/install/lib/libscalapack.dylib
+	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
+
+	export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+	export LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LIBRARY_PATH  
+	export DYLD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
+	
+    export LD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
+    export LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
+    cores=4
+    
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [10,2,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [10,2,0]}}")
+# fi
 
 ############### Cori Haswell Openmpi+GNU
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
@@ -60,9 +96,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
     MPIRUN=mpirun
-    proc=haswell
     cores=32
-    machine=cori
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 
@@ -76,9 +110,7 @@ elif [ $ModuleEnv = 'cleanubuntu-unknown-openmpi-gnu' ]; then
 	export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
 
-    proc=unknown
     cores=4
-    machine=cleanubuntu
     
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
@@ -95,6 +127,7 @@ export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPTune/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPy/
 export PYTHONWARNINGS=ignore
 
 
@@ -123,13 +156,14 @@ if [ $ex = 'test' ];then
     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
     $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./scalapack_MLA.py -mmax 1300 -nmax 1300 -ntask 2 -nrun 10 -jobid 0
     
-    cd $GPTUNEROOT/examples/SuperLU_DIST
-    rm -rf gptune.db/*.json
-    tp=SuperLU_DIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json    
-    $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA.py  -ntask 1 -nrun 20
-
+    if [[ $BuildExample == 1 ]]; then
+        cd $GPTUNEROOT/examples/SuperLU_DIST
+        rm -rf gptune.db/*.json
+        tp=SuperLU_DIST
+        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json    
+        $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA.py  -ntask 1 -nrun 20
+    fi
 elif [ $ex = 'Fig.2' ];then
     cd $GPTUNEROOT/examples/postprocess/demo/
     python ./plot_obj_demo.py
@@ -208,18 +242,18 @@ elif [ $ex = 'Fig.6_exp' ];then
         rm -rf gptune.db/*.json
         $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./scalapack_MLA.py -mmax 2000 -nmax 2000 -ntask 2 -nrun 20 -optimization ${tuner} | tee a.out_qr_${tuner}
     done
-
-# this example autotunes the runtime or memory of the numerical factorization of superlu_dist using a small matrix "big.rua" with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. Run the following configurations with setting -obj to 'time' or 'memory', and -optimization to 'GPTune', 'hpbandster' or 'opentuner' 
-    cd $GPTUNEROOT/examples/SuperLU_DIST
-    tp=SuperLU_DIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json      
-    for tuner in GPTune hpbandster opentuner 
-    do
-        rm -rf gptune.db/*.json
-        $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python superlu_MLA.py -ntask 1 -nrun 10 -obj time -optimization ${tuner} | tee a.out_superlu_${tuner}
-    done
-
+    if [[ $BuildExample == 1 ]]; then
+    # this example autotunes the runtime or memory of the numerical factorization of superlu_dist using a small matrix "big.rua" with $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. Run the following configurations with setting -obj to 'time' or 'memory', and -optimization to 'GPTune', 'hpbandster' or 'opentuner' 
+        cd $GPTUNEROOT/examples/SuperLU_DIST
+        tp=SuperLU_DIST
+        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json      
+        for tuner in GPTune hpbandster opentuner 
+        do
+            rm -rf gptune.db/*.json
+            $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python superlu_MLA.py -ntask 1 -nrun 10 -obj time -optimization ${tuner} | tee a.out_superlu_${tuner}
+        done
+    if
 elif [ $ex = 'Fig.7' ];then
     cd $GPTUNEROOT/examples/postprocess/superlu_dist/
 # the plot is $GPTUNEROOT/examples/postprocess/superlu_dist/pareto_superlu.eps        
@@ -228,22 +262,26 @@ elif [ $ex = 'Fig.7' ];then
     matlab -r plot_pareto_MLA
 elif [ $ex = 'Fig.7_exp' ];then
 # this example demonstrates the multi-objective (runtime and memory) tuning of the numerical factorization of superlu_dist using three small matrices "big.rua", "g4.rua", "g20.rua" using $\epsilon=10$. Suppose that your machine has 1 node with 4 cores, each superlu_dist run will use at most 3 MPI ranks. The Pareto optima for each matrix are shown in "Popts" and "Oopts" at the bottom of the runlog.   
-    cd $GPTUNEROOT/examples/SuperLU_DIST
-    rm -rf gptune.db/*.json
-    tp=SuperLU_DIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json          
-    $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_MO.py  -ntask 3 -nrun 10 | tee a.out_superlu_multiobj
+    if [[ $BuildExample == 1 ]]; then
+        cd $GPTUNEROOT/examples/SuperLU_DIST
+        rm -rf gptune.db/*.json
+        tp=SuperLU_DIST
+        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json          
+        $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_MLA_MO.py  -ntask 3 -nrun 10 | tee a.out_superlu_multiobj
+    fi
 elif [ $ex = 'Tab.4_exp' ];then
 # this example autotunes the runtime for solving the 3D Poisson equation discretized on a nx x ny x nz grid using hypre with $\epsilon=10$ samples. The grid size is randomly generated with nx,ny,nz<=40. Suppose that your machine has 1 node with 4 cores, each hypre run will use at most 3 MPI ranks. Run the following configurations with setting -optimization to 'GPTune', 'hpbandster' or 'opentuner' 
-    cd $GPTUNEROOT/examples/Hypre
-    for tuner in GPTune hpbandster opentuner 
-    do    
-        rm -rf gptune.db/*.json
-        tp=Hypre
-        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
-        $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -optimization ${tuner} | tee a.out_hypre_${tuner} 
-    done
+    if [[ $BuildExample == 1 ]]; then    
+        cd $GPTUNEROOT/examples/Hypre
+        for tuner in GPTune hpbandster opentuner 
+        do    
+            rm -rf gptune.db/*.json
+            tp=Hypre
+            app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+            echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
+            $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+        done
+    fi    
 fi
 done

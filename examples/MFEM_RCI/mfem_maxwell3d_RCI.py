@@ -58,11 +58,6 @@ def objectives(point):
 
 def main():
 
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nprocmax
 
 	# Parse command line arguments
 
@@ -97,12 +92,13 @@ def main():
 	OS = Space([result])
 	constraints = {}
 	models = {}
+	constants={"nodes":nodes,"cores":cores}	
 
 	# """ Print all input and parameter samples """	
 	# print(IS, PS, OS, constraints, models)
 
 
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

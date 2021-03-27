@@ -44,6 +44,14 @@ import math
 
 # 
 def print_model_predication(point):
+
+######################################### 
+##### constants defined in TuningProblem
+    nodes = point['nodes']
+    cores = point['cores']
+    bunit = point['bunit']	
+#########################################
+    
     m = point['m']
     n = point['n']
     p = point['p']
@@ -73,6 +81,15 @@ def print_model_predication(point):
 
 # should always use this name for user-defined model function
 def models(point):
+
+######################################### 
+##### constants defined in TuningProblem
+    nodes = point['nodes']
+    cores = point['cores']
+    bunit = point['bunit']	
+#########################################
+
+
     m = point['m']
     n = point['n']
     p = point['p']
@@ -122,11 +139,11 @@ def models_update(data):
 
         Ns = X0.shape[0]
 
-        b = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[0])]*bunit
+        b = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[0])]*data.D[i]['bunit']
 
         npernode = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[1])]
         npernode = 2**npernode
-        nproc = nodes*npernode
+        nproc = data.D[i]['nodes']*npernode
         p = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[2])]
         q = np.floor(nproc/p)
         m = data.I[i][0]
@@ -154,6 +171,14 @@ def models_update(data):
 
 
 def objectives(point):
+######################################### 
+##### constants defined in TuningProblem
+    nodes = point['nodes']
+    cores = point['cores']
+    bunit = point['bunit']	
+    perfmodel = point['perfmodel']    
+#########################################    
+
     m = point['m']
     n = point['n']
     mb = point['b']*bunit
@@ -179,23 +204,19 @@ def objectives(point):
 
     return elapsedtime
 
-def cst1(b,p,m):
+def cst1(b,p,m,bunit):
     return b*bunit * p <= m
-def cst2(b,npernode,n,p):
+def cst2(b,npernode,n,p,nodes,bunit):
     return b * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p):
+def cst3(npernode,p,nodes):
     return nodes * 2**npernode >= p
 
 def main():
 
-    global ROOTDIR
     global nodes
     global cores
     global bunit
     global JOBID
-    global nprocmax
-    global nprocmin
-    global perfmodel
 
     # Parse command line arguments
     args = parse_args()
@@ -237,11 +258,12 @@ def main():
     OS = Space([r])
 
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+    constants={"nodes":nodes,"cores":cores,"bunit":bunit,"perfmodel":perfmodel}
     print(IS, PS, OS, constraints)
     if(perfmodel==1):
-        problem = TuningProblem(IS, PS, OS, objectives, constraints, models) # use performance models
+        problem = TuningProblem(IS, PS, OS, objectives, constraints, models, constants=constants) # use performance models
     else:
-        problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+        problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """

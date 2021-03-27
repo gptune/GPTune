@@ -41,6 +41,14 @@ import math
 ''' The objective function required by GPTune. '''
 # should always use this name for user-defined objective function
 def objectives(point):
+
+######################################### 
+##### constants defined in TuningProblem
+    nodes = point['nodes']
+    cores = point['cores']
+    bunit = point['bunit']	
+#########################################
+
     m = point['m']
     n = point['n']
     mb = point['mb']*bunit
@@ -64,22 +72,18 @@ def objectives(point):
 
     return elapsedtime
 
-def cst1(mb,p,m):
+def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
-def cst2(nb,npernode,n,p):
+def cst2(nb,npernode,n,p,nodes,bunit):
     return nb * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p):
+def cst3(npernode,p,nodes):
     return nodes * 2**npernode >= p
 
 def main():
 
-    global ROOTDIR
-    global nodes
-    global cores
-    global bunit
+
     global JOBID
-    global nprocmax
-    global nprocmin
+
 
     # Parse command line arguments
     args = parse_args()
@@ -120,9 +124,10 @@ def main():
     OS = Space([r])
     
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+    constants={"nodes":nodes,"cores":cores,"bunit":bunit}
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+    problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """
@@ -154,7 +159,7 @@ def main():
     data = Data(problem)
     if(TUNER_NAME=='GPTune'):
 
-        gt = GPTune(problem, computer=computer, data=data, options=options)
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
 
         """ Building MLA with the given list of tasks """
         NI = len(giventask)

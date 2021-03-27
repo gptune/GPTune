@@ -261,6 +261,11 @@ if __name__ == '__main__':
     def models(point):
         print('this is a dummy definition')
         return point
+    
+    def models_update(data):
+        print('this is a dummy definition')
+        return data
+
     def cst1(point):
         print('this is a dummy definition')
         return point

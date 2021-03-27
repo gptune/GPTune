@@ -486,6 +486,8 @@ class GPTune(object):
                             points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
                             points.update(points1)
                             points.update(points0)
+                            if(self.problem.constants is not None):
+                                points.update(self.problem.constants)
                             modeldata.append(self.problem.models(points))
                         modeldata=np.array(modeldata)
                         tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space

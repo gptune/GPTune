@@ -57,6 +57,12 @@ import math
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
     
+	######################################### 
+	##### constants defined in TuningProblem
+	nodes = point['nodes']
+	cores = point['cores']	
+	#########################################
+
 	gridsize = point['gridsize']
 	sp_reordering_method = point['sp_reordering_method']
 	sp_compression = point['sp_compression']
@@ -116,13 +122,6 @@ def objectives(point):                  # should always use this name for user-d
 	
 def main():
 
-	global ROOTDIR
-	global nodes
-	global cores
-	global target
-	global nprocmax
-	global nprocmin
-
 	# Parse command line arguments
 
 	args   = parse_args()
@@ -165,12 +164,13 @@ def main():
 	OS = Space([result])
 	constraints = {}
 	models = {}
+	constants={"nodes":nodes,"cores":cores}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
 
 
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	

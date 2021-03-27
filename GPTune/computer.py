@@ -48,7 +48,8 @@ class Computer(object):
 #       kwargs['constraints_evaluation_parallelism']
 
         # points can be either a dict or a list of dicts on which to iterate
-
+        if(problem.constants is not None):
+            point.update(problem.constants)
         cond = True
         for (cstname, cst) in problem.constraints.items():
             if (isinstance(cst, str)):
@@ -64,11 +65,19 @@ class Computer(object):
                         raise Exception(f"Unexpected exception '{inst}' was raised while evaluating constraint '{cstname}'. Correct this constraint before calling the tuner again.")
             else:
                 try:
+                    if(hasattr(problem, 'driverabspath')): # differentiate between Problem and TuningProblem 
+                        if(problem.driverabspath is not None):
+                            modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+                            sys.path.append(problem.driverabspath) # add path to sys
+                            module = importlib.import_module(modulename) # import driver name as a module
+                            cst = getattr(module, cstname)
+                        else:
+                            raise Exception('the driverabspath is required for the constraints')        
                     kwargs2 = {}
                     sig = inspect.signature(cst)
                     for varname in point:
                         if (varname in sig.parameters):
-                            kwargs2[varname] = point[varname]
+                            kwargs2[varname] = point[varname]              
                     cond = cst(**kwargs2)
                 except Exception as inst:
                     if (isinstance(inst, TypeError)):
@@ -167,6 +176,8 @@ class Computer(object):
                     kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                     kwargs.update(kwargst)
                     kwargs.update(D2)
+                    if(problem.constants is not None):
+                        kwargs.update(problem.constants)
                     # print(kwargs)
                     return module.objectives(kwargs)
                 O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))
@@ -177,6 +188,8 @@ class Computer(object):
                 x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                 kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
                 kwargs.update(kwargst)
+                if(problem.constants is not None):
+                    kwargs.update(problem.constants)
                 if D2 is not None:
                     kwargs.update(D2)
                 o = module.objectives(kwargs)

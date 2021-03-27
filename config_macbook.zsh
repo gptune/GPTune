@@ -9,7 +9,7 @@ openblasversion=0.3.13
 lapackversion=3.9.0_1
 
 export ModuleEnv='macbook-inteli7-openmpi-gnu'
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 ##################################################
 ##################################################
@@ -40,9 +40,12 @@ if [ $ModuleEnv = 'macbook-inteli7-openmpi-gnu' ]; then
 	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.dylib
 	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
+	export LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
 	export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
+	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
 	CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-10
 	FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-10
@@ -65,11 +68,12 @@ export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
-export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.dylib
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libparmetis.dylib"
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.dylib
 
 # install dependencies using homebrew and virtualenv
 ###################################
+# softwareupdate --all --install --force
 brew install wget
 brew upgrade wget
 brew install python@3.9
@@ -94,6 +98,7 @@ unalias pip  # this makes sure virtualenv install packages at its own site-packa
 unalias python
 
 pip install --force-reinstall cloudpickle
+pip install --force-reinstall filelock
 brew reinstall tbb
 brew reinstall pagmo
 brew reinstall pybind11
@@ -167,9 +172,8 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX=./install \
-		-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 		-DBLAS_LIBRARIES="${BLAS_LIB}" \
 		-DLAPACK_LIBRARIES="${LAPACK_LIB}"
 	make -j8
@@ -187,7 +191,8 @@ rm -rf cmake_install.cmake
 rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
-	-DCMAKE_C_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
+	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
@@ -309,15 +314,17 @@ if [[ $BuildExample == 1 ]]; then
 	mkdir install
 	cd ./src
 	cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
-	sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
-	sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
-	sed -i "s/CCD/#CCD/" Makefile.inc
+	sed -i "" "s/-DSCOTCH_PTHREAD//" Makefile.inc
+	sed -i "" "s/-lrt//" Makefile.inc
+	sed -i "" "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+	sed -i "" "s/CCD/#CCD/" Makefile.inc
 	printf "CCD = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCP/#CCP/" Makefile.inc
+	sed -i "" "s/CCP/#CCP/" Makefile.inc
 	printf "CCP = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCS/#CCS/" Makefile.inc
+	sed -i "" "s/CCS/#CCS/" Makefile.inc
 	printf "CCS = $MPICC\n" >> Makefile.inc
 	cat Makefile.inc
+	cp ../../../../patches/ptscotch/common.* libscotch/.
 	make ptscotch
 	make prefix=../install install
 
@@ -394,7 +401,7 @@ if [[ $BuildExample == 1 ]]; then
 
 fi
 
-# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang, this may cause segfault at the search phase
+# # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang (I haven't figured out how to install boost with gnu on mac os), this may cause segfault at the search phase
 cd $GPTUNEROOT
 rm -rf pygmo2
 git clone https://github.com/esa/pygmo2.git
@@ -419,8 +426,20 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 pip install -e .
 
+
+
+cd $GPTUNEROOT
+rm -rf GPy
+git clone https://github.com/SheffieldML/GPy.git
+cd GPy
+cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
+cp ../patches/GPy/stationary.py ./GPy/kern/src/.
+cp ../patches/GPy/choleskies.py ./GPy/util/.
+LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
+python setup.py install
 
 
 
