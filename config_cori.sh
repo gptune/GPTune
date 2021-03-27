@@ -1,4 +1,11 @@
 #!/bin/bash
+
+if [ $NERSC_HOST"s" != *"cori"* ]; then
+	echo "This script can only be used for Cori"
+	exit
+fi
+
+
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
 module load python/3.7-anaconda-2019.10
@@ -18,10 +25,6 @@ BuildExample=1 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
-if [ $NERSC_HOST != "cori" ]; then
-	echo "This script can only be used for Cori"
-	exit
-fi
 
 ##################################################
 ##################################################
