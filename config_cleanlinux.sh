@@ -6,7 +6,7 @@
 export ModuleEnv='cleanulinux-unknown-openmpi-gnu'
 BuildExample=1 # whether to build all examples
 
-if [[ $(hostnamectl | grep "Operating System") != *"Ubuntu"* && $(hostnamectl | grep "Operating System") != *"Debian"* ]]; then
+if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
 	echo "This script can only be used for Ubuntu or Debian systems"
 	exit
 fi

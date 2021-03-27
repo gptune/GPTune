@@ -52,7 +52,7 @@ elif [[ $(dnsdomainname) = "summit.olcf.ornl.gov" ]]; then
     export machine=summit
 elif [[ $(hostname -s) = "tr4-workstation" ]]; then
     export machine=tr4-workstation
-elif [[ $(hostnamectl | grep "Operating System") == *"Ubuntu"* || $(hostnamectl | grep "Operating System") == *"Debian"* ]]; then
+elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") == *"Ubuntu"* || $(cat /etc/os-release | grep "PRETTY_NAME"") == *"Debian"* ]]; then
     export machine=cleanlinux
 fi    
 
