@@ -3,7 +3,7 @@
 ##################################################
 ##################################################
 
-export ModuleEnv='cleanulinux-unknown-openmpi-gnu'
+export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
 BuildExample=1 # whether to build all examples
 
 if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
