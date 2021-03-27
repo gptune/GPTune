@@ -18,6 +18,11 @@ BuildExample=1 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
+if [ $NERSC_HOST != "cori" ]; then
+	echo "This script can only be used for Cori"
+	exit
+fi
+
 ##################################################
 ##################################################
 

@@ -5,16 +5,19 @@ rm -rf ~/.local/lib
 ##################################################
 ##################################################
 
-export ModuleEnv='yang-tr4-openmpi-gnu'
+export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
 BuildExample=1 # whether to build all examples
 
 ##################################################
 ##################################################
 
-
+if [[ $(hostname -s) != "tr4-workstation" ]]; then
+	echo "This script can only be used for tr4-workstation"
+	exit
+fi
 
 ############### Yang's tr4 machine
-if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
+if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
@@ -29,6 +32,7 @@ if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
 	OPENMPFLAG=fopenmp
 fi
 ###############
+
 
 
 

@@ -3,8 +3,13 @@
 ##################################################
 ##################################################
 
-export ModuleEnv='cleanubuntu-unknown-openmpi-gnu'
+export ModuleEnv='cleanulinux-unknown-openmpi-gnu'
 BuildExample=1 # whether to build all examples
+
+if [[ $(hostnamectl | grep "Operating System") != *"Ubuntu"* && $(hostnamectl | grep "Operating System") != *"Debian"* ]]; then
+	echo "This script can only be used for Ubuntu or Debian systems"
+	exit
+fi
 
 ##################################################
 ##################################################
@@ -13,7 +18,7 @@ BuildExample=1 # whether to build all examples
 export GPTUNEROOT=$PWD
 
 ############### Yang's tr4 machine
-if [ $ModuleEnv = 'cleanubuntu-unknown-openmpi-gnu' ]; then
+if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 
 	export PATH=$GPTUNEROOT/env/bin/:$PATH
 	export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
@@ -43,6 +48,8 @@ if [ $ModuleEnv = 'cleanubuntu-unknown-openmpi-gnu' ]; then
 
 fi
 ###############
+
+
 
 
 

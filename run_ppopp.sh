@@ -8,12 +8,12 @@ BuildExample=0 # whether all the examples have been built
 ##################################################
 ##################################################
 
-# ################ Any mac os machine that has used config_macbook.sh to build GPTune
-export machine=macbook
-export proc=inteli7   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
+# # ################ Any mac os machine that has used config_macbook.sh to build GPTune
+# export machine=mac
+# export proc=intel   
+# export mpi=openmpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
 
 # ################ Cori
 # export machine=cori
@@ -24,29 +24,46 @@ export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
-# export machine=yang
-# export proc=tr4   
+# export machine=tr4-workstation
+# export proc=AMD1950X   
 # export mpi=openmpi  
 # export compiler=gnu   
 # export nodes=1  # number of nodes to be used
 
 
-# ################ Any ubuntu machine that has used config_cleanubuntu.sh to build GPTune
-# export machine=cleanubuntu
-# export proc=unknown   
-# export mpi=openmpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
+################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+export machine=cleanlinux
+export proc=unknown   
+export mpi=openmpi  
+export compiler=gnu   
+export nodes=1  # number of nodes to be used
 
 
 ##################################################
 ##################################################
+
+
+############### automatic machine checking
+if [ $NERSC_HOST = "cori" ]; then
+    export machine=cori
+elif [[ $(uname -s) = "Darwin" ]]; then
+    export machine=mac
+elif [[ $(dnsdomainname) = "summit.olcf.ornl.gov" ]]; then
+    export machine=summit
+elif [[ $(hostname -s) = "tr4-workstation" ]]; then
+    export machine=tr4-workstation
+elif [[ $(hostnamectl | grep "Operating System") == *"Ubuntu"* || $(hostnamectl | grep "Operating System") == *"Debian"* ]]; then
+    export machine=cleanlinux
+fi    
+
+
+
 
 
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 ############### Yang's tr4 machine
-if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
+if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
@@ -59,7 +76,7 @@ if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
 ###############
 
 ############### macbook
-elif [ $ModuleEnv = 'macbook-inteli7-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/build/
 	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
 	export PATH=$PWD/env/bin/:$PATH
@@ -100,14 +117,15 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 
-############### any ubuntu machine that has used config_cleanubuntu.sh to build GPTune
-elif [ $ModuleEnv = 'cleanubuntu-unknown-openmpi-gnu' ]; then
+############### any ubuntu machine that has used config_cleanlinux.sh to build GPTune
+elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 
 	export PATH=$PWD/env/bin/:$PATH
 	export PATH=$PATH:$PWD/openmpi-4.0.1/bin
 	export MPIRUN=$PWD/openmpi-4.0.1/bin/mpirun
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
 
     cores=4
@@ -253,7 +271,7 @@ elif [ $ex = 'Fig.6_exp' ];then
             rm -rf gptune.db/*.json
             $RUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python superlu_MLA.py -ntask 1 -nrun 10 -obj time -optimization ${tuner} | tee a.out_superlu_${tuner}
         done
-    if
+    fi
 elif [ $ex = 'Fig.7' ];then
     cd $GPTUNEROOT/examples/postprocess/superlu_dist/
 # the plot is $GPTUNEROOT/examples/postprocess/superlu_dist/pareto_superlu.eps        

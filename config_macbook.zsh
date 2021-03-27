@@ -8,17 +8,21 @@ gccversion=10.2.0_4
 openblasversion=0.3.13
 lapackversion=3.9.0_1
 
-export ModuleEnv='macbook-inteli7-openmpi-gnu'
+export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
 
 ##################################################
 ##################################################
 
+if [[ $(uname -s) != "Darwin" ]]; then
+	echo "This script can only be used for Mac OS"
+	exit
+fi
 
 export GPTUNEROOT=$PWD
 
 ############### macbook
-if [ $ModuleEnv = 'macbook-inteli7-openmpi-gnu' ]; then
+if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 
 	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
 	export PATH=$GPTUNEROOT/env/bin/:$PATH

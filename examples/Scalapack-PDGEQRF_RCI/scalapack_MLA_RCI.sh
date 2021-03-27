@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ModuleEnv='yang-tr4-openmpi-gnu'
+# ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
 # ModuleEnv='cori-haswell-craympich-intel'
 # ModuleEnv='cori-haswell-openmpi-gnu'
@@ -22,7 +22,7 @@ done
 
 
 # ############### Yang's tr4 machine
-# if [ $ModuleEnv = 'yang-tr4-openmpi-gnu' ]; then
+# if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 #     module load gcc/9.1.0
 #     module load openmpi/gcc-9.1.0/4.0.1
 #     module load scalapack-netlib/gcc-9.1.0/2.0.2
