@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $NERSC_HOST"s" != *"cori"* ]; then
+if [[ $NERSC_HOST != "cori" ]]; then
 	echo "This script can only be used for Cori"
 	exit
 fi

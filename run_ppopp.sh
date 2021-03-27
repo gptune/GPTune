@@ -44,7 +44,7 @@ export nodes=1  # number of nodes to be used
 
 
 ############### automatic machine checking
-if [ $NERSC_HOST = "cori" ]; then
+if [[ $NERSC_HOST = "cori" ]]; then
     export machine=cori
 elif [[ $(uname -s) = "Darwin" ]]; then
     export machine=mac
@@ -52,7 +52,7 @@ elif [[ $(dnsdomainname) = "summit.olcf.ornl.gov" ]]; then
     export machine=summit
 elif [[ $(hostname -s) = "tr4-workstation" ]]; then
     export machine=tr4-workstation
-elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") == *"Ubuntu"* || $(cat /etc/os-release | grep "PRETTY_NAME"") == *"Debian"* ]]; then
+elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") == *"Ubuntu"* || $(cat /etc/os-release | grep "PRETTY_NAME") == *"Debian"* ]]; then
     export machine=cleanlinux
 fi    
 
