@@ -19,57 +19,156 @@ works, and perform publicly and display publicly, and to permit other to do so.
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
 
 ## Dependency
-GPTune relies on OpenMPI/4.0 (url), Python 3.7, BLAS/LAPACK/SCALAPACK(url) (compiled with OpenMPI/4.0?), mpi4py (built with openmpi/4.0), scikit-optimize, autotune, intel-depdent lib (??). 
+GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume OpenMPI, Python, BLAS/LAPACK have been installed (with the same compiler version):
+```
+export MPICC=path-to-c-compiler-wrapper
+export MPICXX=path-to-cxx-compiler-wrapper
+export MPIF90=path-to-f90-compiler-wrapper
+export MPIRUN=path-to-mpirun
+export BLAS_LIB=path-to-blas-lib
+export LAPACK_LIB=path-to-lapack-lib
+export GPTUNEROOT=path-to-gptune-root-directory
+```
 
-All these need be installed before installing GPTune.
+The rest can be installed as follows:
+
+
+## Install SCALAPACK
+```
+cd $GPTUNEROOT
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
+rm -rf build
+mkdir -p build
+cd build
+mkdir -p install
+cmake .. \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_INSTALL_PREFIX=./install \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DCMAKE_Fortran_FLAGS="-fopenmp" \
+    -DBLAS_LIBRARIES="$BLAS_LIB" \
+    -DLAPACK_LIBRARIES="$LAPACK_LIB"
+make 
+make install
+export SCALAPACK_LIB="$PWD/install/lib/libscalapack.so"  
+```
+
 
 ## Install mpi4py
 ```
+cd $GPTUNEROOT
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
-python setup.py build --mpicc="$CCC -shared"
+python setup.py build --mpicc="$MPICC -shared"
 python setup.py install --user
+export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
 ## Install scikit-optimize
 ```
+cd $GPTUNEROOT
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-env CC=$CCC pip install --user -e .
+pip install --user -e .
+export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
 ## Install autotune
 autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
 ```
+cd $GPTUNEROOT
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-pip install -e .
+pip install --user -e .
+export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
 ## Install GPTune
-
-(change makefile to cmake?)
-
-GPTune also depends on several external Python libraries as listed in the `requirements.txt` file. These Python libraries can all be installed through the standard Python repository through the pip tool.
-
+GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, scikit-learn, scipy, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, and pygmo. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
-pip install --upgrade --user -r requirements.txt
+cd $GPTUNEROOT
+env CC=$MPICC pip install --user -r requirements.txt
 ```
-Besides the basic requirements, 
 
-The library can be run either sequentially or in parallel.  In the latter case, the MPI library should be installed.
-#XXX MPICC
+In addition, the following MPI-enabled component needs to be installed:
+```
+cd $GPTUNEROOT
+export PYTHONPATH=$PYTHONPATH:$PWD
+mkdir -p build
+cd build
+cmake .. \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_CXX_COMPILER=$MPICXX \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+    -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
+    -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
+make 
+cp lib_gptuneclcm.so ../.
+```
 
 ## Examples
-
-
-(how to tune compiler parameters, different libs,)
-
-The file `demo.py` in the `examples` folder shows how to describe the autotuning problem and how to invoke GPTune.
-
+There are a few examples included in GPTune
+### demo
+The file `demo.py` in the `examples` folder shows how to describe the autotuning problem for a sequential objective function and how to invoke GPTune 
 ```
-python examples/demo.py
+cd $GPTUNEROOT/examples
+$MPIRUN -n 1 python ./demo.py
 ```
+### SCALAPCK QR
+The files `scalapack_*.py` in the `examples` folder shows how to tune the parallel QR factorization subroutine PDGEQRF with different features of GPTune. 
+```
+cd $GPTUNEROOT/examples
+cp ../build/pdqrdriver ../.
+export PYTHONPATH=$PYTHONPATH:$PWD/scalapack-driver/spt/
+$MPIRUN -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine yourmachine -optimization 'GPTune'
+```
+### SuperLU_DIST
+First, SuperLU_DIST needs to be installed with the same OpenMPI and BLAS/LAPACK as the above.
+```
+cd $GPTUNEROOT/examples
+git clone https://github.com/xiaoyeli/superlu_dist.git
+cd superlu_dist
+wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+tar -xf parmetis-4.0.3.tar.gz
+cd parmetis-4.0.3/
+mkdir -p install
+make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+make install 
+cd ../
+export PARMETIS_INCLUDE_DIRS="$PWD/parmetis-4.0.3/metis/include;$PWD/parmetis-4.0.3/install/include"
+export PARMETIS_LIBRARIES=$PWD/parmetis-4.0.3/install/lib/libparmetis.so
+mkdir -p build
+cd build
+cmake .. \
+    -DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+    -DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_CXX_COMPILER=$MPICXX \
+    -DCMAKE_C_COMPILER=$MPICC \
+    -DCMAKE_Fortran_COMPILER=$MPIF90 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
+    -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
+    -DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+    -DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+make pddrive_spawn 
+```
+Note that `pddrive_spawn` is a modified application driver that will be launched by GPTune via MPI spawning (see the Usage section). The files `superlu_*.py` in the `examples` folder shows how to tune the performance of sparse LU factorization with different features of GPTune. 
+```
+cd $GPTUNEROOT/examples
+$MPIRUN -n 1 python ./superlu_MLA_MO.py  -nodes 1 -cores 4 -nprocmin_pernode 1 -ntask 1 -nrun 10 -machine youmachine -optimization 'GPTune'
+```
+
 
 ## Usage
 
@@ -86,8 +185,6 @@ A point in this space represents a combination of the parameters.
 The goal of the tuner is to find the best possible combination that minimizes the objective function of the application.
 3. Output Space (OS): this space defines the result(s) of the application, i.e., the objective of the application to be optimized.
 For examples, this can be runtime, memory or energy consumption in HPC applications or prediction accuracy in machine learning applications.
-The current version of GPTune supports only single dimensional output spaces.
-However, future developments intend to support multi-dimensional output spaces, i.e. multi-objective tuning.
 
 #### Parameters
 
@@ -112,12 +209,20 @@ Constraints might exist that define the validity of a given combination of input
 Two ways exist to define constraints in GPTune:
 1. Strings: the user can define a Python statement in a string.
 The evaluation of that statement should be a boolean.
-2. Functions: the user can define a Python function that returns a boolean.  The parameters of the function should have the same name as the parameters defining the problem.
-*TODO*: Extra parameters can be passed as a \*\*kwargs argument.
+2. Functions: the user can define a Python function that returns a boolean. 
 
-#### Models
+#### Objective Function
+The user need to define a Python function representing the objective function to be optimized
+```
+def objectives(point)
+   # extract the parameters from 'point', invoke the application code, and store the objective function value in 'result'
+   return result
+```
+Here point is a dictionary containing key pairs representing task and tuning parameters. If the application code is distributed-memory parallel, the user needs to modify the application code (in C, C++, Fortran, Python, etc.) with the MPI spawning syntax and invoke the code using MPI.COMM_SELF.Spawn from mpi4py. Please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.   
 
-The user having additional knowledge about the application can help speed up or improve the result of the tuning process by passing a model(s) of the objective function to be optimized.
+#### Performance Models
+
+The user having additional knowledge about the application can help speed up or improve the result of the tuning process by passing a performance model(s) of the objective function to be optimized.
 
 These models are defined through Python functions following similarly to the constraints definition.
 

@@ -1,0 +1,45 @@
+=============================================
+Hypre init times:
+=============================================
+Hypre init:
+  wall clock time = 0.000000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.000002 seconds
+  cpu MFLOPS      = 0.000000
+
+=============================================
+Generate Matrix:
+=============================================
+Spatial Operator:
+  wall clock time = 0.060000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.054504 seconds
+  cpu MFLOPS      = 0.000000
+
+=============================================
+IJ Vector Setup:
+=============================================
+RHS and Initial Guess:
+  wall clock time = 0.000000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.000544 seconds
+  cpu MFLOPS      = 0.000000
+
+=============================================
+Setup phase times:
+=============================================
+GMRES Setup:
+  wall clock time = 0.260000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.257468 seconds
+  cpu MFLOPS      = 0.000000
+
+=============================================
+Solve phase times:
+=============================================
+GMRES Solve:
+  wall clock time = 0.200000 seconds
+  wall MFLOPS     = 0.000000
+  cpu clock time  = 0.208490 seconds
+  cpu MFLOPS      = 0.000000
+

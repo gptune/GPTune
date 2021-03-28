@@ -28,7 +28,7 @@
   $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./demo.py
   $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
   $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 5 -machine travis -jobid 0
-  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_TLA.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
+  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 5 -machine travis -jobid 0
+  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
+  $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
   $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 6 -machine travis  

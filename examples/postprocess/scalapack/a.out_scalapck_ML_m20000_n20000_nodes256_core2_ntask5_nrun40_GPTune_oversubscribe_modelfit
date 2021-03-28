@@ -1,0 +1,699 @@
+Space([Integer(low=128, high=20000, prior='uniform', transform='normalize'),
+       Integer(low=128, high=20000, prior='uniform', transform='normalize')]) Space([Integer(low=4, high=16, prior='uniform', transform='normalize'),
+       Integer(low=510, high=511, prior='uniform', transform='normalize'),
+       Integer(low=1, high=511, prior='uniform', transform='normalize')]) Space([Real(low=-inf, high=inf, prior='uniform', transform='identity')]) {'cst1': 'b*8 * p <= m', 'cst2': 'b*8 * nproc <= n * p', 'cst3': 'nproc >= p'}
+
+
+------Validating the options
+  
+  total core counts provided to GPTune: 512
+   ---> distributed_memory_parallelism: False
+   ---> shared_memory_parallelism: False
+   ---> objective_evaluation_parallelism: False
+  
+  total core counts for modeling: 2
+   ---> model_processes: 1
+   ---> model_threads: 1
+   ---> model_restart_processes: 1
+   ---> model_restart_threads: 1
+  
+  total core counts for search: 1
+   ---> search_processes: 1
+   ---> search_threads: 1
+   ---> search_multitask_processes: 1
+   ---> search_multitask_threads: 1
+  
+  total core counts for objective function evaluation: 512
+   ---> core counts in a single application run: 511
+   ---> objective_multisample_processes: 1
+   ---> objective_multisample_threads: 1
+
+
+
+------Starting MLA with 5 tasks and 40 samples each 
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.2031578186270857, 'c3': 2.573578429675206, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.20887185145017712, 'c3': 2.963982279581559, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1644757487428442, 'c3': 2.560083351612054, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06686730557232758, 'c3': 0.8012278645857486, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.10417407071616298, 'c3': 1.3019316264977037, 'c4': 0}
+MLA iteration:  0
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 2483883.797483591, 8811.669434953837]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.18e-01 volume term: 7.90e-01 offset term: 0.00e+00 total: 1.71e+00
+model2(measured): flop term: 5.10e-01 divide term: 3.12e-03 latency term: 1.62e+00 volume term: 1.37e+01 total: 1.59e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 511, 7, 73, 1.0)]  scalapack time:  [1.9916]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1657001.69374186, 3382.268437733225]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.28e+00 volume term: 4.06e-01 offset term: 0.00e+00 total: 1.68e+00
+model2(measured): flop term: 4.75e-01 divide term: 1.26e-03 latency term: 2.33e+00 volume term: 7.62e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 40, 40, 1, 510, 16, 31, 1.0)]  scalapack time:  [2.3157]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1521410.094209254, 4286.374198955335]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.16e+00 volume term: 5.26e-01 offset term: 0.00e+00 total: 1.68e+00
+model2(measured): flop term: 4.01e-01 divide term: 1.66e-03 latency term: 1.87e+00 volume term: 7.74e+00 total: 1.00e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 12, 42, 1.0)]  scalapack time:  [1.7435]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1344219.7404230013, 3168.888558113795]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.38e+00 volume term: 7.79e-01 offset term: 0.00e+00 total: 2.16e+00
+model2(measured): flop term: 1.94e-01 divide term: 9.04e-04 latency term: 1.33e+00 volume term: 4.08e+00 total: 5.61e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 20, 25, 1.0)]  scalapack time:  [1.0858]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 2228588.2058795374, 4902.0516091289865]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.18e+00 volume term: 8.29e-01 offset term: 0.00e+00 total: 2.01e+00
+model2(measured): flop term: 3.01e-01 divide term: 1.59e-03 latency term: 1.43e+00 volume term: 6.75e+00 total: 8.48e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 511, 13, 39, 1.0)]  scalapack time:  [1.4141]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1998864263134521, 'c3': 2.585362164381895, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.20421751266256297, 'c3': 2.980848779673242, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1603553273259475, 'c3': 2.578241534370162, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06565201030750926, 'c3': 0.8061616733211157, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.10196721306153228, 'c3': 1.3095962514602517, 'c4': 0}
+MLA iteration:  1
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1943870.1033155208, 6152.89913633264]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.01e+00 volume term: 6.22e-01 offset term: 0.00e+00 total: 1.63e+00
+model2(measured): flop term: 4.95e-01 divide term: 2.43e-03 latency term: 1.81e+00 volume term: 1.08e+01 total: 1.31e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 9, 56, 1.0)]  scalapack time:  [2.0067]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 7123841.893158123, 5535.380192572596]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.03e+00 volume term: 5.49e-01 offset term: 0.00e+00 total: 1.57e+00
+model2(measured): flop term: 6.37e-01 divide term: 2.02e-03 latency term: 1.91e+00 volume term: 1.02e+01 total: 1.28e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 128, 128, 1, 510, 10, 51, 1.0)]  scalapack time:  [2.8834]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1394361.6235762974, 3709.9288299464274]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.20e+00 volume term: 4.85e-01 offset term: 0.00e+00 total: 1.68e+00
+model2(measured): flop term: 3.95e-01 divide term: 1.42e-03 latency term: 1.98e+00 volume term: 7.09e+00 total: 9.47e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 14, 36, 1.0)]  scalapack time:  [1.8773]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1313527.0174694704, 3048.812078252669]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.37e+00 volume term: 7.65e-01 offset term: 0.00e+00 total: 2.14e+00
+model2(measured): flop term: 1.93e-01 divide term: 8.61e-04 latency term: 1.36e+00 volume term: 3.99e+00 total: 5.54e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 21, 24, 1.0)]  scalapack time:  [1.0975]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1586040.9298486041, 4117.058605388439]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.23e+00 volume term: 7.42e-01 offset term: 0.00e+00 total: 1.97e+00
+model2(measured): flop term: 2.86e-01 divide term: 1.38e-03 latency term: 1.51e+00 volume term: 6.00e+00 total: 7.80e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 15, 34, 1.0)]  scalapack time:  [1.3571]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.19632516638943365, 'c3': 2.5993286854397306, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.20297229957208598, 'c3': 2.985172885832819, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1566381011372043, 'c3': 2.594886171215051, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06455855691711192, 'c3': 0.8106233829685594, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.09957020374041399, 'c3': 1.3181002328437934, 'c4': 0}
+MLA iteration:  2
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 2168896.6326054665, 7230.750663406392]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.33e-01 volume term: 6.98e-01 offset term: 0.00e+00 total: 1.63e+00
+model2(measured): flop term: 5.01e-01 divide term: 2.73e-03 latency term: 1.72e+00 volume term: 1.20e+01 total: 1.42e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 511, 8, 63, 1.0)]  scalapack time:  [2.0118]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1629618.005827433, 4934.498905199627]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.03e+00 volume term: 5.05e-01 offset term: 0.00e+00 total: 1.53e+00
+model2(measured): flop term: 4.82e-01 divide term: 2.02e-03 latency term: 1.97e+00 volume term: 9.36e+00 total: 1.18e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 10, 51, 1.0)]  scalapack time:  [1.9529]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1521410.094209254, 4286.374198955335]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.10e+00 volume term: 5.33e-01 offset term: 0.00e+00 total: 1.64e+00
+model2(measured): flop term: 4.01e-01 divide term: 1.66e-03 latency term: 1.87e+00 volume term: 7.74e+00 total: 1.00e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 12, 42, 1.0)]  scalapack time:  [1.7709]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 7144543.689883389, 4730.1673472520715]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.17e+00 volume term: 1.05e+00 offset term: 0.00e+00 total: 2.22e+00
+model2(measured): flop term: 2.91e-01 divide term: 1.21e-03 latency term: 1.19e+00 volume term: 5.43e+00 total: 6.91e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 15, 34, 1.0)]  scalapack time:  [1.5689]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1667530.67006318, 4436.740084555808]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.17e+00 volume term: 7.85e-01 offset term: 0.00e+00 total: 1.95e+00
+model2(measured): flop term: 2.89e-01 divide term: 1.48e-03 latency term: 1.47e+00 volume term: 6.31e+00 total: 8.07e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 14, 36, 1.0)]  scalapack time:  [1.375]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.19313808090929557, 'c3': 2.611435440269268, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.19907651556936357, 'c3': 2.998878841765691, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.15314958994294878, 'c3': 2.610249553570069, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0650679137761834, 'c3': 0.8087216451063948, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.09747099494707097, 'c3': 1.3254829556472048, 'c4': 0}
+MLA iteration:  3
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1943870.1033155208, 6152.89913633264]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.62e-01 volume term: 6.29e-01 offset term: 0.00e+00 total: 1.59e+00
+model2(measured): flop term: 4.94e-01 divide term: 2.43e-03 latency term: 1.81e+00 volume term: 1.08e+01 total: 1.31e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 511, 9, 56, 1.0)]  scalapack time:  [1.9849]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1333816.9873026898, 3095.9068880831333]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.31e+00 volume term: 4.16e-01 offset term: 0.00e+00 total: 1.73e+00
+model2(measured): flop term: 4.59e-01 divide term: 9.63e-04 latency term: 2.56e+00 volume term: 7.66e+00 total: 1.07e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 21, 24, 1.0)]  scalapack time:  [2.7607]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1646910.0658519866, 3291.7836885457764]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 4.64e-01 offset term: 0.00e+00 total: 1.68e+00
+model2(measured): flop term: 3.97e-01 divide term: 1.17e-03 latency term: 2.11e+00 volume term: 6.70e+00 total: 9.21e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 40, 40, 1, 511, 17, 30, 1.0)]  scalapack time:  [2.0443]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 2260459.387654655, 3777.45244398264]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 8.89e-01 offset term: 0.00e+00 total: 2.10e+00
+model2(measured): flop term: 2.11e-01 divide term: 1.06e-03 latency term: 1.26e+00 volume term: 4.58e+00 total: 6.05e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 48, 48, 1, 510, 17, 30, 1.0)]  scalapack time:  [1.0742]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1586040.9298486041, 4117.058605388439]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.17e+00 volume term: 7.51e-01 offset term: 0.00e+00 total: 1.92e+00
+model2(measured): flop term: 2.86e-01 divide term: 1.38e-03 latency term: 1.51e+00 volume term: 6.00e+00 total: 7.80e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 15, 34, 1.0)]  scalapack time:  [1.3283]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1898179808563515, 'c3': 2.624464221654911, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1956427460698311, 'c3': 3.011413383021163, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.15009148072353332, 'c3': 2.6241110938913783, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06409681608557187, 'c3': 0.812555624931097, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.09530149051414971, 'c3': 1.3331822255460404, 'c4': 0}
+MLA iteration:  4
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1964313.457179797, 4454.4261783634975]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.05e+00 volume term: 5.12e-01 offset term: 0.00e+00 total: 1.56e+00
+model2(measured): flop term: 4.93e-01 divide term: 1.82e-03 latency term: 2.02e+00 volume term: 8.70e+00 total: 1.12e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 510, 12, 42, 1.0)]  scalapack time:  [2.0852]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1388659.717994789, 3796.0915878372043]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 4.36e-01 offset term: 0.00e+00 total: 1.53e+00
+model2(measured): flop term: 4.71e-01 divide term: 1.56e-03 latency term: 2.18e+00 volume term: 7.98e+00 total: 1.06e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 13, 39, 1.0)]  scalapack time:  [2.1906]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1759316.3620726855, 3765.4791572636964]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.11e+00 volume term: 4.99e-01 offset term: 0.00e+00 total: 1.61e+00
+model2(measured): flop term: 4.04e-01 divide term: 1.42e-03 latency term: 1.97e+00 volume term: 7.16e+00 total: 9.53e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 40, 40, 1, 511, 14, 36, 1.0)]  scalapack time:  [1.9741]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 5816349.956125421, 3378.71341898557]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.28e+00 volume term: 8.63e-01 offset term: 0.00e+00 total: 2.14e+00
+model2(measured): flop term: 2.57e-01 divide term: 8.22e-04 latency term: 1.35e+00 volume term: 4.42e+00 total: 6.03e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 22, 23, 1.0)]  scalapack time:  [1.5122]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1367786.7811782665, 3224.4459372774577]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.26e+00 volume term: 6.51e-01 offset term: 0.00e+00 total: 1.91e+00
+model2(measured): flop term: 2.78e-01 divide term: 1.04e-03 latency term: 1.66e+00 volume term: 5.18e+00 total: 7.12e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 20, 25, 1.0)]  scalapack time:  [1.5308]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18644419873649534, 'c3': 2.6383082222340573, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.19234395716748406, 'c3': 3.023286954164543, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.14748145391597825, 'c3': 2.6357787566787203, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0645599017892744, 'c3': 0.8106890989160663, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.09376222196310878, 'c3': 1.3387784481260967, 'c4': 0}
+MLA iteration:  5
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1558587.029501435, 4391.11535772585]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.04e+00 volume term: 5.10e-01 offset term: 0.00e+00 total: 1.55e+00
+model2(measured): flop term: 4.81e-01 divide term: 1.82e-03 latency term: 2.03e+00 volume term: 8.63e+00 total: 1.11e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 12, 42, 1.0)]  scalapack time:  [2.1022]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1316396.4610557011, 3155.2981797452444]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 4.15e-01 offset term: 0.00e+00 total: 1.64e+00
+model2(measured): flop term: 4.61e-01 divide term: 1.06e-03 latency term: 2.48e+00 volume term: 7.56e+00 total: 1.05e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 19, 26, 1.0)]  scalapack time:  [2.6481]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1617666.1115785427, 4714.130982651947]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.01e+00 volume term: 5.76e-01 offset term: 0.00e+00 total: 1.58e+00
+model2(measured): flop term: 4.04e-01 divide term: 1.81e-03 latency term: 1.81e+00 volume term: 8.23e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 11, 46, 1.0)]  scalapack time:  [1.7311]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1381505.1990606557, 3311.358674125326]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 8.23e-01 offset term: 0.00e+00 total: 2.05e+00
+model2(measured): flop term: 1.95e-01 divide term: 9.52e-04 latency term: 1.31e+00 volume term: 4.20e+00 total: 5.71e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 19, 26, 1.0)]  scalapack time:  [1.0703]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1323505.056546152, 2986.377170761944]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.30e+00 volume term: 6.33e-01 offset term: 0.00e+00 total: 1.93e+00
+model2(measured): flop term: 2.76e-01 divide term: 9.01e-04 latency term: 1.74e+00 volume term: 5.01e+00 total: 7.02e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.5324]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18329123080139864, 'c3': 2.6512662936101883, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18950135807639895, 'c3': 3.033655964815773, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.14460507173355666, 'c3': 2.6482374068172416, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06361670002349104, 'c3': 0.8145039689775962, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0921524298887862, 'c3': 1.344667856316166, 'c4': 0}
+MLA iteration:  6
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 7221632.324535649, 5391.414844127758]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.64e-01 volume term: 5.93e-01 offset term: 0.00e+00 total: 1.56e+00
+model2(measured): flop term: 6.36e-01 divide term: 1.99e-03 latency term: 1.92e+00 volume term: 9.99e+00 total: 1.26e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 128, 128, 1, 511, 11, 46, 1.0)]  scalapack time:  [2.8633]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 2610937.3825576846, 4760.539885911459]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.58e+00 volume term: 8.26e-01 offset term: 0.00e+00 total: 2.41e+00
+model2(measured): flop term: 4.56e-01 divide term: 4.05e-04 latency term: 3.26e+00 volume term: 1.50e+01 total: 1.87e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 50, 10, 1.0)]  scalapack time:  [4.6204]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1448366.6712046494, 3959.3087243885716]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.05e+00 volume term: 5.18e-01 offset term: 0.00e+00 total: 1.57e+00
+model2(measured): flop term: 3.97e-01 divide term: 1.53e-03 latency term: 1.93e+00 volume term: 7.37e+00 total: 9.69e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 13, 39, 1.0)]  scalapack time:  [1.8806]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 5743871.530090786, 3289.7945191203166]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.26e+00 volume term: 8.59e-01 offset term: 0.00e+00 total: 2.12e+00
+model2(measured): flop term: 2.54e-01 divide term: 7.86e-04 latency term: 1.37e+00 volume term: 4.36e+00 total: 5.99e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.5278]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1395122.9923391403, 3343.999447338352]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.20e+00 volume term: 6.70e-01 offset term: 0.00e+00 total: 1.87e+00
+model2(measured): flop term: 2.80e-01 divide term: 1.09e-03 latency term: 1.64e+00 volume term: 5.28e+00 total: 7.20e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 19, 26, 1.0)]  scalapack time:  [1.5354]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18264972661075027, 'c3': 2.6538331490207647, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18745085305986164, 'c3': 3.040867778404861, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.14211721163845956, 'c3': 2.659298324919475, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06410816368163823, 'c3': 0.8125139318852153, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.09094972957649626, 'c3': 1.3490242393504286, 'c4': 0}
+MLA iteration:  7
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1762859.5494048926, 3680.2775268764285]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 4.65e-01 offset term: 0.00e+00 total: 1.55e+00
+model2(measured): flop term: 4.82e-01 divide term: 1.46e-03 latency term: 2.20e+00 volume term: 7.81e+00 total: 1.05e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 511, 15, 34, 1.0)]  scalapack time:  [2.2594]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1523460.6293549864, 4439.601535996001]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.75e-01 volume term: 4.84e-01 offset term: 0.00e+00 total: 1.46e+00
+model2(measured): flop term: 4.78e-01 divide term: 1.84e-03 latency term: 2.04e+00 volume term: 8.75e+00 total: 1.13e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 11, 46, 1.0)]  scalapack time:  [2.0707]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1296964.1843615915, 3163.886669661949]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.17e+00 volume term: 4.65e-01 offset term: 0.00e+00 total: 1.63e+00
+model2(measured): flop term: 3.89e-01 divide term: 1.11e-03 latency term: 2.16e+00 volume term: 6.60e+00 total: 9.15e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 18, 28, 1.0)]  scalapack time:  [2.1633]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1723471.9376068017, 4585.581043554327]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.07e+00 volume term: 1.03e+00 offset term: 0.00e+00 total: 2.10e+00
+model2(measured): flop term: 2.03e-01 divide term: 1.29e-03 latency term: 1.18e+00 volume term: 5.24e+00 total: 6.62e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 14, 36, 1.0)]  scalapack time:  [1.0785]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 2513151.5612484072, 7954.836099543857]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.98e-01 volume term: 1.21e+00 offset term: 0.00e+00 total: 2.11e+00
+model2(measured): flop term: 3.07e-01 divide term: 2.30e-03 latency term: 1.24e+00 volume term: 9.51e+00 total: 1.11e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 9, 56, 1.0)]  scalapack time:  [1.3745]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17978961860535708, 'c3': 2.6658059646140018, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18479903161894007, 'c3': 3.0502715224141017, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1400986291294288, 'c3': 2.6685054263259893, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0633228268087568, 'c3': 0.8154404292194775, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08946684586386215, 'c3': 1.3534209154033137, 'c4': 0}
+MLA iteration:  8
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 2081570.7546952816, 4884.264955521639]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.53e-01 volume term: 5.50e-01 offset term: 0.00e+00 total: 1.50e+00
+model2(measured): flop term: 4.96e-01 divide term: 1.99e-03 latency term: 1.95e+00 volume term: 9.22e+00 total: 1.17e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 511, 11, 46, 1.0)]  scalapack time:  [1.9986]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1319887.5455698892, 3426.175375027835]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.08e+00 volume term: 4.20e-01 offset term: 0.00e+00 total: 1.50e+00
+model2(measured): flop term: 4.67e-01 divide term: 1.35e-03 latency term: 2.29e+00 volume term: 7.58e+00 total: 1.03e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 15, 34, 1.0)]  scalapack time:  [2.2951]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1617666.1115785427, 4714.130982651947]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.59e-01 volume term: 5.82e-01 offset term: 0.00e+00 total: 1.54e+00
+model2(measured): flop term: 4.03e-01 divide term: 1.81e-03 latency term: 1.81e+00 volume term: 8.23e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 11, 46, 1.0)]  scalapack time:  [1.7444]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1269999.3281608243, 2865.646022086231]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.24e+00 volume term: 7.65e-01 offset term: 0.00e+00 total: 2.00e+00
+model2(measured): flop term: 1.91e-01 divide term: 7.86e-04 latency term: 1.39e+00 volume term: 3.86e+00 total: 5.45e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.1153]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1760794.9976975617, 3391.6740831907077]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.16e+00 volume term: 6.81e-01 offset term: 0.00e+00 total: 1.84e+00
+model2(measured): flop term: 2.87e-01 divide term: 1.09e-03 latency term: 1.63e+00 volume term: 5.33e+00 total: 7.25e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 511, 19, 26, 1.0)]  scalapack time:  [1.5296]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17698393076807528, 'c3': 2.6771806536143465, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.18225919552873263, 'c3': 3.0595065773057333, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1376926434129357, 'c3': 2.678894612912639, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.06254959620274218, 'c3': 0.8186490993197982, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08841242890007013, 'c3': 1.357244079515053, 'c4': 0}
+MLA iteration:  9
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1379050.164426404, 3500.9413108749195]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 4.57e-01 offset term: 0.00e+00 total: 1.55e+00
+model2(measured): flop term: 4.71e-01 divide term: 1.37e-03 latency term: 2.26e+00 volume term: 7.63e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 16, 31, 1.0)]  scalapack time:  [2.2525]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1388659.717994789, 3796.0915878372043]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.01e+00 volume term: 4.43e-01 offset term: 0.00e+00 total: 1.45e+00
+model2(measured): flop term: 4.72e-01 divide term: 1.56e-03 latency term: 2.18e+00 volume term: 7.98e+00 total: 1.06e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 13, 39, 1.0)]  scalapack time:  [2.2215]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 5834068.153917125, 3621.696949608812]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.11e+00 volume term: 5.26e-01 offset term: 0.00e+00 total: 1.64e+00
+model2(measured): flop term: 4.80e-01 divide term: 1.11e-03 latency term: 2.12e+00 volume term: 7.42e+00 total: 1.00e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 128, 128, 1, 511, 18, 28, 1.0)]  scalapack time:  [2.5009]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1269999.3281608243, 2865.646022086231]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 7.67e-01 offset term: 0.00e+00 total: 1.99e+00
+model2(measured): flop term: 1.91e-01 divide term: 7.86e-04 latency term: 1.39e+00 volume term: 3.86e+00 total: 5.45e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.0898]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 6793262.988613275, 4919.133872505199]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.02e+00 volume term: 8.78e-01 offset term: 0.00e+00 total: 1.90e+00
+model2(measured): flop term: 3.91e-01 divide term: 1.48e-03 latency term: 1.44e+00 volume term: 6.86e+00 total: 8.69e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 120, 120, 1, 510, 14, 36, 1.0)]  scalapack time:  [1.9413]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17424719771512612, 'c3': 2.688698399182014, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17998141872859336, 'c3': 3.067713186955694, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.13683125575236013, 'c3': 2.6827686804287323, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.061750862629349826, 'c3': 0.8219635989207338, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08853433180700461, 'c3': 1.3568251837604213, 'c4': 0}
+MLA iteration:  10
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 6375308.215688888, 4329.980636021725]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.02e+00 volume term: 5.28e-01 offset term: 0.00e+00 total: 1.55e+00
+model2(measured): flop term: 5.99e-01 divide term: 1.56e-03 latency term: 2.11e+00 volume term: 8.82e+00 total: 1.15e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 128, 128, 1, 510, 14, 36, 1.0)]  scalapack time:  [2.7929]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1312336.257971652, 3331.5772970470152]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 4.19e-01 offset term: 0.00e+00 total: 1.51e+00
+model2(measured): flop term: 4.65e-01 divide term: 1.26e-03 latency term: 2.34e+00 volume term: 7.54e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 16, 31, 1.0)]  scalapack time:  [2.3877]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 5957271.809529713, 3853.573625685781]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.07e+00 volume term: 5.37e-01 offset term: 0.00e+00 total: 1.61e+00
+model2(measured): flop term: 4.92e-01 divide term: 1.25e-03 latency term: 2.04e+00 volume term: 7.58e+00 total: 1.01e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 128, 128, 1, 511, 16, 31, 1.0)]  scalapack time:  [2.4516]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 5692956.042770456, 3217.431395934239]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 8.59e-01 offset term: 0.00e+00 total: 2.08e+00
+model2(measured): flop term: 2.51e-01 divide term: 7.54e-04 latency term: 1.39e+00 volume term: 4.32e+00 total: 5.97e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 24, 21, 1.0)]  scalapack time:  [1.5343]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1424766.6549265706, 3475.6551347020513]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.13e+00 volume term: 6.91e-01 offset term: 0.00e+00 total: 1.82e+00
+model2(measured): flop term: 2.81e-01 divide term: 1.15e-03 latency term: 1.61e+00 volume term: 5.39e+00 total: 7.28e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 18, 28, 1.0)]  scalapack time:  [1.4749]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17349884234373544, 'c3': 2.6917777230954596, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1778114592566836, 'c3': 3.0756239803774696, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.13606088169035138, 'c3': 2.686204350414162, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.062251081104754, 'c3': 0.8199293823269314, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08744237237341194, 'c3': 1.3607789182175618, 'c4': 0}
+MLA iteration:  11
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1558587.029501435, 4391.11535772585]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.70e-01 volume term: 5.18e-01 offset term: 0.00e+00 total: 1.49e+00
+model2(measured): flop term: 4.81e-01 divide term: 1.82e-03 latency term: 2.03e+00 volume term: 8.63e+00 total: 1.11e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 12, 42, 1.0)]  scalapack time:  [2.1298]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1445908.024107996, 4073.6569792645087]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.70e-01 volume term: 4.63e-01 offset term: 0.00e+00 total: 1.43e+00
+model2(measured): flop term: 4.74e-01 divide term: 1.69e-03 latency term: 2.11e+00 volume term: 8.31e+00 total: 1.09e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 12, 42, 1.0)]  scalapack time:  [2.2045]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1745697.1740672805, 5285.98773666058]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.02e-01 volume term: 6.31e-01 offset term: 0.00e+00 total: 1.53e+00
+model2(measured): flop term: 4.08e-01 divide term: 1.99e-03 latency term: 1.74e+00 volume term: 8.88e+00 total: 1.10e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 10, 51, 1.0)]  scalapack time:  [1.8128]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1256586.175783785, 2799.0004879422354]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.23e+00 volume term: 7.61e-01 offset term: 0.00e+00 total: 1.99e+00
+model2(measured): flop term: 1.91e-01 divide term: 7.54e-04 latency term: 1.41e+00 volume term: 3.82e+00 total: 5.42e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 24, 21, 1.0)]  scalapack time:  [1.2106]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1682587.704531507, 3091.9751729008944]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.19e+00 volume term: 6.54e-01 offset term: 0.00e+00 total: 1.84e+00
+model2(measured): flop term: 2.83e-01 divide term: 9.42e-04 latency term: 1.71e+00 volume term: 5.09e+00 total: 7.08e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 511, 22, 23, 1.0)]  scalapack time:  [1.6771]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17127315324517461, 'c3': 2.700919521074469, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17585498268784655, 'c3': 3.0826174633124546, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1341537861592322, 'c3': 2.6942092620055824, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.061867735234773125, 'c3': 0.8215273374728421, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0868994064763958, 'c3': 1.3627697815672104, 'c4': 0}
+MLA iteration:  12
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1360409.4917693522, 3207.0545783390403]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.15e+00 volume term: 4.53e-01 offset term: 0.00e+00 total: 1.60e+00
+model2(measured): flop term: 4.65e-01 divide term: 1.09e-03 latency term: 2.43e+00 volume term: 7.53e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 511, 20, 25, 1.0)]  scalapack time:  [2.7534]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 7157351.444010039, 6208.733298999266]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.35e-01 volume term: 6.12e-01 offset term: 0.00e+00 total: 1.45e+00
+model2(measured): flop term: 6.43e-01 divide term: 2.25e-03 latency term: 1.83e+00 volume term: 1.10e+01 total: 1.34e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 120, 120, 1, 511, 9, 56, 1.0)]  scalapack time:  [2.993]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 2038008.9437206425, 4782.050113070302]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.26e-01 volume term: 5.91e-01 offset term: 0.00e+00 total: 1.52e+00
+model2(measured): flop term: 4.15e-01 divide term: 1.81e-03 latency term: 1.80e+00 volume term: 8.29e+00 total: 1.05e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 40, 40, 1, 511, 11, 46, 1.0)]  scalapack time:  [1.8491]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 15565702.084082415, 138993.49781433615]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 3.04e-01 volume term: 9.44e+00 offset term: 0.00e+00 total: 9.74e+00
+model2(measured): flop term: 3.88e-01 divide term: 9.04e-03 latency term: 3.52e-01 volume term: 4.73e+01 total: 4.80e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 511, 2, 255, 1.0)]  scalapack time:  [2.7812]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1520322.1814945606, 3859.583116215084]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.07e+00 volume term: 7.40e-01 offset term: 0.00e+00 total: 1.81e+00
+model2(measured): flop term: 2.84e-01 divide term: 1.30e-03 latency term: 1.54e+00 volume term: 5.75e+00 total: 7.58e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 16, 31, 1.0)]  scalapack time:  [1.4417]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.16991494588519834, 'c3': 2.7066886783431294, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17570132313850742, 'c3': 3.0831311824849763, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.13238497013810732, 'c3': 2.7018083988475112, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08014455102962594, 'c3': 0.6863029189224885, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0858893547006147, 'c3': 1.3663748100146573, 'c4': 0}
+MLA iteration:  13
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1778489.1690113617, 5385.282210931389]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.86e-01 volume term: 5.94e-01 offset term: 0.00e+00 total: 1.48e+00
+model2(measured): flop term: 4.89e-01 divide term: 2.19e-03 latency term: 1.89e+00 volume term: 9.84e+00 total: 1.22e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 10, 51, 1.0)]  scalapack time:  [1.97]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1629618.005827433, 4934.498905199627]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.86e-01 volume term: 5.24e-01 offset term: 0.00e+00 total: 1.41e+00
+model2(measured): flop term: 4.82e-01 divide term: 2.02e-03 latency term: 1.97e+00 volume term: 9.36e+00 total: 1.18e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 10, 51, 1.0)]  scalapack time:  [1.9922]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1448366.6712046494, 3959.3087243885716]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.82e-01 volume term: 5.26e-01 offset term: 0.00e+00 total: 1.51e+00
+model2(measured): flop term: 3.97e-01 divide term: 1.53e-03 latency term: 1.93e+00 volume term: 7.37e+00 total: 9.69e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 13, 39, 1.0)]  scalapack time:  [1.9014]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 9500845.507555554, 4013.6770106262707]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.59e+00 volume term: 1.44e+00 offset term: 0.00e+00 total: 3.03e+00
+model2(measured): flop term: 2.19e-01 divide term: 2.55e-04 latency term: 1.86e+00 volume term: 7.22e+00 total: 9.30e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 510, 71, 7, 1.0)]  scalapack time:  [2.2673]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1323270.0329550726, 2911.77959964629]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.22e+00 volume term: 6.46e-01 offset term: 0.00e+00 total: 1.87e+00
+model2(measured): flop term: 2.74e-01 divide term: 8.29e-04 latency term: 1.78e+00 volume term: 5.01e+00 total: 7.06e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 25, 20, 1.0)]  scalapack time:  [1.6561]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1677269263980455, 'c3': 2.7153693586391987, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17359686962866785, 'c3': 3.090470680320835, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.13070012438611514, 'c3': 2.709305192481956, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08032921981003971, 'c3': 0.6856965766211683, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08521901441458266, 'c3': 1.3688496129279086, 'c4': 0}
+MLA iteration:  14
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1420934.6354552568, 3165.080767733691]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.20e+00 volume term: 4.75e-01 offset term: 0.00e+00 total: 1.67e+00
+model2(measured): flop term: 4.62e-01 divide term: 9.11e-04 latency term: 2.57e+00 volume term: 7.87e+00 total: 1.09e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 510, 24, 21, 1.0)]  scalapack time:  [2.8514]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 3999767.2243570387, 4754.209313486499]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.96e-01 volume term: 5.15e-01 offset term: 0.00e+00 total: 1.41e+00
+model2(measured): flop term: 5.49e-01 divide term: 1.84e-03 latency term: 2.00e+00 volume term: 9.19e+00 total: 1.17e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 80, 80, 1, 510, 11, 46, 1.0)]  scalapack time:  [2.5737]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 2320706.3500410877, 4403.456640940031]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.36e-01 volume term: 5.63e-01 offset term: 0.00e+00 total: 1.50e+00
+model2(measured): flop term: 4.22e-01 divide term: 1.66e-03 latency term: 1.85e+00 volume term: 7.87e+00 total: 1.01e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 48, 48, 1, 510, 12, 42, 1.0)]  scalapack time:  [2.1208]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1798360.9464760465, 3526.158455001264]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 8.76e-01 offset term: 0.00e+00 total: 1.96e+00
+model2(measured): flop term: 2.02e-01 divide term: 1.00e-03 latency term: 1.28e+00 volume term: 4.37e+00 total: 5.86e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 40, 40, 1, 511, 18, 28, 1.0)]  scalapack time:  [1.109]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 2228588.2058795374, 4902.0516091289865]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.69e-01 volume term: 8.72e-01 offset term: 0.00e+00 total: 1.84e+00
+model2(measured): flop term: 3.01e-01 divide term: 1.59e-03 latency term: 1.43e+00 volume term: 6.75e+00 total: 8.48e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 510, 13, 39, 1.0)]  scalapack time:  [1.4328]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1662759643731156, 'c3': 2.721547790685355, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17272081721968632, 'c3': 3.09354332447226, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.12968420797984942, 'c3': 2.713740993267408, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.07956282178853474, 'c3': 0.6883225738154632, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08430481814482263, 'c3': 1.371964160957386, 'c4': 0}
+MLA iteration:  15
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1558587.029501435, 4391.11535772585]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.35e-01 volume term: 5.22e-01 offset term: 0.00e+00 total: 1.46e+00
+model2(measured): flop term: 4.80e-01 divide term: 1.82e-03 latency term: 2.03e+00 volume term: 8.63e+00 total: 1.11e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 32, 32, 1, 511, 12, 42, 1.0)]  scalapack time:  [2.1339]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1629618.005827433, 4934.498905199627]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.70e-01 volume term: 5.26e-01 offset term: 0.00e+00 total: 1.40e+00
+model2(measured): flop term: 4.82e-01 divide term: 2.02e-03 latency term: 1.97e+00 volume term: 9.36e+00 total: 1.18e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 10, 51, 1.0)]  scalapack time:  [2.0645]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1745697.1740672805, 5285.98773666058]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.70e-01 volume term: 6.37e-01 offset term: 0.00e+00 total: 1.51e+00
+model2(measured): flop term: 4.07e-01 divide term: 1.99e-03 latency term: 1.74e+00 volume term: 8.88e+00 total: 1.10e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 10, 51, 1.0)]  scalapack time:  [1.8002]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 15565702.084082415, 138993.49781433615]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 2.95e-01 volume term: 9.50e+00 offset term: 0.00e+00 total: 9.80e+00
+model2(measured): flop term: 3.88e-01 divide term: 9.04e-03 latency term: 3.52e-01 volume term: 4.73e+01 total: 4.80e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 510, 2, 255, 1.0)]  scalapack time:  [2.7922]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1323505.056546152, 2986.377170761944]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.17e+00 volume term: 6.49e-01 offset term: 0.00e+00 total: 1.82e+00
+model2(measured): flop term: 2.76e-01 divide term: 9.01e-04 latency term: 1.74e+00 volume term: 5.01e+00 total: 7.02e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.6573]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.16448569111114122, 'c3': 2.7288839343304634, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.17089470542668284, 'c3': 3.0999113622738754, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.12801969430064689, 'c3': 2.7207065264514796, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08939862600864054, 'c3': 0.6134636616261364, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08383804239814782, 'c3': 1.3736856087662617, 'c4': 0}
+MLA iteration:  16
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 2376471.75297936, 4509.269482749545]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.21e-01 volume term: 5.32e-01 offset term: 0.00e+00 total: 1.45e+00
+model2(measured): flop term: 5.04e-01 divide term: 1.82e-03 latency term: 2.01e+00 volume term: 8.77e+00 total: 1.13e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 48, 48, 1, 510, 12, 42, 1.0)]  scalapack time:  [2.3009]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1445908.024107996, 4073.6569792645087]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.30e-01 volume term: 4.67e-01 offset term: 0.00e+00 total: 1.40e+00
+model2(measured): flop term: 4.74e-01 divide term: 1.69e-03 latency term: 2.11e+00 volume term: 8.31e+00 total: 1.09e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 12, 42, 1.0)]  scalapack time:  [2.3316]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1521410.094209254, 4286.374198955335]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.30e-01 volume term: 5.55e-01 offset term: 0.00e+00 total: 1.49e+00
+model2(measured): flop term: 4.01e-01 divide term: 1.66e-03 latency term: 1.87e+00 volume term: 7.74e+00 total: 1.00e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 12, 42, 1.0)]  scalapack time:  [1.8864]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 5602096.997498425, 3579.1988524975613]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 9.13e-01 offset term: 0.00e+00 total: 2.01e+00
+model2(measured): flop term: 2.58e-01 divide term: 9.04e-04 latency term: 1.31e+00 volume term: 4.54e+00 total: 6.11e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 120, 120, 1, 510, 20, 25, 1.0)]  scalapack time:  [1.6239]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1424766.6549265706, 3475.6551347020513]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.07e+00 volume term: 6.99e-01 offset term: 0.00e+00 total: 1.77e+00
+model2(measured): flop term: 2.81e-01 divide term: 1.15e-03 latency term: 1.61e+00 volume term: 5.39e+00 total: 7.28e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 18, 28, 1.0)]  scalapack time:  [1.556]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1631892888831588, 'c3': 2.734174612160517, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.16954131924001534, 'c3': 3.104760536194717, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1265506579333385, 'c3': 2.727159590081661, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.0894969611455857, 'c3': 0.6131680032285819, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08327990178532516, 'c3': 1.3757057038453067, 'c4': 0}
+MLA iteration:  17
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1812276.1587773275, 3878.829442046651]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.73e-01 volume term: 4.87e-01 offset term: 0.00e+00 total: 1.46e+00
+model2(measured): flop term: 4.85e-01 divide term: 1.56e-03 latency term: 2.14e+00 volume term: 8.03e+00 total: 1.07e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 511, 14, 36, 1.0)]  scalapack time:  [2.3586]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1312336.257971652, 3331.5772970470152]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.03e+00 volume term: 4.25e-01 offset term: 0.00e+00 total: 1.45e+00
+model2(measured): flop term: 4.65e-01 divide term: 1.26e-03 latency term: 2.34e+00 volume term: 7.54e+00 total: 1.04e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 16, 31, 1.0)]  scalapack time:  [2.6022]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1301232.4579377994, 3118.951263864602]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 4.76e-01 offset term: 0.00e+00 total: 1.56e+00
+model2(measured): flop term: 3.88e-01 divide term: 1.05e-03 latency term: 2.20e+00 volume term: 6.62e+00 total: 9.21e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 19, 26, 1.0)]  scalapack time:  [2.4616]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1798360.9464760465, 3526.158455001264]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.06e+00 volume term: 8.81e-01 offset term: 0.00e+00 total: 1.94e+00
+model2(measured): flop term: 2.02e-01 divide term: 1.00e-03 latency term: 1.28e+00 volume term: 4.37e+00 total: 5.86e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 40, 40, 1, 511, 18, 28, 1.0)]  scalapack time:  [1.1957]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1880662.6777814522, 3411.9629439873047]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.43e+00 volume term: 9.24e-01 offset term: 0.00e+00 total: 2.36e+00
+model2(measured): flop term: 2.67e-01 divide term: 4.06e-04 latency term: 2.16e+00 volume term: 7.12e+00 total: 9.55e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 511, 51, 10, 1.0)]  scalapack time:  [2.3849]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.16191967366520438, 'c3': 2.739469336576985, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1684672125679599, 'c3': 3.1086948700004657, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.1261822845651336, 'c3': 2.7288592916488574, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08885812157658164, 'c3': 0.6150982560692664, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08336619767061879, 'c3': 1.3753925587923088, 'c4': 0}
+MLA iteration:  18
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1876064.556240442, 4126.6328397887155]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.48e-01 volume term: 5.04e-01 offset term: 0.00e+00 total: 1.45e+00
+model2(measured): flop term: 4.88e-01 divide term: 1.68e-03 latency term: 2.08e+00 volume term: 8.31e+00 total: 1.09e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 511, 13, 39, 1.0)]  scalapack time:  [2.3296]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1771800.9354614608, 5608.251511744489]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.23e-01 volume term: 5.73e-01 offset term: 0.00e+00 total: 1.40e+00
+model2(measured): flop term: 4.87e-01 divide term: 2.25e-03 latency term: 1.88e+00 volume term: 1.02e+01 total: 1.25e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 511, 9, 56, 1.0)]  scalapack time:  [2.0615]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 1448366.6712046494, 3959.3087243885716]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.53e-01 volume term: 5.29e-01 offset term: 0.00e+00 total: 1.48e+00
+model2(measured): flop term: 3.97e-01 divide term: 1.53e-03 latency term: 1.93e+00 volume term: 7.37e+00 total: 9.69e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 511, 13, 39, 1.0)]  scalapack time:  [2.0083]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 6029996.60057162, 3613.1387927365367]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.09e+00 volume term: 9.23e-01 offset term: 0.00e+00 total: 2.01e+00
+model2(measured): flop term: 2.64e-01 divide term: 9.04e-04 latency term: 1.31e+00 volume term: 4.58e+00 total: 6.16e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 510, 20, 25, 1.0)]  scalapack time:  [1.6685]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1916984.0981454963, 3912.94398507965]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.02e+00 volume term: 7.53e-01 offset term: 0.00e+00 total: 1.77e+00
+model2(measured): flop term: 2.93e-01 divide term: 1.30e-03 latency term: 1.54e+00 volume term: 5.80e+00 total: 7.63e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 510, 16, 31, 1.0)]  scalapack time:  [1.3952]
+task  0 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.160726848684694, 'c3': 2.74440157391211, 'c4': 0}
+task  1 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.16687981128506787, 'c3': 3.1140872412025917, 'c4': 0}
+task  2 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.12506768204704774, 'c3': 2.7338217789354906, 'c4': 0}
+task  3 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08904122166948603, 'c3': 0.6145495844636318, 'c4': 0}
+task  4 : models update:  {'c0': 0, 'c1': 0, 'c2': 0.08252099431704137, 'c3': 1.3783921970661275, 'c4': 0}
+MLA iteration:  19
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+measured coefficients [156.90609527649454, 0.008688045142663043, 0.18343971, 22.663377806328707, 1876064.556240442, 4126.6328397887155]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 9.38e-01 volume term: 5.05e-01 offset term: 0.00e+00 total: 1.44e+00
+model2(measured): flop term: 4.89e-01 divide term: 1.68e-03 latency term: 2.08e+00 volume term: 8.31e+00 total: 1.09e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 510, 13, 39, 1.0)]  scalapack time:  [2.1014]
+measured coefficients [161.65825367082198, 0.009361182099184781, 0.19041347, 24.41930297828037, 1523460.6293549864, 4439.601535996001]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 8.85e-01 volume term: 4.94e-01 offset term: 0.00e+00 total: 1.38e+00
+model2(measured): flop term: 4.78e-01 divide term: 1.84e-03 latency term: 2.04e+00 volume term: 8.75e+00 total: 1.13e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17269, 16601, 256, 2, 32, 32, 1, 510, 11, 46, 1.0)]  scalapack time:  [2.048]
+measured coefficients [127.18720648828125, 0.007337017968749999, 0.16857459, 19.139128246591422, 5859526.524952847, 3709.971086843386]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.02e+00 volume term: 5.37e-01 offset term: 0.00e+00 total: 1.55e+00
+model2(measured): flop term: 4.86e-01 divide term: 1.17e-03 latency term: 2.08e+00 volume term: 7.45e+00 total: 1.00e+01
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 128, 128, 1, 511, 17, 30, 1.0)]  scalapack time:  [2.4289]
+measured coefficients [51.17343100434782, 0.0026172990489130433, 0.10068366000000001, 6.827408951454805, 1425226.0193376965, 3476.7757338322376]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.06e+00 volume term: 8.74e-01 offset term: 0.00e+00 total: 1.93e+00
+model2(measured): flop term: 1.96e-01 divide term: 1.00e-03 latency term: 1.29e+00 volume term: 4.33e+00 total: 5.82e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 32, 32, 1, 511, 18, 28, 1.0)]  scalapack time:  [1.0455]
+measured coefficients [78.88080922978939, 0.00406162449048913, 0.12542445, 10.595033615027633, 1323505.056546152, 2986.377170761944]
+model1(data fit): flop term: 0.00e+00 divide term: 0.00e+00 latency term: 1.14e+00 volume term: 6.52e-01 offset term: 0.00e+00 total: 1.79e+00
+model2(measured): flop term: 2.76e-01 divide term: 9.01e-04 latency term: 1.74e+00 volume term: 5.01e+00 total: 7.02e+00
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 23, 22, 1.0)]  scalapack time:  [1.5674]
+stats:  {'time_total': 1413.86740243, 'time_sample_init': 0.001172684, 'time_fun': 1250.3193723759998, 'time_search': 84.860193744, 'time_model': 78.38755046199998}
+tid: 0
+    m:18060 n:15993
+    Ps  [[7, 511, 43], [13, 510, 150], [11, 511, 205], [7, 510, 115], [11, 510, 6], [10, 511, 189], [4, 510, 102], [6, 511, 244], [14, 511, 71], [5, 510, 448], [14, 510, 125], [5, 510, 297], [4, 511, 68], [8, 510, 141], [6, 511, 262], [9, 511, 7], [11, 510, 196], [6, 510, 166], [11, 511, 81], [9, 510, 36], [4, 511, 7], [4, 510, 9], [4, 511, 8], [4, 511, 9], [5, 510, 12], [4, 510, 12], [16, 511, 11], [5, 511, 15], [5, 511, 11], [4, 510, 16], [16, 510, 14], [4, 510, 12], [4, 511, 20], [4, 510, 10], [4, 510, 24], [4, 511, 12], [6, 510, 12], [5, 511, 14], [5, 511, 13], [5, 510, 13]]
+    Os  [[3.766765], [11.306302], [15.181882], [9.081068], [2.941303], [14.599423], [7.805722], [15.15728], [6.018572], [27.867702], [8.365711], [28.428409], [5.755248], [11.059302], [22.683739], [2.507227], [15.139398], [11.847053], [7.005872], [3.32786], [1.991589], [2.006742], [2.011841], [1.984872], [2.085197], [2.102207], [2.863311], [2.259429], [1.998558], [2.252487], [2.79292], [2.129833], [2.753386], [1.970047], [2.851407], [2.133887], [2.300917], [2.358628], [2.329569], [2.101403]]
+    Popt  [4, 510, 10] Oopt  1.970047 nth  33
+tid: 1
+    m:17269 n:16601
+    Ps  [[10, 511, 76], [6, 510, 329], [10, 511, 167], [8, 511, 30], [5, 511, 98], [9, 511, 25], [4, 510, 275], [13, 510, 125], [16, 510, 86], [6, 510, 107], [15, 511, 33], [11, 510, 190], [5, 511, 279], [14, 510, 54], [5, 511, 137], [7, 511, 241], [5, 510, 288], [8, 511, 4], [11, 511, 77], [7, 511, 263], [5, 510, 16], [16, 510, 10], [4, 510, 10], [4, 511, 21], [4, 511, 13], [4, 511, 19], [4, 510, 50], [4, 510, 11], [4, 511, 15], [4, 510, 13], [4, 511, 16], [4, 511, 12], [15, 511, 9], [4, 510, 10], [10, 510, 11], [4, 510, 10], [4, 511, 12], [4, 511, 16], [4, 511, 9], [4, 510, 11]]
+    Os  [[7.015401], [31.66724], [12.511049], [3.042492], [8.92492], [3.257021], [28.629044], [9.619793], [9.094078], [10.373139], [3.886904], [16.994406], [28.071761], [4.814559], [11.614763], [16.163595], [30.537271], [3.122843], [7.391264], [27.396024], [2.315675], [2.883361], [1.952893], [2.760727], [2.190586], [2.648086], [4.620401], [2.070706], [2.29511], [2.221499], [2.387728], [2.204466], [2.992975], [1.992185], [2.573671], [2.064485], [2.331558], [2.602222], [2.061461], [2.048035]]
+    Popt  [4, 510, 10] Oopt  1.952893 nth  22
+tid: 2
+    m:17335 n:14697
+    Ps  [[9, 511, 138], [7, 510, 28], [5, 511, 118], [12, 510, 84], [13, 511, 54], [16, 510, 8], [9, 511, 189], [12, 511, 179], [5, 511, 400], [10, 511, 9], [15, 510, 144], [7, 511, 76], [13, 510, 108], [6, 510, 234], [5, 511, 202], [5, 511, 46], [12, 511, 80], [5, 511, 324], [12, 511, 105], [11, 510, 173], [4, 510, 12], [4, 511, 14], [4, 510, 12], [5, 511, 17], [5, 511, 14], [4, 510, 11], [4, 511, 13], [4, 510, 18], [4, 511, 11], [16, 511, 18], [16, 511, 16], [4, 510, 10], [5, 511, 11], [4, 511, 13], [6, 510, 12], [4, 511, 10], [4, 510, 12], [4, 510, 19], [4, 511, 13], [16, 511, 17]]
+    Os  [[10.282788], [2.799079], [8.556503], [6.361334], [4.028293], [2.940134], [13.345763], [13.854432], [27.437685], [2.269974], [10.423752], [6.281084], [8.028948], [13.936053], [13.986028], [3.3411], [5.762441], [24.054363], [7.775823], [13.012124], [1.74349], [1.877262], [1.770872], [2.044297], [1.974149], [1.731147], [1.880551], [2.163251], [1.744354], [2.500877], [2.451564], [1.812845], [1.849059], [1.901394], [2.120788], [1.800179], [1.88644], [2.461597], [2.008327], [2.428903]]
+    Popt  [4, 510, 11] Oopt  1.731147 nth  25
+tid: 3
+    m:19552 n:8778
+    Ps  [[12, 510, 12], [5, 510, 362], [7, 510, 84], [9, 511, 240], [5, 510, 199], [4, 511, 28], [12, 511, 66], [10, 510, 213], [8, 510, 260], [7, 510, 285], [15, 511, 122], [10, 511, 133], [4, 511, 51], [5, 511, 16], [10, 510, 115], [13, 511, 151], [7, 511, 166], [6, 511, 236], [5, 510, 63], [11, 511, 192], [4, 510, 20], [4, 510, 21], [16, 511, 15], [6, 510, 17], [16, 511, 22], [4, 510, 19], [16, 510, 23], [4, 510, 14], [4, 510, 23], [4, 510, 23], [16, 511, 24], [4, 510, 24], [4, 511, 2], [16, 510, 71], [5, 511, 18], [4, 510, 2], [15, 510, 20], [5, 511, 18], [16, 510, 20], [4, 511, 18]]
+    Os  [[1.44978], [9.217042], [2.226035], [4.752694], [5.022276], [1.274237], [2.117269], [4.686151], [6.983357], [8.371209], [2.966969], [3.311891], [1.449384], [1.037008], [2.930959], [3.766288], [3.789221], [4.718589], [1.603693], [4.653838], [1.085804], [1.097452], [1.568861], [1.074233], [1.512209], [1.070264], [1.527808], [1.078485], [1.115265], [1.08984], [1.534327], [1.210613], [2.781151], [2.267253], [1.10895], [2.792217], [1.623862], [1.195675], [1.668508], [1.045505]]
+    Popt  [5, 511, 16] Oopt  1.037008 nth  13
+tid: 4
+    m:19421 n:10935
+    Ps  [[12, 510, 27], [11, 510, 154], [7, 511, 96], [8, 510, 229], [9, 510, 203], [7, 510, 63], [5, 511, 401], [14, 511, 106], [10, 511, 169], [5, 511, 468], [6, 510, 11], [5, 511, 408], [11, 510, 113], [4, 510, 180], [7, 510, 80], [7, 511, 261], [6, 510, 344], [10, 510, 224], [10, 511, 15], [15, 511, 41], [5, 511, 13], [4, 510, 15], [4, 510, 14], [4, 511, 15], [4, 511, 20], [4, 510, 23], [4, 510, 19], [4, 511, 9], [5, 511, 19], [15, 510, 14], [4, 510, 18], [5, 511, 22], [4, 511, 16], [4, 511, 25], [5, 510, 13], [4, 510, 23], [4, 510, 18], [4, 511, 51], [5, 510, 16], [4, 510, 23]]
+    Os  [[1.836727], [5.739466], [3.931328], [7.441028], [7.404033], [2.325435], [14.899613], [4.539199], [6.293613], [13.987361], [1.498594], [14.636895], [4.381306], [7.750958], [3.71516], [11.244477], [13.974975], [7.518813], [1.848339], [2.600013], [1.414097], [1.357124], [1.374999], [1.328332], [1.530783], [1.532385], [1.535354], [1.374512], [1.529566], [1.941292], [1.47493], [1.677058], [1.44167], [1.656134], [1.432813], [1.65726], [1.555993], [2.38487], [1.395247], [1.567375]]
+    Popt  [4, 511, 15] Oopt  1.328332 nth  23

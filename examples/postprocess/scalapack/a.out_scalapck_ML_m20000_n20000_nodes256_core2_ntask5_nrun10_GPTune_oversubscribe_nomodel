@@ -1,0 +1,119 @@
+Space([Integer(low=128, high=20000, prior='uniform', transform='normalize'),
+       Integer(low=128, high=20000, prior='uniform', transform='normalize')]) Space([Integer(low=4, high=16, prior='uniform', transform='normalize'),
+       Integer(low=510, high=511, prior='uniform', transform='normalize'),
+       Integer(low=1, high=511, prior='uniform', transform='normalize')]) Space([Real(low=-inf, high=inf, prior='uniform', transform='identity')]) {'cst1': 'b*8 * p <= m', 'cst2': 'b*8 * nproc <= n * p', 'cst3': 'nproc >= p'}
+
+
+------Validating the options
+  
+  total core counts provided to GPTune: 512
+   ---> distributed_memory_parallelism: False
+   ---> shared_memory_parallelism: False
+   ---> objective_evaluation_parallelism: False
+  
+  total core counts for modeling: 2
+   ---> model_processes: 1
+   ---> model_threads: 1
+   ---> model_restart_processes: 1
+   ---> model_restart_threads: 1
+  
+  total core counts for search: 1
+   ---> search_processes: 1
+   ---> search_threads: 1
+   ---> search_multitask_processes: 1
+   ---> search_multitask_threads: 1
+  
+  total core counts for objective function evaluation: 512
+   ---> core counts in a single application run: 511
+   ---> objective_multisample_processes: 1
+   ---> objective_multisample_threads: 1
+
+
+
+------Starting MLA with 5 tasks and 10 samples each 
+MLA iteration:  0
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 120, 120, 1, 511, 8, 63, 1.0)]  scalapack time:  [3.1398]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 128, 128, 1, 511, 25, 20, 1.0)]  scalapack time:  [3.5679]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 48, 48, 1, 511, 3, 170, 1.0)]  scalapack time:  [2.9972]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 510, 10, 51, 1.0)]  scalapack time:  [1.8987]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 40, 40, 1, 511, 4, 127, 1.0)]  scalapack time:  [2.2148]
+MLA iteration:  1
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 40, 40, 1, 511, 3, 170, 1.0)]  scalapack time:  [3.0927]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 128, 128, 1, 511, 42, 12, 1.0)]  scalapack time:  [4.3387]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 80, 80, 1, 511, 4, 127, 1.0)]  scalapack time:  [3.2524]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 16, 31, 1.0)]  scalapack time:  [1.5754]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19421, 10935, 256, 2, 56, 56, 1, 511, 5, 102, 1.0)]  scalapack time:  [2.2041]
+MLA iteration:  2
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 80, 80, 1, 511, 6, 85, 1.0)]  scalapack time:  [2.8683]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 128, 128, 1, 511, 25, 20, 1.0)]  scalapack time:  [3.2172]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 128, 128, 1, 511, 19, 26, 1.0)]  scalapack time:  [2.8629]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 9, 56, 1.0)]  scalapack time:  [2.2953]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 6, 85, 1.0)]  scalapack time:  [1.7191]
+MLA iteration:  3
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 80, 80, 1, 511, 6, 85, 1.0)]  scalapack time:  [2.8259]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 120, 120, 1, 511, 12, 42, 1.0)]  scalapack time:  [2.9123]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17335, 14697, 256, 2, 120, 120, 1, 511, 5, 102, 1.0)]  scalapack time:  [3.5619]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 510, 13, 39, 1.0)]  scalapack time:  [1.6385]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 80, 80, 1, 510, 5, 102, 1.0)]  scalapack time:  [2.7815]
+MLA iteration:  4
+exec /project/projectdirs/m2957/liuyangz/my_research/GPTune/GPTune/lcm.py args None nproc 1
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 18060, 15993, 256, 2, 80, 80, 1, 511, 3, 170, 1.0)]  scalapack time:  [4.4908]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 17269, 16601, 256, 2, 120, 120, 1, 511, 10, 51, 1.0)]  scalapack time:  [2.8054]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 17335, 14697, 256, 2, 32, 32, 1, 510, 6, 85, 1.0)]  scalapack time:  [1.8445]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 511
+[('QR', 19552, 8778, 256, 2, 128, 128, 1, 511, 26, 19, 1.0)]  scalapack time:  [1.4994]
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/GPTune/0/ nproc 510
+[('QR', 19421, 10935, 256, 2, 32, 32, 1, 510, 7, 72, 1.0)]  scalapack time:  [1.6347]
+stats:  {'time_total': 535.971412055, 'time_sample_init': 0.000993716, 'time_fun': 473.839887866, 'time_search': 18.497926621999998, 'time_model': 43.629681942000005}
+tid: 0
+    m:18060 n:15993
+    Ps  [[5, 510, 391], [7, 511, 22], [16, 510, 110], [7, 511, 23], [6, 511, 253], [15, 511, 8], [5, 511, 3], [10, 511, 6], [10, 511, 6], [10, 511, 3]]
+    Os  [[30.318358], [2.655664], [8.786206], [2.718038], [15.572008], [3.13984], [3.092678], [2.868302], [2.82587], [4.490838]]
+    Popt  [7, 511, 22] Oopt  2.655664 nth  1
+tid: 1
+    m:17269 n:16601
+    Ps  [[9, 511, 61], [15, 510, 94], [6, 510, 163], [6, 511, 51], [5, 510, 153], [16, 511, 25], [16, 511, 42], [16, 511, 25], [15, 511, 12], [15, 511, 10]]
+    Os  [[4.806195], [8.386704], [12.90222], [4.618569], [12.630641], [3.567919], [4.338688], [3.217151], [2.912348], [2.805387]]
+    Popt  [15, 511, 10] Oopt  2.805387 nth  9
+tid: 2
+    m:17335 n:14697
+    Ps  [[10, 511, 27], [5, 510, 165], [6, 510, 101], [16, 510, 127], [7, 511, 206], [6, 511, 3], [10, 511, 4], [16, 511, 19], [15, 511, 5], [4, 510, 6]]
+    Os  [[2.748672], [10.181746], [7.324309], [7.24111], [12.842725], [2.997246], [3.252378], [2.862901], [3.561898], [1.844504]]
+    Popt  [4, 510, 6] Oopt  1.844504 nth  9
+tid: 3
+    m:19552 n:8778
+    Ps  [[6, 510, 244], [8, 511, 140], [14, 511, 36], [9, 511, 70], [5, 511, 192], [16, 510, 10], [16, 511, 16], [16, 511, 9], [16, 510, 13], [16, 511, 26]]
+    Os  [[4.878821], [3.665726], [1.557945], [2.031809], [4.723473], [1.898659], [1.575375], [2.295322], [1.638511], [1.499359]]
+    Popt  [16, 511, 26] Oopt  1.499359 nth  9
+tid: 4
+    m:19421 n:10935
+    Ps  [[8, 510, 104], [5, 511, 330], [14, 511, 43], [7, 511, 196], [5, 510, 455], [5, 511, 4], [7, 511, 5], [4, 510, 6], [10, 510, 5], [4, 510, 7]]
+    Os  [[4.171737], [14.296497], [2.274723], [7.308754], [14.696543], [2.214787], [2.204127], [1.719067], [2.781458], [1.634652]]
+    Popt  [4, 510, 7] Oopt  1.634652 nth  9

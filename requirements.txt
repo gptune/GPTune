@@ -2,6 +2,7 @@ numpy
 joblib
 scikit-learn <= 0.22
 scipy
+pyaml
 matplotlib
 GPy
 openturns
@@ -9,4 +10,5 @@ lhsmdu
 ipyparallel
 opentuner
 hpbandster
-pygmo 
+pygmo
+filelock 

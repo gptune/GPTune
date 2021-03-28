@@ -203,9 +203,6 @@ set(SOURCE_DIR "gptuneclcm")
 include_directories(${SOURCE_DIR})
 set(headers "${SOURCE_DIR}/lcm.h")
 set(sources "${SOURCE_DIR}/lcm.c")
-
-
-
 add_library(_gptuneclcm ${sources} ${HEADERS})
 target_link_libraries(_gptuneclcm
                       ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} ${BLAS_LIB} ${LAPACK_LIB} ${SCALAPACK_LIB} m)
@@ -215,7 +212,7 @@ set_target_properties(_gptuneclcm PROPERTIES
 
 
 
-set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/scalapack-driver/src/")
+set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/Scalapack-PDGEQRF/scalapack-driver/src/")
 include_directories(${SOURCE_DIR_SCALAPACK_EX})
 #set(sources_scalapack_example "${SOURCE_DIR_SCALAPACK_EX}/pdqrdriver.f ${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f")
 set(sources_scalapack_example 

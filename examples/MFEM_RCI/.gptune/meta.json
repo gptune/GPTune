@@ -1,0 +1,42 @@
+{
+    "tuning_problem_name": "MFEM",
+    "machine_configuration": {
+        "machine_name": "cori",
+        "intel": {
+            "nodes": 1,
+            "cores": 32
+        }
+    },
+    "software_configuration": {
+        "gcc": {
+            "version_split": [8,3,0]
+        },
+        "cray-mpich": {
+            "version_split": [7,7,10]
+        },
+        "libsci": {
+            "version_split": [19,6,1]
+        }
+    },
+    "loadable_machine_configurations": {
+        "cori" : {
+            "intel": {
+                "nodes":1,
+                "cores":32
+            }
+        }
+    },
+    "loadable_software_configurations": {
+        "gcc": {
+            "version_from":[8,0,0],
+            "version_to":[10,0,0]
+        },
+        "cray-mpich": {
+            "version_from":[7,7,10],
+            "version_to":[8,0,0]
+        },
+        "libsci":{
+            "version_split":[19,6,1]
+        }
+    }
+}

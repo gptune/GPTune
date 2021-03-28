@@ -1,0 +1,4559 @@
+Space([Integer(low=1280, high=40000, prior='uniform', transform='normalize'),
+       Integer(low=1280, high=40000, prior='uniform', transform='normalize')]) Space([Integer(low=1, high=16, prior='uniform', transform='normalize'),
+       Integer(low=1, high=16, prior='uniform', transform='normalize'),
+       Integer(low=2, high=5, prior='uniform', transform='normalize'),
+       Integer(low=1, high=2048, prior='uniform', transform='normalize')]) Space([Real(low=-inf, high=inf, prior='uniform', transform='identity')]) {'cst1': 'mb*8 * p <= m', 'cst2': 'nb * 8 * 64 * 2**npernode <= n * p', 'cst3': '64 * 2**npernode >= p'}
+
+
+------Validating the options
+  
+  total core counts provided to GPTune: 2048
+   ---> distributed_memory_parallelism: False
+   ---> shared_memory_parallelism: False
+   ---> objective_evaluation_parallelism: False
+  
+  total core counts for modeling: 2
+   ---> model_processes: 1
+   ---> model_threads: 1
+   ---> model_restart_processes: 1
+   ---> model_restart_threads: 1
+  
+  total core counts for search: 1
+   ---> search_processes: 1
+   ---> search_threads: 1
+   ---> search_multitask_processes: 1
+   ---> search_multitask_threads: 1
+  
+  total core counts for objective function evaluation: 2048
+   ---> core counts in a single application run: 2047
+   ---> objective_multisample_processes: 1
+   ---> objective_multisample_threads: 1
+Start HpBandSter
+Configuration:
+  mb, Value: 13
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 366
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1524
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1591
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 1743
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 5
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1503
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 842
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1728
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 956
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1750
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 1124
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 642
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1816
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 600
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 942
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 315
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 315 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 8, 72, 4, 315, 315, 1, 1.0, 8)]  scalapack time:  [5.845953]
+[9496, 7549] [1, 9, 3, 315] 5.845953 OK
+Configuration:
+  mb, Value: 15
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 706
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 844
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1688 nthreads 1 npernode 32
+[('QR', 9496, 7549, 64, 32, 8, 96, 1, 1688, 844, 2, 1.0, 32)]  scalapack time:  [7.210739]
+[9496, 7549] [1, 12, 5, 844] 7.210739 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 1084
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1814
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1679
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1750
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 2000
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1672
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 466
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1864 nthreads 1 npernode 32
+[('QR', 9496, 7549, 64, 32, 8, 48, 1, 1864, 466, 4, 1.0, 32)]  scalapack time:  [6.810117]
+[9496, 7549] [1, 6, 5, 466] 6.810117 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 92
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 460 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 80, 72, 4, 460, 92, 5, 1.0, 8)]  scalapack time:  [2.035095]
+[9496, 7549] [10, 9, 3, 92] 2.035095 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 261
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 964
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1778
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 332
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 33
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 231 nthreads 8 npernode 4
+[('QR', 9496, 7549, 64, 32, 40, 48, 8, 231, 33, 7, 1.0, 4)]  scalapack time:  [1.064561]
+[9496, 7549] [5, 6, 2, 33] 1.064561 OK
+Configuration:
+  mb, Value: 15
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1285
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 285
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 1738
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 910
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1599
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 670
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 756
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 848
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1814
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1693
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 1172
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 901
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 6
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 63
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 252 nthreads 8 npernode 4
+[('QR', 9496, 7549, 64, 32, 24, 16, 8, 252, 63, 4, 1.0, 4)]  scalapack time:  [1.419658]
+[9496, 7549] [3, 2, 2, 63] 1.419658 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 71
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 994 nthreads 2 npernode 16
+[('QR', 9496, 7549, 64, 32, 104, 16, 2, 994, 71, 14, 1.0, 16)]  scalapack time:  [1.470574]
+[9496, 7549] [13, 2, 4, 71] 1.470574 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1005
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1879
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 1675
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 811
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1735
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1595
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 1221
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1694
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1628
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 600
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 1120
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 518
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 730
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 940
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 2038
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 568
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 98
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1960 nthreads 1 npernode 32
+[('QR', 9496, 7549, 64, 32, 56, 8, 1, 1960, 98, 20, 1.0, 32)]  scalapack time:  [1.269199]
+[9496, 7549] [7, 1, 5, 98] 1.269199 OK
+Configuration:
+  mb, Value: 8
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 1238
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 482
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1046
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 312
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 46
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 230 nthreads 8 npernode 4
+[('QR', 9496, 7549, 64, 32, 48, 40, 8, 230, 46, 5, 1.0, 4)]  scalapack time:  [1.375338]
+[9496, 7549] [6, 5, 2, 46] 1.375338 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 1526
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 335
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 335 nthreads 4 npernode 8
+[('QR', 9496, 7549, 64, 32, 8, 48, 4, 335, 335, 1, 1.0, 8)]  scalapack time:  [5.252314]
+[9496, 7549] [1, 6, 3, 335] 5.252314 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 901
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1541
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 1695
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 372
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1623
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 78
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 468 nthreads 4 npernode 8
+[('QR', 21487, 20981, 64, 32, 120, 88, 4, 468, 78, 6, 1.0, 8)]  scalapack time:  [13.221781]
+[21487, 20981] [15, 11, 3, 78] 13.221781 OK
+Configuration:
+  mb, Value: 5
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1527
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 602
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 1154
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1154 nthreads 1 npernode 32
+[('QR', 21487, 20981, 64, 32, 8, 48, 1, 1154, 1154, 1, 1.0, 32)]  scalapack time:  [84.622327]
+[21487, 20981] [1, 6, 5, 1154] 84.622327 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1268
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 222
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 888 nthreads 2 npernode 16
+[('QR', 21487, 20981, 64, 32, 8, 80, 2, 888, 222, 4, 1.0, 16)]  scalapack time:  [19.019448]
+[21487, 20981] [1, 10, 4, 222] 19.019448 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 403
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 506
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 1818
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1240
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1607
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 532
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 677
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 920
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 47
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 470 nthreads 4 npernode 8
+[('QR', 21487, 20981, 64, 32, 8, 16, 4, 470, 47, 10, 1.0, 8)]  scalapack time:  [6.539453]
+[21487, 20981] [1, 2, 3, 47] 6.539453 OK
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 1448
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1683
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 536
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 1983
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 688
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 135
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 135 nthreads 8 npernode 4
+[('QR', 21487, 20981, 64, 32, 56, 104, 8, 135, 135, 1, 1.0, 4)]  scalapack time:  [22.391098]
+[21487, 20981] [7, 13, 2, 135] 22.391098 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 16
+  npernode, Value: 5
+  p, Value: 1453
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 43
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 215 nthreads 8 npernode 4
+[('QR', 21487, 20981, 64, 32, 64, 8, 8, 215, 43, 5, 1.0, 4)]  scalapack time:  [12.252861]
+[21487, 20981] [8, 1, 2, 43] 12.252861 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1480
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 513
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1539 nthreads 1 npernode 32
+[('QR', 21487, 20981, 64, 32, 40, 40, 1, 1539, 513, 3, 1.0, 32)]  scalapack time:  [37.029104]
+[21487, 20981] [5, 5, 5, 513] 37.029104 OK
+Configuration:
+  mb, Value: 15
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1199
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 811
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 1610
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 823
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 103
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1957 nthreads 1 npernode 32
+[('QR', 21487, 20981, 64, 32, 72, 24, 1, 1957, 103, 19, 1.0, 32)]  scalapack time:  [9.626655]
+[21487, 20981] [9, 3, 5, 103] 9.626655 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 827
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 880
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1762
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 355
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1775 nthreads 1 npernode 32
+[('QR', 21487, 20981, 64, 32, 8, 40, 1, 1775, 355, 5, 1.0, 32)]  scalapack time:  [31.283324]
+[21487, 20981] [1, 5, 5, 355] 31.283324 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 1432
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 1882
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 915
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1830 nthreads 1 npernode 32
+[('QR', 21487, 20981, 64, 32, 16, 40, 1, 1830, 915, 2, 1.0, 32)]  scalapack time:  [55.42879]
+[21487, 20981] [2, 5, 5, 915] 55.42879 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 1061
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 973
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 685
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 685 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 40, 96, 2, 685, 685, 1, 1.0, 16)]  scalapack time:  [65.423887]
+[37073, 20774] [5, 12, 4, 685] 65.423887 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 57
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 969 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 16, 56, 2, 969, 57, 17, 1.0, 16)]  scalapack time:  [10.768322]
+[37073, 20774] [2, 7, 4, 57] 10.768322 OK
+Configuration:
+  mb, Value: 11
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 745
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 235
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 470 nthreads 4 npernode 8
+[('QR', 37073, 20774, 64, 32, 120, 104, 4, 470, 235, 2, 1.0, 8)]  scalapack time:  [23.021076]
+[37073, 20774] [15, 13, 3, 235] 23.021076 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 331
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1986 nthreads 1 npernode 32
+[('QR', 37073, 20774, 64, 32, 112, 72, 1, 1986, 331, 6, 1.0, 32)]  scalapack time:  [24.333035]
+[37073, 20774] [14, 9, 5, 331] 24.333035 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 811
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1151
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1652
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1537
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1902
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 1978
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 168
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 168 nthreads 8 npernode 4
+[('QR', 37073, 20774, 64, 32, 88, 112, 8, 168, 168, 1, 1.0, 4)]  scalapack time:  [29.77578]
+[37073, 20774] [11, 14, 2, 168] 29.77578 OK
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1193
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1123
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 2007
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1359
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 283
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1981 nthreads 1 npernode 32
+[('QR', 37073, 20774, 64, 32, 120, 88, 1, 1981, 283, 7, 1.0, 32)]  scalapack time:  [37.451656]
+[37073, 20774] [15, 11, 5, 283] 37.451656 OK
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 1196
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 1768
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 639
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 295
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 90
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 990 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 72, 96, 2, 990, 90, 11, 1.0, 16)]  scalapack time:  [12.745931]
+[37073, 20774] [9, 12, 4, 90] 12.745931 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 339
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 339 nthreads 4 npernode 8
+[('QR', 37073, 20774, 64, 32, 104, 96, 4, 339, 339, 1, 1.0, 8)]  scalapack time:  [35.459301]
+[37073, 20774] [13, 12, 3, 339] 35.459301 OK
+Configuration:
+  mb, Value: 7
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 83
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 498 nthreads 4 npernode 8
+[('QR', 37073, 20774, 64, 32, 56, 104, 4, 498, 83, 6, 1.0, 8)]  scalapack time:  [12.738111]
+[37073, 20774] [7, 13, 3, 83] 12.738111 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 552
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 552 nthreads 2 npernode 16
+[('QR', 37073, 20774, 64, 32, 48, 48, 2, 552, 552, 1, 1.0, 16)]  scalapack time:  [87.995902]
+[37073, 20774] [6, 6, 4, 552] 87.995902 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 1532
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 1723
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1859
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1865
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 641
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 836
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 478
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 1688
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 1061
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 856
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 216
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1248
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 872
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 915
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 1357
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 804
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 804 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 8, 88, 2, 804, 804, 1, 1.0, 16)]  scalapack time:  [79.922538]
+[11070, 34241] [1, 11, 4, 804] 79.922538 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 536
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1923
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1484
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1398
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1886
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 1821
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 218
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 304
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1399
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 612
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 94
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 317
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 384
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 1334
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1106
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 219
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 459
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 887
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 408
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 408 nthreads 4 npernode 8
+[('QR', 11070, 34241, 64, 32, 8, 80, 4, 408, 408, 1, 1.0, 8)]  scalapack time:  [57.649395]
+[11070, 34241] [1, 10, 3, 408] 57.649395 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 370
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 865
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 1192
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 742
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 700
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 190
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 190 nthreads 8 npernode 4
+[('QR', 11070, 34241, 64, 32, 24, 40, 8, 190, 190, 1, 1.0, 4)]  scalapack time:  [29.761553]
+[11070, 34241] [3, 5, 2, 190] 29.761553 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1868
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1783
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1645
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 265
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1538
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 2031
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 113
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2034 nthreads 1 npernode 32
+[('QR', 11070, 34241, 64, 32, 24, 32, 1, 2034, 113, 18, 1.0, 32)]  scalapack time:  [9.117844]
+[11070, 34241] [3, 4, 5, 113] 9.117844 OK
+Configuration:
+  mb, Value: 1
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 233
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 932 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 8, 112, 2, 932, 233, 4, 1.0, 16)]  scalapack time:  [18.548859]
+[11070, 34241] [1, 14, 4, 233] 18.548859 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 1943
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 162
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 972 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 8, 104, 2, 972, 162, 6, 1.0, 16)]  scalapack time:  [16.898217]
+[11070, 34241] [1, 13, 4, 162] 16.898217 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1032
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1198
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1361
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 348
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 826
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 7
+  npernode, Value: 2
+  p, Value: 1748
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1608
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1089
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1135
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 1513
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 682
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 344
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 344 nthreads 4 npernode 8
+[('QR', 11070, 34241, 64, 32, 8, 96, 4, 344, 344, 1, 1.0, 8)]  scalapack time:  [50.411262]
+[11070, 34241] [1, 12, 3, 344] 50.411262 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 46
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 506 nthreads 4 npernode 8
+[('QR', 11070, 34241, 64, 32, 104, 48, 4, 506, 46, 11, 1.0, 8)]  scalapack time:  [8.83028]
+[11070, 34241] [13, 6, 3, 46] 8.83028 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 218
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 335
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 335 nthreads 4 npernode 8
+[('QR', 11070, 34241, 64, 32, 8, 56, 4, 335, 335, 1, 1.0, 8)]  scalapack time:  [48.605375]
+[11070, 34241] [1, 7, 3, 335] 48.605375 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 7
+  npernode, Value: 2
+  p, Value: 116
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 1
+  npernode, Value: 4
+  p, Value: 1282
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 588
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 1600
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 462
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 1912
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1727
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 1986
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 31
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1023 nthreads 2 npernode 16
+[('QR', 11070, 34241, 64, 32, 104, 80, 2, 1023, 31, 33, 1.0, 16)]  scalapack time:  [3.605991]
+[11070, 34241] [13, 10, 4, 31] 3.605991 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 896
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1636
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1671
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1589
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1589
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 322
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 458
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 916 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 32, 40, 2, 916, 458, 2, 1.0, 16)]  scalapack time:  [118.114754]
+[27958, 39976] [4, 5, 4, 458] 118.114754 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 547
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 7
+  npernode, Value: 2
+  p, Value: 1713
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1392
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 887
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 5
+  p, Value: 506
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 289
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 867 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 72, 96, 2, 867, 289, 3, 1.0, 16)]  scalapack time:  [80.112358]
+[27958, 39976] [9, 12, 4, 289] 80.112358 OK
+Configuration:
+  mb, Value: 15
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1216
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1670
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 888
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1388
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 126
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 120, 120, 2, 1008, 126, 8, 1.0, 16)]  scalapack time:  [29.609379]
+[27958, 39976] [15, 15, 4, 126] 29.609379 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 365
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 600
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 2032
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 156
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 468 nthreads 4 npernode 8
+[('QR', 27958, 39976, 64, 32, 80, 48, 4, 468, 156, 3, 1.0, 8)]  scalapack time:  [56.788667]
+[27958, 39976] [10, 6, 3, 156] 56.788667 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 1584
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1884
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 160
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1920 nthreads 1 npernode 32
+[('QR', 27958, 39976, 64, 32, 64, 104, 1, 1920, 160, 12, 1.0, 32)]  scalapack time:  [45.656537]
+[27958, 39976] [8, 13, 5, 160] 45.656537 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1345
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1674
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 68
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1020 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 40, 32, 2, 1020, 68, 15, 1.0, 16)]  scalapack time:  [24.935516]
+[27958, 39976] [5, 4, 4, 68] 24.935516 OK
+Configuration:
+  mb, Value: 5
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 925
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 151
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 906 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 40, 16, 2, 906, 151, 6, 1.0, 16)]  scalapack time:  [47.607016]
+[27958, 39976] [5, 2, 4, 151] 47.607016 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 517
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 1498
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 1603
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 750
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1699
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 480
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1854
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 1554
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1170
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 354
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1325
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 470
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 761
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 8
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 512 nthreads 4 npernode 8
+[('QR', 27958, 39976, 64, 32, 104, 56, 4, 512, 8, 64, 1.0, 8)]  scalapack time:  [7.423176]
+[27958, 39976] [13, 7, 3, 8] 7.423176 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1332
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 301
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 929
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 1611
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1419
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1538
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 241
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 964 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 56, 72, 2, 964, 241, 4, 1.0, 16)]  scalapack time:  [69.236556]
+[27958, 39976] [7, 9, 4, 241] 69.236556 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1346
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 660
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 1
+  npernode, Value: 4
+  p, Value: 677
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 677 nthreads 2 npernode 16
+[('QR', 27958, 39976, 64, 32, 32, 8, 2, 677, 677, 1, 1.0, 16)]  scalapack time:  [226.043143]
+[27958, 39976] [4, 1, 4, 677] 226.043143 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 302
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1812 nthreads 1 npernode 32
+[('QR', 17026, 15910, 64, 32, 16, 104, 1, 1812, 302, 6, 1.0, 32)]  scalapack time:  [12.794822]
+[17026, 15910] [2, 13, 5, 302] 12.794822 OK
+Configuration:
+  mb, Value: 9
+  nb, Value: 16
+  npernode, Value: 5
+  p, Value: 1932
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 477
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1759
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1570
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 949
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 921
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 254
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 508 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 64, 120, 4, 508, 254, 2, 1.0, 8)]  scalapack time:  [16.844961]
+[17026, 15910] [8, 15, 3, 254] 16.844961 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 631
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1893 nthreads 1 npernode 32
+[('QR', 17026, 15910, 64, 32, 16, 120, 1, 1893, 631, 3, 1.0, 32)]  scalapack time:  [23.572237]
+[17026, 15910] [2, 15, 5, 631] 23.572237 OK
+Configuration:
+  mb, Value: 7
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 931
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 2024
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 376
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 1022
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 399
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 1343
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 1186
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 1980
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1736
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1132
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 1673
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1000
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 1672
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 969
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1564
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 436
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1311
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 240
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1988
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 212
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1173
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 349
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1386
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1398
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 631
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 1316
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 833
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 753
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 753 nthreads 2 npernode 16
+[('QR', 17026, 15910, 64, 32, 16, 32, 2, 753, 753, 1, 1.0, 16)]  scalapack time:  [39.756592]
+[17026, 15910] [2, 4, 4, 753] 39.756592 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 20
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 500 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 128, 16, 4, 500, 20, 25, 1.0, 8)]  scalapack time:  [4.63733]
+[17026, 15910] [16, 2, 3, 20] 4.63733 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1471
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1042
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 862
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1637
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 1351
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 852
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 1044
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1627
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 859
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1470
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1499
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1270
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1985
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1640
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 1260
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 420
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 3
+  npernode, Value: 4
+  p, Value: 1711
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1864
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 2033
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1180
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 1979
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 682
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2046 nthreads 1 npernode 32
+[('QR', 17026, 15910, 64, 32, 8, 32, 1, 2046, 682, 3, 1.0, 32)]  scalapack time:  [22.455546]
+[17026, 15910] [1, 4, 5, 682] 22.455546 OK
+Configuration:
+  mb, Value: 5
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 247
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 494 nthreads 4 npernode 8
+[('QR', 17026, 15910, 64, 32, 40, 56, 4, 494, 247, 2, 1.0, 8)]  scalapack time:  [18.018557]
+[17026, 15910] [5, 7, 3, 247] 18.018557 OK
+Configuration:
+  mb, Value: 5
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 1297
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1219
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1780
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1064
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 366
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 1328
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 481
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 896
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 3
+  npernode, Value: 4
+  p, Value: 1161
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 385
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 450
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1618
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 576
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 369
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 444
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 97
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 194 nthreads 8 npernode 4
+[('QR', 17026, 15910, 64, 32, 64, 104, 8, 194, 97, 2, 1.0, 4)]  scalapack time:  [10.763737]
+[17026, 15910] [8, 13, 2, 97] 10.763737 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 750
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 750 nthreads 2 npernode 16
+[('QR', 17026, 15910, 64, 32, 16, 128, 2, 750, 750, 1, 1.0, 16)]  scalapack time:  [35.128777]
+[17026, 15910] [2, 16, 4, 750] 35.128777 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 3
+  npernode, Value: 4
+  p, Value: 3
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1023 nthreads 2 npernode 16
+[('QR', 17026, 15910, 64, 32, 112, 24, 2, 1023, 3, 341, 1.0, 16)]  scalapack time:  [2.275725]
+[17026, 15910] [14, 3, 4, 3] 2.275725 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 849
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1969
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1330
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 434
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 868 nthreads 2 npernode 16
+[('QR', 23884, 4712, 64, 32, 24, 56, 2, 868, 434, 2, 1.0, 16)]  scalapack time:  [2.41626]
+[23884, 4712] [3, 7, 4, 434] 2.41626 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 1988
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 2035
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1727
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 2004
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 395
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 356
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 712 nthreads 2 npernode 16
+[('QR', 23884, 4712, 64, 32, 64, 48, 2, 712, 356, 2, 1.0, 16)]  scalapack time:  [2.251913]
+[23884, 4712] [8, 6, 4, 356] 2.251913 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 1202
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1590
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1603
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 549
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 549 nthreads 2 npernode 16
+[('QR', 23884, 4712, 64, 32, 16, 80, 2, 549, 549, 1, 1.0, 16)]  scalapack time:  [4.382173]
+[23884, 4712] [2, 10, 4, 549] 4.382173 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 1324
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1796
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1796 nthreads 1 npernode 32
+[('QR', 23884, 4712, 64, 32, 8, 88, 1, 1796, 1796, 1, 1.0, 32)]  scalapack time:  [6.252744]
+[23884, 4712] [1, 11, 5, 1796] 6.252744 OK
+Configuration:
+  mb, Value: 5
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1061
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1692
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1653
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 662
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 1343
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 539
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 2014
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1818
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 14
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 40, 8, 4, 504, 14, 36, 1.0, 8)]  scalapack time:  [0.556605]
+[23884, 4712] [5, 1, 3, 14] 0.556605 OK
+Configuration:
+  mb, Value: 9
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1657
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 791
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 214
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 214 nthreads 8 npernode 4
+[('QR', 23884, 4712, 64, 32, 32, 120, 8, 214, 214, 1, 1.0, 4)]  scalapack time:  [2.144615]
+[23884, 4712] [4, 15, 2, 214] 2.144615 OK
+Configuration:
+  mb, Value: 4
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 499
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1368
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 885
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 1944
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 457
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1366
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1366 nthreads 1 npernode 32
+[('QR', 23884, 4712, 64, 32, 8, 80, 1, 1366, 1366, 1, 1.0, 32)]  scalapack time:  [8.725302]
+[23884, 4712] [1, 10, 5, 1366] 8.725302 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 1
+  npernode, Value: 4
+  p, Value: 798
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 798 nthreads 2 npernode 16
+[('QR', 23884, 4712, 64, 32, 24, 8, 2, 798, 798, 1, 1.0, 16)]  scalapack time:  [5.079422]
+[23884, 4712] [3, 1, 4, 798] 5.079422 OK
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1091
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1663
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1926
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 2040
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 767
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 1299
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 2019
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 235
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 470 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 24, 88, 4, 470, 235, 2, 1.0, 8)]  scalapack time:  [2.663835]
+[23884, 4712] [3, 11, 3, 235] 2.663835 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1588
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 821
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 23
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 506 nthreads 4 npernode 8
+[('QR', 23884, 4712, 64, 32, 80, 56, 4, 506, 23, 22, 1.0, 8)]  scalapack time:  [1.204839]
+[23884, 4712] [10, 7, 3, 23] 1.204839 OK
+Configuration:
+  mb, Value: 4
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 223
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1877
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 618
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 728
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 762
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 797
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 1371
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 791
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 336
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1549
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 839
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1325
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1420
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 640
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 108
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1944 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 56, 64, 1, 1944, 108, 18, 1.0, 32)]  scalapack time:  [2.681683]
+[6666, 11170] [7, 8, 5, 108] 2.681683 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1021
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 856
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1628
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1402
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 821
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1924
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 454
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1696
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 1583
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1543
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1451
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 2022
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1999
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 923
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1206
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 277
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 915
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 136
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 136 nthreads 8 npernode 4
+[('QR', 6666, 11170, 64, 32, 32, 16, 8, 136, 136, 1, 1.0, 4)]  scalapack time:  [7.972884]
+[6666, 11170] [4, 2, 2, 136] 7.972884 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 572
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 893
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 317
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 1052
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1960
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1071
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 1200
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 1829
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1540
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 696
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 96
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2016 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 8, 80, 1, 2016, 96, 21, 1.0, 32)]  scalapack time:  [1.930254]
+[6666, 11170] [1, 10, 5, 96] 1.930254 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 251
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2008 nthreads 1 npernode 32
+[('QR', 6666, 11170, 64, 32, 16, 48, 1, 2008, 251, 8, 1.0, 32)]  scalapack time:  [4.195719]
+[6666, 11170] [2, 6, 5, 251] 4.195719 OK
+Configuration:
+  mb, Value: 7
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1458
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 477
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 939
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1284
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 429
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 123
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1945
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 830
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 825
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1494
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1030
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 590
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1412
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 506
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1558
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 6
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 1319
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 973
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1587
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 903
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1358
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1257
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 27
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 243 nthreads 8 npernode 4
+[('QR', 6666, 11170, 64, 32, 24, 80, 8, 243, 27, 9, 1.0, 4)]  scalapack time:  [1.251221]
+[6666, 11170] [3, 10, 2, 27] 1.251221 OK
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1545
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 1995
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1260
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 1398
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 888
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1632
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1615
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 1340
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 955
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 2017
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1966
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 253
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1386
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 1536
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 1572
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1257
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 1626
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 1335
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1521
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 825
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1089
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 223
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 1689
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 1579
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 360
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 1179
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 299
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 1831
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1150
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 220
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 1749
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 741
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1481
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 211
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 207
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 597
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 21
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 252 nthreads 8 npernode 4
+[('QR', 6666, 11170, 64, 32, 48, 24, 8, 252, 21, 12, 1.0, 4)]  scalapack time:  [1.472036]
+[6666, 11170] [6, 3, 2, 21] 1.472036 OK
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 1635
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 14
+  npernode, Value: 3
+  p, Value: 383
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 1066
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 377
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 2
+  p, Value: 157
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 157 nthreads 8 npernode 4
+[('QR', 6666, 11170, 64, 32, 8, 24, 8, 157, 157, 1, 1.0, 4)]  scalapack time:  [11.957862]
+[6666, 11170] [1, 3, 2, 157] 11.957862 OK
+Configuration:
+  mb, Value: 6
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 211
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 653
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1553
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 1511
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 7
+  npernode, Value: 4
+  p, Value: 1636
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 508
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 1962
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1030
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 235
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1862
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 1884
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 447
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 946
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 665
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 1032
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 1641
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 5
+  p, Value: 547
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 1359
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 395
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 790 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 8, 120, 2, 790, 395, 2, 1.0, 16)]  scalapack time:  [6.736831]
+[6666, 11170] [1, 15, 4, 395] 6.736831 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 363
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 1977
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 529
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 130
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 130 nthreads 8 npernode 4
+[('QR', 6666, 11170, 64, 32, 32, 40, 8, 130, 130, 1, 1.0, 4)]  scalapack time:  [6.477116]
+[6666, 11170] [4, 5, 2, 130] 6.477116 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 535
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 11
+  npernode, Value: 3
+  p, Value: 763
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1675
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1649
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 670
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 114
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1593
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 1760
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 344
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1835
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 1114
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1521
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 976
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 35
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1015 nthreads 2 npernode 16
+[('QR', 6666, 11170, 64, 32, 80, 88, 2, 1015, 35, 29, 1.0, 16)]  scalapack time:  [1.200072]
+[6666, 11170] [10, 11, 4, 35] 1.200072 OK
+Configuration:
+  mb, Value: 13
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1197
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 745
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 3
+  npernode, Value: 4
+  p, Value: 1729
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 1458
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 1405
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1230
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 8
+  npernode, Value: 4
+  p, Value: 718
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 663
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 537
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 1188
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 2003
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1580
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 528
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1599
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 1706
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 784
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1448
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1448 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 8, 88, 1, 1448, 1448, 1, 1.0, 32)]  scalapack time:  [144.19049]
+[23324, 26545] [1, 11, 5, 1448] 144.19049 OK
+Configuration:
+  mb, Value: 14
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 72
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 112, 128, 4, 504, 72, 7, 1.0, 8)]  scalapack time:  [15.205558]
+[23324, 26545] [14, 16, 3, 72] 15.205558 OK
+Configuration:
+  mb, Value: 9
+  nb, Value: 16
+  npernode, Value: 2
+  p, Value: 1733
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1563
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 133
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 399 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 48, 104, 4, 399, 133, 3, 1.0, 8)]  scalapack time:  [17.161111]
+[23324, 26545] [6, 13, 3, 133] 17.161111 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1272
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 328
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 328 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 24, 96, 4, 328, 328, 1, 1.0, 8)]  scalapack time:  [55.270428]
+[23324, 26545] [3, 12, 3, 328] 55.270428 OK
+Configuration:
+  mb, Value: 3
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1702
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 797
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 36
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2016 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 8, 96, 1, 2016, 36, 56, 1.0, 32)]  scalapack time:  [6.302738]
+[23324, 26545] [1, 12, 5, 36] 6.302738 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1523
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 2
+  npernode, Value: 4
+  p, Value: 1929
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 1504
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 1105
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 16
+  npernode, Value: 5
+  p, Value: 582
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1332
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 1475
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 379
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 1398
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 215
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1935 nthreads 1 npernode 32
+[('QR', 23324, 26545, 64, 32, 16, 40, 1, 1935, 215, 9, 1.0, 32)]  scalapack time:  [23.774248]
+[23324, 26545] [2, 5, 5, 215] 23.774248 OK
+Configuration:
+  mb, Value: 2
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1793
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 370
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 740 nthreads 2 npernode 16
+[('QR', 23324, 26545, 64, 32, 16, 72, 2, 740, 370, 2, 1.0, 16)]  scalapack time:  [44.304453]
+[23324, 26545] [2, 9, 4, 370] 44.304453 OK
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1838
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 13
+  npernode, Value: 3
+  p, Value: 1699
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 1594
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 1852
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 873
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 2
+  p, Value: 1127
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 763
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 6
+  npernode, Value: 5
+  p, Value: 534
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1755
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1830
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 742
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 1907
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 1727
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 567
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 14
+  npernode, Value: 4
+  p, Value: 1182
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 1877
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 1621
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 483
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1559
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 346
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 62
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 992 nthreads 2 npernode 16
+[('QR', 23324, 26545, 64, 32, 104, 128, 2, 992, 62, 16, 1.0, 16)]  scalapack time:  [10.302269]
+[23324, 26545] [13, 16, 4, 62] 10.302269 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 10
+  npernode, Value: 2
+  p, Value: 619
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 15
+  npernode, Value: 3
+  p, Value: 1432
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 612
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1622
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 707
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 707 nthreads 2 npernode 16
+[('QR', 23324, 26545, 64, 32, 16, 40, 2, 707, 707, 1, 1.0, 16)]  scalapack time:  [95.323456]
+[23324, 26545] [2, 5, 4, 707] 95.323456 OK
+Configuration:
+  mb, Value: 11
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1113
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 957
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1078
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 533
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1783
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 1
+  npernode, Value: 5
+  p, Value: 977
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 1138
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 9
+  npernode, Value: 3
+  p, Value: 1398
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 112
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 448 nthreads 4 npernode 8
+[('QR', 23324, 26545, 64, 32, 56, 8, 4, 448, 112, 4, 1.0, 8)]  scalapack time:  [23.082265]
+[23324, 26545] [7, 1, 3, 112] 23.082265 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 714
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 986
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 980
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 5
+  npernode, Value: 2
+  p, Value: 1488
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 15
+  nb, Value: 12
+  npernode, Value: 4
+  p, Value: 426
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 8
+  npernode, Value: 3
+  p, Value: 431
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 331
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 993 nthreads 2 npernode 16
+[('QR', 8381, 29070, 64, 32, 8, 88, 2, 993, 331, 3, 1.0, 16)]  scalapack time:  [20.419311]
+[8381, 29070] [1, 11, 4, 331] 20.419311 OK
+Configuration:
+  mb, Value: 12
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1695
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 2013
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 252
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 8381, 29070, 64, 32, 8, 120, 2, 1008, 252, 4, 1.0, 16)]  scalapack time:  [14.782286]
+[8381, 29070] [1, 15, 4, 252] 14.782286 OK
+Configuration:
+  mb, Value: 15
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1269
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 1159
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1717
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 15
+  npernode, Value: 5
+  p, Value: 1730
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 1
+  npernode, Value: 2
+  p, Value: 803
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 11
+  npernode, Value: 4
+  p, Value: 989
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 2
+  npernode, Value: 5
+  p, Value: 1904
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 1400
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 25
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 500 nthreads 4 npernode 8
+[('QR', 8381, 29070, 64, 32, 88, 8, 4, 500, 25, 20, 1.0, 8)]  scalapack time:  [2.167569]
+[8381, 29070] [11, 1, 3, 25] 2.167569 OK
+Configuration:
+  mb, Value: 11
+  nb, Value: 10
+  npernode, Value: 5
+  p, Value: 679
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1061
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 1234
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 7
+  npernode, Value: 2
+  p, Value: 759
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 14
+  npernode, Value: 2
+  p, Value: 990
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 1290
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 1296
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 488
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1952 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 8, 40, 1, 1952, 488, 4, 1.0, 32)]  scalapack time:  [22.103268]
+[8381, 29070] [1, 5, 5, 488] 22.103268 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 1905
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 117
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 237
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 4
+  nb, Value: 9
+  npernode, Value: 2
+  p, Value: 1310
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 480
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 15
+  npernode, Value: 4
+  p, Value: 1305
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1285
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 270
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 959
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 986
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 12
+  npernode, Value: 2
+  p, Value: 117
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 11
+  nb, Value: 5
+  npernode, Value: 3
+  p, Value: 193
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 12
+  npernode, Value: 5
+  p, Value: 651
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 9
+  npernode, Value: 5
+  p, Value: 640
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 8
+  npernode, Value: 2
+  p, Value: 989
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 3
+  npernode, Value: 4
+  p, Value: 1158
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 2
+  npernode, Value: 2
+  p, Value: 1847
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 6
+  npernode, Value: 3
+  p, Value: 1846
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 1507
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 12
+  npernode, Value: 3
+  p, Value: 1474
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 4
+  npernode, Value: 2
+  p, Value: 36
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 252 nthreads 8 npernode 4
+[('QR', 8381, 29070, 64, 32, 80, 32, 8, 252, 36, 7, 1.0, 4)]  scalapack time:  [3.618874]
+[8381, 29070] [10, 4, 2, 36] 3.618874 OK
+Configuration:
+  mb, Value: 11
+  nb, Value: 1
+  npernode, Value: 4
+  p, Value: 1607
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 448
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 448 nthreads 4 npernode 8
+[('QR', 8381, 29070, 64, 32, 16, 32, 4, 448, 448, 1, 1.0, 8)]  scalapack time:  [31.97696]
+[8381, 29070] [2, 4, 3, 448] 31.97696 OK
+Configuration:
+  mb, Value: 10
+  nb, Value: 1
+  npernode, Value: 3
+  p, Value: 209
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 15
+  npernode, Value: 2
+  p, Value: 1234
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 16
+  npernode, Value: 5
+  p, Value: 262
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 3
+  npernode, Value: 3
+  p, Value: 21
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 504 nthreads 4 npernode 8
+[('QR', 8381, 29070, 64, 32, 8, 24, 4, 504, 21, 24, 1.0, 8)]  scalapack time:  [2.905421]
+[8381, 29070] [1, 3, 3, 21] 2.905421 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 14
+  npernode, Value: 5
+  p, Value: 9
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 2043 nthreads 1 npernode 32
+[('QR', 8381, 29070, 64, 32, 128, 112, 1, 2043, 9, 227, 1.0, 32)]  scalapack time:  [1.177272]
+[8381, 29070] [16, 14, 5, 9] 1.177272 OK
+Configuration:
+  mb, Value: 4
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 190
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 950 nthreads 2 npernode 16
+[('QR', 8381, 29070, 64, 32, 32, 80, 2, 950, 190, 5, 1.0, 16)]  scalapack time:  [17.991055]
+[8381, 29070] [4, 10, 4, 190] 17.991055 OK
+Configuration:
+  mb, Value: 16
+  nb, Value: 3
+  npernode, Value: 5
+  p, Value: 1614
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1676
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 13
+  npernode, Value: 2
+  p, Value: 189
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 7
+  nb, Value: 5
+  npernode, Value: 4
+  p, Value: 1942
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 7
+  npernode, Value: 3
+  p, Value: 874
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 11
+  npernode, Value: 5
+  p, Value: 1152
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 1293
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 13
+  npernode, Value: 4
+  p, Value: 253
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 545
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 12
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 142
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 6
+  nb, Value: 5
+  npernode, Value: 5
+  p, Value: 1447
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1385
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 16
+  npernode, Value: 4
+  p, Value: 1458
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 8
+  nb, Value: 6
+  npernode, Value: 4
+  p, Value: 1219
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 7
+  npernode, Value: 5
+  p, Value: 1648
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 9
+  nb, Value: 10
+  npernode, Value: 3
+  p, Value: 1263
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 13
+  nb, Value: 4
+  npernode, Value: 3
+  p, Value: 153
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 4
+  npernode, Value: 4
+  p, Value: 902
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 2
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 1037
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 3
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 762
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 10
+  nb, Value: 11
+  npernode, Value: 2
+  p, Value: 688
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 5
+  nb, Value: 16
+  npernode, Value: 3
+  p, Value: 1673
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 13
+  npernode, Value: 5
+  p, Value: 524
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 9
+  npernode, Value: 4
+  p, Value: 1288
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 14
+  nb, Value: 2
+  npernode, Value: 3
+  p, Value: 295
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 16
+  nb, Value: 8
+  npernode, Value: 5
+  p, Value: 1534
+ <class 'ConfigSpace.configuration_space.Configuration'>
+Configuration:
+  mb, Value: 1
+  nb, Value: 10
+  npernode, Value: 4
+  p, Value: 42
+ <class 'ConfigSpace.configuration_space.Configuration'>
+exec /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/bin/cori1/pdqrdriver args /global/project/projectdirs/m2957/liuyangz/my_research/GPTune/examples/scalapack-driver/exp/cori1/hpbandster/0/ nproc 1008 nthreads 2 npernode 16
+[('QR', 8381, 29070, 64, 32, 8, 80, 2, 1008, 42, 24, 1.0, 16)]  scalapack time:  [3.102206]
+[8381, 29070] [1, 10, 4, 42] 3.102206 OK
+End HpBandSter
+stats:  {'time_total': 10531.471962003, 'time_fun': 10528.412419443}
+tid: 0
+    m:9496 n:7549
+    Ps  [[1, 9, 3, 315], [1, 12, 5, 844], [1, 6, 5, 466], [10, 9, 3, 92], [5, 6, 2, 33], [3, 2, 2, 63], [13, 2, 4, 71], [7, 1, 5, 98], [6, 5, 2, 46], [1, 6, 3, 335]]
+    Os  [[5.845953], [7.210739], [6.810117], [2.035095], [1.064561], [1.419658], [1.470574], [1.269199], [1.375338], [5.252314]]
+    Popt  [5, 6, 2, 33] Oopt  1.064561 nth  4
+tid: 1
+    m:21487 n:20981
+    Ps  [[15, 11, 3, 78], [1, 6, 5, 1154], [1, 10, 4, 222], [1, 2, 3, 47], [7, 13, 2, 135], [8, 1, 2, 43], [5, 5, 5, 513], [9, 3, 5, 103], [1, 5, 5, 355], [2, 5, 5, 915]]
+    Os  [[13.221781], [84.622327], [19.019448], [6.539453], [22.391098], [12.252861], [37.029104], [9.626655], [31.283324], [55.42879]]
+    Popt  [1, 2, 3, 47] Oopt  6.539453 nth  3
+tid: 2
+    m:37073 n:20774
+    Ps  [[5, 12, 4, 685], [2, 7, 4, 57], [15, 13, 3, 235], [14, 9, 5, 331], [11, 14, 2, 168], [15, 11, 5, 283], [9, 12, 4, 90], [13, 12, 3, 339], [7, 13, 3, 83], [6, 6, 4, 552]]
+    Os  [[65.423887], [10.768322], [23.021076], [24.333035], [29.77578], [37.451656], [12.745931], [35.459301], [12.738111], [87.995902]]
+    Popt  [2, 7, 4, 57] Oopt  10.768322 nth  1
+tid: 3
+    m:11070 n:34241
+    Ps  [[1, 11, 4, 804], [1, 10, 3, 408], [3, 5, 2, 190], [3, 4, 5, 113], [1, 14, 4, 233], [1, 13, 4, 162], [1, 12, 3, 344], [13, 6, 3, 46], [1, 7, 3, 335], [13, 10, 4, 31]]
+    Os  [[79.922538], [57.649395], [29.761553], [9.117844], [18.548859], [16.898217], [50.411262], [8.83028], [48.605375], [3.605991]]
+    Popt  [13, 10, 4, 31] Oopt  3.605991 nth  9
+tid: 4
+    m:27958 n:39976
+    Ps  [[4, 5, 4, 458], [9, 12, 4, 289], [15, 15, 4, 126], [10, 6, 3, 156], [8, 13, 5, 160], [5, 4, 4, 68], [5, 2, 4, 151], [13, 7, 3, 8], [7, 9, 4, 241], [4, 1, 4, 677]]
+    Os  [[118.114754], [80.112358], [29.609379], [56.788667], [45.656537], [24.935516], [47.607016], [7.423176], [69.236556], [226.043143]]
+    Popt  [13, 7, 3, 8] Oopt  7.423176 nth  7
+tid: 5
+    m:17026 n:15910
+    Ps  [[2, 13, 5, 302], [8, 15, 3, 254], [2, 15, 5, 631], [2, 4, 4, 753], [16, 2, 3, 20], [1, 4, 5, 682], [5, 7, 3, 247], [8, 13, 2, 97], [2, 16, 4, 750], [14, 3, 4, 3]]
+    Os  [[12.794822], [16.844961], [23.572237], [39.756592], [4.63733], [22.455546], [18.018557], [10.763737], [35.128777], [2.275725]]
+    Popt  [14, 3, 4, 3] Oopt  2.275725 nth  9
+tid: 6
+    m:23884 n:4712
+    Ps  [[3, 7, 4, 434], [8, 6, 4, 356], [2, 10, 4, 549], [1, 11, 5, 1796], [5, 1, 3, 14], [4, 15, 2, 214], [1, 10, 5, 1366], [3, 1, 4, 798], [3, 11, 3, 235], [10, 7, 3, 23]]
+    Os  [[2.41626], [2.251913], [4.382173], [6.252744], [0.556605], [2.144615], [8.725302], [5.079422], [2.663835], [1.204839]]
+    Popt  [5, 1, 3, 14] Oopt  0.556605 nth  4
+tid: 7
+    m:6666 n:11170
+    Ps  [[7, 8, 5, 108], [4, 2, 2, 136], [1, 10, 5, 96], [2, 6, 5, 251], [3, 10, 2, 27], [6, 3, 2, 21], [1, 3, 2, 157], [1, 15, 4, 395], [4, 5, 2, 130], [10, 11, 4, 35]]
+    Os  [[2.681683], [7.972884], [1.930254], [4.195719], [1.251221], [1.472036], [11.957862], [6.736831], [6.477116], [1.200072]]
+    Popt  [10, 11, 4, 35] Oopt  1.200072 nth  9
+tid: 8
+    m:23324 n:26545
+    Ps  [[1, 11, 5, 1448], [14, 16, 3, 72], [6, 13, 3, 133], [3, 12, 3, 328], [1, 12, 5, 36], [2, 5, 5, 215], [2, 9, 4, 370], [13, 16, 4, 62], [2, 5, 4, 707], [7, 1, 3, 112]]
+    Os  [[144.19049], [15.205558], [17.161111], [55.270428], [6.302738], [23.774248], [44.304453], [10.302269], [95.323456], [23.082265]]
+    Popt  [1, 12, 5, 36] Oopt  6.302738 nth  4
+tid: 9
+    m:8381 n:29070
+    Ps  [[1, 11, 4, 331], [1, 15, 4, 252], [11, 1, 3, 25], [1, 5, 5, 488], [10, 4, 2, 36], [2, 4, 3, 448], [1, 3, 3, 21], [16, 14, 5, 9], [4, 10, 4, 190], [1, 10, 4, 42]]
+    Os  [[20.419311], [14.782286], [2.167569], [22.103268], [3.618874], [31.97696], [2.905421], [1.177272], [17.991055], [3.102206]]
+    Popt  [16, 14, 5, 9] Oopt  1.177272 nth  7

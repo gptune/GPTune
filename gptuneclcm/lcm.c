@@ -92,7 +92,7 @@ void K
                     sum = 0.;
                     for (d = 0; d < DI; d++)
                     {
-                        sum += dists[d] / theta[q * DI + d];
+                        sum += dists[d] / (theta[q * DI + d]*theta[q * DI + d])/2;
                     }
                     C[i*n + j] += BS[((q) * NT + idxi) * NT + idxj] * var[q] * exp( - sum);
                 }
@@ -101,7 +101,6 @@ void K
 
         free(dists);
     }
-
     return;
 }
 
@@ -155,6 +154,7 @@ fun_jac_struct* initialize
     double* Y,
     // MPI ScaLAPACK related parameters
     int mb,
+    int maxtries,
     int nprow,
     int npcol,
     MPI_Comm comm
@@ -173,6 +173,7 @@ fun_jac_struct* initialize
     z->m      = m;
     z->X      = X;
     z->Y      = Y;
+    z->maxtries      = maxtries;
 
     // MPI ScaLAPACK related parameters
     z->mpi_comm = comm;
@@ -321,19 +322,25 @@ double fun_jac // negloglike_and_grads
     // Declare variables
 
     int k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, info, tmppid;
-    double sum, ws2, a, dldk, *dL_dK;
+    double sum, ws2, kk, a, dldk, *dL_dK, t1, t2;
 
     // Unpack hyper-parameters
 
     double* theta = params;                 // length scales of each kernel k_q
     double* var   = theta + z->NL * z->DI;  // variance of each kernel k_q
-    double* kappa = var   + z->NL;          // YL: diagonal regularizer in B_q ??? not documented in the paper?  
+    double* kappa = var   + z->NL;          // YL: diagonal regularizer added to B_q  
     double* sigma = kappa + z->NL * z->NT;  // diagonal matrix D of variances in LCM
     double* ws    = sigma + z->NT;          // W_q used to form B_q
     
+    double* Kcopy;
+    if(z->lr * z->lc>0)
+        Kcopy = (double *) malloc(z->lr * z->lc      * sizeof(double));
+
     // Initialize outputs
 
     double neg_log_marginal_likelihood = 0.;
+
+    t1 = omp_get_wtime();
 
     for (k = 0; k < z->nparam ; k++)
     {
@@ -385,7 +392,7 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
 						sum = 0.;
 						for (d = 0; d < z->DI; d++)
 						{
-							sum += z->dists[(li * z->lc + lj) * z->DI + d] / theta[q * z->DI + d];
+							sum += z->dists[(li * z->lc + lj) * z->DI + d] / (theta[q * z->DI + d]*theta[q * z->DI + d])/2;
 						}
 						z->exps[(li * z->lc + lj) * z->NL + q] = exp( - sum );
 						if (idxi == idxj)
@@ -405,9 +412,16 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
             if (z->pcolid == tmppid)
             {
 //@                z->K[li * z->lc + ljstart] += sigma[idxi] + 1e-8;
-                z->K[ljstart * z->lr + li] += sigma[idxi] + 1e-8;     //YL: why is 1e-8 here?
+                z->K[ljstart * z->lr + li] += sigma[idxi];    
                 // printf("%5d%5d%14f\n",ljstart,li,z->K[ljstart * z->lr + li]);
             }
+        }
+
+
+# pragma omp for
+        for (k = 0; k < z->lr * z->lc; k++)
+        {
+            Kcopy[k] = z->K[k];
         }
     }
 
@@ -436,8 +450,49 @@ for (int p = 0; p < 8; p++)
     /**************************************************************************************************/
 
     // Compute dL_dK
+    
 	if(z->prowid!=-1 && z->pcolid!=-1){
-		pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+        info=1;
+        int ntry=0;
+        double jitter = 1e-8;
+        while(info>0 && ntry<z->maxtries){
+            
+        # pragma omp parallel private ( k, li, gi, ljstart, tmppid ) shared ( z )
+            {            
+        # pragma omp for
+                for (k = 0; k < z->lr * z->lc; k++)
+                {
+                    z->K[k] = Kcopy[k];
+                }
+            
+
+        # pragma omp for
+                for (li = 0; li < z->lr; li++)
+                {
+                    rl2g(z, li, z->prowid, &gi);
+                    cg2l(z, gi, &ljstart, &tmppid);			
+                    if (z->pcolid == tmppid)
+                    {
+                        z->K[ljstart * z->lr + li] += jitter;    
+                    }
+                }
+            }     
+
+            // printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
+
+            pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
+
+            jitter*=10;   
+            ntry++;         
+
+        }
+
+        if(info>0){
+            printf("K matrix not positive definite with jittering, consider increasing option['model_max_jitter_try']");
+            exit(0);
+        }
+        free(Kcopy);
+
 	}
 /*    if (info != 0)
     {
@@ -520,7 +575,7 @@ for (int p = 0; p < 8; p++)
 	}
     /**************************************************************************************************/
 
-# pragma omp parallel private ( k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, sum, ws2, a, dldk, info, tmppid ) shared ( z, theta, var, kappa, sigma, ws )
+# pragma omp parallel private ( k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, sum, ws2, kk, a, dldk, info, tmppid ) shared ( z, theta, var, kappa, sigma, ws )
     {
         int tid = omp_get_thread_num();
 
@@ -548,28 +603,25 @@ for (int p = 0; p < 8; p++)
                 idxk = ljstart * z->lr + li;
                 dldk = dL_dK[idxk];
 
-                sigma_gradients_TPS[idxi] += dldk;
-
-                for (q = 0; q < z->NL; q++)
-                {
-                    kappa_gradients_TPS[q * z->NT + idxi] += dldk;
-                }
+                sigma_gradients_TPS[idxi] += dldk*sigma[idxi];
 
                 for (q = 0; q < z->NL; q++)
                 {
                     ws2 = ws[q * z->NT + idxi] * ws[q * z->NT + idxi];
+                    kk = kappa[q * z->NT + idxi];
                     a = dldk * z->exps[(li * z->lc + ljstart) * z->NL + q];
-                    var_gradients_TPS[q] += ws2 * a;
-                    a *= var[q];
+                    var_gradients_TPS[q] += 0; // This makes sure variance is fixed 
+                    // var_gradients_TPS[q] += (ws2+kk) * a;
+                    a *= var[q];  // a is kq in the ppopp21 paper
+                    kappa_gradients_TPS[q * z->NT + idxi] += a*kappa[q * z->NT + idxi];
                     for (d = 0; d < z->DI; d++)
                     {
-                        theta_gradients_TPS[q * z->DI + d] += ws2 * a * (z->dists[(li * z->lc + ljstart) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
+                        theta_gradients_TPS[q * z->DI + d] += (ws2+kk) * a * (z->dists[(li * z->lc + ljstart) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
                     }
                     // If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
                     // which is exacly what happens in the following two lines anyways
                     // so no need for an if statement
-                    ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxi] * a;
-                    ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxi] * a;
+                    ws_gradients_TPS[q * z->NT + idxi] += 2 * ws[q * z->NT + idxi]* ws[q * z->NT + idxi] * a;
                 }
             }
 
@@ -577,35 +629,38 @@ for (int p = 0; p < 8; p++)
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
-				if (gi <= gj){		
+				if (gi < gj){		
 					
 	//@                idxk = li * z->lc + lj;
 					idxk = lj * z->lr + li;
 					dldk = dL_dK[idxk];
 
-					if (idxi == idxj)
-					{
-						for (q = 0; q < z->NL; q++)
-						{
-							kappa_gradients_TPS[q * z->NT + idxi] += 2. * dldk;
-						}
-					}
-
 					for (q = 0; q < z->NL; q++)
 					{
+                        if (idxi == idxj)
+                        {
+                            kk = kappa[q * z->NT + idxi];
+                        }else{
+                            kk = 0;
+                        }
 						ws2 = ws[q * z->NT + idxi] * ws[q * z->NT + idxj];
 						a = dldk * z->exps[(li * z->lc + lj) * z->NL + q];
-						var_gradients_TPS[q] += 2. * ws2 * a;
-						a *= var[q];
+						var_gradients_TPS[q] += 0; // this makes sure variance is fixed //2. * (ws2+kk) * a;
+						// var_gradients_TPS[q] += 2. * (ws2+kk) * a;
+                        a *= var[q];  // a is kq in the ppopp21 paper
+                        if (idxi == idxj){
+                            kappa_gradients_TPS[q * z->NT + idxi]  += 2. * a*kappa[q * z->NT + idxi];
+                        }
 						for (d = 0; d < z->DI; d++)
 						{
-							theta_gradients_TPS[q * z->DI + d] += 2. * ws2 * a * (z->dists[(li * z->lc + lj) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
+							theta_gradients_TPS[q * z->DI + d] += 2. * (ws2+kk) * a * (z->dists[(li * z->lc + lj) * z->DI + d]) / (theta[q * z->DI + d] * theta[q * z->DI + d]);
 						}
-						// If (idxi == idxj) then ws_gradient is supposed to be 2 * ws[] * a
-						// which is exacly what happens in the following two lines anyways
-						// so no need for an if statement
-						ws_gradients_TPS[q * z->NT + idxi] += 2. * ws[q * z->NT + idxj] * a;
-						ws_gradients_TPS[q * z->NT + idxj] += 2. * ws[q * z->NT + idxi] * a;
+                        if (idxi == idxj){
+                            ws_gradients_TPS[q * z->NT + idxi] += 4*ws[q * z->NT + idxi]*ws[q * z->NT + idxi] * a;
+                        }else{
+                            ws_gradients_TPS[q * z->NT + idxi] += ws[q * z->NT + idxj]*ws[q * z->NT + idxi] * a;
+                            ws_gradients_TPS[q * z->NT + idxj] += ws[q * z->NT + idxi]*ws[q * z->NT + idxj] * a;
+                        }
 					}
 				}	
             }
@@ -623,7 +678,12 @@ for (int p = 0; p < 8; p++)
     }
 
     MPI_Allreduce(z->buffer, gradients, z->nparam, MPI_DOUBLE, MPI_SUM, z->mpi_comm);
-
+    
+    t2 = omp_get_wtime();
+    // if (z->pid == 0){
+    //     printf("time in fun_jac: %e\n",t2-t1);
+    //     fflush(stdout);
+    // }
     return neg_log_marginal_likelihood;
 }
 

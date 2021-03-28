@@ -127,9 +127,9 @@
   
   printf "${BLUE} GC; Installing ScaLAPACK from source\n"
   cd $GPROOT/installDir
-  wget http://www.netlib.org/scalapack/scalapack-2.0.2.tgz
-  tar -xf scalapack-2.0.2.tgz
-  cd scalapack-2.0.2
+  wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+  tar -xf scalapack-2.1.0.tgz
+  cd scalapack-2.1.0
   rm -rf build
   mkdir -p build
   cd build
@@ -144,7 +144,7 @@
     -DBLAS_LIBRARIES="$BLAS_LIB" \
     -DLAPACK_LIBRARIES="$LAPACK_LIB"
   make -j8  &>build_scalapack.log
-  sudo cp $GPROOT/installDir/scalapack-2.0.2/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
+  sudo cp $GPROOT/installDir/scalapack-2.1.0/build/lib/libscalapack.so /usr/lib/x86_64-linux-gnu/.
   export SCALAPACK_LIB="/usr/lib/x86_64-linux-gnu/libscalapack.so"  
   printf "${BLUE} GC; Done installing ScaLAPACK from source\n"
   
@@ -183,7 +183,7 @@
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
   make &>>build_gptune.log
   cp lib_gptuneclcm.so ../.
-  cp pdqrdriver ../
+  # cp pdqrdriver ../
 
 
 
@@ -219,7 +219,14 @@
   make pddrive_spawn &>>build_gptune.log
   make pzdrive_spawn &>>build_gptune.log
 
-
+  cd ../../
+  rm -rf hypre
+  git clone https://github.com/hypre-space/hypre.git
+  cd hypre/src/
+  ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI"
+  make
+  cp ../../hypre-driver/src/ij.c ./test/.
+  make test
 	
   cd ../../../
   rm -rf mpi4py
@@ -238,6 +245,7 @@
   rm -rf autotune
   git clone https://github.com/ytopt-team/autotune.git
   cd autotune/
+  cp ../patches/autotune/problem.py autotune/.
   env CC=$MPICC pip3.7 install -e .
   printf "${BLUE} GC; Done installing GPtune from source\n"
 
@@ -247,7 +255,7 @@
   # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./demo.py
   # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_TLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
   # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_TLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 5 -machine travis -jobid 0
-  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA_loaddata.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
-  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_TLA.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
+  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 5 -machine travis -jobid 0
+  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nodes 1 -cores 4 -ntask 2 -nrun 10 -machine travis -jobid 0
+  # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA.py -nodes 1 -cores 4 -ntask 1 -nrun 4 -machine travis 
   # $MPIRUN --allow-run-as-root --oversubscribe -n 1 python3.7 ./superlu_MLA_MO.py  -nodes 1 -cores 4 -ntask 1 -nrun 6 -machine travis  
