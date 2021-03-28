@@ -20,10 +20,12 @@
 """
 Example of invocation of this script:
 
-python scalapack_MLA_RCI.py -nprocmin_pernode 1 -nrun 10 -jobid 0 -bunit 8
+python scalapack_MLA_RCI.py -mmax 5000 -nmax 5000 -nprocmin_pernode 1 -ntask 5 -nrun 10 -jobid 0 -bunit 8
 
 where:
+    -mmax (nmax) is the maximum number of rows (columns) in a matrix
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
+    -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -jobid is optional. You can always set it to 0.
     -tla is whether TLA is used after MLA
@@ -70,7 +72,9 @@ def main():
 
     # Parse command line arguments
     args = parse_args()
-
+    mmax = args.mmax
+    nmax = args.nmax
+    ntask = args.ntask
     bunit = args.bunit
     nprocmin_pernode = args.nprocmin_pernode
     nrun = args.nrun
@@ -90,8 +94,7 @@ def main():
 
     mmin=128
     nmin=128
-    mmax=2000
-    nmax=2000
+
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
@@ -128,10 +131,15 @@ def main():
     options['RCI_mode'] = True
     options.validate(computer=computer)
 
+    seed(1)
+    if ntask == 1:
+        giventask = [[mmax,nmax]]
+    else:
+        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # # giventask = [[2000, 2000]]
     # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
-    giventask = [[177, 1303],[367, 381]]
+    # giventask = [[177, 1303],[367, 381]]
     ntask=len(giventask)
     
 
@@ -170,6 +178,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # Problem related arguments
+    parser.add_argument('-mmax', type=int, default=-1, help='Number of rows')
+    parser.add_argument('-nmax', type=int, default=-1, help='Number of columns')    
     parser.add_argument('-bunit', type=int, default=8, help='mb and nb are integer multiples of bunit')
     # Machine related arguments
     parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
@@ -179,7 +189,9 @@ def parse_args():
     # Algorithm related arguments    
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-tla', type=int, default=0, help='Whether perform TLA after MLA when optimization is GPTune')    
+    parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
+    
     # Experiment related arguments
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')

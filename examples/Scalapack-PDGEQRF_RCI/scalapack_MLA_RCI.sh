@@ -11,11 +11,14 @@
 
 
 # Get nrun and nprocmin_pernode from command line
-while getopts "a:b:" opt
+while getopts "a:b:c:d:e:" opt
 do
    case $opt in
       a ) nrun=$OPTARG ;;
       b ) nprocmin_pernode=$OPTARG ;;
+      c ) mmax=$OPTARG ;;
+      d ) nmax=$OPTARG ;;
+      e ) ntask=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -151,7 +154,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./scalapack_MLA_RCI.py -nrun $nrun -bunit $bunit -nprocmin_pernode $nprocmin_pernode
+python ./scalapack_MLA_RCI.py -nrun $nrun -mmax $mmax -nmax $nmax -ntask $ntask -bunit $bunit -nprocmin_pernode $nprocmin_pernode
 
 # check whether GPTune needs more data
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
