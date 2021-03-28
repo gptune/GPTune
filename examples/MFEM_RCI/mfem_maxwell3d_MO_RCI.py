@@ -18,13 +18,13 @@
 ################################################################################
 """
 Example of invocation of this script:
-python superlu_MLA_MO_RCI.py -nprocmin_pernode 1 -nrun 800 
+python mfem_maxwell3d_RCI.py -nprocmin_pernode 1 -nrun 800 
 
 where:
 	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -nrun is the number of calls per task 
 """
- 
+
 ################################################################################
 
 import sys
@@ -32,7 +32,6 @@ import os
 import numpy as np
 import argparse
 import pickle
-import copy
 
 import mpi4py
 from mpi4py import MPI
@@ -47,22 +46,21 @@ from gptune import * # import all
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
 
+from callopentuner import OpenTuner
+from callhpbandster import HpBandSter
 import math
 
 ################################################################################
 def objectives(point):                          
 	print('objective is not needed when options["RCI_mode"]=True')
 	
-def cst1(NSUP,NREL):
-	return NSUP >= NREL
-def cst2(npernode,nprows,nodes):
-	return nodes * 2**npernode >= nprows
 
 def main():
 
+
 	# Parse command line arguments
+
 	args   = parse_args()
 
 	# Extract arguments
@@ -76,40 +74,31 @@ def main():
 	TUNER_NAME = 'GPTune'
 	os.environ['MACHINE_NAME'] = machine
 
-	
-	nprocmax = nodes*cores
-
-
-	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
-	matrices = ["big.rua","g20.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
-
 	# Task parameters
-	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
+	meshes = ["escher", "fichera", "periodic-cube", "amr-hex", "inline-tet"]
+	mesh    = Categoricalnorm (meshes, transform="onehot", name="mesh")    
+	omega = Real(16.0, 64.0, transform="normalize", name="omega")
 
-	# Input parameters
-	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
-	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
-	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
-	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
-	NREL      = Integer     (10, 40, transform="normalize", name="NREL")
-
+	# Tuning parameters
+	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
+	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")	
+	sp_blr_min_sep_size     = Integer     (1, 10, transform="normalize", name="sp_blr_min_sep_size")
+	sp_hodlr_min_sep_size     = Integer     (10, 40, transform="normalize", name="sp_hodlr_min_sep_size")
+	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
+	blr_leaf_size     = Integer     (5, 9, transform="normalize", name="blr_leaf_size")
 	time   = Real        (float("-Inf") , float("Inf"), name="time")
 	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 
-	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
-	OS = Space([time, memory])
 
-	constraints = {"cst1" : cst1, "cst2" : cst2}
+	IS = Space([mesh,omega])
+	PS = Space([npernode, sp_blr_min_sep_size,sp_hodlr_min_sep_size,blr_leaf_size,hodlr_leaf_size])
+	OS = Space([time, memory])
+	constraints = {}
 	models = {}
 	constants={"nodes":nodes,"cores":cores}
 
 	# """ Print all input and parameter samples """	
 	# print(IS, PS, OS, constraints, models)
-
-
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
@@ -133,14 +122,14 @@ def main():
 	options['search_more_samples'] = 4
 	options.validate(computer = computer)
 	
+	
 	# """ Building MLA with the given list of tasks """
-	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-	giventask = [["big.rua"],["g20.rua"]]		
-	# giventask = [["Si2.bin"]]	
-	# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
+	giventask = [["inline-tet",32.0]]		
 	data = Data(problem)
-
-
+	
+	data.I = giventask
+	Pdefault = [int(math.log2(nprocmin_pernode)),1,10,8,8]
+	data.P = [[Pdefault]]
 
 	if(TUNER_NAME=='GPTune'):
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
@@ -175,7 +164,7 @@ def parse_args():
 	# Algorithm related arguments
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
-
+	# Experiment related arguments
 
 	args   = parser.parse_args()
 	return args

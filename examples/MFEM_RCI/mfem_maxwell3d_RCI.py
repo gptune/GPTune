@@ -18,11 +18,12 @@
 ################################################################################
 """
 Example of invocation of this script:
-python mfem_maxwell3d_RCI.py -nprocmin_pernode 1 -nrun 800 
+python mfem_maxwell3d_RCI.py -nprocmin_pernode 1 -nrun 800 -obj time
 
 where:
 	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -nrun is the number of calls per task 
+	-obj is the tuning objective: "time" or "memory"	
 """
 
 ################################################################################
@@ -68,6 +69,8 @@ def main():
 	nprocmin_pernode = args.nprocmin_pernode
 	optimization = args.optimization
 	nrun = args.nrun
+	obj = args.obj
+	target=obj
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 	TUNER_NAME = 'GPTune'
@@ -85,7 +88,10 @@ def main():
 	sp_hodlr_min_sep_size     = Integer     (10, 40, transform="normalize", name="sp_hodlr_min_sep_size")
 	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
 	blr_leaf_size     = Integer     (5, 9, transform="normalize", name="blr_leaf_size")
-	result   = Real        (float("-Inf") , float("Inf"),name="r")
+	if(target=='time'):			
+		result   = Real        (float("-Inf") , float("Inf"),name="time")
+	if(target=='memory'):	
+		result   = Real        (float("-Inf") , float("Inf"),name="memory")
 
 	IS = Space([mesh,omega])
 	PS = Space([npernode, sp_blr_min_sep_size,sp_hodlr_min_sep_size,blr_leaf_size,hodlr_leaf_size])
@@ -131,7 +137,7 @@ def main():
 		NI = len(giventask)
 		NS = nrun
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
-		print("stats: ", stats)
+		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
@@ -147,6 +153,7 @@ def parse_args():
 	parser = argparse.ArgumentParser()
 
 	# Problem related arguments
+	parser.add_argument('-obj', type=str, default='time', help='Tuning objective (time or memory)')	
 	# Machine related arguments
 	parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
 	# Algorithm related arguments

@@ -1,5 +1,5 @@
 #!/bin/bash
-
+start=`date +%s`
 # ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
 # ModuleEnv='cori-haswell-craympich-intel'
@@ -167,6 +167,9 @@ fi
 while [ ! $idx = null ]; 
 do 
 echo " $idx"    # idx indexes the record that has null objective function values
+# write a large value to the database. This becomes useful in case the application crashes. 
+bigval=1e30
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 
 
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
@@ -229,4 +232,8 @@ idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | 
 done
 done
 
+end=`date +%s`
+
+runtime=$((end-start))
+echo "Total tuning time: $runtime"
 

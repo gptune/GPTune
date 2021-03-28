@@ -151,7 +151,7 @@ def main():
 		NI = len(giventask)
 		NS = nrun
 		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
-		print("stats: ", stats)
+		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	
 		for tid in range(NI):

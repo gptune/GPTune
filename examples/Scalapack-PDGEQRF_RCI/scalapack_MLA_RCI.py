@@ -152,7 +152,7 @@ def main():
         NI = len(giventask)
         NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
-        print("stats: ", stats)
+        # print("stats: ", stats)
 
         """ Print all input and parameter samples """
         for tid in range(NI):
@@ -166,7 +166,7 @@ def main():
             """ Call TLA for 2 new tasks using the constructed LCM model"""
             newtask = [[400, 500], [800, 600]]
             (aprxopts, objval, stats) = gt.TLA1(newtask, NS=None)
-            print("stats: ", stats)
+            # print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""
             for tid in range(len(newtask)):

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 start=`date +%s`
-
 # ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
 # ModuleEnv='cori-haswell-craympich-gnu'
 # ModuleEnv='cori-haswell-craympich-intel'
@@ -10,13 +9,12 @@ start=`date +%s`
 # ModuleEnv='cori-knl-openmpi-gnu'
 # ModuleEnv='cori-knl-openmpi-intel'
 
-# Get nrun, nprocmin_pernode, objecitve(memory or time) from command line
-while getopts "a:b:c:" opt
+# Get nrun, nprocmin_pernode from command line
+while getopts "a:b:" opt
 do
    case $opt in
       a ) nrun=$OPTARG ;;
       b ) nprocmin_pernode=$OPTARG ;;
-      c ) obj=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -137,8 +135,9 @@ processor=${machine_info[1]}
 nodes=${machine_info[2]}
 cores=${machine_info[3]}
 
+obj1=time    # name of the objective defined in the python file
+obj2=memory    # name of the objective defined in the python file
 
-# obj=memory    # name of the objective defined in the python file
 
 
 database="gptune.db/MFEM.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
@@ -150,10 +149,10 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./mfem_maxwell3d_RCI.py -nprocmin_pernode $nprocmin_pernode -nrun $nrun -obj $obj
+python ./mfem_maxwell3d_MO_RCI.py -nprocmin_pernode $nprocmin_pernode -nrun $nrun 
 
 # check whether GPTune needs more data
-idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 if [ $idx = null ]
 then
 more=0
@@ -166,7 +165,8 @@ echo " $idx"    # idx indexes the record that has null objective function values
 
 # write a large value to the database. This becomes useful in case the application crashes. 
 bigval=1e30
-jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
 declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_parameter' $database | jq -r '.[]'))
@@ -220,32 +220,28 @@ else
     srun -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
 fi
 
-
 iter=$(grep 'number of Krylov iterations =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
 
 if [[ $iter == 1000 ]]; then
-    result=$bigval
+    result1=$bigval
+    result2=$bigval
 else 
     # get the result (for this example: search the runlog)
-    time=$(grep 'MFEM solve time =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-    mem=$(grep 'factor memory =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-    if [ $obj = time ]
-    then
-    result=$time
-    else
-    result=$mem
-    fi
+    result1=$(grep 'MFEM solve time =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    result2=$(grep 'factor memory =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
 fi
 
+
 # write the data back to the database file
-jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $result1 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $result2 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+
 #############################################################################
 #############################################################################
 
 done
 done
-
 
 end=`date +%s`
 

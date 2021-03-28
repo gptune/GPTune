@@ -14,12 +14,12 @@ BuildExample=0 # whether all the examples have been built
 # export compiler=gnu   
 # export nodes=1  # number of nodes to be used
 
-# ################ Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=craympich  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=1  # number of nodes to be used
+################ Cori
+export machine=cori
+export proc=haswell   # knl,haswell
+export mpi=craympich  # openmpi,craympich
+export compiler=gnu   # gnu, intel	
+export nodes=16  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -30,12 +30,12 @@ BuildExample=0 # whether all the examples have been built
 # export nodes=1  # number of nodes to be used
 
 
-################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-export machine=cleanlinux
-export proc=unknown   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
+# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+# export machine=cleanlinux
+# export proc=unknown   
+# export mpi=openmpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
 
 
 ##################################################
@@ -274,7 +274,9 @@ machine_json=$(echo ",\"machine_configuration\":{\"machine_name\":\"$machine\",\
 loadable_machine_json=$(echo ",\"loadable_machine_configurations\":{\"$machine\":{\"$proc\":{\"nodes\":$nodes,\"cores\":$cores}}}")
 
 
-
+timestamp() {
+  date +"%Y-%m-%d_%H-%M-%S" # current time
+}
 
 
 
@@ -361,32 +363,53 @@ echo "Testing Reverse Communication Interface"
 # tp=PDGEQRF
 # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
 # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-# bash scalapack_MLA_RCI.sh -a 40 -b 2 -c 1000 -d 1000 -e 2 #a: nrun b: nprocmin_pernode c: mmax d: nmax e: ntask
+# bash scalapack_MLA_RCI.sh -a 40 -b 2 -c 1000 -d 1000 -e 2 | tee log.pdgeqrf #a: nrun b: nprocmin_pernode c: mmax d: nmax e: ntask
+# cp gptune.db/PDGEQRF.json  gptune.db/PDGEQRF.json_$(timestamp)
 
+if [[ $BuildExample == 1 ]]; then
+    cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
+    rm -rf gptune.db/*.json # do not load any database 
+    tp=SuperLU_DIST
+    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory | tee log.superlu #a: nrun b: nprocmin_pernode c: objective
+    cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
 
-# if [[ $BuildExample == 1 ]]; then
-#     cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
-#     rm -rf gptune.db/*.json # do not load any database 
-#     tp=SuperLU_DIST
-#     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-#     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-#     bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory #a: nrun b: nprocmin_pernode c: objective
+    # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
+    # rm -rf gptune.db/*.json # do not load any database 
+    # tp=SuperLU_DIST
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash superlu_MLA_MO_RCI.sh -a 10 -b 2 | tee log.superlu_MO #a: nrun b: nprocmin_pernode 
+    # cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_MO_$(timestamp)
 
-#     cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
-#     rm -rf gptune.db/*.json # do not load any database 
-#     tp=SuperLU_DIST
-#     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-#     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-#     bash superlu_MLA_MO_RCI.sh -a 10 -b 2 #a: nrun b: nprocmin_pernode 
+    # cd $GPTUNEROOT/examples/MFEM_RCI
+    # rm -rf gptune.db/MFEM.json # do not load any database 
+    # # cp gptune.db/MFEM.json_memory gptune.db/MFEM.json  
+    # tp=MFEM
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash mfem_maxwell3d_RCI.sh -a 40 -b 2 -c memory | tee log.mfem_memory  #a: nrun b: nprocmin_pernode c: objective
+    # cp gptune.db/MFEM.json  gptune.db/MFEM.json_memory_$(timestamp)
 
+    # cd $GPTUNEROOT/examples/MFEM_RCI
+    # rm -rf gptune.db/MFEM.json # do not load any database 
+    # # cp gptune.db/MFEM.json_time gptune.db/MFEM.json 
+    # tp=MFEM
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash mfem_maxwell3d_RCI.sh -a 40 -b 2 -c time | tee log.mfem_time #a: nrun b: nprocmin_pernode c: objective
+    # cp gptune.db/MFEM.json  gptune.db/MFEM.json_time_$(timestamp)
 
-#     cd $GPTUNEROOT/examples/MFEM_RCI
-#     rm -rf gptune.db/*.json # do not load any database 
-#     tp=MFEM
-#     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-#     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-#     bash mfem_maxwell3d_RCI.sh -a 20 -b 2  #a: nrun b: nprocmin_pernode
-# fi
+    # cd $GPTUNEROOT/examples/MFEM_RCI
+    # rm -rf gptune.db/MFEM.json # do not load any database 
+    # # cp gptune.db/MFEM.json_time_memory gptune.db/MFEM.json
+    # tp=MFEM
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash mfem_maxwell3d_MO_RCI.sh -a 40 -b 2 | tee log.mfem_time_memory  #a: nrun b: nprocmin_pernode 
+    # cp gptune.db/MFEM.json  gptune.db/MFEM.json_time_memory_$(timestamp)
+fi
 
 # ##########################################################################
 # ##########################################################################
