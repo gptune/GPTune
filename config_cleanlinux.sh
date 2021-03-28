@@ -5,6 +5,7 @@
 
 export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
 BuildExample=1 # whether to build all examples
+MPIFromSource=1 # whether to build openmpi from source
 
 if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
 	echo "This script can only be used for Ubuntu or Debian systems"
@@ -19,32 +20,43 @@ export GPTUNEROOT=$PWD
 
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
-
-	export PATH=$GPTUNEROOT/env/bin/:$PATH
-	export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
-	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
-	export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
-	export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
 	
-	export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
-	export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
-	export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
-	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-	export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
-	OPENMPFLAG=fopenmp
 	CC=gcc-8
 	FTN=gfortran-8
 	CPP=g++-8
 
-	# CC=gcc-9
-	# FTN=gfortran-9
-	# CPP=g++-9
+	if [[ $MPIFromSource = 1 ]]; then
+		export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
+		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  		
+	else
 
-	# CC=gcc-10
-	# FTN=gfortran-10
-	# CPP=g++-10
+		#######################################
+		#  define the following as needed
+		export MPICC=
+		export MPICXX=
+		export MPIF90=
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$LIBRARY_PATH 
+		export PATH=$PATH 
+		########################################
+
+		if [[ -z "$MPICC" ]]; then
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			exit
+		fi
+	fi
+	export PATH=$GPTUNEROOT/env/bin/:$PATH
+	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
+	export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+	OPENMPFLAG=fopenmp
+
 
 fi
 ###############
@@ -160,15 +172,16 @@ make PREFIX=. CC=$CC CXX=$CPP FC=$FTN -j32
 make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
 
 
-cd $GPTUNEROOT
-wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-bzip2 -d openmpi-4.0.1.tar.bz2
-tar -xvf openmpi-4.0.1.tar 
-cd openmpi-4.0.1/ 
-./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
-make -j32
-make install
-
+if [[ $MPIFromSource = 1 ]]; then
+	cd $GPTUNEROOT
+	wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
+	bzip2 -d openmpi-4.0.1.tar.bz2
+	tar -xvf openmpi-4.0.1.tar 
+	cd openmpi-4.0.1/ 
+	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+	make -j32
+	make install
+fi
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then

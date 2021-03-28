@@ -30,7 +30,7 @@ BuildExample=0 # whether all the examples have been built
 # export nodes=1  # number of nodes to be used
 
 
-################ Any ubuntu machine that has used config_cleanlinux.sh to build GPTune
+################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
 export machine=cleanlinux
 export proc=unknown   
 export mpi=openmpi  
@@ -75,22 +75,35 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 ###############
 ############### macbook
 elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
+    
+    MPIFromSource=1 # whether openmpi was built from source when installing GPTune
+
+    if [[ $MPIFromSource = 1 ]]; then
+        export PATH=$PWD/openmpi-4.0.1/bin:$PATH
+        export MPIRUN="$PWD/openmpi-4.0.1/bin/mpirun"
+        export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+    else
+        export MPIRUN=
+        export PATH=$PATH
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+        export LIBRARY_PATH=$LIBRARY_PATH  
+        export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH    
+        if [[ -z "$MPIRUN" ]]; then
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi has not been built from source when installing GPTune, please set MPIRUN, PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above."
+			exit
+		fi       
+    fi    
+    
     export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/build/
 	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
 	export PATH=$PWD/env/bin/:$PATH
 	export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
 	export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
 
-	export MPIRUN="$PWD/openmpi-4.0.1/bin/mpirun"
-	export PATH=$PATH:$PWD/openmpi-4.0.1/bin
 	export SCALAPACK_LIB=$PWD/scalapack-2.1.0/build/install/lib/libscalapack.dylib
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
     export LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LIBRARY_PATH
     export DYLD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
-
-	export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-	export LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LIBRARY_PATH  
-	export DYLD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
 	
     export LD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
     export LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
@@ -210,11 +223,24 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
 elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 
+    MPIFromSource=1 # whether openmpi was built from source when installing GPTune
+
+    if [[ $MPIFromSource = 1 ]]; then
+        export PATH=$PWD/openmpi-4.0.1/bin:$PATH
+        export MPIRUN=$PWD/openmpi-4.0.1/bin/mpirun
+        export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+    else
+        export PATH=$PATH
+        export MPIRUN=
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH     
+        if [[ -z "$MPIRUN" ]]; then
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi has not been built from source when installing GPTune, please set MPIRUN, PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above."
+			exit
+		fi       
+    fi
+
 	export PATH=$PWD/env/bin/:$PATH
-	export PATH=$PATH:$PWD/openmpi-4.0.1/bin
-	export MPIRUN=$PWD/openmpi-4.0.1/bin/mpirun
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
 

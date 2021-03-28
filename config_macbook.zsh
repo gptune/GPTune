@@ -10,7 +10,7 @@ lapackversion=3.9.0_1
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
-
+MPIFromSource=1 # whether to build openmpi from source
 ##################################################
 ##################################################
 
@@ -36,33 +36,47 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/scalapack-driver/spt/
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
 	export PYTHONWARNINGS=ignore
-	export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
-	export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
-	export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
-	export MPIRUN="$GPTUNEROOT/openmpi-4.0.1/bin/mpirun"
-	export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
+
 	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.dylib
 	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
 	export LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
-	export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
-	export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
 	CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-10
 	FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-10
 	CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-10
 
+	if [[ $MPIFromSource = 1 ]]; then
+		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
+		export PATH=$GPTUNEROOT/openmpi-4.0.1/bin:$PATH
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
+		export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
+	else 
+
+		#######################################
+		#  define the following as needed
+		export MPICC=
+		export MPICXX=
+		export MPIF90=
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$LIBRARY_PATH 
+		export PATH=$PATH 
+		export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH 
+		########################################
+
+		if [[ -z "$MPICC" ]]; then
+			echo "Line: ${LINENO} of ${(%):-%x}: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			exit
+		fi
+	fi	
 
 fi
 ###############
-
-
-
-
-
 
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
