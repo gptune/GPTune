@@ -63,66 +63,7 @@ class GPTune(object):
         if (options is None):
             options = Options()
         self.options  = options
-
-        # if history database is requested by CK-GPTune
-        if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
-            history_db = HistoryDB()
-            history_db.tuning_problem_name = os.environ.get('CKGPTUNE_APPLICATION_NAME','Unknown')
-            history_db.machine_configuration = os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION','Unknown')
-            import ast
-            history_db.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
-            if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
-                history_db.load_model = True
-            try:
-                with FileLock("test.lock", timeout=5):
-                    print ("[HistoryDB] use filelock for synchronization")
-                    history_db.file_synchronization_method = 'filelock'
-            except Timeout:
-                print ("[HistoryDB] use rsync for synchronization")
-                history_db.file_synchronization_method = 'rsync'
-            os.system("rm test.lock")
-            self.history_db = history_db
-
-        # if GPTune is called through Reverse Communication Interface
-        elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
-            with open("./.gptune/meta.json") as f_in:
-                gptune_metadata = json.load(f_in)
-
-                history_db = HistoryDB()
-
-                if "tuning_problem_name" in gptune_metadata:
-                    history_db.tuning_problem_name = gptune_metadata["tuning_problem_name"]
-                else:
-                    history_db.tuning_problem_name = "Unknown"
-
-                if "history_db_path" in gptune_metadata:
-                    history_db.history_db_path = gptune_metadata["history_db_path"]
-                else:
-                    os.system("mkdir -p ./gptune.db")
-                    history_db.history_db_path = "./gptune.db"
-
-                if "machine_configuration" in gptune_metadata:
-                    history_db.machine_configuration = gptune_metadata["machine_configuration"]
-                if "software_configuration" in gptune_metadata:
-                    history_db.software_configuration = gptune_metadata["software_configuration"]
-                if "loadable_machine_configurations" in gptune_metadata:
-                    history_db.loadable_machine_configurations = gptune_metadata["loadable_machine_configurations"]
-                if "loadable_software_configurations" in gptune_metadata:
-                    history_db.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
-
-                try:
-                    with FileLock("test.lock", timeout=5):
-                        print ("[HistoryDB] use filelock for synchronization")
-                        history_db.file_synchronization_method = 'filelock'
-                except Timeout:
-                    print ("[HistoryDB] use rsync for synchronization")
-                    history_db.file_synchronization_method = 'rsync'
-                os.system("rm test.lock")
-
-                self.history_db = history_db
-        # else: history database is not used.
-        else:
-            self.history_db = None
+        self.history_db = HistoryDB()
 
     def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", update = 0, model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
@@ -566,7 +507,7 @@ class GPTune(object):
         return (copy.deepcopy(self.data), modelers, stats)
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
-        if self.history_db is not None:
+        if self.history_db.history_db is True:
             if self.history_db.load_func_eval == True and self.history_db.load_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:

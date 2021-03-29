@@ -74,6 +74,7 @@ class HistoryDB(dict):
         self.tuning_problem_name = None
 
         """ Options """
+        self.history_db = True
         self.save_func_eval = True
         self.save_model = True
         self.load_func_eval = True
@@ -109,6 +110,66 @@ class HistoryDB(dict):
 
         """ Process uid """
         self.process_uid = str(uuid.uuid1())
+
+        # if history database is requested by CK-GPTune
+        if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+            print ("CK-GPTune History Database Init")
+            import ast
+            self.tuning_problem_name = os.environ.get('CKGPTUNE_TUNING_PROBLEM_NAME','Unknown')
+            self.machine_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION','{}'))
+            self.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
+
+            os.system("mkdir -p ./gptune.db")
+            self.history_db_path = "./gptune.db"
+
+            if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
+                self.load_model = True
+            try:
+                with FileLock("test.lock", timeout=5):
+                    print ("[HistoryDB] use filelock for synchronization")
+                    self.file_synchronization_method = 'filelock'
+            except Timeout:
+                print ("[HistoryDB] use rsync for synchronization")
+                self.file_synchronization_method = 'rsync'
+            os.system("rm test.lock")
+
+        # if GPTune is called through Reverse Communication Interface
+        elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
+            with open("./.gptune/meta.json") as f_in:
+                print ("GPTune History Database Init")
+
+                gptune_metadata = json.load(f_in)
+
+                if "tuning_problem_name" in gptune_metadata:
+                    self.tuning_problem_name = gptune_metadata["tuning_problem_name"]
+                else:
+                    self.tuning_problem_name = "Unknown"
+
+                if "history_db_path" in gptune_metadata:
+                    self.history_db_path = gptune_metadata["history_db_path"]
+                else:
+                    os.system("mkdir -p ./gptune.db")
+                    self.history_db_path = "./gptune.db"
+
+                if "machine_configuration" in gptune_metadata:
+                    self.machine_configuration = gptune_metadata["machine_configuration"]
+                if "software_configuration" in gptune_metadata:
+                    self.software_configuration = gptune_metadata["software_configuration"]
+                if "loadable_machine_configurations" in gptune_metadata:
+                    self.loadable_machine_configurations = gptune_metadata["loadable_machine_configurations"]
+                if "loadable_software_configurations" in gptune_metadata:
+                    self.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
+
+                try:
+                    with FileLock("test.lock", timeout=5):
+                        print ("[HistoryDB] use filelock for synchronization")
+                        self.file_synchronization_method = 'filelock'
+                except Timeout:
+                    print ("[HistoryDB] use rsync for synchronization")
+                    self.file_synchronization_method = 'rsync'
+                os.system("rm test.lock")
+        else:
+            self.history_db = False
 
     def check_load_deps(self, func_eval):
 
