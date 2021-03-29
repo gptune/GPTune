@@ -39,134 +39,14 @@ import logging
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 logging.getLogger('matplotlib.font_manager').disabled = True
 
-# from GPTune import *
 
 ################################################################################
 
+
+
 # Define Problem
 def objectives(point):
-    nodes = point['nodes']
-    cores = point['cores']
-    nstepmax = point['nstepmax']
-    nstepmin = point['nstepmin']
-    bmin = point['bmin']
-    bmax = point['bmax']
-    eta = point['eta']
-    
-    nprocmax = nodes*cores
-
-    def budget_map(b, nmin=10, nmax=100):
-        k1 = (nmax-nmin)/(bmax-bmin)
-        b1 = nmin - k1
-        assert k1 * bmax + b1 == nmax
-        return int(k1 * b + b1) 
-        # return int(45*(np.log(b)/np.log(eta)) + 10)
-        # return int(10*b)
-    try:
-        budget = point['budget']
-        nstep = budget_map(budget,nstepmin,nstepmax)
-    except:
-        nstep = budget_map(bmax,nstepmin,nstepmax)
-
-    # COLPERM = point['COLPERM']
-    # ROWPERM = point['ROWPERM']    
-    
-    COLPERM = '4'
-    ROWPERM = '2'
-    mx = point['mx']
-    my = point['my']
-    lphi = point['lphi']
-    # nstep = point['nstep']
-    # nprows = 2**point['nprows']
-    # nproc = 2**point['nproc']
-    # nproc = 32
-    NSUP = point['NSUP']
-    NREL = point['NREL']
-    nbx = point['nbx']
-    nby = point['nby']
-    # nblock     = int(nprocmax/nproc)
-    # npcols     = int(nproc/ nprows)
-    params = ['mx',mx,'my',my,'lphi',lphi,'nstep',nstep,'ROWPERM', ROWPERM, 'COLPERM', COLPERM, 'NSUP', NSUP, 'NREL', NREL, 'nbx', nbx, 'nby', nby]
-
-    # # INPUTDIR = os.path.abspath(__file__ + "/../superlu_dist/EXAMPLE/")
-
-    nthreads   = 1
-
-
-    """ pass some parameters through environment variables """	
-
-
-    info = MPI.Info.Create()
-    envstr= 'OMP_NUM_THREADS=1\n'
-    envstr+= 'NREL=%d\n' %(NREL)   
-    envstr+= 'NSUP=%d\n' %(NSUP)   
-    info.Set('env',envstr)
-
-    #####################################
-    ####### npernode is very important, without setting it the application can be much slower
-    info.Set('npernode','%d'%(cores)) # flat MPI # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-    #####################################
-
-    fin = open("./nimrod_template.in","rt")
-    fout = open("./nimrod.in","wt")
-
-    for line in fin:
-        #read replace the string and write to output file
-        if(line.find("iopts(3)")!=-1):
-            fout.write("iopts(3)= %s\n"%(ROWPERM))
-        elif(line.find("iopts(4)")!=-1):
-            fout.write("iopts(4)= %s\n"%(COLPERM))    
-        elif(line.find("lphi")!=-1):
-            fout.write("lphi= %s\n"%(lphi))    
-        elif(line.find("nlayers")!=-1):
-            fout.write("nlayers= %s\n"%(int(np.floor(2**lphi/3.0)+1)))  	
-        elif(line.find("mx")!=-1):
-            fout.write("mx= %s\n"%(2**mx))
-        elif(line.find("nstep")!=-1):
-            fout.write("nstep= %s\n"%(nstep))  			  
-        elif(line.find("my")!=-1):
-            fout.write("my= %s\n"%(2**my))   
-        elif(line.find("nxbl")!=-1):
-            fout.write("nxbl= %s\n"%(int(2**mx/2**nbx)))  
-        elif(line.find("nybl")!=-1):
-            fout.write("nybl= %s\n"%(int(2**my/2**nby)))  									  						        
-        else:
-            fout.write(line)
-    #close input and output files
-    fin.close()
-    fout.close()
-
-
-    nlayers=int(np.floor(2**lphi/3.0)+1)
-    nproc = int(nprocmax/nlayers)*nlayers
-    if(nprocmax<nlayers):
-        print('nprocmax', nprocmax, 'nlayers', nlayers, 'decrease lphi!')
-        raise Exception("nprocmax<nlayers")
-    if(nproc>int(2**mx/2**nbx)*int(2**my/2**nby)*int(np.floor(2**lphi/3.0)+1)): # nproc <= nlayers*nxbl*nybl
-        nproc = int(2**mx/2**nbx)*int(2**my/2**nby)*int(np.floor(2**lphi/3.0)+1) 
-
-    os.system("./nimset")
-
-
-    nrep=1 #3
-    hist=[]
-    for i in range(nrep):
-        """ use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-        print('exec', "./nimrod_spawn", 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL))
-        comm = MPI.COMM_SELF.Spawn("./nimrod_spawn", maxprocs=nproc,info=info)
-        """ gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
-        tmpdata = np.array([0,0,0,0,0],dtype=np.float64)
-        comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-        comm.Disconnect()
-        time.sleep(5.0)
-        hist.append(tmpdata)
-        print(params, ' nimrod time (trial) -- loop:', tmpdata[0],'slu: ', tmpdata[1],'factor: ', tmpdata[2], 'iter: ', tmpdata[3], 'total: ', tmpdata[4])
-    
-    tmpdata = min(hist, key=lambda x: x[0])
-    retval = tmpdata[0]
-    print(params, ' nimrod time -- loop:', tmpdata[0],'slu: ', tmpdata[1],'factor: ', tmpdata[2], 'iter: ', tmpdata[3], 'total: ', tmpdata[4])
-
-    return retval 
+    print('objective is not needed when options["RCI_mode"]=True')
 
 
 
@@ -192,7 +72,6 @@ def main():
     bmin = args.bmin
     bmax = args.bmax
     eta = args.eta
-
     TUNER_NAME = args.optimization
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -231,17 +110,17 @@ def main():
     models = {}
     constants={"nodes":nodes,"cores":cores,"nstepmin":nstepmin,"nstepmax":nstepmax,"bmin":bmin,"bmax":bmax,"eta":eta}
 
-    """ Print all input and parameter samples """	
-    print(IS, PS, OS, constraints, models)
+    # """ Print all input and parameter samples """	
+    # print(IS, PS, OS, constraints, models)
 
-    BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_openmpi/bin")
-    RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input")
-    os.system("cp %s/nimrod.in ./nimrod_template.in"%(RUNDIR))
-    os.system("cp %s/fluxgrid.in ."%(RUNDIR))
-    os.system("cp %s/g163518.03130 ."%(RUNDIR))
-    os.system("cp %s/p163518.03130 ."%(RUNDIR))
-    os.system("cp %s/nimset ."%(RUNDIR))
-    os.system("cp %s/nimrod ./nimrod_spawn"%(BINDIR))
+    # BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_openmpi/bin")
+    # RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input")
+    # os.system("cp %s/nimrod.in ./nimrod_template.in"%(RUNDIR))
+    # os.system("cp %s/fluxgrid.in ."%(RUNDIR))
+    # os.system("cp %s/g163518.03130 ."%(RUNDIR))
+    # os.system("cp %s/p163518.03130 ."%(RUNDIR))
+    # os.system("cp %s/nimset ."%(RUNDIR))
+    # os.system("cp %s/nimrod ./nimrod_spawn"%(BINDIR))
 
 
 
@@ -250,14 +129,14 @@ def main():
 
     """ Set and validate options """	
     options = Options()
-
+    options['RCI_mode'] = True
     options['model_restarts'] = 1
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     options['objective_evaluation_parallelism'] = False
-    options['objective_multisample_threads'] = 1
-    options['objective_multisample_processes'] = 1
-    options['objective_nprocmax'] = 1
+    # options['objective_multisample_threads'] = 1
+    # options['objective_multisample_processes'] = 1
+    # options['objective_nprocmax'] = 1
     options['model_processes'] = 1
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
@@ -266,8 +145,8 @@ def main():
     # options['search_threads'] = 16
     # options['mpi_comm'] = None
     # options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM' if args.LCMmodel == 'LCM' else 'Model_GPy_LCM' # Model_GPy_LCM or Model_LCM
-    options['verbose'] = True
+    options['model_class '] = 'Model_GPy_LCM' # 'Model_LCM'
+    options['verbose'] = False
     options['sample_class'] = 'SampleLHSMDU'
     options['sample_algo'] = 'LHS-MDU'
     options.validate(computer=computer)
@@ -364,76 +243,19 @@ def main():
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], f'Oopt  {min(data.O[tid])[0]:.3f}', 'nth ', np.argmin(data.O[tid]))
             
-    if(TUNER_NAME=='opentuner'):
-        NS = Btotal
-        (data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
-        print("stats: ", stats)
-
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    mx:%s my:%s lphi:%s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid][:NS])], 'Oopt ', min(data.O[tid][:NS])[0], 'nth ', np.argmin(data.O[tid][:NS]))
-            
-    if(TUNER_NAME=='hpbandster'):
-        NS = Btotal
-        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    mx:%s my:%s lphi:%s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-            
     
-    if(TUNER_NAME=='TPE'):
-        NS = Ntotal
-        (data,stats)=callhpbandster_bandit.HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, options=options, run_id="hpbandster_bandit", niter=1)
-        print("Tuner: ", TUNER_NAME)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    mx:%s my:%s lphi:%s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            # print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-            max_budget = 0.
-            Oopt = 99999
-            Popt = None
-            nth = None
-            for idx, (config, out) in enumerate(zip(data.P[tid], data.O[tid].tolist())):
-                for subout in out[0]:
-                    budget_cur = subout[0]
-                    if budget_cur > max_budget:
-                        max_budget = budget_cur
-                        Oopt = subout[1]
-                        Popt = config
-                        nth = idx
-                    elif budget_cur == max_budget:
-                        if subout[1] < Oopt:
-                            Oopt = subout[1]
-                            Popt = config
-                            nth = idx                    
-            print('    Popt ', Popt, 'Oopt ', Oopt, 'nth ', nth)
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-bmin', type=int, default=1, help='budget min')   
-    parser.add_argument('-bmax', type=int, default=2, help='budget max')   
-    parser.add_argument('-eta', type=int, default=2, help='eta')   
+    parser.add_argument('-bmax', type=int, default=1, help='budget max')   
+    parser.add_argument('-eta', type=int, default=2, help='eta')
     parser.add_argument('-nstepmax', type=int, default=-1, help='maximum number of time steps')   
     parser.add_argument('-nstepmin', type=int, default=-1, help='minimum number of time steps')   
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='total application runs')
-    parser.add_argument('-LCMmodel', type=str, default='LCM', help='choose from LCM models: LCM or GPy_LCM')
     parser.add_argument('-Nloop', type=int, default=1, help='Number of outer loops in multi-armed bandit per task')
     # parser.add_argument('-sample_class', type=str,default='SampleOpenTURNS',help='Supported sample classes: SampleLHSMDU, SampleOpenTURNS')
     args = parser.parse_args()

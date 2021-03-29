@@ -929,6 +929,7 @@ class GPTune_MB(object):
         output_space = tp.output_space
         objectives = tp.objective
         constraints = tp.constraints
+        constants = tp.constants
 
         """ insert "budget" as the first dimension of the input space """
         inputs = [Real(options['budget_min']-1e-12,
@@ -947,7 +948,7 @@ class GPTune_MB(object):
         print('inputs = ', inputs)
         input_space = Space(inputs)
 
-        self.tp = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)
+        self.tp = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None, constants=constants)
         self.computer = computer
         self.options  = options
         self.data     = Data(tp)
@@ -1039,11 +1040,13 @@ class GPTune_MB(object):
                 data1.I += data.I[0:len(Igiven)]
                 data1.P += data.P[0:len(Igiven)]
                 data1.O += data.O[0:len(Igiven)]
-                data1.D += data.D[0:len(Igiven)]
+                if(data.D is not None):
+                    data1.D += data.D[0:len(Igiven)]
                 del data.I[0:len(Igiven)]
                 del data.P[0:len(Igiven)]
                 del data.O[0:len(Igiven)]
-                del data.D[0:len(Igiven)]
+                if(data.D is not None):
+                    del data.D[0:len(Igiven)]
                 # merge new results to history
                 
 

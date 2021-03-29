@@ -17,7 +17,7 @@ module load cmake/3.14.4
 ##################################################
 machine=cori
 proc=haswell   # knl,haswell
-mpi=craympich  # openmpi,craympich
+mpi=openmpi  # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 

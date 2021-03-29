@@ -4,7 +4,7 @@
 ##################################################
 ##################################################
 
-BuildExample=0 # whether all the examples have been built
+BuildExample=1 # whether all the examples have been built
 
 
 # # ################ Any mac os machine that has used config_macbook.sh to build GPTune
@@ -17,7 +17,7 @@ BuildExample=0 # whether all the examples have been built
 ################ Cori
 export machine=cori
 export proc=haswell   # knl,haswell
-export mpi=craympich  # openmpi,craympich
+export mpi=openmpi  # openmpi,craympich
 export compiler=gnu   # gnu, intel	
 export nodes=16  # number of nodes to be used
 
@@ -283,72 +283,72 @@ timestamp() {
 
 
 
-##########################################################################
-##########################################################################
-echo "Testing MPI Spawning-based Interface"
+# ##########################################################################
+# ##########################################################################
+# echo "Testing MPI Spawning-based Interface"
 
-# the following examples only work with openmpi
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+# # the following examples only work with openmpi
+# if [[ $ModuleEnv == *"openmpi"* ]]; then
 
-    # cd $GPTUNEROOT/examples/GPTune-Demo
-    # rm -rf gptune.db/*.json # do not load any database 
-    # tp=GPTune-Demo
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py
+#     # cd $GPTUNEROOT/examples/GPTune-Demo
+#     # rm -rf gptune.db/*.json # do not load any database 
+#     # tp=GPTune-Demo
+#     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py
 
-    # cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
-    # rm -rf gptune.db/*.json # do not load any database 
-    # tp=PDGEQRF
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
+#     # cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
+#     # rm -rf gptune.db/*.json # do not load any database 
+#     # tp=PDGEQRF
+#     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
 
-    if [[ $BuildExample == 1 ]]; then
-        cd $GPTUNEROOT/examples/SuperLU_DIST
-        rm -rf gptune.db/*.json # do not load any database 
-        tp=SuperLU_DIST
-        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
-
-
-        # cd $GPTUNEROOT/examples/STRUMPACK
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=STRUMPACK_Poisson3d
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
+#     if [[ $BuildExample == 1 ]]; then
+#         cd $GPTUNEROOT/examples/SuperLU_DIST
+#         rm -rf gptune.db/*.json # do not load any database 
+#         tp=SuperLU_DIST
+#         app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
 
 
-        # ###### this one has a segmentation fault when running on Cori, also seems to fail on MacOS
-        # cd $GPTUNEROOT/examples/STRUMPACK
-        # rm -rf gptune.db/*.json # do not load any database
-        # tp=STRUMPACK_KRR
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori 
+#         # cd $GPTUNEROOT/examples/STRUMPACK
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=STRUMPACK_Poisson3d
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
+
+
+#         # ###### this one has a segmentation fault when running on Cori, also seems to fail on MacOS
+#         # cd $GPTUNEROOT/examples/STRUMPACK
+#         # rm -rf gptune.db/*.json # do not load any database
+#         # tp=STRUMPACK_KRR
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori 
 
 
 
-        # cd $GPTUNEROOT/examples/MFEM
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=MFEM
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
+#         # cd $GPTUNEROOT/examples/MFEM
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=MFEM
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
 
 
-        # cd $GPTUNEROOT/examples/ButterflyPACK
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=ButterflyPACK-IE2D
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
-    fi
+#         # cd $GPTUNEROOT/examples/ButterflyPACK
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=ButterflyPACK-IE2D
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
+#     fi
 
-fi
+# fi
 
 
 
@@ -367,13 +367,13 @@ echo "Testing Reverse Communication Interface"
 # cp gptune.db/PDGEQRF.json  gptune.db/PDGEQRF.json_$(timestamp)
 
 if [[ $BuildExample == 1 ]]; then
-    cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
-    rm -rf gptune.db/*.json # do not load any database 
-    tp=SuperLU_DIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory | tee log.superlu #a: nrun b: nprocmin_pernode c: objective
-    cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
+    # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
+    # rm -rf gptune.db/*.json # do not load any database 
+    # tp=SuperLU_DIST
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory | tee log.superlu #a: nrun b: nprocmin_pernode c: objective
+    # cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
 
     # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
     # rm -rf gptune.db/*.json # do not load any database 
@@ -409,6 +409,19 @@ if [[ $BuildExample == 1 ]]; then
     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
     # bash mfem_maxwell3d_MO_RCI.sh -a 40 -b 2 | tee log.mfem_time_memory  #a: nrun b: nprocmin_pernode 
     # cp gptune.db/MFEM.json  gptune.db/MFEM.json_time_memory_$(timestamp)
+
+
+    cd $GPTUNEROOT/examples/NIMROD_RCI
+    rm -rf gptune.db/*.json # do not load any database 
+    tp=NIMROD
+    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    nstepmax=30
+    nstepmin=3
+    Nloop=1
+    optimization='GPTuneBand'
+    bash nimrod_single_MB_RCI.sh -a $nstepmax -b $nstepmin -c $Nloop -d $optimization | tee log.nimrod_nstepmax${nstepmax}_nstepmin$nstepmin}_Nloop${Nloop}_optimization${optimization}_nodes${nodes} #a: nstepmax b: nstepmin c: Nloop d: optimization
+    cp gptune.db/NIMROD.json  gptune.db/NIMROD.json_$(timestamp)
 fi
 
 # ##########################################################################
