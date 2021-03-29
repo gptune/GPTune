@@ -852,9 +852,19 @@ class GPTune_MB(object):
         options      : object defining all the options that will define the behaviour of the tuner (See file 'GPTune/options.py')
         """
 
-        smax = int(np.floor(np.log10(options['budget_max']/options['budget_min'])/np.log10(options['budget_base'])))
-        self.budgets=[options['budget_max']/options['budget_base']**x for x in range(smax+1)]
-        # print(self.budgets)
+        # options contains: bin, bmax, eta
+        # Or contains: fidelity map (dictionary from s values to budget level B(s)), eta
+        if options['fidelity_map'] == None:
+            self.smax = int(np.floor(np.log10(
+                options['budget_max']/options['budget_min'])/np.log10(options['budget_base'])))
+            self.budgets = [options['budget_max'] /
+                            options['budget_base']**x for x in range(self.smax+1)]
+            print(f'Using a default way, smax = {self.smax}, budgets = {self.budgets}.')
+        else:
+            s_vals = sorted(options['fidelity_map'].keys())
+            self.smax = s_vals[-1]
+            self.budgets = [options['fidelity_map'].get(key) for key in s_vals]
+            print(f'Using a flexible way, smax = {self.smax}, budgets = {self.budgets}.')
 
         parameter_space = tp.parameter_space
         output_space = tp.output_space
@@ -862,7 +872,8 @@ class GPTune_MB(object):
         constraints = tp.constraints
 
         """ insert "budget" as the first dimension of the input space """
-        inputs = [Real     (options['budget_min']-1e-12, options['budget_max'], transform="normalize", name="budget")]
+        inputs = [Real(options['budget_min']-1e-12,
+                       options['budget_max'], transform="normalize", name="budget")]
 
         for n,p in zip(tp.input_space.dimension_names,tp.input_space.dimensions):
             if (isinstance(p, Real)):
@@ -874,7 +885,7 @@ class GPTune_MB(object):
             else:
                 raise Exception("Unknown parameter type")
 
-        # print(inputs)
+        print('inputs = ', inputs)
         input_space = Space(inputs)
 
         self.tp = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)
@@ -883,14 +894,15 @@ class GPTune_MB(object):
         self.data     = Data(tp)
 
 
-    def MB_LCM(self, NS = None, Igiven = None, **kwargs):
+    def MB_LCM(self, NS=None, Igiven=None, Pdefault=None, **kwargs):
         """
-        Igiven       : a list of tasks
-        NS           : number of samples in the highest budget arm
+        Igiven		 : a list of tasks 
+        NS			 : number of samples in the highest budget arm
+        Pdefault     : assuming there is a default parameter configuration among all tasks
         """
 
-        np.set_printoptions(suppress=False,precision=4)
-        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d samples for task'%(NS),Igiven)
+        np.set_printoptions(suppress=False, precision=4)
+        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d loops for task' % (NS), Igiven)
 
         stats = {
             "time_total": 0,
@@ -904,54 +916,174 @@ class GPTune_MB(object):
         time_search=0
         time_model=0
 
-        self.NSs=[int(self.options['budget_max']/x*NS) for x in self.budgets]
-        info = [[x,y] for x,y in zip(self.budgets,self.NSs)]
-        print('total samples:',info)
-
-        data = Data(self.tp)   # having the budgets not fully sampled before SH
-        data1 = Data(self.tp)  # having the budgets fully sampled before SH
-        data1.I=[]
-        data1.P=[]
-        data1.O=[]
-        data1.D=[]
-
-        for s in range(len(self.budgets)): # loop over the budget levels
-            budget = self.budgets[s]
-            ns = self.NSs[s]
-            newtasks=[]
-            for s1 in range(s,len(self.budgets)):
-                for t in range(len(Igiven)):
-                    budget1 = self.budgets[s1]
-                    tmp = [budget1]+Igiven[t]
-                    newtasks.append(tmp)
-
-            gt = GPTune(self.tp, computer=self.computer, data=data, options=self.options)
-            (data, modeler, stats0) = gt.MLA(NS=ns, Igiven=newtasks, NI=len(newtasks), NS1=int(ns/2))
-            data1.I += data.I[0:len(Igiven)]
-            data1.P += data.P[0:len(Igiven)]
-            data1.O += data.O[0:len(Igiven)]
-            data1.D += data.D[0:len(Igiven)]
-            del data.I[0:len(Igiven)]
-            del data.P[0:len(Igiven)]
-            del data.O[0:len(Igiven)]
-            del data.D[0:len(Igiven)]
-
-
-            stats['time_total'] += stats0['time_total']
-            stats['time_fun'] += stats0['time_fun']
-            stats['time_model'] += stats0['time_model']
-            stats['time_search'] += stats0['time_search']
-            stats['time_sample_init'] += stats0['time_sample_init']
-
-        # print(data1.I)
-        # print(data1.P)
-        # print(data1.O)
+        # self.NSs = [int(self.options['budget_max']/x*NS) for x in self.budgets] # so that the highest fidelity has NS samples
+        self.NSs = [int((self.smax+1)/(s+1))*self.options['budget_base']**s for s in range(self.smax+1)] # consistent with hyperband
+        info = [[x, y] for x, y in zip(self.budgets, self.NSs)]
+        print('total samples:', info)
+                
         self.data.I = Igiven
-        self.data.P = data1.P[0:len(Igiven)]  # this will be updated by SH
-        self.data.O = data1.O[0:len(Igiven)]  # this will be updated by SH
-        #todo SH on each arm and return all samples of the highest fidelity in self.data
+        self.data.D = [{}] * len(Igiven)
+        self.data.P = []
+        self.data.O = []
+        
+        data = Data(self.tp)   # having the budgets not fully sampled before SH
 
-        return (copy.deepcopy(self.data), stats)
+        for Nloop in range(NS):
+            data1 = Data(self.tp)  # having the budgets fully sampled before SH for each loop
+            data1.I = []
+            data1.P = []
+            data1.O = []
+            data1.D = []
+            for s in range(len(self.budgets)):  # loop over the budget levels
+                budget = self.budgets[s]
+                ns = self.NSs[s]
+                ntotal = int(ns*(Nloop+1))
+                print(f"Bracket s = {s}, budget = {budget}, ns = {ns}")
+                newtasks = []
+                for s1 in range(s, len(self.budgets)):
+                    for t in range(len(Igiven)):
+                        budget1 = self.budgets[s1]
+                        tmp = [budget1]+Igiven[t]
+                        newtasks.append(tmp)
+                if s == 0 and Nloop == 0:
+                    all_subtasks = copy.deepcopy(newtasks)
+                # put parameters in previous loop into data.P
+                if Nloop > 0 and len(data1_hist.P) > 0:
+                    data.I = newtasks
+                    data.D = [{}] * len(newtasks)
+                    ratio = int(ns*Nloop)
+                    # take the best ns output&params from each subtask
+                    for i, (P_temp, O_temp) in enumerate(zip(data1_hist.P[-len(newtasks):], data1_hist.O[-len(newtasks):])):
+                        idx = np.argsort(np.array(O_temp.squeeze()))
+                        if s > 0:
+                            # data.P[i] = np.array(P_temp)[idx[:ratio]].tolist() + data.P[i] 
+                            data.P[i] = [P_temp[_i] for _i in idx[:ratio]] + data.P[i] 
+                            # print(data.O[i])
+                            # print(O_temp[idx[:ratio]])
+                            data.O[i] = np.concatenate((O_temp[idx[:ratio]], data.O[i]))
+                        else:
+                            data.P.append([P_temp[_i] for _i in idx[:ratio]])
+                            data.O.append(O_temp[idx[:ratio]])
+                if(Pdefault is not None):
+                    if(data.P is None):
+                        data.P = [[Pdefault]] * len(newtasks)
+                    elif(len(data.P) == 0):
+                        data.P = [[Pdefault]] * len(newtasks)
+                
+                # print("Calling MLA: \ndata.I", data.I, "\ndata.P", data.P, "\ndata.O", data.O)
+                # print(f"NS={ntotal}, Igiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
+                gt = GPTune(self.tp, computer=self.computer,
+                            data=data, options=self.options)
+                (data, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs))
+                data.P = [x[-ns:] for x in data.P]
+                data.O = [x[-ns:] for x in data.O]
+                data1.I += data.I[0:len(Igiven)]
+                data1.P += data.P[0:len(Igiven)]
+                data1.O += data.O[0:len(Igiven)]
+                data1.D += data.D[0:len(Igiven)]
+                del data.I[0:len(Igiven)]
+                del data.P[0:len(Igiven)]
+                del data.O[0:len(Igiven)]
+                del data.D[0:len(Igiven)]
+                # merge new results to history
+                
 
-
-
+                stats['time_total'] += stats0['time_total']
+                stats['time_fun'] += stats0['time_fun']
+                stats['time_model'] += stats0['time_model']
+                stats['time_search'] += stats0['time_search']
+                stats['time_sample_init'] += stats0['time_sample_init']
+                # print(f'At the end of bracket {s}')
+                # print('Current data1:')
+                # print('data1.I: ', data1.I)
+                # print('data1.P: ', data1.P)
+                # print('data1.O: ', data1.O)
+                # print("data1.D = ", data1.D)
+                # print('Current data:')
+                # print('data.I: ', data.I)
+                # print('data.P: ', data.P)
+                # print('data.O: ', data.O)
+                # print("data.D = ", data.D)
+                
+            if Nloop == 0:
+                self.data.P = data1.P[0:len(Igiven)]  
+                self.data.O = data1.O[0:len(Igiven)] 
+            else:
+                # self.data.P = [np.concatenate((self.data.P[i], data1.P[0:len(Igiven)][i])) for i in range(len(self.data.P))]
+                self.data.P = [self.data.P[i] + data1.P[0:len(Igiven)][i] for i in range(len(self.data.P))]
+                self.data.O = [np.concatenate((self.data.O[i], data1.O[0:len(Igiven)][i])) for i in range(len(self.data.O))]
+            
+            print("Finish multi-arm initial evaluation")
+            # print('data.I: ', data.I)
+            # print('data.P: ', data.P)
+            # print('data.O: ', data.O)
+            # print("data.D = ", data.D)
+            print('self.data.P = ', self.data.P)
+            print('self.data.O = ', self.data.O)
+            
+            print('\n\n\n------Start SH run on each arm, except the first highest fidelity arm')
+            options1 = copy.deepcopy(self.options)
+            kwargs.update(options1)
+            for s in range(1, len(self.budgets)):
+                budget = self.budgets[s]
+                ns = self.NSs[s]
+                # print(f'\n\n\nArm {s}, Initial budget = {budget}, number of total samples = {ns}')
+                ratio = int(ns/self.options['budget_base'])
+                # print(f'Current s = {s}, budget = {budget}, ns = {ns}')
+                idx = s*len(Igiven) 
+                temp_I = data1.I[idx:idx+len(Igiven)]
+                # print(f'Tasks: ', temp_I)
+                temp_O = list(map(np.squeeze, data1.O[idx:idx+len(Igiven)]))
+                # temp_P = list(map(np.array, data1.P[idx:idx+len(Igiven)]))
+                temp_P = data1.P[idx:idx+len(Igiven)]
+                for ri in range(s):
+                    idx_sort = list(map(np.argsort, temp_O))
+                    temp_O = [y[x[:ratio]] for (x, y) in zip(idx_sort, temp_O)]
+                    temp_P = [[y[_i] for _i in x[:ratio]] for (x, y) in zip(idx_sort, temp_P)]
+                    # temp_P = [x.tolist() for x in temp_P]
+                    # budget *= self.options['budget_base'] # lift budget level
+                    budget = self.budgets[s-ri-1]
+                    for subtasks in temp_I:
+                        subtasks[0] = budget
+                    newdata = Data(problem=self.tp, I=temp_I, P=temp_P)
+                    gt = GPTune(self.tp, computer=self.computer, data=newdata, options=self.options)
+                    print(f'Evaluating top {ratio} by MLA with budget = {budget}')
+                    # print('temp_P is', temp_P)
+                    # print(f'NS={ratio}, Igiven={temp_I}, \n NI={len(temp_I)}, NS1={int(ns/2)}')
+                    # (newdata, _, stats_new) = gt.MLA(NS=ratio, Igiven=temp_I, NI=len(temp_I), NS1=int(ns/2))
+                    (newdata, _, stats_new) = gt.MLA(NS=ratio, Igiven=temp_I, NI=len(temp_I), NS1=ratio)
+                    temp_O = list(map(np.squeeze, newdata.O))
+                    # temp_P = list(map(np.array, newdata.P))
+                    temp_P = newdata.P
+                    ratio = int(ratio/self.options['budget_base'])
+                    stats['time_fun'] += stats_new['time_fun']
+                    stats['time_total'] += stats_new['time_total']
+                
+                newdata.I = Igiven
+                # print('newdata before merge')
+                # print('newdata.P = ', newdata.P)
+                # self.data.merge(newdata) # this would make self.data.P a list of numpy array
+                self.data.P = [x + y for x, y in zip(self.data.P, newdata.P)]
+                self.data.O = [np.concatenate((self.data.O[i], newdata.O[i])) for i in range(len(self.data.O))]
+                
+                # print('Data updated: ')
+                # print('self.data.P = ', self.data.P)
+                # print('self.data.O = ', self.data.O)
+            
+            print('Updated self.data after all SH runs')
+            print('self.data.P = ', self.data.P)
+            print('self.data.O = ', self.data.O)
+            
+            data1.I = all_subtasks # change budgets back to initial values
+            if Nloop == 0:
+                data1_hist = copy.deepcopy(data1)
+            else:
+                data1_hist.merge(data1)
+                
+            Nloop += 1
+            print(f"Finish one loop, next Nloop = {Nloop}")
+            print('data1_hist.I = ', data1_hist.I)
+            print('data1_hist.P = ', data1_hist.P)
+            print('data1_hist.O = ', data1_hist.O)
+            
+        return (copy.deepcopy(self.data), stats, data1_hist)

@@ -22,6 +22,7 @@ import hpbandster.optimizers
 
 import numpy as np
 from autotune.problem import TuningProblem
+from options import Options
 from computer import Computer
 from typing import Collection
 
@@ -119,6 +120,7 @@ class HpBandSterWorker(hpbandster.core.worker.Worker):
             kwargs = {d.name: x[i] for (i, d) in enumerate(self.tp.parameter_space)}
             kwargs2 = {d.name: t[i] for (i, d) in enumerate(self.tp.input_space)}
             kwargs2.update(kwargs)
+            kwargs2['budget'] = budget
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.tp, inputs_only = False, kwargs = kwargs)
             cond = check_constraints(kwargs2)
 
@@ -209,3 +211,63 @@ def HpBandSter(T, NS, tp : TuningProblem, computer : Computer, run_id="HpBandSte
 
     return (data, stats)
 
+def HpBandSter_bandit(T, NS, tp : TuningProblem, computer : Computer, options: Options = None, run_id="HpBandSter_bandit", niter=1):
+   # Initialize
+    min_budget   = options['budget_min'] # Minimum budget used during the optimization.
+    max_budget   = options['budget_max'] # Maximum budget used during the optimization.
+    budget_base  = options['budget_base']
+    n_iterations = NS # Number of iterations performed by the optimizer
+    n_workers    = 1  # Number of workers to run in parallel.
+    
+    X = []
+    Y = []
+    # Xopt = []
+    # Yopt = []
+    data = Data(tp)
+
+    server = hpbandster.core.nameserver.NameServer(run_id=run_id, host='127.0.0.1', port=None)
+    server.start()
+
+    # Tune
+    stats = {
+        "time_total": 0,
+        "time_fun": 0
+    }
+
+    timefun=0
+    t1 = time.time_ns()
+    for i in range(len(T)):
+
+        workers=[]
+        for j in range(n_workers):
+            w = HpBandSterWorker(t=T[i], NS=NS, tp=tp, computer=computer, niter=niter, run_id=run_id, nameserver='127.0.0.1', id=j)
+            w.run(background=True)
+            workers.append(w)
+            
+        bohb = hpbandster.optimizers.BOHB(configspace=workers[0].get_configspace(), run_id=run_id, nameserver='127.0.0.1', min_budget=min_budget, max_budget=max_budget, eta=budget_base)
+        res = bohb.run(n_iterations=n_iterations, min_n_workers=n_workers)
+
+        config_mapping = res.get_id2config_mapping()
+
+        xs = [[config_mapping[idx]['config'][p] for p in tp.parameter_space.dimension_names] for idx in config_mapping.keys()]
+        ys = [[(k, v['loss']) for k,v in res[idx].results.items()] for idx in config_mapping.keys()]
+        
+        X.append(xs)
+        tmp = np.array(ys).reshape((len(ys), 1))
+        Y.append(tmp)
+        timefun=timefun+workers[0].timefun
+        bohb.shutdown(shutdown_workers=True)
+
+    t2 = time.time_ns()
+    stats['time_total'] = (t2-t1)/1e9	
+    stats['time_fun'] = timefun
+    # Finalize
+
+    server.shutdown()
+
+    data.I=T
+    data.P=X
+    data.O=Y
+    # Finalize
+
+    return (data, stats)

@@ -1,0 +1,64 @@
+{
+  "tuning_problem_name": "NIMROD",
+  "machine_configuration": {
+    "machine_name": "cori",
+    "haswell": {
+      "nodes": 16,
+      "cores": 32
+    }
+  },
+  "software_configuration": {
+    "openmpi": {
+      "version_split": [
+        4,
+        0,
+        1
+      ]
+    },
+    "scalapack": {
+      "version_split": [
+        2,
+        1,
+        0
+      ]
+    },
+    "gcc": {
+      "version_split": [
+        8,
+        3,
+        0
+      ]
+    }
+  },
+  "loadable_machine_configurations": {
+    "cori": {
+      "haswell": {
+        "nodes": 16,
+        "cores": 32
+      }
+    }
+  },
+  "loadable_software_configurations": {
+    "openmpi": {
+      "version_split": [
+        4,
+        0,
+        1
+      ]
+    },
+    "scalapack": {
+      "version_split": [
+        2,
+        1,
+        0
+      ]
+    },
+    "gcc": {
+      "version_split": [
+        8,
+        3,
+        0
+      ]
+    }
+  }
+}
