@@ -134,7 +134,8 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 ############### any ubuntu machine that has used config_cleanlinux.sh to build GPTune
 elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
-
+    export OMPI_MCA_btl="^vader"  # disable vader, this causes runtime error when run in docker
+    
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
 
     if [[ $MPIFromSource = 1 ]]; then

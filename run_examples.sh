@@ -222,7 +222,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
 elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
-
+    export OMPI_MCA_btl="^vader"  # disable vader, this causes runtime error when run in docker
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
 
     if [[ $MPIFromSource = 1 ]]; then
@@ -295,15 +295,15 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     # tp=GPTune-Demo
     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./demo.py
+    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./demo.py
 
     # cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
     # rm -rf gptune.db/*.json # do not load any database 
     # tp=PDGEQRF
     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
+    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
+    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
 
     if [[ $BuildExample == 1 ]]; then
         cd $GPTUNEROOT/examples/SuperLU_DIST
@@ -311,7 +311,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         tp=SuperLU_DIST
         app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
         echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
+        $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
 
 
         # cd $GPTUNEROOT/examples/STRUMPACK
@@ -319,7 +319,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         # tp=STRUMPACK_Poisson3d
         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
+        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
 
 
         # ###### this one has a segmentation fault when running on Cori, also seems to fail on MacOS
@@ -328,7 +328,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         # tp=STRUMPACK_KRR
         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori 
+        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori 
 
 
 
@@ -337,7 +337,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         # tp=MFEM
         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
+        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
 
 
         # cd $GPTUNEROOT/examples/ButterflyPACK
@@ -345,7 +345,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         # tp=ButterflyPACK-IE2D
         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true --mca btl_vader_single_copy_mechanism none -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
+        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true  -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
     fi
 
 fi
