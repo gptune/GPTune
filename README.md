@@ -233,4 +233,4 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 ## REFERENCES
 
-W.M. Sid-Lakhdar, M.M. Aznaveh, X.S. Li, and J. Demmel, "Multitask and Transfer Learning for Autotuning Exascale Applications", arXiv:1908.05792, Aug. 2019.
+Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234–246. DOI:https://doi.org/10.1145/3437801.3441621
