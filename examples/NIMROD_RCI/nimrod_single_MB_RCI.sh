@@ -103,12 +103,12 @@ NREL=${tuning_para[1]}
 nbx=${tuning_para[2]}
 nby=${tuning_para[3]}
 
-
 # call the application
 NTH=1
 export OMP_NUM_THREADS=$NTH # flat MPI
 export NREL=$NREL
 export NSUP=$NSUP
+
 nproc=$(($nodes*$cores))
 
 if [[ $ModuleEnv == *"openmpi"* ]]; then
@@ -117,7 +117,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input"
 elif [[ $ModuleEnv == *"craympich"* ]]; then
 ############ craympich
-    BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_craympich_openmpi/bin"
+    BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_craympich/bin"
     RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input_craympich"
 fi
 

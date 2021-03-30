@@ -259,6 +259,8 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_C_COMPILER=$MPICC \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	 	-DCMAKE_INSTALL_PREFIX=. \
+	 	-DCMAKE_INSTALL_LIBDIR=./lib \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
@@ -267,6 +269,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
+	make install
 
 
 	cd $GPTUNEROOT/examples/Hypre
