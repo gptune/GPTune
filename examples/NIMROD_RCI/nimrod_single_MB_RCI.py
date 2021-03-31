@@ -192,7 +192,7 @@ def main():
         print("Tuner: ", TUNER_NAME)
         print("Sampler class: ", options['sample_class'])
         print("Model class: ", options['model_class'])
-        print("stats: ", stats)
+        # print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
@@ -222,7 +222,7 @@ def main():
         gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
         """ Building MLA with the given list of tasks """
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
-        print("stats: ", stats)
+        # print("stats: ", stats)
         print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
         print("Model class: ", options['model_class'])
         if options['model_class'] == 'Model_LCM' and NI > 1:

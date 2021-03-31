@@ -125,13 +125,13 @@ class HistoryDB(dict):
             if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
                 self.load_model = True
             try:
-                with FileLock("test.lock", timeout=5):
+                with FileLock("test.lock", timeout=0):
                     print ("[HistoryDB] use filelock for synchronization")
                     self.file_synchronization_method = 'filelock'
-            except Timeout:
+            except:
                 print ("[HistoryDB] use rsync for synchronization")
                 self.file_synchronization_method = 'rsync'
-            os.system("rm test.lock")
+            os.system("rm -rf test.lock")
 
         # if GPTune is called through Reverse Communication Interface
         elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
@@ -161,13 +161,13 @@ class HistoryDB(dict):
                     self.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
 
                 try:
-                    with FileLock("test.lock", timeout=5):
+                    with FileLock("test.lock", timeout=0):
                         print ("[HistoryDB] use filelock for synchronization")
                         self.file_synchronization_method = 'filelock'
-                except Timeout:
+                except:
                     print ("[HistoryDB] use rsync for synchronization")
                     self.file_synchronization_method = 'rsync'
-                os.system("rm test.lock")
+                os.system("rm -rf test.lock")
         else:
             self.history_db = False
 
@@ -323,10 +323,14 @@ class HistoryDB(dict):
                     if (self.check_load_deps(func_eval)):
                         task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
                         if (task_id != -1):
-                            # current policy: skip loading the func eval result
-                            # if the same parameter data has been loaded once (duplicated)
-                            # YL: only need to search in PS_history[task_id], not PS_history
-                            if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+                            # # current policy: skip loading the func eval result
+                            # # if the same parameter data has been loaded once (duplicated)
+                            # # YL: only need to search in PS_history[task_id], not PS_history
+                            # if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+                            
+                            # current policy: allow duplicated samples 
+                            # YL: This makes RCI-based multi-armed bandit much easier to implement, maybe we can add an option for changing this behavior 
+                            if False: # self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
                                 continue
                             else:
                                 parameter_arr = []

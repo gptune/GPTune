@@ -121,6 +121,7 @@ class Computer(object):
                         evaluation_result = tmp)
 
         if(options['RCI_mode']==True):
+            print('RCI: GPTune returns\n')
             exit()
 
         return O

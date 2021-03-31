@@ -197,7 +197,7 @@ fi
 declare -a arr=($(grep 'Loop  time' $logfile | egrep -o "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?."))
 result=${arr[0]}
 
-
+# result=1
 echo "nimrod time: mx: $mx, my: $my, lphi: $lphi, nstep: $nstep, NSUP: $NSUP, NREL: $NREL, nbx: $nbx, nby: $nby, result: $result"
 
 
