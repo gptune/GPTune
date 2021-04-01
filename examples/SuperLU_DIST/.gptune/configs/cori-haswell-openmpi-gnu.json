@@ -1,0 +1,56 @@
+{
+    "tuning_problem_name": "SuperLU_DIST",
+    "machine_configuration": {
+        "machine_name": "Cori",
+        "haswell": {
+            "nodes": 8,
+            "cores": 32
+        }
+    },
+    "software_configuration": {
+        "openmpi": {
+            "version_split": [4,0,1]
+        },
+        "parmetis": {
+            "version_split": [4,0,3]
+        },
+        "superlu_dist": {
+            "version_split": [6,4,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
+        },
+        "mkl": {
+            "version_split": [2019,0,3]
+        }
+    },
+    "loadable_machine_configurations": {
+        "Cori" : {
+            "haswell": {
+                "nodes":8,
+                "cores":32
+            }
+        }
+    },
+    "loadable_software_configurations": {
+        "openmpi": {
+            "version_from":[4,0,1],
+            "version_to":[5,0,0]
+        },
+        "parmetis": {
+            "version_from": [4,0,3],
+            "version_to":[5,0,0]
+        },
+        "superlu_dist": {
+            "version_from": [6,0,0],
+            "version_to":[7,0,0]
+        },
+        "gcc": {
+            "version_from": [8,0,0],
+            "version_to": [9,0,0]
+        },
+        "mkl": {
+            "version_split": [2019,0,3]
+        }
+    }
+}

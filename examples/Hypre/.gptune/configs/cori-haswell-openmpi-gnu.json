@@ -12,7 +12,10 @@
             "version_split": [4,0,1]
         },
         "hypre": {
-            "version_text": "fcd2b2b4bb91cfa489bbb748429f0da1e84c0815"
+            "version_split": [2,20,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
         }
     },
     "loadable_machine_configurations": {
@@ -29,7 +32,10 @@
             "version_to":[5,0,0]
         },
         "hypre":{
-            "version_text": "fcd2b2b4bb91cfa489bbb748429f0da1e84c0815"
+            "version_split": [2,20,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
         }
     }
 }

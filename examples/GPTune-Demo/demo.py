@@ -25,9 +25,9 @@ mpirun -n 1 python ./demo.py -nrun 20 -ntask 5 -perfmodel 0 -optimization GPTune
 
 where:
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task 
+    -nrun is the number of calls per task
     -perfmodel is whether a coarse performance model is used
-    -optimization is the optimization algorithm: GPTune,opentuner,hpbandster 
+    -optimization is the optimization algorithm: GPTune,opentuner,hpbandster
 """
 
 
@@ -113,7 +113,7 @@ def objectives(point):
     return [f]
 
 
-# test=1  # make sure to set global variables here, rather than in the main function 
+# test=1  # make sure to set global variables here, rather than in the main function
 def models(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
@@ -142,7 +142,7 @@ def models(point):
 
 
 def main():
-    
+
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -164,11 +164,11 @@ def main():
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
-    output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
+    output_space = Space([Real(float('-Inf'), float('Inf'), name="y")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
     if(perfmodel==1):
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-    else:    
+    else:
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
@@ -201,13 +201,13 @@ def main():
 
     options.validate(computer=computer)
 
-    
+
    # giventask = [[6],[6.5]]
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=nrun	    
-    
+    NS=nrun
+
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
@@ -223,8 +223,8 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-    
+
+
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)

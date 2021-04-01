@@ -45,7 +45,7 @@ mpirun -n 1 python ./demo_parallelperformance.py -nrun 100 -ntask 5 -perfmodel 0
 
 where:
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task 
+    -nrun is the number of calls per task
     -perfmodel is whether a coarse performance model is used
     -distparallel is whether distributed-memory parallelism is used inside GPTune
 """
@@ -72,8 +72,8 @@ def parse_args():
     parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
-    parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')    
-    parser.add_argument('-distparallel', type=int, default=0, help='Whether to use distributed-memory parallelism in the modeling and search phase')    
+    parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')
+    parser.add_argument('-distparallel', type=int, default=0, help='Whether to use distributed-memory parallelism in the modeling and search phase')
 
 
     args = parser.parse_args()
@@ -105,7 +105,7 @@ def objectives(point):
     return [f]
 
 
-# test=1  # make sure to set global variables here, rather than in the main function 
+# test=1  # make sure to set global variables here, rather than in the main function
 def models(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
@@ -134,7 +134,7 @@ def models(point):
 
 
 def main():
-    
+
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -149,18 +149,18 @@ def main():
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = 'GPTune'    
+    os.environ['TUNER_NAME'] = 'GPTune'
 
     input_space = Space([Real(0., 10., transform="normalize", name="t")])
     parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
-    output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
+    output_space = Space([Real(float('-Inf'), float('Inf'), name="y")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
     if(perfmodel==1):
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-    else:    
+    else:
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
@@ -196,14 +196,14 @@ def main():
 
     options.validate(computer=computer)
 
-    
+
     # giventask = [[6],[6.5]]
     # giventask = [[i] for i in np.arange(0, 10, 0.5).tolist()]
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=nrun	    
-    
+    NS=nrun
+
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):

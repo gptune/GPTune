@@ -1,8 +1,8 @@
 {
   "tuning_problem_name": "SuperLU_DIST",
   "machine_configuration": {
-      "machine_name": "Cori",
-      "haswell": {
+      "machine_name": "mymachine",
+      "myprocessor": {
           "nodes": 8,
           "cores": 32
       }
@@ -19,8 +19,8 @@
       }
   },
   "loadable_machine_configurations": {
-      "Cori" : {
-          "haswell": {
+      "mymachine" : {
+          "myprocessor": {
               "nodes":8,
               "cores":32
           }
