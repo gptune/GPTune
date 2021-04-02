@@ -4,7 +4,7 @@
     "machine_name": "mymachine",
     "myprocessor": {
       "nodes": 1,
-      "cores": 1
+      "cores": 2
     }
   },
   "software_configuration": {
@@ -13,7 +13,7 @@
     "mymachine": {
       "myprocessor": {
         "nodes": 1,
-        "cores": 1
+        "cores": 2
       }
     }
   },
