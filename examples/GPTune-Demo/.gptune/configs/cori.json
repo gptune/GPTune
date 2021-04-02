@@ -1,19 +1,19 @@
 {
   "tuning_problem_name": "GPTune-Demo",
   "machine_configuration": {
-    "machine_name": "mymachine",
-    "myprocessor": {
+    "machine_name": "cori",
+    "haswell": {
       "nodes": 1,
-      "cores": 2
+      "cores": 32
     }
   },
   "software_configuration": {
   },
   "loadable_machine_configurations": {
-    "mymachine": {
-      "myprocessor": {
+    "cori": {
+      "haswell": {
         "nodes": 1,
-        "cores": 2
+        "cores": 32
       }
     }
   },

@@ -24,10 +24,10 @@ mpirun -n 1 python ./demo.py -nrun 20 -ntask 5 -perfmodel 0 -optimization GPTune
 
 where:
     -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task 
+    -nrun is the number of calls per task
     -perfmodel is whether a coarse performance model is used
-    -optimization is the optimization algorithm: GPTune,opentuner,hpbandster 
-    -plot is whether the objective function and the model will be plotted 
+    -optimization is the optimization algorithm: GPTune,opentuner,hpbandster
+    -plot is whether the objective function and the model will be plotted
 """
 
 ################################################################################
@@ -125,7 +125,7 @@ def objectives(point):
     return [f]
 
 
-# test=1  # make sure to set global variables here, rather than in the main function 
+# test=1  # make sure to set global variables here, rather than in the main function
 def models(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
@@ -185,7 +185,7 @@ def predict_aug(modeler, gt, point,tid):   # point is the orginal space
 
 
 def main():
-    
+
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -208,11 +208,11 @@ def main():
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
-    output_space = Space([Real(float('-Inf'), float('Inf'), transform="normalize", name="time")])
+    output_space = Space([Real(float('-Inf'), float('Inf'), transform="normalize", name="y")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
     if(perfmodel==1):
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
-    else:    
+    else:
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
@@ -245,13 +245,13 @@ def main():
 
     options.validate(computer=computer)
 
-    
+
     # giventask = [[6]]
     giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
 
     NI=len(giventask)
-    NS=nrun	    
-    
+    NS=nrun
+
     TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
@@ -267,8 +267,8 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-    
+
+
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -309,7 +309,7 @@ def main():
                 P_orig=[x[i]]
                 kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
                 kwargs.update(kwargst)
-                y[i]=objectives(kwargs) 
+                y[i]=objectives(kwargs)
                 if(TUNER_NAME=='GPTune'):
                     (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid)
                     y_std[i]=np.sqrt(var)
@@ -322,19 +322,19 @@ def main():
             plt.fill_between(x, y_mean - y_std, y_mean + y_std,alpha=0.2, color='k')
             # print(data.P[tid])
             plt.scatter(data.P[tid], data.O[tid], c='r', s=50, zorder=10, edgecolors=(0, 0, 0),label='sample')
-            
+
             plt.xlabel('x',fontsize=fontsize+2)
             plt.ylabel('y(t,x)',fontsize=fontsize+2)
             plt.title('t=%f'%t,fontsize=fontsize+2)
-            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
+            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())
             # legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
             # legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
             annot_min(x,y)
             # plt.show()
             plt.show(block=False)
             plt.pause(0.5)
-            input("Press [enter] to continue.")                
-            fig.savefig('obj_t_%f.pdf'%t)        
+            input("Press [enter] to continue.")
+            fig.savefig('obj_t_%f.pdf'%t)
 
 
 if __name__ == "__main__":

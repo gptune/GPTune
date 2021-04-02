@@ -67,7 +67,7 @@ def objectives(point):
     t = point['t']
     x = point['x']
     if 'budget' in point:
-        bgt = point['budget']    
+        bgt = point['budget']
     else:
         bgt = bmax
 
@@ -92,7 +92,7 @@ def objectives(point):
         # return np.cos(c)*(-np.log10(bgt))*0.1
         assert k1*bmax + perturb_magnitude == 0
         return np.cos(c) * (k1*bgt + perturb_magnitude)
-    
+
     out = [f*(1+perturb(bgt))]
     print(f"One demo run, x = {x:.4f}, t = {t:.4f}, budget = {bgt:.4f}, perturb = {perturb(bgt):.4f}, out = {out[0]:.4f}")
     return out
@@ -121,9 +121,9 @@ def main():
     plot = args.plot
     expid = args.expid
     restart = args.restart
-    
+
     (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))      
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -133,7 +133,7 @@ def main():
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
-    output_space = Space([Real(float('-Inf'), float('Inf'), name="time")])
+    output_space = Space([Real(float('-Inf'), float('Inf'), name="y")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
     # problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
     problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
@@ -172,7 +172,7 @@ def main():
     options['budget_base'] = eta
     smax = int(np.floor(np.log(options['budget_max']/options['budget_min'])/np.log(options['budget_base'])))
     budgets = [options['budget_max'] /options['budget_base']**x for x in range(smax+1)]
-    NSs = [int((smax+1)/(s+1))*options['budget_base']**s for s in range(smax+1)] 
+    NSs = [int((smax+1)/(s+1))*options['budget_base']**s for s in range(smax+1)]
     NSs_all = NSs.copy()
     budget_all = budgets.copy()
     for s in range(smax+1):
@@ -186,7 +186,7 @@ def main():
     print("total number of evaluations at highest budget: ", Btotal)
     print(f"Sampler: {options['sample_class']}, {options['sample_algo']}")
     print()
-    
+
     data = Data(problem)
     # giventask = [[1.0], [5.0], [10.0]]
     # giventask = [[1.0], [1.2], [1.3]]
@@ -197,7 +197,7 @@ def main():
     # giventask = [[1.0], [1.05], [1.1]]
     NI=len(giventask)
     assert NI == ntask # make sure number of tasks match
-	    
+
     np.set_printoptions(suppress=False, precision=3)
     if(TUNER_NAME=='GPTuneBand'):
         NS = Nloop
@@ -224,20 +224,20 @@ def main():
                 except ValueError:
                     pass
             print('    Popt ', Popt, 'Oopt ', min(data.O[tid])[0], 'nth ', nth, 'nth-bandit (s, nth) = ', (arm_opt, idx))
-         
+
     if(TUNER_NAME=='GPTune'):
         NS = Btotal
         if args.nruns > 0:
             NS = args.nruns
             print("In GPTune, using the given number of nruns ", NS)
         NS1 = max(NS//2, 1)
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
         """ Building MLA with the given list of tasks """
         (data, modeler, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
         print("stats: ", stats)
         print("model class: ", options['model_class'])
         print("Model restart: ", restart)
-        
+
         """ Print all input and parameter samples """
         sum_Oopt = 0.
         for tid in range(NI):
@@ -248,7 +248,7 @@ def main():
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], f'Oopt  {min(data.O[tid])[0]:.3f}', 'nth ', np.argmin(data.O[tid]))
             sum_Oopt += min(data.O[tid])[0]
         # print("sum of all optimal objectives", sum_Oopt)
-        
+
     if(TUNER_NAME=='opentuner'):
         NS = Btotal
         (data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -261,7 +261,7 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid][:NS])], 'Oopt ', min(data.O[tid][:NS])[0], 'nth ', np.argmin(data.O[tid][:NS]))
-    
+
     # single fidelity version of hpbandster
     if(TUNER_NAME=='TPE'):
         NS = Btotal
@@ -274,7 +274,7 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-            
+
     # multi-fidelity version
     if(TUNER_NAME=='hpbandster'):
         NS = Ntotal
@@ -304,7 +304,7 @@ def main():
                         if subout[1] < Oopt:
                             Oopt = subout[1]
                             Popt = config
-                            nth = idx                    
+                            nth = idx
             print('    Popt ', Popt, 'Oopt ', Oopt, 'nth ', nth)
 
     if plot==1:
@@ -324,7 +324,7 @@ def main():
                 P_orig=[x[i]]
                 kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
                 kwargs.update(kwargst)
-                y[i]=objectives(kwargs) 
+                y[i]=objectives(kwargs)
                 if(TUNER_NAME=='GPTune'):
                     (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid)
                     y_std[i]=np.sqrt(var)
@@ -338,20 +338,20 @@ def main():
             plt.ylim(0, 2)
             # print(data.P[tid])
             plt.scatter(data.P[tid], data.O[tid], c='r', s=50, zorder=10, edgecolors=(0, 0, 0),label='sample')
-            
+
             plt.xlabel('x',fontsize=fontsize+2)
             plt.ylabel('y(t,x)',fontsize=fontsize+2)
             plt.title('t=%f'%t,fontsize=fontsize+2)
-            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())    
+            print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())
             # legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
             legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
             annot_min(x,y)
             # plt.show()
             plt.show(block=False)
             plt.pause(0.5)
-            # input("Press [enter] to continue.")                
+            # input("Press [enter] to continue.")
             # fig.savefig('obj_t_%f.eps'%t)
-            fig.savefig(f'obj_ntask{NI}_{expid}_tid_{tid}_t_{t:.1f}.pdf')        
+            fig.savefig(f'obj_ntask{NI}_{expid}_tid_{tid}_t_{t:.1f}.pdf')
             ymean_set.append(y_mean)
             ytrue_set.append(y)
         # show the distance among surrogate functions
@@ -373,7 +373,7 @@ def main():
         print("The mean absolute error is: \n", np.mean(abs(new_Rtrue - new_R)))
         print("The mean relative error is: \n", np.mean( abs(new_Rtrue - new_R)/ abs(new_R) ))
 
-        
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
@@ -387,8 +387,8 @@ def parse_args():
     parser.add_argument('-restart', type=int, default=1, help='number of model restart')
     # parser.add_argument('-sample_class', type=str,default='SampleOpenTURNS',help='Supported sample classes: SampleLHSMDU, SampleOpenTURNS')
     args = parser.parse_args()
-    
-    return args   
+
+    return args
 
 
 if __name__ == "__main__":

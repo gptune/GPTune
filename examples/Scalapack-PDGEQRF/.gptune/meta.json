@@ -1,8 +1,8 @@
 {
   "tuning_problem_name": "PDGEQRF",
   "machine_configuration": {
-    "machine_name": "cori",
-    "haswell": {
+    "machine_name": "mymachine",
+    "myprocessor": {
       "nodes": 1,
       "cores": 32
     }
@@ -31,8 +31,8 @@
     }
   },
   "loadable_machine_configurations": {
-    "cori": {
-      "haswell": {
+    "mymachine": {
+      "myprocessor": {
         "nodes": 1,
         "cores": 32
       }

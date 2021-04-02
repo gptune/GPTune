@@ -1,35 +1,41 @@
 {
-  "tuning_problem_name": "Hypre",
-  "machine_configuration": {
-      "machine_name": "Cori",
-      "haswell": {
-          "nodes": 1,
-          "cores": 32
-      }
-  },
-  "software_configuration": {
-      "openmpi": {
-          "version_split": [4,0,1]
-      },
-      "hypre": {
-          "version_text": "fcd2b2b4bb91cfa489bbb748429f0da1e84c0815"
-      }
-  },
-  "loadable_machine_configurations": {
-      "Cori" : {
-          "haswell": {
-              "nodes":1,
-              "cores":32
-          }
-      }
-  },
-  "loadable_software_configurations": {
-      "openmpi": {
-          "version_from":[4,0,1],
-          "version_to":[5,0,0]
-      },
-      "hypre":{
-          "version_text": "fcd2b2b4bb91cfa489bbb748429f0da1e84c0815"
-      }
-  }
+    "tuning_problem_name": "Hypre",
+    "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+            "nodes": 1,
+            "cores": 32
+        }
+    },
+    "software_configuration": {
+        "openmpi": {
+            "version_split": [4,0,1]
+        },
+        "hypre": {
+            "version_split": [2,20,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
+        }
+    },
+    "loadable_machine_configurations": {
+        "mymachine" : {
+            "myprocessor": {
+                "nodes":1,
+                "cores":32
+            }
+        }
+    },
+    "loadable_software_configurations": {
+        "openmpi": {
+            "version_from":[4,0,1],
+            "version_to":[5,0,0]
+        },
+        "hypre":{
+            "version_split": [2,20,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
+        }
+    }
 }
