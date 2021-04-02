@@ -20,14 +20,13 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nprocmin_pernode 1 -ntask 20 -nrun 800 -jobid 0
+mpirun -n 1 python hypre.py -nxmax 200 -nymax 200 -nzmax 200 -nprocmin_pernode 1 -ntask 20 -nrun 800
 
 where:
     -nxmax/nymax/nzmax       maximum number of discretization size for each dimension
     -nprocmin_pernode is the minimum number of MPIs per node for launching the application code
     -ntask                   number of different tasks to be tuned
     -nrun                    number of calls per task
-    -jobid                   optional, can always be 0
     
 Description of the parameters of Hypre AMG:
 Task space:
@@ -126,7 +125,7 @@ def objectives(point):
                Px, Py, Pz, strong_threshold, 
                trunc_factor, P_max_elmts, coarsen_type, relax_type, 
                smooth_type, smooth_num_levels, interp_type, agg_num_levels, nthreads, npernode)]
-    runtime = hypredriver(params, niter=1, JOBID=JOBID)
+    runtime = hypredriver(params, niter=1, JOBID=-1)
     print(params, ' hypre time: ', runtime)
 
     return runtime
@@ -136,8 +135,6 @@ def models(): # todo
     pass
 
 def main(): 
-    global JOBID
-
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
@@ -150,19 +147,15 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     ntask = args.ntask
     nrun = args.nrun
-    JOBID = args.jobid
     TUNER_NAME = args.optimization
     TLA = False
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
     # os.system("mkdir -p scalapack-driver/bin/%s; cp ../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
-    nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
-    nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space 
+    nprocmax = nodes*cores
+    nprocmin = nodes*nprocmin_pernode 
 
     
     nxmin = 20
@@ -197,7 +190,7 @@ def main():
 
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants) # no performance model
+    problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants) 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     options = Options()
@@ -207,7 +200,7 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class '] = 'Model_LCM'
+    options['model_class'] = 'Model_LCM'
     options['verbose'] = False
     options.validate(computer=computer)
     
@@ -284,22 +277,12 @@ def parse_args():
     parser.add_argument('-nymax', type=int, default=50, help='discretization size in dimension y')
     parser.add_argument('-nzmax', type=int, default=50, help='discretization size in dimension y')
     # Machine related arguments
-    parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
-    parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
     # Algorithm related arguments
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
-    # parser.add_argument('-truns', type=int, default=-1, help='Time of runs')
-    # Experiment related arguments
-    # 0 means interactive execution (not batch)
-    parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
-    parser.add_argument('-stepid', type=int, default=-1, help='step ID')
-    parser.add_argument('-phase', type=int, default=0, help='phase')
-    
     args = parser.parse_args()
 
     return args

@@ -2,6 +2,7 @@ import numpy as np
 import os, sys, re
 import mpi4py
 from mpi4py import MPI
+import time
 
 # Paths
 MACHINE_NAME = 'tmp'
@@ -95,6 +96,7 @@ def execute(params, RUNDIR, niter = 1):
             os.system("rm -rf %s"%(outputfilename))
             comm = MPI.COMM_SELF.Spawn(EXCUDIR, args=myargslist, maxprocs=NProc,info=info)
             comm.Disconnect()
+            time.sleep(2.0) # this gives new MPI_spawn more time to find the resource
             runtime = read_output(outputfilename)
             runtimes.append(runtime)
         return np.mean(runtimes)             

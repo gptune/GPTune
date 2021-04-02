@@ -166,11 +166,7 @@ class GPTune(object):
                 if tmpdata.I is not None:    # from 2D numpy array to a list of lists
                     tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
                 if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
-                    tmp=[]
-                    for x in tmpdata.P:
-                        xOrig = self.problem.PS.inverse_transform(x)
-                        tmp.append(xOrig)
-                    tmpdata.P=tmp
+                    tmpdata.P = [self.problem.PS.inverse_transform(x) for x in tmpdata.P]
                 self.problem.models_update(tmpdata)
                 self.data.D = tmpdata.D
 
@@ -258,11 +254,7 @@ class GPTune(object):
         if self.data.I is not None:    # from 2D numpy array to a list of lists
             self.data.I = self.problem.IS.inverse_transform(self.data.I)
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
-            tmp=[]
-            for x in self.data.P:
-                xOrig = self.problem.PS.inverse_transform(x)
-                tmp.append(xOrig)
-            self.data.P=tmp
+            self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
         t4 = time.time_ns()
         stats['time_total'] = (t4-t3)/1e9
@@ -398,11 +390,7 @@ class GPTune(object):
                 if tmpdata.I is not None:    # from 2D numpy array to a list of lists
                     tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
                 if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
-                    tmp=[]
-                    for x in tmpdata.P:
-                        xOrig = self.problem.PS.inverse_transform(x)
-                        tmp.append(xOrig)
-                    tmpdata.P=tmp
+                    tmpdata.P = [self.problem.PS.inverse_transform(x) for x in tmpdata.P]
                 self.problem.models_update(tmpdata)
                 self.data.D = tmpdata.D
 
@@ -491,11 +479,7 @@ class GPTune(object):
         if self.data.I is not None:    # from 2D numpy array to a list of lists
             self.data.I = self.problem.IS.inverse_transform(self.data.I)
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
-            tmp=[]
-            for x in self.data.P:
-                xOrig = self.problem.PS.inverse_transform(x)
-                tmp.append(xOrig)
-            self.data.P=tmp
+            self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
         t4 = time.time_ns()
         stats['time_total'] = (t4-t3)/1e9
@@ -1083,6 +1067,8 @@ class GPTune_MB(object):
                         # print('gaga',gt.data.P[0])
                         gt.data.I = gt.problem.IS.transform(gt.data.I)
                         newdata.O = gt.computer.evaluate_objective(gt.problem, gt.data.I, gt.data.P, gt.data.D, gt.history_db, options = kwargs)
+                        newdata.P = [gt.problem.PS.inverse_transform(x) for x in newdata.P]
+
                     else:
                         # print('done: what do you do')
                         newdata.I=gt.data.I
@@ -1106,6 +1092,7 @@ class GPTune_MB(object):
                 newdata.I = Igiven
                 # print('newdata before merge')
                 # print('newdata.P = ', newdata.P)
+                # print('self.data.P = ', self.data.P)
                 # self.data.merge(newdata) # this would make self.data.P a list of numpy array
                 self.data.P = [x + y for x, y in zip(self.data.P, newdata.P)]
                 self.data.O = [np.concatenate((self.data.O[i], newdata.O[i])) for i in range(len(self.data.O))]
