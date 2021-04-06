@@ -18,7 +18,21 @@ works, and perform publicly and display publicly, and to permit other to do so.
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
 
-## Dependency
+
+## Installation using example scripts
+The following example build scripts are available for a collection of tested systems. 
+
+### Ubuntu/Debian-like systems supporting apt-get
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
+
+### Mac OS supporting homebrew
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
+
+### NERSC Cori
+The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and ``compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface mode can be used, see Section \ref{sec:obj_parallel} for more details.
+
+
+## Installation from scratch
 GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume OpenMPI, Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
 export MPICC=path-to-c-compiler-wrapper
@@ -33,7 +47,7 @@ export GPTUNEROOT=path-to-gptune-root-directory
 The rest can be installed as follows:
 
 
-## Install SCALAPACK
+### Install SCALAPACK
 ```
 cd $GPTUNEROOT
 wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
@@ -59,7 +73,7 @@ export SCALAPACK_LIB="$PWD/install/lib/libscalapack.so"
 ```
 
 
-## Install mpi4py
+### Install mpi4py
 ```
 cd $GPTUNEROOT
 git clone https://github.com/mpi4py/mpi4py.git
@@ -69,7 +83,7 @@ python setup.py install --user
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-## Install scikit-optimize
+### Install scikit-optimize
 ```
 cd $GPTUNEROOT
 git clone https://github.com/scikit-optimize/scikit-optimize.git
@@ -78,7 +92,7 @@ pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-## Install autotune
+### Install autotune
 autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
 ```
 cd $GPTUNEROOT
@@ -89,7 +103,7 @@ pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-## Install GPTune
+### Install GPTune
 GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, scikit-learn, scipy, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, and pygmo. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
 cd $GPTUNEROOT
