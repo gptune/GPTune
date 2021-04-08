@@ -131,7 +131,6 @@ class HistoryDB(dict):
 
             self.loadable_machine_configurations = ast.literal_eval(os.environ.get('CKGPTUNE_LOADABLE_MACHINE_CONFIGURATIONS','{}'))
             self.loadable_software_configurations = ast.literal_eval(os.environ.get('CKGPTUNE_LOADABLE_SOFTWARE_CONFIGURATIONS', '{}'))
-            # YC-TODO: if not given by "CKGPTUNE_LOADABLE_SOFTWARE_CONFIGURATIONS" we can use software definition in CK meta.json
 
             os.system("mkdir -p ./gptune.db")
             self.history_db_path = "./gptune.db"
