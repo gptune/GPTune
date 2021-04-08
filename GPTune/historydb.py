@@ -29,10 +29,11 @@ import time
 def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
     import ast
 
-    machine_name = "none"
-    processor_model = "none"
-    nodes = 0
-    cores = 0
+    # machine configuration values
+    machine_name = "mymachine"
+    processor_model = "unknown"
+    nodes = 1
+    cores = 2
 
     if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
         try:
@@ -117,7 +118,20 @@ class HistoryDB(dict):
             import ast
             self.tuning_problem_name = os.environ.get('CKGPTUNE_TUNING_PROBLEM_NAME','Unknown')
             self.machine_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION','{}'))
-            self.software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
+
+            software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION','{}'))
+            for x in software_configuration:
+                self.software_configuration[x] = software_configuration[x]
+            compile_deps = ast.literal_eval(os.environ.get('CKGPTUNE_COMPILE_DEPS','{}'))
+            for x in compile_deps:
+                self.software_configuration[x] = compile_deps[x]
+            runtime_deps = ast.literal_eval(os.environ.get('CKGPTUNE_RUNTIME_DEPS','{}'))
+            for x in runtime_deps:
+                self.software_configuration[x] = runtime_deps[x]
+
+            self.loadable_machine_configurations = ast.literal_eval(os.environ.get('CKGPTUNE_LOADABLE_MACHINE_CONFIGURATIONS','{}'))
+            self.loadable_software_configurations = ast.literal_eval(os.environ.get('CKGPTUNE_LOADABLE_SOFTWARE_CONFIGURATIONS', '{}'))
+            # YC-TODO: if not given by "CKGPTUNE_LOADABLE_SOFTWARE_CONFIGURATIONS" we can use software definition in CK meta.json
 
             os.system("mkdir -p ./gptune.db")
             self.history_db_path = "./gptune.db"
