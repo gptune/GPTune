@@ -255,7 +255,7 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 [**Manual**] [GPTune History Database & Shared Repository](https://gptune.lbl.gov/docs/index.html)
 
-[**Tutorial**] [GPTune: Performance Autotuner for ECP Applications, Tutorial at ECP Annual Meeting](https://gptune.lbl.gov/documentation/gptune-tutorial-ecp2021)
+[**Tutorial**] [GPTune: Performance Autotuner for ECP Applications, Tutorial at ECP Annual Meeting, April 14, 2021](https://gptune.lbl.gov/documentation/gptune-tutorial-ecp2021)
 
 [**Talk**] [GPTune: Multitask Learning for Autotuning Exascale Applications, PPoPP 2021, February 27, 2021](https://www.youtube.com/watch?v=QDcZTEKh_b0)
 
