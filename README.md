@@ -13,7 +13,7 @@ its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the
 Software to reproduce, distribute copies to the public, prepare derivative
 works, and perform publicly and display publicly, and to permit other to do so.
 
-# GPTune
+# [GPTune](https://gptune.lbl.gov)
 
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
@@ -248,6 +248,18 @@ These models are defined through Python functions following similarly to the con
 
 Once the parameters and spaces (and optionally constraints and models) are defined, an object of the **GPTune** class has to be instantiated.
 Then, the different kinds of tuning techniques (*MLA, ...*) can be called through it.
+
+## Resources
+
+[**Manual**] [GPTune UsersGuide](https://gptune.lbl.gov/documentation/gptune-user-guide)
+
+[**Manual**] [GPTune History Database & Shared Repository](https://gptune.lbl.gov/docs/index.html)
+
+[**Tutorial**] [GPTune: Performance Autotuner for ECP Applications, Tutorial at ECP Annual Meeting](https://gptune.lbl.gov/documentation/gptune-tutorial-ecp2021)
+
+[**Talk**] [GPTune: Multitask Learning for Autotuning Exascale Applications, PPoPP 2021, February 27, 2021](https://www.youtube.com/watch?v=QDcZTEKh_b0)
+
+[**Talk**] [Autotuning exascale applications with Gaussain Process Regression, E-NLA Seminar, October 14, 2020](https://www.youtube.com/watch?v=Xnj8FDquMgI&t=287s)
 
 ## REFERENCES
 
