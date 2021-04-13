@@ -1,0 +1,18 @@
+{
+  "tuning_problem_name": "SmoothingSplines",
+  "machine_configuration": {
+    "machine_name": "mymachine",
+    "myprocessor": {
+      "nodes": 1,
+      "cores": 2
+    }
+  },
+  "loadable_machine_configurations": {
+    "mymachine": {
+      "myprocessor": {
+        "nodes": 1,
+        "cores": 2
+      }
+    }
+  }
+}
