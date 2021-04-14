@@ -57,7 +57,7 @@ def compute_arsquared(\
 
     return Adjusted
 
-def run_grid_search(dataset_name, X_train, Y_train, X_test, Y_test):
+def run_grid_search(dataset_name, size, X_train, Y_train, X_test, Y_test):
 
     print ("dataset_name")
     print (dataset_name)
@@ -77,9 +77,10 @@ def run_grid_search(dataset_name, X_train, Y_train, X_test, Y_test):
     os.system("mkdir -p grid-search.db")
     with open("grid-search.db/"+dataset_name+".log", "a") as f_out:
         f_out.write("NKnots,Lambda,RegressionTime,InTestTime,InMSE,InR2,InAR2,OutTestTime,OutMSE,OutR2,OutAR2\n")
-        for k in [4,5,6,7,8,9,10,11]:
-            for l in range(21):
-                lambda1 = float(l)/20.0
+
+        k_unit = int(size/50)
+        for k in range(k_unit, size, k_unit):
+            for lambda1 in [0,0.1,0.01,10**-3,10**-4,10**-5,10**-6,10**-7,10**-8,10**-9,10**-10,1]:
 
                 print ("Grid-search Dataset: "+str(dataset_name)+" K: "+str(k)+" L:"+str(lambda1))
                 f_out.write(str(k)+","+str(lambda1)+",")
@@ -134,33 +135,33 @@ def run_grid_search(dataset_name, X_train, Y_train, X_test, Y_test):
     return
 
 def main():
-    #for task in [1.0, 2.0, 3.0, 4.0, 5.0]:
-    for task in [1.0]:
-        num_samples = 10000000
-        dataset = "gptune-demo-"+str(task)+"-"+str(num_samples)
-        #dataset = sys.argv[1]
+    for t in [0.5,1.0,2.0,3.0,4.0,5.0]:
+        for size in [10000,100000]:
+            for v in [0.01, 0.05, 0.1]:
+                dataset = "gptune-demo-"+str(t)+"-"+str(size)+"-"+str(v)
+                #dataset = sys.argv[1]
 
-        X_train = []
-        Y_train = []
+                X_train = []
+                Y_train = []
 
-        trainset = dataset+"-train"
-        with open("datagen/"+trainset, "r") as f_in:
-            for dataline in f_in.readlines():
-                data = dataline.split(",")
-                X_train.append(float(data[0]))
-                Y_train.append(float(data[1]))
+                trainset = dataset+"-train"
+                with open("datagen/"+trainset, "r") as f_in:
+                    for dataline in f_in.readlines():
+                        data = dataline.split(",")
+                        X_train.append(float(data[0]))
+                        Y_train.append(float(data[1]))
 
-        X_test = []
-        Y_test = []
+                X_test = []
+                Y_test = []
 
-        testset = dataset+"-test"
-        with open("datagen/"+testset, "r") as f_in:
-            for dataline in f_in.readlines():
-                data = dataline.split(",")
-                X_test.append(float(data[0]))
-                Y_test.append(float(data[1]))
+                testset = dataset+"-test"
+                with open("datagen/"+testset, "r") as f_in:
+                    for dataline in f_in.readlines():
+                        data = dataline.split(",")
+                        X_test.append(float(data[0]))
+                        Y_test.append(float(data[1]))
 
-        run_grid_search(dataset, X_train, Y_train, X_test, Y_test)
+                run_grid_search(dataset, size, X_train, Y_train, X_test, Y_test)
 
 if __name__ == "__main__":
     main()

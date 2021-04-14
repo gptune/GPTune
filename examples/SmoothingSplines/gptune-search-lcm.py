@@ -124,7 +124,7 @@ def objectives(point):
     k = int(point['k']) # nknots
     l = float(point['l']) # lambda
 
-    with open("gptune-search-gpy.db/gptune-search."+str(nrun)+"."+task+"."+size+"."+var+".log", "a") as f_out:
+    with open("gptune-search-lcm.db/gptune-search."+str(nrun)+"."+task+"."+size+"."+var+".log", "a") as f_out:
         #f_out.write("NKnots,Lambda,RegressionTime,InTestTime,InMSE,InR2,InAR2,OutTestTime,OutMSE,OutR2,OutAR2\n")
         #lambda1 = float(l)/20.0
         lambda1 = l
@@ -213,8 +213,8 @@ def main():
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
     options['model_processes'] = 1
-    #options['model_class'] = 'Model_LCM'
-    options['model_class'] = 'Model_GPy_LCM'
+    options['model_class'] = 'Model_LCM'
+    #options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options.validate(computer=computer)
 
@@ -230,9 +230,9 @@ def main():
     X_test = []
     Y_test = []
 
-    if not os.path.exists("gptune-search-gpy.db"):
-        os.system("mkdir -p gptune-search-gpy.db")
-    with open("gptune-search-gpy.db/gptune-search."+str(nrun)+"."+task+"."+size+"."+var+".log", "w") as f_out:
+    if not os.path.exists("gptune-search-lcm.db"):
+        os.system("mkdir -p gptune-search-lcm.db")
+    with open("gptune-search-lcm.db/gptune-search."+str(nrun)+"."+task+"."+size+"."+var+".log", "w") as f_out:
         f_out.write("NKnots,Lambda,RegressionTime,InTestTime,InMSE,InR2,InAR2,OutTestTime,OutMSE,OutR2,OutAR2\n")
 
     dataset = "gptune-demo-"+task+"-"+size+"-"+var
