@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 if [[ $NERSC_HOST != "cori" ]]; then
 	echo "This script can only be used for Cori"
 	exit
@@ -8,7 +9,13 @@ fi
 
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
+rm -rf ~/.local/lib/python3.7
 module load python/3.7-anaconda-2019.10
+PREFIX_PATH=~/.local/cori/3.7-anaconda-2019.10/
+
+
+echo $(which python) 
+
 module unload cmake
 module load cmake/3.14.4
 
@@ -58,17 +65,42 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 # fi 
 
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
-	module unload cray-mpich
-	module unload openmpi
-	module swap PrgEnv-intel PrgEnv-gnu
-	module load openmpi/4.0.1
+    module load gcc/8.3.0
+    module unload cray-mpich
+    module unload openmpi
+    module unload PrgEnv-intel
+    module load PrgEnv-gnu
+    module load openmpi/4.0.1
+    module unload craype-hugepages2M
+    module unload cray-libsci
+    module unload atp
+
 	GPTUNEROOT=$PWD
+
+
+
+	
 	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
+
+	### this assumes pytorch is built from source from https://github.com/sparticlesteve/nersc-pytorch-build 
+	# module unload python
+	# USER="$(basename $HOME)"
+	# PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+	# source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+	# conda activate $PREFIX_PATH
+	# export MKLROOT=$PREFIX_PATH
+	# BLAS_INC="-I${MKLROOT}/include"	
+	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+	# BLAS_LIB="${MKLROOT}/lib/libmkl_gf_lp64.so;${MKLROOT}/lib/libmkl_gnu_thread.so;${MKLROOT}/lib/libmkl_core.so;-lgomp"
+	# LAPACK_LIB="${MKLROOT}/lib/libmkl_gf_lp64.so;${MKLROOT}/lib/libmkl_gnu_thread.so;${MKLROOT}/lib/libmkl_core.so;-lgomp"
+	
 	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
+
+	
 	MPICC=mpicc
 	MPICXX=mpicxx
 	MPIF90=mpif90
@@ -170,13 +202,12 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	cp ../patches/GPy/stationary.py ./GPy/kern/src/.
 	cp ../patches/GPy/choleskies.py ./GPy/util/.
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
-	python setup.py install --user
+	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --user -r requirements_intel.txt
+	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --user -r requirements.txt
+	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements.txt
 fi
-
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
@@ -421,13 +452,12 @@ if [[ $BuildExample == 1 ]]; then
 fi
 
 
-
 cd $GPTUNEROOT
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --user
+python setup.py install --prefix=$PREFIX_PATH
 # env CC=mpicc pip install --user -e .								  
 
 
@@ -437,7 +467,7 @@ rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
 python setup.py build 
-python setup.py install --user
+python setup.py install --prefix=$PREFIX_PATH
 # env CC=mpicc pip install --user -e .								  
 
 
@@ -447,8 +477,8 @@ rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 cp ../patches/autotune/problem.py autotune/.
-env CC=$MPICC pip install --user -e .
+env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
-cp ../patches/opentuner/manipulator.py  ~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/opentuner/search/.
+cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
 cd $GPTUNEROOT

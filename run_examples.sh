@@ -4,7 +4,7 @@
 ##################################################
 ##################################################
 
-BuildExample=1 # whether all the examples have been built
+BuildExample=0 # whether all the examples have been built
 
 
 # # ################ Any mac os machine that has used config_macbook.sh to build GPTune
@@ -146,14 +146,35 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 
 ############### Cori Haswell Openmpi+GNU
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
-    module load python/3.7-anaconda-2019.10
+    
+    module load gcc/8.3.0
     module unload cray-mpich
-    module swap PrgEnv-intel PrgEnv-gnu
+    module unload openmpi
+    module unload PrgEnv-intel
+    module load PrgEnv-gnu
     module load openmpi/4.0.1
+    module unload craype-hugepages2M
+    module unload cray-libsci
+    module unload atp    
+    module load python/3.7-anaconda-2019.10
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+
+
+    # module unload python
+    # USER="$(basename $HOME)"
+    # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # conda activate $PREFIX_PATH
+	# export MKLROOT=$PREFIX_PATH
+	# BLAS_INC="-I${MKLROOT}/include"
+	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    # export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
+
+
     MPIRUN=mpirun
     cores=32
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
