@@ -205,10 +205,27 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
-else 
+elif [[ $ModuleEnv == *"craympich"* ]]; then
 ############ craympich
     echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
     srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
+elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
+############ spectrummpi
+    RS_PER_HOST=6
+    GPU_PER_RS=0    # CPU only now
+
+    if [[ $npernode -lt $RS_PER_HOST ]]; then
+        npernode=$RS_PER_HOST
+    fi
+    export OMP_NUM_THREADS=$(($cores / $npernode))
+    npernode_ext=$(($cores / $OMP_NUM_THREADS)) # break the constraint of power-of-2 npernode 
+    RANK_PER_RS=$(($npernode_ext / $RS_PER_HOST)) 
+    npernode_ext=$(($RANK_PER_RS * $RS_PER_HOST)) 
+    RS_VAL=$(($nodes * $RS_PER_HOST)) 
+    TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
+    
+    echo "jsrun --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
+    jsrun --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
 fi
 
 

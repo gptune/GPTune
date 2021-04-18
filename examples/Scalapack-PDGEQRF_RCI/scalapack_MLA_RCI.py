@@ -46,8 +46,8 @@ import numpy as np
 import argparse
 import pickle
 from random import *
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+# from callopentuner import OpenTuner
+# from callhpbandster import HpBandSter
 import time
 import math
 
@@ -147,7 +147,6 @@ def main():
     if(TUNER_NAME=='GPTune'):
 
         gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
         NS = nrun

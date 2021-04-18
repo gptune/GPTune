@@ -35,7 +35,6 @@ import pickle
 import copy
 
 import mpi4py
-from mpi4py import MPI
 from array import array
 import math
 

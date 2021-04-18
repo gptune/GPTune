@@ -21,7 +21,6 @@ import os, ctypes
 import numpy as np
 import GPy
 import mpi4py
-from mpi4py import MPI
 import itertools
 import scipy
 import sys
@@ -396,7 +395,7 @@ if __name__ == "__main__":
                     ("buffer", POINTER(c_double)),\
                     ("mpi_comm", POINTER(c_mpi_comm_t))]
 
-    mpi_comm = MPI.Comm.Get_parent()
+    mpi_comm = mpi4py.MPI.Comm.Get_parent()
     #    mpi_comm.Merge()
 
     #    color = self.mpi_rank // (self.mpi_size // num_subgroups)
@@ -433,7 +432,7 @@ if __name__ == "__main__":
                     c_int(maxtries),\
                     c_int(nprow),\
                     c_int(npcol),\
-                    c_mpi_comm_t.from_address(mpi4py.MPI._addressof(MPI.COMM_WORLD)))
+                    c_mpi_comm_t.from_address(mpi4py.MPI._addressof(mpi4py.MPI.COMM_WORLD)))
 
         elif (res[0] == "fun_jac"):
             x2 = res[1]

@@ -7,6 +7,14 @@
 BuildExample=0 # whether all the examples have been built
 
 
+# ################ summit
+# export machine=summit
+# export proc=power9   
+# export mpi=spectrummpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
+
+
 # # ################ Any mac os machine that has used config_macbook.sh to build GPTune
 # export machine=mac
 # export proc=intel   
@@ -269,6 +277,33 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
     
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
+
+############### Cori Haswell CrayMPICH+GNU
+elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
+
+    module swap xl gcc/7.4.0
+    module load essl
+    module load netlib-lapack
+    module load netlib-scalapack
+    module load cmake
+    module load cuda/10.1.243
+    module load python/3.7.0-anaconda3-5.3.0
+    module load boost
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/summit/anaconda3/5.3.0/3.7/lib/python3.7/site-packages
+    export PATH=$PATH:$PWD/jq-1.6
+    export PYTHONPATH=$PYTHONPATH:$PWD/openturns/build/share/gdb/auto-load/$PWD
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
+     
+    MPIRUN=jsrun
+    cores=44
+    software_json=$(echo ",\"software_configuration\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
+
+# fi
+
+
 else
     echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
     exit
@@ -280,6 +315,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPy/
+export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/
 export PYTHONWARNINGS=ignore
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/STRUMPACK/STRUMPACK/install/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/ButterflyPACK/build/lib   # needed by strumpack_MLA_KRR.py

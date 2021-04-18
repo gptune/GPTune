@@ -214,10 +214,28 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
-else 
+elif [[ $ModuleEnv == *"craympich"* ]]; then
 ############ craympich
     echo "srun -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help"
     srun -n $nproc $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
+elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
+############ spectrummpi
+    RS_PER_HOST=6
+    GPU_PER_RS=0    # CPU only now
+
+    if [[ $npernode -lt $RS_PER_HOST ]]; then
+        npernode=$RS_PER_HOST
+    fi
+    export OMP_NUM_THREADS=$(($cores / $npernode))
+    npernode_ext=$(($cores / $OMP_NUM_THREADS)) # break the constraint of power-of-2 npernode 
+    RANK_PER_RS=$(($npernode_ext / $RS_PER_HOST)) 
+    npernode_ext=$(($RANK_PER_RS * $RS_PER_HOST)) 
+    RS_VAL=$(($nodes * $RS_PER_HOST)) 
+    TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
+    
+    echo "jsrun --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}"
+    jsrun --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/ex3p_indef -m $INPUTDIR/$mesh.mesh -x $extra -sp --omega $omega --sp_reordering_method ${sp_reordering_method} --sp_compression $sp_compression --hodlr_butterfly_levels $hodlr_butterfly_levels --sp_print_root_front_stats --sp_maxit 1000 --sp_enable_METIS_NodeNDP --sp_hodlr_min_sep_size ${sp_hodlr_min_sep_size} --sp_compression_min_front_size ${sp_compression_min_front_size} --sp_blr_min_sep_size ${sp_blr_min_sep_size} --blr_leaf_size $blr_leaf_size --${n15} --hodlr_leaf_size ${hodlr_leaf_size} --hodlr_rel_tol $tol --blr_rel_tol $tol --hodlr_max_rank 1000 --hodlr_BACA_block_size $blocksize --hodlr_verbose --help | tee ${logfile}
+    
 fi
 
 

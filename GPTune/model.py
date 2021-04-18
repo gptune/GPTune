@@ -24,9 +24,6 @@ from computer import Computer
 from data import Data
 
 import mpi4py
-from mpi4py import MPI
-from mpi4py import futures
-
 
 import concurrent
 from concurrent import futures
@@ -395,7 +392,7 @@ if __name__ == '__main__':
         print('this is a dummy definition')
         return point                        
 
-    mpi_comm = MPI.Comm.Get_parent()
+    mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
     mpi_size = mpi_comm.Get_size()
     (modeler, data, restart_iters, kwargs) = mpi_comm.bcast(None, root=0)

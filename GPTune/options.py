@@ -38,7 +38,7 @@ class Options(dict):
         objective_nprocmax = None # Maximum number of cores for each application call, default to computer.cores*computer.nodes-1
 
         """ Options for the sampling phase """
-        sample_class = 'SampleOpenTURNS' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
+        sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
 

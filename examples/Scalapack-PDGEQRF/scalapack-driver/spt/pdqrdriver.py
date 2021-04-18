@@ -5,7 +5,6 @@
 import numpy as np
 import os
 import mpi4py
-from mpi4py import MPI
 import sys
 import time
 ################################################################################
@@ -52,7 +51,7 @@ def execute(nproc, nthreads, npernode, RUNDIR):
         # os.system("cd %s;"%(RUNDIR)) 
         # print('nimdda',RUNDIR)
         
-        info = MPI.Info.Create()
+        info = mpi4py.MPI.Info.Create()
         info.Set('env', 'OMP_NUM_THREADS=%d\n' %(nthreads))
         info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
         
@@ -63,7 +62,7 @@ def execute(nproc, nthreads, npernode, RUNDIR):
 
        
         print('exec', "%s/pdqrdriver"%(BINDIR), 'args', "%s/"%(RUNDIR), 'nproc', nproc, 'nthreads', nthreads, 'npernode', npernode)#, info=mpi_info).Merge()# process_rank = comm.Get_rank()
-        comm = MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
+        comm = mpi4py.MPI.COMM_SELF.Spawn("%s/pdqrdriver"%(BINDIR), args="%s/"%(RUNDIR), maxprocs=nproc,info=info)
         comm.Barrier()
         comm.Disconnect()
         # time.sleep(5.0)

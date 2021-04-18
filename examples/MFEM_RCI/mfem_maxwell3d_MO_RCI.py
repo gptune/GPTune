@@ -34,7 +34,7 @@ import argparse
 import pickle
 
 import mpi4py
-from mpi4py import MPI
+# from mpi4py import MPI
 from array import array
 import math
 
@@ -47,8 +47,8 @@ from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+# from callopentuner import OpenTuner
+# from callhpbandster import HpBandSter
 import math
 
 ################################################################################
