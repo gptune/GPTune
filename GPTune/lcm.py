@@ -360,7 +360,7 @@ class LCM(GPy.kern.Kern):
 if __name__ == "__main__":
 
     from ctypes import Structure, c_int, c_double, c_void_p, POINTER
-
+    from mpi4py import MPI
     if mpi4py.MPI._sizeof(mpi4py.MPI.Comm) == ctypes.sizeof(ctypes.c_int):
         c_mpi_comm_t = c_int
     else:
