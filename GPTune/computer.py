@@ -144,7 +144,7 @@ class Computer(object):
 
 
         if (options['distributed_memory_parallelism'] and options['objective_evaluation_parallelism'] and i_am_manager):
-
+            from mpi4py import MPI
             if(problem.driverabspath is None):
                 raise Exception('objective_evaluation_parallelism and distributed_memory_parallelism require passing driverabspath to GPTune')
 
@@ -203,7 +203,7 @@ class Computer(object):
 
 
     def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None):
-
+        from mpi4py import MPI
         print('exec', executable, 'args', args, 'nproc', nproc)
 
         npernodes=npernode
@@ -226,6 +226,7 @@ class Computer(object):
 
 
 if __name__ == '__main__':
+    from mpi4py import MPI
 
     def objectives(point):
         print('this is a dummy definition')

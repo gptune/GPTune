@@ -22,12 +22,12 @@ BuildExample=0 # whether all the examples have been built
 # export compiler=gnu   
 # export nodes=1  # number of nodes to be used
 
-################ Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=1  # number of nodes to be used
+############### Cori
+export machine=cori
+export proc=haswell   # knl,haswell
+export mpi=openmpi  # openmpi,craympich
+export compiler=gnu   # gnu, intel	
+export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -38,12 +38,12 @@ BuildExample=0 # whether all the examples have been built
 # export nodes=1  # number of nodes to be used
 
 
-################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-export machine=cleanlinux
-export proc=unknown   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
+# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+# export machine=cleanlinux
+# export proc=unknown   
+# export mpi=openmpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
 
 
 ##################################################
@@ -171,16 +171,16 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 
 
-    # module unload python
-    # USER="$(basename $HOME)"
-    # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
-    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
-    # conda activate $PREFIX_PATH
-	# export MKLROOT=$PREFIX_PATH
-	# BLAS_INC="-I${MKLROOT}/include"
-	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
-    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    # export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
+    module unload python
+    USER="$(basename $HOME)"
+    PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+    source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    conda activate $PREFIX_PATH
+	export MKLROOT=$PREFIX_PATH
+	BLAS_INC="-I${MKLROOT}/include"
+	export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
 
 
     MPIRUN=mpirun
@@ -361,6 +361,17 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
+
+
+    cd $GPTUNEROOT/examples/cnnMNIST
+    rm -rf gptune.db/*.json # do not load any database
+    tp=cnnMNIST
+    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
+    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  \
+    python ./cnnMNIST_MB.py -ntask 1 -nrun -1 -machine cori -npernode $cores -optimization GPTuneBand \
+    -bmin 3 -bmax 27 -eta 3 -Nloop 1 -ntrain 2048 -nvalid 1024
+
 
     if [[ $BuildExample == 1 ]]; then
         cd $GPTUNEROOT/examples/SuperLU_DIST

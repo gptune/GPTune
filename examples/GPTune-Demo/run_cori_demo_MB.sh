@@ -19,6 +19,24 @@ if [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+    
+    
+
+    # module unload python
+    # USER="$(basename $HOME)"
+    # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # conda activate $PREFIX_PATH
+	# export MKLROOT=$PREFIX_PATH
+	# BLAS_INC="-I${MKLROOT}/include"
+	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    # export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
+
+    
+    
+    
+    
     proc=haswell
     cores=32
     machine=cori
@@ -47,7 +65,7 @@ tp=GPTune-Demo
 app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
 echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
 
-Nloop=1
+Nloop=2
 # sample_class='SampleLHSMDU' # 'Supported sample classes: SampleLHSMDU, SampleOpenTURNS(default)'
 
 
@@ -55,6 +73,9 @@ ntask=1
 plot=0
 restart=1
 expid='0'
+
+rm gptune.db/GPTune-Demo.json
+
 # tuner='GPTune'
 # mpirun -n 1 python -u demo_MB.py  -ntask ${ntask} -Nloop ${Nloop} -optimization ${tuner} -restart ${restart}  -plot ${plot} -expid ${expid} 2>&1 | tee a.out_demo_ntask${ntask}_nruns${nruns}_expid${expid}_${tuner}
 
