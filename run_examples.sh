@@ -566,7 +566,6 @@ if [[ $BuildExample == 1 ]]; then
 
 
     cd $GPTUNEROOT/examples/NIMROD_RCI
-    rm -rf gptune.db/*.json # do not load any database 
     tp=NIMROD
     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
@@ -574,6 +573,7 @@ if [[ $BuildExample == 1 ]]; then
     seed=881
     for expid in 1 2 3
     do  
+        rm -rf gptune.db/*.json # do not load any database 
         seed=$( expr ${seed} + ${expid} )
         nstepmax=30
         nstepmin=3
