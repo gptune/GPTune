@@ -4,7 +4,7 @@
 ##################################################
 ##################################################
 
-BuildExample=0 # whether all the examples have been built
+BuildExample=1 # whether all the examples have been built
 
 
 # ################ summit
@@ -24,10 +24,10 @@ BuildExample=0 # whether all the examples have been built
 
 ############### Cori
 export machine=cori
-export proc=haswell   # knl,haswell,gpu
-export mpi=openmpi  # openmpi,craympich
+export proc=haswell   # knl,haswell
+export mpi=craympich  # openmpi,craympich
 export compiler=gnu   # gnu, intel	
-export nodes=1  # number of nodes to be used
+export nodes=16  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -216,16 +216,16 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 
 
-    module unload python
-    USER="$(basename $HOME)"
-    PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0-gpu
-    source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
-    conda activate $PREFIX_PATH
-	export MKLROOT=$PREFIX_PATH
-	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
+    # module unload python
+    # USER="$(basename $HOME)"
+    # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0-gpu
+    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # conda activate $PREFIX_PATH
+	# export MKLROOT=$PREFIX_PATH
+	# BLAS_INC="-I${MKLROOT}/include"
+	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    # export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
 
 
     MPIRUN=mpirun
@@ -390,121 +390,121 @@ timestamp() {
 ##########################################################################
 echo "Testing MPI Spawning-based Interface"
 
-# the following examples only work with openmpi
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+# # the following examples only work with openmpi
+# if [[ $ModuleEnv == *"openmpi"* ]]; then
 
-    # cd $GPTUNEROOT/examples/GPTune-Demo
-    # rm -rf gptune.db/*.json # do not load any database 
-    # tp=GPTune-Demo
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py
+#     # cd $GPTUNEROOT/examples/GPTune-Demo
+#     # rm -rf gptune.db/*.json # do not load any database 
+#     # tp=GPTune-Demo
+#     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py
 
-    # cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
-    # rm -rf gptune.db/*.json # do not load any database 
-    # tp=PDGEQRF
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
-
-
-    # if [[ $ModuleEnv == *"gpu"* ]]; then
-    #     device='cuda'
-    # else
-    #     device='cpu'
-    # fi
-    # cd $GPTUNEROOT/examples/cnnMNIST
-    # rm -rf gptune.db/*.json # do not load any database
-    # tp=cnnMNIST
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  \
-    # python ./cnnMNIST_MB.py -ntask 1 -nrun -1 -machine cori -npernode $cores -optimization GPTuneBand \
-    # -bmin 3 -bmax 27 -eta 3 -Nloop 1 -ntrain 8192 -nvalid 1024 -device $device
+#     # cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
+#     # rm -rf gptune.db/*.json # do not load any database 
+#     # tp=PDGEQRF
+#     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 40 -machine cori -jobid 0 -tla 0
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
 
 
-    if [[ $BuildExample == 1 ]]; then
-        cd $GPTUNEROOT/examples/SuperLU_DIST
-        rm -rf gptune.db/*.json # do not load any database 
-        tp=SuperLU_DIST
-        app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
+#     # if [[ $ModuleEnv == *"gpu"* ]]; then
+#     #     device='cuda'
+#     # else
+#     #     device='cpu'
+#     # fi
+#     # cd $GPTUNEROOT/examples/cnnMNIST
+#     # rm -rf gptune.db/*.json # do not load any database
+#     # tp=cnnMNIST
+#     # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#     # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
+#     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  \
+#     # python ./cnnMNIST_MB.py -ntask 1 -nrun -1 -machine cori -npernode $cores -optimization GPTuneBand \
+#     # -bmin 3 -bmax 27 -eta 3 -Nloop 1 -ntrain 8192 -nvalid 1024 -device $device
 
-        if [[ $ModuleEnv == *"gpu"* ]]; then
-            # cd $GPTUNEROOT/examples/SuperLU_DIST
-            # rm -rf gptune.db/*.json # do not load any database 
-            # tp=SuperLU_DIST_GPU
-            # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-            # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-            # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20 -obj "time"
 
-            # cd $GPTUNEROOT/examples/SuperLU_DIST
-            # rm -rf gptune.db/*.json # do not load any database 
-            # tp=SuperLU_DIST_GPU
-            # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-            # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-            # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_ngpu.py -npernode 8 -ntask 1 -nrun 20 -obj "time"        
+#     if [[ $BuildExample == 1 ]]; then
+#         cd $GPTUNEROOT/examples/SuperLU_DIST
+#         rm -rf gptune.db/*.json # do not load any database 
+#         tp=SuperLU_DIST
+#         app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
+
+#         if [[ $ModuleEnv == *"gpu"* ]]; then
+#             # cd $GPTUNEROOT/examples/SuperLU_DIST
+#             # rm -rf gptune.db/*.json # do not load any database 
+#             # tp=SuperLU_DIST_GPU
+#             # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#             # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#             # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20 -obj "time"
+
+#             # cd $GPTUNEROOT/examples/SuperLU_DIST
+#             # rm -rf gptune.db/*.json # do not load any database 
+#             # tp=SuperLU_DIST_GPU
+#             # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#             # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#             # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_ngpu.py -npernode 8 -ntask 1 -nrun 20 -obj "time"        
         
-            cd $GPTUNEROOT/examples/STRUMPACK
-            rm -rf gptune.db/*.json # do not load any database 
-            tp=STRUMPACK_MMdoubleMPIDist_GPU
-            app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-            echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-            $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20
-        fi
+#             cd $GPTUNEROOT/examples/STRUMPACK
+#             rm -rf gptune.db/*.json # do not load any database 
+#             tp=STRUMPACK_MMdoubleMPIDist_GPU
+#             app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#             echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#             $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20
+#         fi
 
-        # cd $GPTUNEROOT/examples/STRUMPACK
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=STRUMPACK_Poisson3d
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
-
-
-        # cd $GPTUNEROOT/examples/STRUMPACK
-        # rm -rf gptune.db/*.json # do not load any database
-        # tp=STRUMPACK_KRR
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori -npernode $cores 
+#         # cd $GPTUNEROOT/examples/STRUMPACK
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=STRUMPACK_Poisson3d
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_Poisson3d.py -ntask 1 -nrun 10 -machine cori 
 
 
-
-        # cd $GPTUNEROOT/examples/MFEM
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=MFEM
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
-
-
-        # cd $GPTUNEROOT/examples/ButterflyPACK
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=ButterflyPACK-IE2D
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
-
-        # cd $GPTUNEROOT/examples/Hypre
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=Hypre 
-        # tuner=GPTune
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+#         # cd $GPTUNEROOT/examples/STRUMPACK
+#         # rm -rf gptune.db/*.json # do not load any database
+#         # tp=STRUMPACK_KRR
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_KRR.py -ntask 1 -nrun 10 -machine cori -npernode $cores 
 
 
-        # cd $GPTUNEROOT/examples/Hypre
-        # rm -rf gptune.db/*.json # do not load any database 
-        # tp=Hypre 
-        # tuner=GPTuneBand
-        # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-        # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
-        # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_MB.py  -nprocmin_pernode 1 -bmin 1 -bmax 8 -eta 2 -amin 0.1 -amax 0.8 -cmin 0.1 -cmax 0.8 -ntask 2 -Nloop 1 -optimization ${tuner} | tee a.out_hypre_MB_${tuner} 
-    fi
-fi
+
+#         # cd $GPTUNEROOT/examples/MFEM
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=MFEM
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./mfem_maxwell3d.py -ntask 1 -nrun 20 -nprocmin_pernode 2 -optimization GPTune
+
+
+#         # cd $GPTUNEROOT/examples/ButterflyPACK
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=ButterflyPACK-IE2D
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./butterflypack_ie2d.py -ntask 1 -nrun 20 -machine tr4 -nprocmin_pernode 2 -optimization GPTune 
+
+#         # cd $GPTUNEROOT/examples/Hypre
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=Hypre 
+#         # tuner=GPTune
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+
+
+#         # cd $GPTUNEROOT/examples/Hypre
+#         # rm -rf gptune.db/*.json # do not load any database 
+#         # tp=Hypre 
+#         # tuner=GPTuneBand
+#         # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+#         # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
+#         # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre_MB.py  -nprocmin_pernode 1 -bmin 1 -bmax 8 -eta 2 -amin 0.1 -amax 0.8 -cmin 0.1 -cmax 0.8 -ntask 2 -Nloop 1 -optimization ${tuner} | tee a.out_hypre_MB_${tuner} 
+#     fi
+# fi
 
 
 ##########################################################################
@@ -521,13 +521,13 @@ echo "Testing Reverse Communication Interface"
 # cp gptune.db/PDGEQRF.json  gptune.db/PDGEQRF.json_$(timestamp)
 
 if [[ $BuildExample == 1 ]]; then
-    cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
-    rm -rf gptune.db/*.json # do not load any database 
-    tp=SuperLU_DIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory | tee log.superlu #a: nrun b: nprocmin_pernode c: objective
-    cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
+    # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
+    # rm -rf gptune.db/*.json # do not load any database 
+    # tp=SuperLU_DIST
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    # bash superlu_MLA_RCI.sh -a 10 -b 2 -c memory | tee log.superlu #a: nrun b: nprocmin_pernode c: objective
+    # cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
 
     # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
     # rm -rf gptune.db/*.json # do not load any database 
@@ -565,17 +565,23 @@ if [[ $BuildExample == 1 ]]; then
     # cp gptune.db/MFEM.json  gptune.db/MFEM.json_time_memory_$(timestamp)
 
 
-    # cd $GPTUNEROOT/examples/NIMROD_RCI
-    # rm -rf gptune.db/*.json # do not load any database 
-    # tp=NIMROD
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-    # nstepmax=30
-    # nstepmin=3
-    # Nloop=2
-    # optimization='GPTune'
-    # bash nimrod_single_MB_RCI.sh -a $nstepmax -b $nstepmin -c $Nloop -d $optimization | tee log.nimrod_nstepmax${nstepmax}_nstepmin$nstepmin}_Nloop${Nloop}_optimization${optimization}_nodes${nodes} #a: nstepmax b: nstepmin c: Nloop d: optimization
-    # cp gptune.db/NIMROD.json  gptune.db/NIMROD.json_$(timestamp)
+    cd $GPTUNEROOT/examples/NIMROD_RCI
+    rm -rf gptune.db/*.json # do not load any database 
+    tp=NIMROD
+    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+    
+    seed=881
+    for expid in TEST1
+    do  
+        seed=$( expr ${seed} + 1 )
+        nstepmax=30
+        nstepmin=3
+        Nloop=1
+        optimization='GPTune'
+        bash nimrod_single_MB_RCI.sh -a $nstepmax -b $nstepmin -c $Nloop -d $optimization -e $expid -f $seed | tee log.nimrod_nstepmax${nstepmax}_nstepmin$nstepmin}_Nloop${Nloop}_optimization${optimization}_nodes${nodes}_expid${expid}_seed${seed} #a: nstepmax b: nstepmin c: Nloop d: optimization e: expid f: seed
+        cp gptune.db/NIMROD.json  gptune.db/NIMROD.json_$(timestamp)
+    done
 fi
 
 # ##########################################################################

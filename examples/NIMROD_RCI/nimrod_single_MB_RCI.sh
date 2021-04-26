@@ -2,14 +2,16 @@
 start=`date +%s`
 
 
-# Get nstepmax, nstepmin, Nloop, optimization from command line
-while getopts "a:b:c:d:" opt
+# Get nstepmax, nstepmin, Nloop, optimization, expid, seed from command line
+while getopts "a:b:c:d:e:f:" opt
 do
    case $opt in
       a ) nstepmax=$OPTARG ;;
       b ) nstepmin=$OPTARG ;;
       c ) Nloop=$OPTARG ;;
       d ) optimization=$OPTARG ;;
+      e ) expid=$OPTARG ;;
+      f ) seed=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -49,7 +51,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./nimrod_single_MB_RCI.py -nstepmax $nstepmax -nstepmin $nstepmin -Nloop $Nloop -bmin $bmin -bmax $bmax -eta $eta -optimization $optimization
+python ./nimrod_single_MB_RCI.py -nstepmax $nstepmax -nstepmin $nstepmin -Nloop $Nloop -bmin $bmin -bmax $bmax -eta $eta -optimization $optimization -expid $expid -seed $seed
 
 
 # check whether GPTune needs more data
@@ -196,6 +198,7 @@ fi
 # get the result (for this example: search the runlog) egrep is needed for scientific notation
 declare -a arr=($(grep 'Loop  time' $logfile | egrep -o "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?."))
 result=${arr[0]}
+# result=1
 
 # result=1
 echo "nimrod time: mx: $mx, my: $my, lphi: $lphi, nstep: $nstep, NSUP: $NSUP, NREL: $NREL, nbx: $nbx, nby: $nby, result: $result"
