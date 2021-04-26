@@ -24,7 +24,7 @@ BuildExample=0 # whether all the examples have been built
 
 ############### Cori
 export machine=cori
-export proc=haswell   # knl,haswell
+export proc=haswell   # knl,haswell,gpu
 export mpi=openmpi  # openmpi,craympich
 export compiler=gnu   # gnu, intel	
 export nodes=1  # number of nodes to be used
@@ -171,9 +171,54 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
 
 
+    # module unload python
+    # USER="$(basename $HOME)"
+    # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # conda activate $PREFIX_PATH
+	# export MKLROOT=$PREFIX_PATH
+	# BLAS_INC="-I${MKLROOT}/include"
+	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    # export PYTHONPATH=$PREFIX_PATH/lib/python3.7/site-packages
+
+
+    MPIRUN=mpirun
+    cores=32
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+# fi    
+###############
+
+
+############### Cori GPU Openmpi+GNU
+elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
+    module load gcc/8.3.0
+    module unload cray-mpich
+    module unload openmpi
+    module unload PrgEnv-intel
+    module load PrgEnv-gnu
+	module use /global/common/software/m3169/cori/modulefiles
+    module load cgpu
+	module load cuda/11.1.1 
+	module load openmpi/4.0.1-ucx-1.9.0-cuda-10.2.89
+    module load cudnn/8.0.5
+    export UCX_LOG_LEVEL=error
+    export NCCL_IB_HCA=mlx5_0:1,mlx5_2:1,mlx5_4:1,mlx5_6:1
+    export LD_LIBRARY_PATH=/usr/common/software/sles15_cgpu/ucx/1.9.0/lib:$LD_LIBRARY_PATH
+    module unload craype-hugepages2M
+    module unload cray-libsci
+    module unload atp
+
+    export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+
+
     module unload python
     USER="$(basename $HOME)"
-    PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
+    PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0-gpu
     source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
     conda activate $PREFIX_PATH
 	export MKLROOT=$PREFIX_PATH
@@ -184,11 +229,12 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 
     MPIRUN=mpirun
-    cores=32
+    cores=40 # two 20-core Intel Xeson Gold 6148
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi    
 ###############
+
 
 ############### Cori Haswell Openmpi+Intel
 elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
@@ -363,14 +409,19 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -machine cori -jobid 0 -tla 1
 
 
-    cd $GPTUNEROOT/examples/cnnMNIST
-    rm -rf gptune.db/*.json # do not load any database
-    tp=cnnMNIST
-    app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
-    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  \
-    python ./cnnMNIST_MB.py -ntask 1 -nrun -1 -machine cori -npernode $cores -optimization GPTuneBand \
-    -bmin 3 -bmax 27 -eta 3 -Nloop 1 -ntrain 2048 -nvalid 1024
+    # if [[ $ModuleEnv == *"gpu"* ]]; then
+    #     device='cuda'
+    # else
+    #     device='cpu'
+    # fi
+    # cd $GPTUNEROOT/examples/cnnMNIST
+    # rm -rf gptune.db/*.json # do not load any database
+    # tp=cnnMNIST
+    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json 
+    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  \
+    # python ./cnnMNIST_MB.py -ntask 1 -nrun -1 -machine cori -npernode $cores -optimization GPTuneBand \
+    # -bmin 3 -bmax 27 -eta 3 -Nloop 1 -ntrain 8192 -nvalid 1024 -device $device
 
 
     if [[ $BuildExample == 1 ]]; then
@@ -381,6 +432,28 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
         echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
         $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA.py -nprocmin_pernode 1 -ntask 1 -nrun 20 -machine cori
 
+        if [[ $ModuleEnv == *"gpu"* ]]; then
+            # cd $GPTUNEROOT/examples/SuperLU_DIST
+            # rm -rf gptune.db/*.json # do not load any database 
+            # tp=SuperLU_DIST_GPU
+            # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+            # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+            # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20 -obj "time"
+
+            # cd $GPTUNEROOT/examples/SuperLU_DIST
+            # rm -rf gptune.db/*.json # do not load any database 
+            # tp=SuperLU_DIST_GPU
+            # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+            # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+            # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./superlu_MLA_ngpu.py -npernode 8 -ntask 1 -nrun 20 -obj "time"        
+        
+            cd $GPTUNEROOT/examples/STRUMPACK
+            rm -rf gptune.db/*.json # do not load any database 
+            tp=STRUMPACK_MMdoubleMPIDist_GPU
+            app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+            echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+            $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./strumpack_MLA_1gpu.py -npernode 1 -ntask 1 -nrun 20
+        fi
 
         # cd $GPTUNEROOT/examples/STRUMPACK
         # rm -rf gptune.db/*.json # do not load any database 

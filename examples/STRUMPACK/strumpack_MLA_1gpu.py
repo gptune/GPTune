@@ -18,13 +18,12 @@
 ################################################################################
 """
 Example of invocation of this script:
-mpirun -n 1 python butterflypack_ie2d.py -nprocmin_pernode 1 -ntask 20 -nrun 800 -optimization GPTune
+mpirun -n 1 python strumpack_MLA_1gpu.py -npernode 1 -ntask 20 -nrun 800 
 
 where:
-	-nprocmin_pernode is the minimum number of MPIs per node for launching the application code
+	-npernode is the number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
-	-optimization is the optimization algorithm: GPTune, hpbandster or opentuner
 """
  
 ################################################################################
@@ -44,41 +43,62 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
 from gptune import * # import all
 
-
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
+
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
 
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
-    
+
 	######################################### 
 	##### constants defined in TuningProblem
 	nodes = point['nodes']
 	cores = point['cores']	
+	npernode = point['npernode']	
+	
 	#########################################
+	#     
+	# gridsize = point['gridsize']
+	matrix = point['matrix']
+	sp_reordering_method = point['sp_reordering_method']
+	# sp_compression = point['sp_compression']
+	# sp_compression1 = sp_compression
+	sp_nd_param = point['sp_nd_param']
+	sp_gpu_streams = point['sp_gpu_streams']
+	# sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
+	# sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
+	# sp_compression_leaf_size = 2**point['sp_compression_leaf_size']
+	# sp_compression_rel_tol = 10.0**point['sp_compression_rel_tol']
+	
+	# sp_compression = 'none'
+	extra_str=[' ']	
+	# if(sp_compression == 'hss'):
+	# 	extra_str=['--hss_rel_tol', '%s'%(sp_compression_rel_tol)]
+	# elif(sp_compression == 'blr'):
+	# 	extra_str=['--blr_rel_tol', '%s'%(sp_compression_rel_tol)]
+	# elif(sp_compression == 'hodlr'):
+	# 	extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '0']
+	# elif(sp_compression == 'hodbf'):
+	# 	extra_str=['--hodlr_rel_tol', '%s'%(sp_compression_rel_tol), '--hodlr_butterfly_levels', '100']
+	# 	sp_compression1 = 'hodlr'
+	# elif(sp_compression == 'none'):
+	# 	extra_str=[' ']
 
-	model2d = point['model2d']
-	nunk = point['nunk']
-	wavelength = point['wavelength']
+	if(sp_reordering_method == 'metis'):
+		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
 
-	lrlevel = point['lrlevel']
-	xyzsort = point['xyzsort']
-	nmin_leaf = 2**point['nmin_leaf']
-	npernode = 2**point['npernode']
-	nproc = nodes*npernode 
-	nthreads = int(cores / npernode)
-
-	params = ['model2d', model2d,'nunk', nunk,'wavelength', wavelength,'lrlevel', lrlevel,'xyzsort', xyzsort,'nmin_leaf', nmin_leaf, 'nproc', nproc]
-
-	RUNDIR = os.path.abspath(__file__ + "/../ButterflyPACK/build/EXAMPLE")
+	nproc = nodes*npernode
+	nthreads = 1
+	
+	params = ['matrix', matrix, 'sp_reordering_method', sp_reordering_method,'sp_nd_param', sp_nd_param, 'sp_gpu_streams', sp_gpu_streams]+extra_str
+	RUNDIR = os.path.abspath(__file__ + "/../STRUMPACK/build/examples")
+	INPUTDIR = os.path.abspath(__file__ + "/../../SuperLU_DIST/superlu_dist/EXAMPLE/")
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
-
 
 	""" pass some parameters through environment variables """	
 	info = MPI.Info.Create()
@@ -88,22 +108,23 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/ie2d"%(RUNDIR), 'args', ['-quant', '--model2d', '%s'%(model2d), '--wavelength', '%s'%(wavelength),'--nunk', '%s'%(nunk),'-option', '--tol_comp', '1d-4','--lrlevel', '%s'%(lrlevel),'--xyzsort', '%s'%(xyzsort),'--nmin_leaf', '%s'%(nmin_leaf),'--format', '1','--precon', '3','--sample_para','2d0','--knn','20','--verbosity','1'], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
-	comm = MPI.COMM_SELF.Spawn("%s/ie2d"%(RUNDIR), args=['-quant', '--model2d', '%s'%(model2d), '--wavelength', '%s'%(wavelength),'--nunk', '%s'%(nunk),'-option', '--tol_comp', '1d-4','--lrlevel', '%s'%(lrlevel),'--xyzsort', '%s'%(xyzsort),'--nmin_leaf', '%s'%(nmin_leaf),'--format', '1','--precon', '3','--sample_para','2d0','--knn','20','--verbosity','1'], maxprocs=nproc,info=info)
+	print('exec', "%s/testMMdoubleMPIDist"%(RUNDIR), 'args', ['%s/%s'%(INPUTDIR,matrix), '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_nd_param', '%s'%(sp_nd_param), '--sp_gpu_streams', '%s'%(sp_gpu_streams)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
+	comm = MPI.COMM_SELF.Spawn("%s/testMMdoubleMPIDist"%(RUNDIR), args=['%s/%s'%(INPUTDIR,matrix), '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_nd_param', '%s'%(sp_nd_param), '--sp_gpu_streams', '%s'%(sp_gpu_streams)]+extra_str, maxprocs=nproc,info=info)
 
-
-	""" gather the return value using the inter-communicator """							
+	""" gather the return value using the inter-communicator """																	
 	tmpdata = np.array([0],dtype=np.float64)
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
-	print(params, 'time:', tmpdata[0])
 
-	return [tmpdata[0]] 
+	retval = tmpdata[0]
+	print(params, ' strumpack time: ', retval)
 
+
+	return [retval] 
+	
 	
 def main():
 
-	
 	# Parse command line arguments
 
 	args   = parse_args()
@@ -111,46 +132,52 @@ def main():
 	# Extract arguments
 
 	ntask = args.ntask
-	nprocmin_pernode = args.nprocmin_pernode
+	npernode = args.npernode
 	optimization = args.optimization
 	nrun = args.nrun
 	
 	TUNER_NAME = args.optimization
+
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-
 
 	os.environ['MACHINE_NAME'] = machine
 	os.environ['TUNER_NAME'] = TUNER_NAME
 	
 	
-	nprocmax = nodes*cores
+	# nprocmax = nodes*cores-1  # YL: there is one proc doing spawning, so nodes*cores should be at least 2
+	# nprocmin = min(nodes*nprocmin_pernode,nprocmax-1)  # YL: ensure strictly nprocmin<nprocmax, required by the Integer space
 
-
+	# matrices = ["big.rua", "g4.rua", "g20.rua"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
-	model2d 	= Integer     (1, 13, transform="normalize", name="model2d")
-	nunk 		= Integer     (2000, 10000000, transform="normalize", name="nunk")
-	wavelength  = Real        (0.00001 , 0.02,name="wavelength")
-
+	matrices = ["matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
+	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 
 	# Input parameters
-	lrlevel   = Categoricalnorm (['0','100'], transform="onehot", name="lrlevel")
-	xyzsort   = Categoricalnorm (['0','1','2'], transform="onehot", name="xyzsort")
-	nmin_leaf = Integer     (5, 9, transform="normalize", name="nmin_leaf")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
+	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
+	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
+	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
+	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
+	# npernode     = Integer     (0, 5, transform="normalize", name="npernode")
+	sp_nd_param     = Integer     (2, 32, transform="normalize", name="sp_nd_param")
+	sp_gpu_streams     = Integer     (1, 8, transform="normalize", name="sp_gpu_streams")
+	# sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
+	# sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
+	# sp_compression_leaf_size     = Integer     (5, 9, transform="normalize", name="sp_compression_leaf_size")
+	# sp_compression_rel_tol     = Integer(-6, -1, transform="normalize", name="sp_compression_rel_tol")
 
 
-	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
-
-
-	IS = Space([model2d,nunk,wavelength])
-	PS = Space([lrlevel,xyzsort,nmin_leaf,npernode])
-	OS = Space([result1])
-
+	result   = Real        (float("-Inf") , float("Inf"),name="r")
+	IS = Space([matrix])
+	PS = Space([sp_reordering_method,sp_nd_param,sp_gpu_streams])
+	OS = Space([result])
 	constraints = {}
 	models = {}
-	constants={"nodes":nodes,"cores":cores}
+	constants={"nodes":nodes,"cores":cores,"npernode":npernode}
 
 	""" Print all input and parameter samples """	
 	print(IS, PS, OS, constraints, models)
@@ -168,21 +195,19 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
-
-	# options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	# options['search_pop_size'] = 1000 # 1000
-	# options['search_gen'] = 10
 
 	options.validate(computer = computer)
 	
-
-	# """ Building MLA with the given list of tasks """	
-	# giventask = [[7,100000,0.001]]			
-	giventask = [[7,5000,0.02]]			
-	# giventask = [[7,2000,0.05]]			
+	
+	# """ Building MLA with the given list of tasks """
+	giventask = [["temp_75k.mtx"]]		
 	data = Data(problem)
+	
+	# the following makes sure the first sample is using default parameters 
+	data.I = giventask
+	data.P = [[['metis',8,4]]]
 
 
 
@@ -197,25 +222,13 @@ def main():
 		""" Print all input and parameter samples """	
 		for tid in range(NI):
 			print("tid: %d"%(tid))
-			print("    model2d:%d nunk:%d wavelength:%1.6e" % (data.I[tid][0], data.I[tid][1], data.I[tid][2]))
+			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			
-
-			OL=np.asarray([o[0] for o in data.O[tid]], dtype=np.float64)
-			np.set_printoptions(suppress=False,precision=8)	
-			print("    Os ", OL)
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-			# ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			# front = ndf[0]
-			# # print('front id: ',front)
-			# fopts = data.O[tid][front]
-			# xopts = [data.P[tid][i] for i in front]
-			# print('    Popts ', xopts)		
-			# print('    Oopts ', fopts)
-
 	if(TUNER_NAME=='opentuner'):
-		NI = ntask
+		NI = len(giventask)
 		NS = nrun
 		(data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
 		print("stats: ", stats)
@@ -225,11 +238,11 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='hpbandster'):
-		NI = ntask
+		NI = len(giventask)
 		NS = nrun
 		(data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
 		print("stats: ", stats)
@@ -238,7 +251,7 @@ def main():
 			print("tid: %d"%(tid))
 			print("    matrix:%s"%(data.I[tid][0]))
 			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid])
+			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
@@ -251,9 +264,7 @@ def parse_args():
 
 	# Problem related arguments
 	# Machine related arguments
-	parser.add_argument('-nodes', type=int, default=1, help='Number of machine nodes')
-	parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
-	parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
+	parser.add_argument('-npernode', type=int, default=1,help='Number of MPIs per machine node for the application code')
 	parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
 	# Algorithm related arguments
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')

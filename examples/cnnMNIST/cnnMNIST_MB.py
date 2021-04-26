@@ -69,7 +69,7 @@ import scipy
 def objectives(point):
     bmin = point['bmin']
     bmax = point['bmax']
-    eta = point['eta']   
+    eta = point['eta']
     
     params = [(point["lr"], point["optimizer"], point["sgd_momentum"], 
                point["num_conv_layers"], point["num_filters_1"], 
@@ -85,7 +85,7 @@ def objectives(point):
     validation_loss = cnnMNISTdriver(params, niter=1, 
                                   budget=budget, 
                                   max_epoch=bmax, batch_size=64,
-                                  ntrain=point["ntrain"], nvalid=point["nvalid"])
+                                  ntrain=point["ntrain"], nvalid=point["nvalid"],device=point["device"])
     # print(params, ' valiation accuracy: ', accuracy)
     
     return validation_loss
@@ -99,6 +99,7 @@ def main():
     # Parse command line arguments
     args = parse_args()
     bmin = args.bmin
+    device = args.device
     bmax = args.bmax
     eta = args.eta
     nrun = args.nrun
@@ -135,7 +136,7 @@ def main():
     OS = Space([validation_loss])
     
     constraints = {}
-    constants={"nodes":nodes,"cores":cores,"npernode":npernode,"bmin":bmin,"bmax":bmax,"eta":eta}
+    constants={"nodes":nodes,"cores":cores,"npernode":npernode,"bmin":bmin,"bmax":bmax,"eta":eta, "device":device}
 
     print(IS, PS, OS, constraints)
 
@@ -185,8 +186,8 @@ def main():
     # giventask = [[0.2, 0.5]]
     
     if ntask == 1:
-        # giventask = [[args.ntrain, args.nvalid]]
-        giventask = [[3000, 1000]]
+        giventask = [[args.ntrain, args.nvalid]]
+        # giventask = [[3000, 1000]]
     
     
     NI=len(giventask)
@@ -303,6 +304,7 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
     parser.add_argument('-npernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
+    parser.add_argument('-device', type=str, default='cpu', help='torch.device: cpu or cuda')
     # Algorithm related arguments
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')

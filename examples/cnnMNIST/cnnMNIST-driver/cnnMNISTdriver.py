@@ -123,9 +123,9 @@ class MNISTConvNet(torch.nn.Module):
 
 
 def execute(params, niter=1, budget=None, max_epoch=243, 
-            ntrain=8192, nvalid=1024, batch_size=64):
+            ntrain=8192, nvalid=1024, batch_size=64,device='cpu'):
     # Load the MNIST Data here
-    device = torch.device('cpu')
+    device = torch.device(device)
     train_dataset = torchvision.datasets.MNIST(root='./data', train=True, transform=transforms.ToTensor(), download=True)
     test_dataset = torchvision.datasets.MNIST(root='./data', train=False, transform=transforms.ToTensor())
     train_sampler = torch.utils.data.sampler.SubsetRandomSampler(range(ntrain))
@@ -189,7 +189,7 @@ def execute(params, niter=1, budget=None, max_epoch=243,
 
 
 def cnnMNISTdriver(params, niter=1, JOBID:int=-1, budget=None, 
-              max_epoch=243, ntrain=8192, nvalid=1024, batch_size=64):
+              max_epoch=243, ntrain=8192, nvalid=1024, batch_size=64, device='cpu'):
     # global EXPDIR 
     # global ROOTDIR
 
@@ -209,7 +209,7 @@ def cnnMNISTdriver(params, niter=1, JOBID:int=-1, budget=None,
     res = []
     for param in params:
         res_cur = execute(param, niter=niter, budget=budget, max_epoch=max_epoch, 
-                          ntrain=ntrain, nvalid=nvalid, batch_size=batch_size)
+                          ntrain=ntrain, nvalid=nvalid, batch_size=batch_size,device=device)
         res.append(res_cur)
     return res
 
@@ -224,6 +224,6 @@ if __name__ == "__main__":
     # params = [(1e-3, "Adam", 0.5, 1, 4, 4, 4, 0.5, 8)]
     params = [(0.001, 'Adam', 0.3512, 3, 18, 48, 26, 0.0585, 111)]
     res = cnnMNISTdriver(params, niter=1, budget=None, max_epoch=27, 
-                          ntrain=2000, nvalid=2000)
+                          ntrain=2000, nvalid=2000, device='cpu')
     
     print(res)
