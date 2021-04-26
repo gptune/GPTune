@@ -32,8 +32,8 @@ from mpi4py import MPI
 import numpy as np
 import time
 import argparse
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter, HpBandSter_bandit
+# from callopentuner import OpenTuner
+# from callhpbandster import HpBandSter, HpBandSter_bandit
 import logging
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
@@ -72,8 +72,11 @@ def main():
     bmin = args.bmin
     bmax = args.bmax
     eta = args.eta
+    expid = args.expid
     TUNER_NAME = args.optimization
     (machine, processor, nodes, cores) = GetMachineConfiguration()
+    ot.RandomGenerator.SetSeed(args.seed)
+    print(args)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
     nstepmax = args.nstepmax
@@ -145,10 +148,11 @@ def main():
     # options['search_threads'] = 16
     # options['mpi_comm'] = None
     # options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class '] = 'Model_GPy_LCM' # 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM' # 'Model_LCM'
     options['verbose'] = False
-    options['sample_class'] = 'SampleLHSMDU'
-    options['sample_algo'] = 'LHS-MDU'
+    options['sample_class'] = 'SampleOpenTURNS'
+    # options['sample_class'] = 'SampleLHSMDU'
+    # options['sample_algo'] = 'LHS-MDU'
     options.validate(computer=computer)
 
     options['budget_min'] = bmin
@@ -184,6 +188,48 @@ def main():
     assert NI == ntask # make sure number of tasks match
     
     np.set_printoptions(suppress=False, precision=4)
+    if(TUNER_NAME=='GPTune'):
+        NS = Btotal
+        if args.nrun > 0:
+            NS = args.nrun
+        NS1 = max(NS//2, 1)
+        
+        data.I = giventask
+        data.P = [[Pdefault]] * NI
+
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
+        """ Building MLA with the given list of tasks """
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+        # print("stats: ", stats)
+        print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
+        print("Model class: ", options['model_class'])
+        results_file = open(f"nimrod_ntask{args.ntask}_bandit{args.bmin}-{args.bmax}-{args.eta}_Nloop{args.Nloop}_expid{args.expid}.txt", "a")
+        results_file.write(f"Tuner: {TUNER_NAME}\n")
+        results_file.write(f"stats: {stats}\n")        
+        if options['model_class'] == 'Model_LCM' and NI > 1:
+            print("Get correlation metric ... ")
+            C = model[0].M.kern.get_correlation_metric()
+            print("The correlation matrix C is \n", C)
+        elif options['model_class'] == 'Model_GPy_LCM' and NI > 1:
+            print("Get correlation metric ... ")
+            C = model[0].get_correlation_metric(NI)
+            print("The correlation matrix C is \n", C)
+
+        
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    mx:%s my:%s lphi:%s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], f'Oopt  {min(data.O[tid])[0]:.3f}', 'nth ', np.argmin(data.O[tid]))
+            results_file.write(f"tid: {tid:d}\n")
+            results_file.write(f"    mx:{data.I[tid][0]:d} my:{data.I[tid][1]:d} lphi:{data.I[tid][2]:d}\n")
+            # results_file.write(f"    Ps {data.P[tid]}\n")
+            results_file.write(f"    Os {data.O[tid].tolist()}\n")
+            # results_file.write(f'    Popt {data.P[tid][np.argmin(data.O[tid])]}  Oopt {-min(data.O[tid])[0]}  nth {np.argmin(data.O[tid])}\n')
+        results_file.close()            
+        
     if(TUNER_NAME=='GPTuneBand'):
         NS = Nloop
         data = Data(problem)
@@ -193,6 +239,9 @@ def main():
         print("Sampler class: ", options['sample_class'])
         print("Model class: ", options['model_class'])
         # print("stats: ", stats)
+        results_file = open(f"nimrod_ntask{args.ntask}_bandit{args.bmin}-{args.bmax}-{args.eta}_Nloop{args.Nloop}_expid{args.expid}.txt", "a")
+        results_file.write(f"Tuner: {TUNER_NAME}\n")
+        results_file.write(f"stats: {stats}\n")        
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
@@ -209,41 +258,13 @@ def main():
                 except ValueError:
                     pass
             print('    Popt ', Popt, 'Oopt ', min(data.O[tid])[0], 'nth ', nth, 'nth-bandit (s, nth) = ', (arm_opt, idx))
-         
-    if(TUNER_NAME=='GPTune'):
-        NS = Btotal
-        if args.nrun > 0:
-            NS = args.nrun
-        NS1 = max(NS//2, 1)
-        
-        data.I = giventask
-        data.P = [[Pdefault]] * NI
+            results_file.write(f"tid: {tid:d}\n")
+            results_file.write(f"    mx:{data.I[tid][0]:d} my:{data.I[tid][1]:d} lphi:{data.I[tid][2]:d}\n")
+            # results_file.write(f"    Ps {data.P[tid]}\n")
+            results_file.write(f"    Os {data.O[tid].tolist()}\n")
+            # results_file.write(f'    Popt {data.P[tid][np.argmin(data.O[tid])]}  Oopt {-min(data.O[tid])[0]}  nth {np.argmin(data.O[tid])}\n')
+        results_file.close()
 
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
-        """ Building MLA with the given list of tasks """
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
-        # print("stats: ", stats)
-        print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
-        print("Model class: ", options['model_class'])
-        if options['model_class'] == 'Model_LCM' and NI > 1:
-            print("Get correlation metric ... ")
-            C = model[0].M.kern.get_correlation_metric()
-            print("The correlation matrix C is \n", C)
-        elif options['model_class'] == 'Model_GPy_LCM' and NI > 1:
-            print("Get correlation metric ... ")
-            C = model[0].get_correlation_metric(NI)
-            print("The correlation matrix C is \n", C)
-
-        
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    mx:%s my:%s lphi:%s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid])
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], f'Oopt  {min(data.O[tid])[0]:.3f}', 'nth ', np.argmin(data.O[tid]))
-            
-    
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -258,6 +279,10 @@ def parse_args():
     parser.add_argument('-nrun', type=int, default=-1, help='total application runs')
     parser.add_argument('-Nloop', type=int, default=1, help='Number of outer loops in multi-armed bandit per task')
     # parser.add_argument('-sample_class', type=str,default='SampleOpenTURNS',help='Supported sample classes: SampleLHSMDU, SampleOpenTURNS')
+   
+    parser.add_argument('-seed', type=int, default=1, help='random seed')
+    parser.add_argument('-expid', type=str, default='-', help='run id for experiment')
+   
     args = parser.parse_args()
     
     return args   
