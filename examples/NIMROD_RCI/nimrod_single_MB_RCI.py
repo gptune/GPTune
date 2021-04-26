@@ -145,7 +145,7 @@ def main():
     # options['search_threads'] = 16
     # options['mpi_comm'] = None
     # options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class '] = 'Model_GPy_LCM' # 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM' # 'Model_LCM'
     options['verbose'] = False
     options['sample_class'] = 'SampleLHSMDU'
     options['sample_algo'] = 'LHS-MDU'
