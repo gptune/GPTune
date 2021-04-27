@@ -2,12 +2,16 @@
 
 start=`date +%s`
 
-# Get nrun, nprocmin_pernode from command line
-while getopts "a:b:" opt
+# Get nprocmin_pernode, objecitve(memory or time), Nloop, optimization, expid, seed from command line
+while getopts "a:b:c:d:e:f:" opt
 do
    case $opt in
-      a ) nrun=$OPTARG ;;
-      b ) nprocmin_pernode=$OPTARG ;;
+      a ) nprocmin_pernode=$OPTARG ;;
+      b ) obj=$OPTARG ;;
+      c ) Nloop=$OPTARG ;;
+      d ) optimization=$OPTARG ;;
+      e ) expid=$OPTARG ;;
+      f ) seed=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -30,10 +34,11 @@ processor=${machine_info[1]}
 nodes=${machine_info[2]}
 cores=${machine_info[3]}
 
-obj1=time    # name of the objective defined in the python file
-obj2=memory    # name of the objective defined in the python file
 
-
+# obj=memory    # name of the objective defined in the python file
+bmin=1
+bmax=8
+eta=8
 
 database="gptune.db/MFEM.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 # rm -rf $database
@@ -44,10 +49,10 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./mfem_maxwell3d_MO_RCI.py -nprocmin_pernode $nprocmin_pernode -nrun $nrun 
+python ./mfem_maxwell3d_MB_RCI.py -nprocmin_pernode $nprocmin_pernode -obj $obj -Nloop $Nloop -bmin $bmin -bmax $bmax -eta $eta -optimization $optimization -expid $expid -seed $seed
 
 # check whether GPTune needs more data
-idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 if [ $idx = null ]
 then
 more=0
@@ -60,8 +65,7 @@ echo " $idx"    # idx indexes the record that has null objective function values
 
 # write a large value to the database. This becomes useful in case the application crashes. 
 bigval=1e30
-jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
 declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_parameter' $database | jq -r '.[]'))
@@ -73,8 +77,24 @@ declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_param
 # Modify the following according to your application !!! 
 
 # get the task input parameters, the parameters should follow the sequence of definition in the python file
-mesh=${input_para[0]}
+if [ $optimization = 'GPTune' ];then
+    extra=1
+    mesh=${input_para[0]}
 omega=${input_para[1]}
+elif [ $optimization = 'GPTuneBand' ];then
+    budget=${input_para[0]}
+    mesh=${input_para[1]}
+    omega=${input_para[2]}
+    if [ $budget = 1 ];then
+        extra=0
+    else
+        extra=1
+    fi
+fi
+
+
+
+
 
 
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
@@ -90,7 +110,6 @@ sp_compression=BLR_HODLR
 n15=hodlr_enable_BF_entry_n15
 blocksize=64
 tol=1e-5
-extra=0
 sp_reordering_method=metis
 hodlr_butterfly_levels=100
 
@@ -133,28 +152,32 @@ elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
     
 fi
 
+
 iter=$(grep 'number of Krylov iterations =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
 
 if [[ $iter == 1000 ]]; then
-    result1=$bigval
-    result2=$bigval
+    result=$bigval
 else 
     # get the result (for this example: search the runlog)
-    result1=$(grep 'MFEM solve time =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-    result2=$(grep 'factor memory =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    time=$(grep 'MFEM solve time =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    mem=$(grep 'factor memory =' $logfile | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    if [ $obj = time ]
+    then
+    result=$time
+    else
+    result=$mem
+    fi
 fi
 
-
 # write the data back to the database file
-jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $result1 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $result2 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
-
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 #############################################################################
 #############################################################################
 
 done
 done
+
 
 end=`date +%s`
 
