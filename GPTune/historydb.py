@@ -79,7 +79,7 @@ class HistoryDB(dict):
         self.save_func_eval = True
         self.save_model = True
         self.load_func_eval = True
-        self.load_model = False
+        self.load_surrogate_model = False
 
         """ Path to JSON data files """
         self.history_db_path = "./"
@@ -136,7 +136,7 @@ class HistoryDB(dict):
             self.history_db_path = "./gptune.db"
 
             if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
-                self.load_model = True
+                self.load_surrogate_model = True
             try:
                 with FileLock("test.lock", timeout=0):
                     print ("[HistoryDB] use filelock for synchronization")
@@ -386,14 +386,14 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
-                                "model_data":[],
+                                "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
                 elif self.file_synchronization_method == 'rsync':
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
-                            "model_data":[],
+                            "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
                     os.system("rsync -u " + temp_path + " " + json_data_path)
@@ -401,7 +401,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
-                            "model_data":[],
+                            "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
 
@@ -513,8 +513,8 @@ class HistoryDB(dict):
 
         return
 
-    def is_model_problem_match(self, model_data : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
-        model_task_parameters = model_data["task_parameters"]
+    def is_model_problem_match(self, surrogate_model : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
+        model_task_parameters = surrogate_model["task_parameters"]
         input_task_parameters = input_given
         if len(model_task_parameters) != len(input_task_parameters):
             return False
@@ -526,7 +526,7 @@ class HistoryDB(dict):
                 if model_task_parameters[i][j] != input_task_parameters[i][j]:
                     return False
 
-        IS_model = model_data["problem_space"]["input_space"]
+        IS_model = surrogate_model["problem_space"]["input_space"]
         IS_given = self.problem_space_to_dict(tuningproblem.input_space)
         if len(IS_model) != len(IS_given):
             return False
@@ -538,7 +538,7 @@ class HistoryDB(dict):
             if IS_model[i]["type"] != IS_given[i]["type"]:
                 return False
 
-        PS_model = model_data["problem_space"]["parameter_space"]
+        PS_model = surrogate_model["problem_space"]["parameter_space"]
         PS_given = self.problem_space_to_dict(tuningproblem.parameter_space)
         if len(PS_model) != len(PS_given):
             return False
@@ -550,7 +550,7 @@ class HistoryDB(dict):
             if PS_model[i]["type"] != PS_given[i]["type"]:
                 return False
 
-        OS_model = model_data["problem_space"]["output_space"]
+        OS_model = surrogate_model["problem_space"]["output_space"]
         OS_given = self.problem_space_to_dict(tuningproblem.output_space)
         if len(OS_model) != len(OS_given):
             return False
@@ -564,7 +564,7 @@ class HistoryDB(dict):
 
         return True
 
-    def read_model_data(self, tuningproblem=None, Igiven=None, modeler="Model_LCM"):
+    def read_surrogate_models(self, tuningproblem=None, Igiven=None, modeler="Model_LCM"):
         ret = []
         print ("problem ", tuningproblem)
         print ("problem input_space ", self.problem_space_to_dict(tuningproblem.input_space))
@@ -589,19 +589,19 @@ class HistoryDB(dict):
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
 
-                num_models = len(history_data["model_data"])
+                num_models = len(history_data["surrogate_model"])
 
                 max_evals = 0
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(num_models):
-                    model_data = history_data["model_data"][i]
-                    if (self.is_model_problem_match(model_data, tuningproblem, Igiven) and
-                        model_data["modeler"] == modeler):
-                        ret.append(model_data)
+                    surrogate_model = history_data["surrogate_model"][i]
+                    if (self.is_model_problem_match(surrogate_model, tuningproblem, Igiven) and
+                        surrogate_model["modeler"] == modeler):
+                        ret.append(surrogate_model)
 
         return ret
 
-    def load_MLE_model_hyperparameters(self, tuningproblem : TuningProblem,
+    def load_MLE_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -622,22 +622,22 @@ class HistoryDB(dict):
 
                 max_mle = -9999
                 max_mle_index = -1
-                for i in range(len(history_data["model_data"])):
-                    model_data = history_data["model_data"][i]
-                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                            model_data["modeler"] == modeler and
-                            model_data["objective_id"] == objective):
-                        log_likelihood = model_data["log_likelihood"]
+                for i in range(len(history_data["surrogate_model"])):
+                    surrogate_model = history_data["surrogate_model"][i]
+                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                            surrogate_model["modeler"] == modeler and
+                            surrogate_model["objective_id"] == objective):
+                        log_likelihood = surrogate_model["log_likelihood"]
                         if log_likelihood > max_mle:
                             max_mle = log_likelihood
                             max_mle_index = i
 
                 hyperparameters =\
-                        history_data["model_data"][max_mle_index]["hyperparameters"]
+                        history_data["surrogate_model"][max_mle_index]["hyperparameters"]
 
         return hyperparameters
 
-    def load_AIC_model_hyperparameters(self, tuningproblem : TuningProblem,
+    def load_AIC_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -658,24 +658,24 @@ class HistoryDB(dict):
 
                 min_aic = 99999
                 min_aic_index = -1
-                for i in range(len(history_data["model_data"])):
-                    model_data = history_data["model_data"][i]
-                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                            model_data["modeler"] == modeler and
-                            model_data["objective_id"] == objective):
-                        log_likelihood = model_data["log_likelihood"]
-                        num_parameters = len(model_data["hyperparameters"])
+                for i in range(len(history_data["surrogate_model"])):
+                    surrogate_model = history_data["surrogate_model"][i]
+                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                            surrogate_model["modeler"] == modeler and
+                            surrogate_model["objective_id"] == objective):
+                        log_likelihood = surrogate_model["log_likelihood"]
+                        num_parameters = len(surrogate_model["hyperparameters"])
                         AIC = -1.0 * 2.0 * log_likelihood + 2.0 * num_parameters
                         if AIC < min_aic:
                             min_aic = AIC
                             min_aic_index = i
 
                 hyperparameters =\
-                        history_data["model_data"][min_aic_index]["hyperparameters"]
+                        history_data["surrogate_model"][min_aic_index]["hyperparameters"]
 
         return hyperparameters
 
-    def load_BIC_model_hyperparameters(self, tuningproblem : TuningProblem,
+    def load_BIC_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         import math
 
@@ -698,25 +698,25 @@ class HistoryDB(dict):
 
                 min_bic = 99999
                 min_bic_index = -1
-                for i in range(len(history_data["model_data"])):
-                    model_data = history_data["model_data"][i]
-                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                            model_data["modeler"] == modeler and
-                            model_data["objective_id"] == objective):
-                        log_likelihood = model_data["log_likelihood"]
-                        num_parameters = len(model_data["hyperparameters"])
-                        num_samples = len(model_data["func_eval"])
+                for i in range(len(history_data["surrogate_model"])):
+                    surrogate_model = history_data["surrogate_model"][i]
+                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                            surrogate_model["modeler"] == modeler and
+                            surrogate_model["objective_id"] == objective):
+                        log_likelihood = surrogate_model["log_likelihood"]
+                        num_parameters = len(surrogate_model["hyperparameters"])
+                        num_samples = len(surrogate_model["func_eval"])
                         BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
                         if BIC < min_bic:
                             min_bic = BIC
                             min_bic_index = i
 
                 hyperparameters =\
-                        history_data["model_data"][min_bic_index]["hyperparameters"]
+                        history_data["surrogate_model"][min_bic_index]["hyperparameters"]
 
         return hyperparameters
 
-    def load_max_evals_model_hyperparameters(self, tuningproblem : TuningProblem,
+    def load_max_evals_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -737,23 +737,23 @@ class HistoryDB(dict):
 
                 max_evals = 0
                 max_evals_index = -1 # TODO: if no model is found?
-                for i in range(len(history_data["model_data"])):
-                    model_data = history_data["model_data"][i]
-                    if (self.is_model_problem_match(model_data, tuningproblem, input_given) and
-                            model_data["modeler"] == modeler and
-                            model_data["objective_id"] == objective):
-                        num_evals = len(history_data["model_data"][i]["func_eval"])
+                for i in range(len(history_data["surrogate_model"])):
+                    surrogate_model = history_data["surrogate_model"][i]
+                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                            surrogate_model["modeler"] == modeler and
+                            surrogate_model["objective_id"] == objective):
+                        num_evals = len(history_data["surrogate_model"][i]["func_eval"])
                         if num_evals > max_evals:
                             max_evals = num_evals
                             max_evals_index = i
 
                 hyperparameters =\
-                        history_data["model_data"][max_evals_index]["hyperparameters"]
+                        history_data["surrogate_model"][max_evals_index]["hyperparameters"]
                 print ("loaded hyperparameters: ", hyperparameters)
 
         return hyperparameters
 
-    def load_model_hyperparameters_by_uid(self, model_uid):
+    def load_surrogate_model_hyperparameters_by_uid(self, model_uid):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
@@ -771,11 +771,11 @@ class HistoryDB(dict):
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
 
-                model_data = history_data["model_data"]
-                num_models = len(model_data)
+                surrogate_model = history_data["surrogate_model"]
+                num_models = len(surrogate_model)
                 for i in range(num_models):
-                    if model_data[i]["uid"] == model_uid:
-                        return model_data[i]["hyperparameters"]
+                    if surrogate_model[i]["uid"] == model_uid:
+                        return surrogate_model[i]["hyperparameters"]
 
         return []
 
@@ -880,7 +880,7 @@ class HistoryDB(dict):
                 with FileLock(json_data_path+".lock"):
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
-                        json_data["model_data"] += new_surrogate_models
+                        json_data["surrogate_model"] += new_surrogate_models
                     with open(json_data_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
             elif self.file_synchronization_method == 'rsync':
@@ -889,14 +889,14 @@ class HistoryDB(dict):
                     os.system("rsync -a " + json_data_path + " " + temp_path)
                     with open(temp_path, "r") as f_in:
                         json_data = json.load(f_in)
-                        json_data["model_data"] += new_surrogate_models
+                        json_data["surrogate_model"] += new_surrogate_models
                     with open(temp_path, "w") as f_out:
                         json.dump(json_data, f_out, indent=2)
                     os.system("rsync -u " + temp_path + " " + json_data_path)
                     os.system("rm " + temp_path)
                     with open(json_data_path, "r") as f_in:
                         json_data = json.load(f_in)
-                        existing_uids = [item["uid"] for item in json_data["model_data"]]
+                        existing_uids = [item["uid"] for item in json_data["surrogate_model"]]
                         new_uids = [item["uid"] for item in new_surrogate_models]
                         retry = False
                         for uid in new_uids:
@@ -908,7 +908,7 @@ class HistoryDB(dict):
             else:
                 with open(json_data_path, "r") as f_in:
                     json_data = json.load(f_in)
-                    json_data["model_data"] += new_surrogate_models
+                    json_data["surrogate_model"] += new_surrogate_models
                 with open(json_data_path, "w") as f_out:
                     json.dump(json_data, f_out, indent=2)
 

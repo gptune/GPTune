@@ -130,22 +130,22 @@ class GPTune(object):
             if model_uids == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
                 if method == "max_evals":
-                    hyperparameters = self.history_db.load_max_evals_model_hyperparameters(
+                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
-                    hyperparameters = self.history_db.load_MLE_model_hyperparameters(
+                    hyperparameters = self.history_db.load_MLE_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
-                    hyperparameters = self.history_db.load_AIC_model_hyperparameters(
+                    hyperparameters = self.history_db.load_AIC_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
                     hyperparameters = self.history_db.load_BIC_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 else:
-                    hyperparameters = self.history_db.load_max_evals_model_hyperparameters(
+                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
             else:
-                hyperparameters = self.history_db.load_model_hyperparameters_by_uid(model_uids[i])
+                hyperparameters = self.history_db.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
             modelers[i].gen_model_from_hyperparameters(self.data,
                     hyperparameters,
                     **kwargs)
@@ -491,7 +491,7 @@ class GPTune(object):
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
         if self.history_db.history_db is True:
-            if self.history_db.load_func_eval == True and self.history_db.load_model == True:
+            if self.history_db.load_func_eval == True and self.history_db.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
