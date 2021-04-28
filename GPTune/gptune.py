@@ -64,7 +64,81 @@ class GPTune(object):
         self.options  = options
         self.history_db = HistoryDB()
 
-    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "maxevals", update = 0, model_uids = None, **kwargs):
+    def LoadSurrogateModels(self, tuningproblem = None, Igiven = None, modeler="Model_LCM"):
+
+        return
+
+    def LoadSurrogateModel(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
+
+        """ Load history function evaluation data """
+
+        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
+
+        """ Update data space """
+
+        if(Igiven is not None and self.data.I is None):
+            self.data.I = Igiven
+
+        # normalize the data as the user always work in the original space
+        if self.data.P is not None:
+            tmp=[]
+            for x in self.data.P:
+                xNorm = self.problem.PS.transform(x)
+                tmp.append(xNorm)
+            self.data.P=tmp
+        if self.data.I is not None:
+            self.data.I = self.problem.IS.transform(self.data.I)
+
+        if (self.data.O is None and self.data.P is not None and self.data.I is not None):
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, options = kwargs)
+
+        if (self.data.D is None):
+            self.data.D = [{}] * len(self.data.I)
+
+        if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
+            raise Exception("len(self.data.P) !=len(self.data.I)")
+
+        if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
+            raise Exception("len(self.data.O) !=len(self.data.I)")
+
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
+        """ Reproduce surrogate models """
+
+        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+
+        for i in range(self.problem.DO):
+            # current limitations
+            # - workf for only Model_LCM
+            # - not considering edge cases (e.g. no model is available)
+            if model_uid == None:
+                #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
+                if method == "max_evals":
+                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                elif method == "MLE" or method == "mle":
+                    hyperparameters = self.history_db.load_MLE_surrogate_model_hyperparameters(
+                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                elif method == "AIC" or method == "aic":
+                    hyperparameters = self.history_db.load_AIC_surrogate_model_hyperparameters(
+                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                elif method == "BIC" or method == "bic":
+                    hyperparameters = self.history_db.load_BIC_model_hyperparameters(
+                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                else:
+                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+            else:
+                hyperparameters = self.history_db.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
+
+            modelers[i].gen_model_from_hyperparameters(self.data,
+                    hyperparameters,
+                    **kwargs)
+
+        return modelers
+
+    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
         stats = {
             "time_total": 0,

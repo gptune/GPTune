@@ -184,7 +184,6 @@ class SearchPyGMO(Search):
         except:
             raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-
         if(self.problem.DO==1): # single objective
             try:
                 algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
