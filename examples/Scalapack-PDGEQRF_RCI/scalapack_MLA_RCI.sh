@@ -1,14 +1,5 @@
 #!/bin/bash
 start=`date +%s`
-# ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
-# ModuleEnv='cori-haswell-craympich-intel'
-# ModuleEnv='cori-haswell-craympich-intel'
-# ModuleEnv='cori-haswell-openmpi-gnu'
-# ModuleEnv='cori-haswell-openmpi-intel'
-# ModuleEnv='cori-knl-openmpi-gnu'
-# ModuleEnv='cori-knl-openmpi-intel'
-
-
 
 # Get nrun and nprocmin_pernode from command line
 while getopts "a:b:c:d:e:" opt
