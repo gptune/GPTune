@@ -374,9 +374,9 @@ class HistoryDB(dict):
                             if(any(ele==[None] for ele in OS_history[i])):
                                 print ("history data contains null function values")
                                 exit()
-                    # print ("data.I: " + str(data.I))
-                    # print ("data.P: " + str(data.P))
-                    # print ("data.O: " + str(OS_history))
+                    # print ("db: data.I: " + str(data.I))
+                    # print ("db: data.P: " + str(data.P))
+                    # print ("db: data.O: " + str(OS_history))
                 else:
                     print ("no history data has been loaded")
             else:
