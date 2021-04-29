@@ -203,7 +203,8 @@ def main():
 
 
    # giventask = [[6],[6.5]]
-    giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    #giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    giventask = [[1.0],[0.5]]
 
     NI=len(giventask)
     NS=nrun

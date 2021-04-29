@@ -418,7 +418,7 @@ class HistoryDB(dict):
 
             # get the types of each parameter
             task_dtype=''
-            for p in problem.IS.dimensions:                    
+            for p in problem.IS.dimensions:
                 if (isinstance(p, Real)):
                     task_dtype=task_dtype+', float64'
                 elif (isinstance(p, Integer)):
@@ -428,7 +428,7 @@ class HistoryDB(dict):
             task_dtype=task_dtype[2:]
             
             tuning_dtype=''
-            for p in problem.PS.dimensions:                    
+            for p in problem.PS.dimensions:
                 if (isinstance(p, Real)):
                     tuning_dtype=tuning_dtype+', float64'
                 elif (isinstance(p, Integer)):
@@ -436,7 +436,6 @@ class HistoryDB(dict):
                 elif (isinstance(p, Categorical)):
                     tuning_dtype=tuning_dtype+', U100'
             tuning_dtype=tuning_dtype[2:]
-
 
             # transform to the original parameter space
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]

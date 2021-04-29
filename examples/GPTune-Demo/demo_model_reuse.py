@@ -103,22 +103,30 @@ def main():
     options['model_class'] = 'Model_LCM'
 
    # giventask = [[6],[6.5]]
-    giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    #giventask = [[i] for i in np.arange(0, ntask/2, 0.5).tolist()]
+    giventask = [[1.0],[0.5]]
     print ("giventask: ", giventask)
 
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-    models = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
+    (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
 
     " A quick validation"
-    for p in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]:
-        for o in range(1):
-            print ("p: ", p)
-            (mu, var) = models[o].predict(np.array([p]), 0)
-            print ("GP model")
-            print (mu, var)
-            print ("True function value")
-            print (demo_func(0, p))
+    print (model_function({"t": 1.0, "x": 0.05}))
+    (mu, var) = models[0].predict(np.array([0.05]), 0)
+    print ("GP model")
+    print (mu, var)
+
+#    for tid in [0, 1]:
+#        for p in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]:
+#            for o in range(1):
+#                print ("tid: ", tid)
+#                print ("p: ", p)
+#                (mu, var) = models[o].predict(np.array([p]), tid)
+#                print ("GP model")
+#                print (mu, var)
+#                print ("True function value")
+#                print (demo_func(tid, p))
 
 if __name__ == "__main__":
     main()

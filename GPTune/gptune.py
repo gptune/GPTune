@@ -20,6 +20,7 @@ import functools
 import time
 
 from autotune.problem import TuningProblem
+from autotune.space import *
 
 from problem import Problem
 from computer import Computer
@@ -136,7 +137,74 @@ class GPTune(object):
                     hyperparameters,
                     **kwargs)
 
-        return modelers
+        def model_function(point):
+
+            ## get the types of each parameter
+            #task_dtype=''
+            #for p in self.problem.IS.dimensions:
+            #    if (isinstance(p, Real)):
+            #        task_dtype=task_dtype+', float64'
+            #    elif (isinstance(p, Integer)):
+            #        task_dtype=task_dtype+', int32'
+            #    elif (isinstance(p, Categorical)):
+            #        task_dtype=task_dtype+', U100'
+            #task_dtype=task_dtype[2:]
+            #print ("task_dtype: ", task_dtype)
+
+            #tuning_dtype=''
+            #for p in self.problem.PS.dimensions:
+            #    if (isinstance(p, Real)):
+            #        tuning_dtype=tuning_dtype+', float64'
+            #    elif (isinstance(p, Integer)):
+            #        tuning_dtype=tuning_dtype+', int32'
+            #    elif (isinstance(p, Categorical)):
+            #        tuning_dtype=tuning_dtype+', U100'
+            #tuning_dtype=tuning_dtype[2:]
+            #print ("tuning_dtype: ", tuning_dtype)
+
+            task_parameter_names = [self.problem.IS[k].name for k in range(len(self.problem.IS))]
+            tuning_parameter_names = [self.problem.PS[k].name for k in range(len(self.problem.PS))]
+            output_names = [self.problem.OS[k].name for k in range(len(self.problem.OS))]
+
+            print ("task_parameter_names: ", task_parameter_names)
+            print ("tuning_parameter_names: ", tuning_parameter_names)
+            print ("output_names: ", output_names)
+            print ("Igiven: ", Igiven)
+
+            input_task = []
+            for task_parameter_name in task_parameter_names:
+                input_task.append(point[task_parameter_name])
+            print (input_task)
+
+            tid = -1
+            for i in range(len(Igiven)):
+                is_equal = True
+                for j in range(len(Igiven[i])):
+                    if Igiven[i][j] != input_task[j]:
+                        is_equal = False
+                if (is_equal):
+                    tid = i
+                    break
+            if tid == -1:
+                print ("[Error] cannot find model for the given input task: ", input_task)
+                return None
+
+            input_tuning_parameters = []
+            for tuning_parameter_name in tuning_parameter_names:
+                input_tuning_parameters.append(point[tuning_parameter_name])
+            #print (input_tuning_parameters)
+
+            ret = {}
+
+            for o in range(self.problem.DO):
+                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters),tid)
+                #print ("mu: ", mu)
+
+                ret[output_names[o]] = np.array(mu).tolist()
+
+            return ret
+
+        return (modelers, model_function)
 
     def MLA_LoadModel(self, NS = 0, Igiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
