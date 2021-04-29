@@ -173,12 +173,12 @@ def main():
 		""" Print all input and parameter samples """
 		for tid in range(NI):
 			print("tid: %d"%(tid))
-			print("    matrix:%s freq:%f"%(data.I[tid][0],data.I[tid][1]))
+			print("    model:%s freq:%f"%(data.I[tid][0],data.I[tid][1]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid])
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], f'Oopt  {min(data.O[tid])[0]:.3f}', 'nth ', np.argmin(data.O[tid]))
 			results_file.write(f"tid: {tid:d}\n")
-			results_file.write(f"    matrix:{data.I[tid][0]:s} freq:{data.I[tid][1]:f}\n")
+			results_file.write(f"    model:{data.I[tid][0]:s} freq:{data.I[tid][1]:f}\n")
 			# results_file.write(f"    Ps {data.P[tid]}\n")
 			results_file.write(f"    Os {data.O[tid].tolist()}\n")
 			# results_file.write(f'    Popt {data.P[tid][np.argmin(data.O[tid])]}  Oopt {-min(data.O[tid])[0]}  nth {np.argmin(data.O[tid])}\n')
@@ -199,7 +199,7 @@ def main():
 		""" Print all input and parameter samples """
 		for tid in range(NI):
 			print("tid: %d" % (tid))
-			print("    matrix:%s freq:%f"%(data.I[tid][0],data.I[tid][1]))
+			print("    model:%s freq:%f"%(data.I[tid][0],data.I[tid][1]))
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			nth = np.argmin(data.O[tid])
@@ -213,7 +213,7 @@ def main():
 					pass
 			print('    Popt ', Popt, 'Oopt ', min(data.O[tid])[0], 'nth ', nth, 'nth-bandit (s, nth) = ', (arm_opt, idx))
 			results_file.write(f"tid: {tid:d}\n")
-			results_file.write(f"    matrix:{data.I[tid][0]:s} freq:{data.I[tid][1]:f}\n")
+			results_file.write(f"    model:{data.I[tid][0]:s} freq:{data.I[tid][1]:f}\n")
 			# results_file.write(f"    Ps {data.P[tid]}\n")
 			results_file.write(f"    Os {data.O[tid].tolist()}\n")
 			# results_file.write(f'    Popt {data.P[tid][np.argmin(data.O[tid])]}  Oopt {-min(data.O[tid])[0]}  nth {np.argmin(data.O[tid])}\n')
