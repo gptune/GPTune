@@ -85,6 +85,8 @@ class GPTune(object):
             tmp=[]
             for x in self.data.P:
                 xNorm = self.problem.PS.transform(x)
+                print ("X: ", x)
+                print ("xNorm: ", xNorm)
                 tmp.append(xNorm)
             self.data.P=tmp
         if self.data.I is not None:
@@ -192,12 +194,17 @@ class GPTune(object):
             input_tuning_parameters = []
             for tuning_parameter_name in tuning_parameter_names:
                 input_tuning_parameters.append(point[tuning_parameter_name])
-            #print (input_tuning_parameters)
+            print ("input_tuning_parameters")
+            print (input_tuning_parameters)
+            input_tuning_parameters_transformed = self.problem.PS.transform([input_tuning_parameters])
+            print ("input_tuning_parameters_transformed")
+            print (input_tuning_parameters_transformed)
 
             ret = {}
 
             for o in range(self.problem.DO):
-                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters),tid)
+                #(mu, var) = modelers[o].predict(np.array(input_tuning_parameters),tid)
+                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed[0]),tid)
                 #print ("mu: ", mu)
 
                 ret[output_names[o]] = np.array(mu).tolist()

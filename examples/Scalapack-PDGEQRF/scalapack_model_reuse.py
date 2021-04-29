@@ -38,39 +38,39 @@ import math
 
 ################################################################################
 
-''' The objective function required by GPTune. '''
-# should always use this name for user-defined objective function
-def objectives(point):
-
-######################################### 
-##### constants defined in TuningProblem
-    nodes = point['nodes']
-    cores = point['cores']
-    bunit = point['bunit']	
-#########################################
-
-    m = point['m']
-    n = point['n']
-    mb = point['mb']*bunit
-    nb = point['nb']*bunit
-    p = point['p']
-    npernode = 2**point['npernode']
-    nproc = nodes*npernode
-    nthreads = int(cores / npernode)  
-
-    # this becomes useful when the parameters returned by TLA1 do not respect the constraints
-    if(nproc == 0 or p == 0 or nproc < p):
-        print('Warning: wrong parameters for objective function!!!')
-        return 1e12
-    q = int(nproc / p)
-    nproc = p*q
-    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
-
-    print(params, ' scalapack starts ') 
-    elapsedtime = pdqrdriver(params, niter=2, JOBID=JOBID)
-    print(params, ' scalapack time: ', elapsedtime)
-
-    return elapsedtime
+#''' The objective function required by GPTune. '''
+## should always use this name for user-defined objective function
+#def objectives(point):
+#
+########################################## 
+###### constants defined in TuningProblem
+#    nodes = point['nodes']
+#    cores = point['cores']
+#    bunit = point['bunit']	
+##########################################
+#
+#    m = point['m']
+#    n = point['n']
+#    mb = point['mb']*bunit
+#    nb = point['nb']*bunit
+#    p = point['p']
+#    npernode = 2**point['npernode']
+#    nproc = nodes*npernode
+#    nthreads = int(cores / npernode)  
+#
+#    # this becomes useful when the parameters returned by TLA1 do not respect the constraints
+#    if(nproc == 0 or p == 0 or nproc < p):
+#        print('Warning: wrong parameters for objective function!!!')
+#        return 1e12
+#    q = int(nproc / p)
+#    nproc = p*q
+#    params = [('QR', m, n, nodes, cores, mb, nb, nthreads, nproc, p, q, 1., npernode)]
+#
+#    print(params, ' scalapack starts ') 
+#    elapsedtime = pdqrdriver(params, niter=2, JOBID=JOBID)
+#    print(params, ' scalapack time: ', elapsedtime)
+#
+#    return elapsedtime
 
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
@@ -90,18 +90,9 @@ def main():
     nmax = args.nmax
     ntask = args.ntask
     nprocmin_pernode = args.nprocmin_pernode
-    nrun = args.nrun
-    truns = args.truns
-    tla = args.tla
-    JOBID = args.jobid
-    TUNER_NAME = args.optimization
 
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-
-    os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = TUNER_NAME
-    os.system("mkdir -p scalapack-driver/bin/%s; cp ../../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
 
     nprocmax = nodes*cores
 
@@ -125,23 +116,12 @@ def main():
     constants={"nodes":nodes,"cores":cores,"bunit":bunit}
     print(IS, PS, OS, constraints)
 
-    problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
+    problem = TuningProblem(IS, PS, OS, None, constraints, None, constants=constants)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """
     options = Options()
-    options['model_processes'] = 1
-    # options['model_threads'] = 1
-    options['model_restarts'] = 1
-    # options['search_multitask_processes'] = 1
-    # options['model_restart_processes'] = 1
-    # options['model_restart_threads'] = 1
-    options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = False
-    # options['mpi_comm'] = None
     options['model_class'] = 'Model_LCM'
-    options['verbose'] = False
-    options.validate(computer=computer)
 
     seed(1)
     if ntask == 1:
@@ -153,63 +133,27 @@ def main():
     # giventask = [[177, 1303],[367, 381]]
     ntask=len(giventask)
     
-
     data = Data(problem)
-    if(TUNER_NAME=='GPTune'):
+    gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+    (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
+    " A quick validation"
+    ret = model_function({
+        "m": giventask[0][0],
+        "n": giventask[0][1],
+        "mb": 16,
+        "nb": 16,
+        "npernode": 5,
+        "p": 13})
+    print ("func return: ", ret)
 
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-
-        """ Building MLA with the given list of tasks """
-        NI = len(giventask)
-        NS = nrun
-        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
-        print("stats: ", stats)
-
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-        if(tla==1):
-            """ Call TLA for 2 new tasks using the constructed LCM model"""
-            newtask = [[400, 500], [800, 600]]
-            (aprxopts, objval, stats) = gt.TLA1(newtask, NS=None)
-            print("stats: ", stats)
-
-            """ Print the optimal parameters and function evaluations"""
-            for tid in range(len(newtask)):
-                print("new task: %s" % (newtask[tid]))
-                print('    predicted Popt: ', aprxopts[tid], ' objval: ', objval[tid])
-
-
-    if(TUNER_NAME=='opentuner'):
-        NI = len(giventask)
-        NS = nrun
-        (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-
-    if(TUNER_NAME=='hpbandster'):
-        NI = len(giventask)
-        NS = nrun
-        (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
-        print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+    ret = model_function({
+        "m": giventask[0][0],
+        "n": giventask[0][1],
+        "mb": 1,
+        "nb": 1,
+        "npernode": 1,
+        "p": 1})
+    print ("func return: ", ret)
 
 def parse_args():
 
@@ -233,12 +177,9 @@ def parse_args():
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
 
-
-
     args = parser.parse_args()
 
     return args
-
 
 if __name__ == "__main__":
     main()

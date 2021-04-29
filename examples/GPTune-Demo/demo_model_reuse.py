@@ -112,10 +112,8 @@ def main():
     (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
 
     " A quick validation"
-    print (model_function({"t": 1.0, "x": 0.05}))
-    (mu, var) = models[0].predict(np.array([0.05]), 0)
-    print ("GP model")
-    print (mu, var)
+    ret = model_function({"t": 1.0, "x": 0.137})
+    print ("func return: ", ret)
 
 #    for tid in [0, 1]:
 #        for p in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]:
