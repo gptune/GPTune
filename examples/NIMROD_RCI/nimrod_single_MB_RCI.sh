@@ -221,3 +221,8 @@ end=`date +%s`
 runtime=$((end-start))
 echo "Total tuning time: $runtime"
 
+if [ $optimization = 'GPTuneBand' ];then
+ntask=1
+expname=nimrod_ntask${ntask}_bandit${bmin}-${bmax}-${eta}_Nloop${Nloop}
+python parse_GPTuneBand_db.py -ntask ${ntask} -save_path ${expname}_expid${expid} -database "./gptune.db/NIMROD.json" -r "time"
+fi
