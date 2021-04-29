@@ -26,6 +26,7 @@ fi
 
 export GPTUNEROOT=$PWD
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
+export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/autotune/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/GPTune/
@@ -41,13 +42,13 @@ cd -
 # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
 
 
-mmax=40000
-nmax=40000
+mmax=4000
+nmax=4000
 
 ntask=1
 nrun=20
 nprocmin_pernode=1
 
-cp .gptune/configs/cori.json .gptune/meta.json
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./scalapack_MLA.py -nprocmin_pernode ${nprocmin_pernode} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out_scalapck_MLA_ntask${ntask}_nrun${nrun}_oversubscribe
+cp .gptune/configs/cori-haswell-openmpi-gnu.json .gptune/meta.json
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_MLA.py -nprocmin_pernode ${nprocmin_pernode} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out_scalapck_MLA_ntask${ntask}_nrun${nrun}_oversubscribe
 

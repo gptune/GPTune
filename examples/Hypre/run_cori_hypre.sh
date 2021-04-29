@@ -63,15 +63,15 @@ cd -
 
 
 
-nxmax=400
-nymax=400
-nzmax=400
+nxmax=100
+nymax=100
+nzmax=100
 ntask=1
 nrun=10
-nprocmin_pernode=32  # nprocmin_pernode=cores means flat MPI 
+nprocmin_pernode=1  # nprocmin_pernode=cores means flat MPI
 
 # test hypredriver, the following calling sequence will first dump the data to file when using GPTune, then read data when using opentuner or hpbandster to make sure they use the same tasks as GPTune
 tuner='GPTune'
-cp .gptune/configs/cori.json .gptune/meta.json
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -jobid 0 -optimization ${tuner}   2>&1 | tee a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_ntask${ntask}_nrun${nrun}_${tuner}
+cp .gptune/configs/cori-haswell-openmpi-gnu.json .gptune/meta.json
+mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./hypre.py -nxmax ${nxmax} -nymax ${nymax} -nzmax ${nzmax} -nprocmin_pernode ${nprocmin_pernode} -ntask ${ntask} -nrun ${nrun} -optimization ${tuner}   2>&1 | tee a.out_hypre_ML_nxmax${nxmax}_nymax${nymax}_nzmax${nzmax}_ntask${ntask}_nrun${nrun}_${tuner}
 

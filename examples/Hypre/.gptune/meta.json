@@ -1,8 +1,8 @@
 {
     "tuning_problem_name": "Hypre",
     "machine_configuration": {
-        "machine_name": "mymachine",
-        "myprocessor": {
+        "machine_name": "Cori",
+        "haswell": {
             "nodes": 1,
             "cores": 32
         }
@@ -19,8 +19,8 @@
         }
     },
     "loadable_machine_configurations": {
-        "mymachine" : {
-            "myprocessor": {
+        "Cori" : {
+            "haswell": {
                 "nodes":1,
                 "cores":32
             }
