@@ -409,6 +409,11 @@ class HistoryDB(dict):
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray):
+
+        print ("update_func_eval")
+        print ("problem.constants")
+        print (problem.constants)
+
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
 
@@ -456,6 +461,7 @@ class HistoryDB(dict):
                             for k in range(len(problem.IS))},
                         "tuning_parameter":{problem.PS[k].name:tuning_parameter_orig_list[k]
                             for k in range(len(problem.PS))},
+                        "constants":problem.constants,
                         "machine_configuration":self.machine_configuration,
                         "software_configuration":self.software_configuration,
                         "evaluation_result":{problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k]
@@ -786,6 +792,9 @@ class HistoryDB(dict):
         for i in range(space_len):
             dict_ = {}
 
+            dict_["name"] = space[i].name
+            print ("space[i] name: ", space[i].name)
+
             space_type_name = type(space[i]).__name__
 
             if space_type_name == "Real":
@@ -839,7 +848,7 @@ class HistoryDB(dict):
             #model_stats["gradients_average_abs"] = np.average(np.absolute(gradients))
             #model_stats["gradients_hmean_abs"] = hmean(np.absolute(gradients))
             #model_stats["gradients_gmean_abs"] = gmean(np.absolute(gradients))
-            model_stats["iteration"] = iteration
+            model_stats["iterations"] = iteration
 
             gradients_list = gradients.tolist()
 

@@ -85,8 +85,6 @@ class GPTune(object):
             tmp=[]
             for x in self.data.P:
                 xNorm = self.problem.PS.transform(x)
-                print ("X: ", x)
-                print ("xNorm: ", xNorm)
                 tmp.append(xNorm)
             self.data.P=tmp
         if self.data.I is not None:
@@ -141,29 +139,6 @@ class GPTune(object):
 
         def model_function(point):
 
-            ## get the types of each parameter
-            #task_dtype=''
-            #for p in self.problem.IS.dimensions:
-            #    if (isinstance(p, Real)):
-            #        task_dtype=task_dtype+', float64'
-            #    elif (isinstance(p, Integer)):
-            #        task_dtype=task_dtype+', int32'
-            #    elif (isinstance(p, Categorical)):
-            #        task_dtype=task_dtype+', U100'
-            #task_dtype=task_dtype[2:]
-            #print ("task_dtype: ", task_dtype)
-
-            #tuning_dtype=''
-            #for p in self.problem.PS.dimensions:
-            #    if (isinstance(p, Real)):
-            #        tuning_dtype=tuning_dtype+', float64'
-            #    elif (isinstance(p, Integer)):
-            #        tuning_dtype=tuning_dtype+', int32'
-            #    elif (isinstance(p, Categorical)):
-            #        tuning_dtype=tuning_dtype+', U100'
-            #tuning_dtype=tuning_dtype[2:]
-            #print ("tuning_dtype: ", tuning_dtype)
-
             task_parameter_names = [self.problem.IS[k].name for k in range(len(self.problem.IS))]
             tuning_parameter_names = [self.problem.PS[k].name for k in range(len(self.problem.PS))]
             output_names = [self.problem.OS[k].name for k in range(len(self.problem.OS))]
@@ -203,9 +178,7 @@ class GPTune(object):
             ret = {}
 
             for o in range(self.problem.DO):
-                #(mu, var) = modelers[o].predict(np.array(input_tuning_parameters),tid)
                 (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed[0]),tid)
-                #print ("mu: ", mu)
 
                 ret[output_names[o]] = np.array(mu).tolist()
 
