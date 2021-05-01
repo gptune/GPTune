@@ -1217,3 +1217,96 @@ class GPTune_MB(object):
             print('data1_hist.O = ', data1_hist.O)
             
         return (copy.deepcopy(self.data), stats, data1_hist)
+
+def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None):
+
+    meta_data = {}
+
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path) as f_in:
+                meta_data.update(json.load(f_in))
+        except:
+            print ("[Error] not able to get model load configuration from path")
+
+    if meta_dict != None:
+        try:
+            meta_data.update(meta_dict)
+        except:
+            print ("[Error] not able to get model load configuration from dict")
+
+    input_space_info = meta_data["problem_space"]["input_space"]
+    parameter_space_info = meta_data["problem_space"]["parameter_space"]
+    output_space_info = meta_data["problem_space"]["output_space"]
+
+    input_space_arr = []
+    for input_space_info in meta_data["problem_space"]["input_space"]:
+        name_ = input_space_info["name"]
+        type_ = input_space_info["type"]
+        transformer_ = input_space_info["transformer"]
+        lower_bound_ = input_space_info["lower_bound"]
+        upper_bound_ = input_space_info["upper_bound"]
+
+        if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            input_space_arr.append(input_space)
+        elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            input_space_arr.append(input_space)
+        elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+            input_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            input_space_arr.append(input_space)
+    IS = Space(input_space_arr)
+
+    parameter_space_arr = []
+    for parameter_space_info in meta_data["problem_space"]["parameter_space"]:
+        name_ = parameter_space_info["name"]
+        type_ = parameter_space_info["type"]
+        transformer_ = parameter_space_info["transformer"]
+        lower_bound_ = parameter_space_info["lower_bound"]
+        upper_bound_ = parameter_space_info["upper_bound"]
+
+        if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            parameter_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            parameter_space_arr.append(parameter_space)
+        elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            parameter_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            parameter_space_arr.append(parameter_space)
+        elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+            parameter_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            parameter_space_arr.append(parameter_space)
+    PS = Space(parameter_space_arr)
+
+    output_space_arr = []
+    for output_space_info in meta_data["problem_space"]["output_space"]:
+        name_ = output_space_info["name"]
+        type_ = output_space_info["type"]
+        transformer_ = parameter_space_info["transformer"]
+        lower_bound_ = output_space_info["lower_bound"]
+        upper_bound_ = output_space_info["upper_bound"]
+
+        if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            output_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            output_space_arr.append(output_space)
+        elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            output_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            output_space_arr.append(output_space)
+        elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+            output_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            output_space_arr.append(output_space)
+    OS = Space(output_space_arr)
+
+    problem = TuningProblem(IS, PS, OS, objective=None, constraints=None, models=None, constants=None)
+    computer = Computer(nodes=1, cores=2) # number of nodes/cores is not actually used when reproducing only surrogate models
+    data = Data(problem)
+    options = Options()
+    if "modeler" in meta_data:
+        options['model_class'] = meta_data['modeler']
+    else:
+        options['model_class'] = 'Model_LCM'
+    gt = GPTune(problem, computer=computer, data=data, options=options)
+
+    task_parameters = meta_data["task_parameters"]
+    (models, model_function) = gt.LoadSurrogateModel(Igiven = task_parameters, method = "max_evals")
+
+    return (models, model_function)

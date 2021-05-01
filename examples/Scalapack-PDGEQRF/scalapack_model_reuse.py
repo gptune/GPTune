@@ -81,61 +81,65 @@ def cst3(npernode,p,nodes):
 
 def main():
 
-    global JOBID
+#    global JOBID
+#
+#    # Parse command line arguments
+#    args = parse_args()
+#
+#    mmax = args.mmax
+#    nmax = args.nmax
+#    ntask = args.ntask
+#    nprocmin_pernode = args.nprocmin_pernode
+#
+#    (machine, processor, nodes, cores) = GetMachineConfiguration()
+#    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+#
+#    nprocmax = nodes*cores
+#
+#    bunit=8     # the block size is multiple of bunit
+#    mmin=128
+#    nmin=128
+#
+#    m = Integer(mmin, mmax, transform="normalize", name="m")
+#    n = Integer(nmin, nmax, transform="normalize", name="n")
+#    mb = Integer(1, 16, transform="normalize", name="mb")
+#    nb = Integer(1, 16, transform="normalize", name="nb")
+#    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+#    p = Integer(1, nprocmax, transform="normalize", name="p")
+#    r = Real(float("-Inf"), float("Inf"), name="r")
+#
+#    IS = Space([m, n])
+#    PS = Space([mb, nb, npernode, p])
+#    OS = Space([r])
+#    
+#    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+#    constants={"nodes":nodes,"cores":cores,"bunit":bunit}
+#    print(IS, PS, OS, constraints)
+#
+#    problem = TuningProblem(IS, PS, OS, None, constraints, None, constants=constants)
+#    computer = Computer(nodes=nodes, cores=cores, hosts=None)
+#
+#    """ Set and validate options """
+#    options = Options()
+#    options['model_class'] = 'Model_LCM'
+#
+#    seed(1)
+#    if ntask == 1:
+#        giventask = [[mmax,nmax]]
+#    else:
+#        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+#    # # giventask = [[2000, 2000]]
+#    # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
+#    # giventask = [[177, 1303],[367, 381]]
+#    ntask=len(giventask)
+#    
+#    data = Data(problem)
+#    gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+#    (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
 
-    # Parse command line arguments
-    args = parse_args()
+    (models, model_function) = LoadSurrogateModelFunction()
 
-    mmax = args.mmax
-    nmax = args.nmax
-    ntask = args.ntask
-    nprocmin_pernode = args.nprocmin_pernode
-
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-
-    nprocmax = nodes*cores
-
-    bunit=8     # the block size is multiple of bunit
-    mmin=128
-    nmin=128
-
-    m = Integer(mmin, mmax, transform="normalize", name="m")
-    n = Integer(nmin, nmax, transform="normalize", name="n")
-    mb = Integer(1, 16, transform="normalize", name="mb")
-    nb = Integer(1, 16, transform="normalize", name="nb")
-    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
-    p = Integer(1, nprocmax, transform="normalize", name="p")
-    r = Real(float("-Inf"), float("Inf"), name="r")
-
-    IS = Space([m, n])
-    PS = Space([mb, nb, npernode, p])
-    OS = Space([r])
-    
-    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
-    constants={"nodes":nodes,"cores":cores,"bunit":bunit}
-    print(IS, PS, OS, constraints)
-
-    problem = TuningProblem(IS, PS, OS, None, constraints, None, constants=constants)
-    computer = Computer(nodes=nodes, cores=cores, hosts=None)
-
-    """ Set and validate options """
-    options = Options()
-    options['model_class'] = 'Model_LCM'
-
-    seed(1)
-    if ntask == 1:
-        giventask = [[mmax,nmax]]
-    else:
-        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
-    # # giventask = [[2000, 2000]]
-    # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
-    # giventask = [[177, 1303],[367, 381]]
-    ntask=len(giventask)
-    
-    data = Data(problem)
-    gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-    (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
+    giventask = [[4000, 4000]]
     " A quick validation"
     ret = model_function({
         "m": giventask[0][0],

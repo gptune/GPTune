@@ -789,11 +789,14 @@ class HistoryDB(dict):
 
         space_len = len(space)
 
+        transformers = space.get_transformer()
+
         for i in range(space_len):
             dict_ = {}
 
             dict_["name"] = space[i].name
-            print ("space[i] name: ", space[i].name)
+
+            dict_["transformer"] = transformers[i]
 
             space_type_name = type(space[i]).__name__
 
