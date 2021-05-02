@@ -518,7 +518,7 @@ class HistoryDB(dict):
 
         return
 
-    def is_model_problem_match(self, surrogate_model : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
+    def check_model_problem_match(self, surrogate_model : dict, tuningproblem : TuningProblem, input_given : np.ndarray):
         model_task_parameters = surrogate_model["task_parameters"]
         input_task_parameters = input_given
         if len(model_task_parameters) != len(input_task_parameters):
@@ -531,40 +531,52 @@ class HistoryDB(dict):
                 if model_task_parameters[i][j] != input_task_parameters[i][j]:
                     return False
 
-        IS_model = surrogate_model["problem_space"]["input_space"]
+        IS_model = surrogate_model["input_space"]
         IS_given = self.problem_space_to_dict(tuningproblem.input_space)
         if len(IS_model) != len(IS_given):
             return False
         for i in range(len(IS_given)):
+            if IS_model[i]["name"] != IS_given[i]["name"]:
+                return False
+            if IS_model[i]["type"] != IS_given[i]["type"]:
+                return False
+            if IS_model[i]["transformer"] != IS_given[i]["transformer"]:
+                return False
             if IS_model[i]["lower_bound"] != IS_given[i]["lower_bound"]:
                 return False
             if IS_model[i]["upper_bound"] != IS_given[i]["upper_bound"]:
                 return False
-            if IS_model[i]["type"] != IS_given[i]["type"]:
-                return False
 
-        PS_model = surrogate_model["problem_space"]["parameter_space"]
+        PS_model = surrogate_model["parameter_space"]
         PS_given = self.problem_space_to_dict(tuningproblem.parameter_space)
         if len(PS_model) != len(PS_given):
             return False
         for i in range(len(PS_given)):
+            if PS_model[i]["name"] != PS_given[i]["name"]:
+                return False
+            if PS_model[i]["type"] != PS_given[i]["type"]:
+                return False
+            if PS_model[i]["transformer"] != PS_given[i]["transformer"]:
+                return False
             if PS_model[i]["lower_bound"] != PS_given[i]["lower_bound"]:
                 return False
             if PS_model[i]["upper_bound"] != PS_given[i]["upper_bound"]:
                 return False
-            if PS_model[i]["type"] != PS_given[i]["type"]:
-                return False
 
-        OS_model = surrogate_model["problem_space"]["output_space"]
+        OS_model = surrogate_model["output_space"]
         OS_given = self.problem_space_to_dict(tuningproblem.output_space)
         if len(OS_model) != len(OS_given):
             return False
         for i in range(len(OS_given)):
+            if OS_model[i]["name"] != OS_given[i]["name"]:
+                return False
+            if OS_model[i]["type"] != OS_given[i]["type"]:
+                return False
+            if OS_model[i]["transformer"] != OS_given[i]["transformer"]:
+                return False
             if OS_model[i]["lower_bound"] != OS_given[i]["lower_bound"]:
                 return False
             if OS_model[i]["upper_bound"] != OS_given[i]["upper_bound"]:
-                return False
-            if OS_model[i]["type"] != OS_given[i]["type"]:
                 return False
 
         return True
@@ -600,7 +612,7 @@ class HistoryDB(dict):
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(num_models):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.is_model_problem_match(surrogate_model, tuningproblem, Igiven) and
+                    if (self.check_model_problem_match(surrogate_model, tuningproblem, Igiven) and
                         surrogate_model["modeler"] == modeler):
                         ret.append(surrogate_model)
 
@@ -629,7 +641,7 @@ class HistoryDB(dict):
                 max_mle_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                    if (self.check_model_problem_match(surrogate_model, tuningproblem, input_given) and
                             surrogate_model["modeler"] == modeler and
                             surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
@@ -640,7 +652,11 @@ class HistoryDB(dict):
                 hyperparameters =\
                         history_data["surrogate_model"][max_mle_index]["hyperparameters"]
 
-        return hyperparameters
+                parameter_names = []
+                for parameter_info in history_db["surrogate_model"][max_mle_index]["parameter_space"]:
+                    parameter_names.append(parameter_info["name"])
+
+        return (hyperparameters, parameter_names)
 
     def load_AIC_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
@@ -665,7 +681,7 @@ class HistoryDB(dict):
                 min_aic_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                    if (self.check_model_problem_match(surrogate_model, tuningproblem, input_given) and
                             surrogate_model["modeler"] == modeler and
                             surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
@@ -678,7 +694,11 @@ class HistoryDB(dict):
                 hyperparameters =\
                         history_data["surrogate_model"][min_aic_index]["hyperparameters"]
 
-        return hyperparameters
+                parameter_names = []
+                for parameter_info in history_db["surrogate_model"][min_aic_index]["parameter_space"]:
+                    parameter_names.append(parameter_info["name"])
+
+        return (hyperparameters, parameter_names)
 
     def load_BIC_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
@@ -705,12 +725,12 @@ class HistoryDB(dict):
                 min_bic_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                    if (self.check_model_problem_match(surrogate_model, tuningproblem, input_given) and
                             surrogate_model["modeler"] == modeler and
                             surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
                         num_parameters = len(surrogate_model["hyperparameters"])
-                        num_samples = len(surrogate_model["func_eval"])
+                        num_samples = len(surrogate_model["function_evaluations"])
                         BIC = -1.0 * 2.0 * log_likelihood + num_parameters * math.log(num_samples)
                         if BIC < min_bic:
                             min_bic = BIC
@@ -719,7 +739,11 @@ class HistoryDB(dict):
                 hyperparameters =\
                         history_data["surrogate_model"][min_bic_index]["hyperparameters"]
 
-        return hyperparameters
+                parameter_names = []
+                for parameter_info in history_db["surrogate_model"][min_bic_index]["parameter_space"]:
+                    parameter_names.append(parameter_info["name"])
+
+        return (hyperparameters, parameter_names)
 
     def load_max_evals_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
@@ -744,19 +768,22 @@ class HistoryDB(dict):
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.is_model_problem_match(surrogate_model, tuningproblem, input_given) and
+                    if (self.check_model_problem_match(surrogate_model, tuningproblem, input_given) and
                             surrogate_model["modeler"] == modeler and
                             surrogate_model["objective_id"] == objective):
-                        num_evals = len(history_data["surrogate_model"][i]["func_eval"])
+                        num_evals = len(history_data["surrogate_model"][i]["function_evaluations"])
                         if num_evals > max_evals:
                             max_evals = num_evals
                             max_evals_index = i
 
                 hyperparameters =\
                         history_data["surrogate_model"][max_evals_index]["hyperparameters"]
-                print ("loaded hyperparameters: ", hyperparameters)
 
-        return hyperparameters
+                parameter_names = []
+                for parameter_info in history_data["surrogate_model"][max_evals_index]["parameter_space"]:
+                    parameter_names.append(parameter_info["name"])
+
+        return (hyperparameters, parameter_names)
 
     def load_surrogate_model_hyperparameters_by_uid(self, model_uid):
         if (self.tuning_problem_name is not None):
@@ -855,20 +882,26 @@ class HistoryDB(dict):
 
             gradients_list = gradients.tolist()
 
-            problem_space = {}
-            problem_space["input_space"] = self.problem_space_to_dict(problem.IS)
-            problem_space["parameter_space"] = self.problem_space_to_dict(problem.PS)
-            problem_space["output_space"] = self.problem_space_to_dict(problem.OS)
+            #problem_space = {}
+            #problem_space["input_space"] = self.problem_space_to_dict(problem.IS)
+            #problem_space["parameter_space"] = self.problem_space_to_dict(problem.PS)
+            #problem_space["output_space"] = self.problem_space_to_dict(problem.OS)
 
             task_parameter_orig = problem.IS.inverse_transform(np.array(input_given, ndmin=2))
             task_parameter_orig_list = np.array(task_parameter_orig).tolist()
+            #task_parameter_dict_list = []
+            #for i in range(len(input_given)):
+            #    task_parameter_dict = {problem.IS[k].name:task_parameter_orig_list[i][k] for k in range(len(problem.IS))}
+            #    task_parameter_dict_list.append(task_parameter_dict)
 
             new_surrogate_models.append({
                     "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
-                    "func_eval":self.uids,
                     "task_parameters":task_parameter_orig_list,
-                    "problem_space":problem_space,
+                    "function_evaluations":self.uids,
+                    "input_space":self.problem_space_to_dict(problem.IS),
+                    "parameter_space":self.problem_space_to_dict(problem.PS),
+                    "output_space":self.problem_space_to_dict(problem.OS),
                     "modeler":"Model_LCM",
                     "objective_id":objective,
                     "time":{

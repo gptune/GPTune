@@ -41,7 +41,7 @@ from filelock import Timeout, FileLock
 
 class GPTune(object):
 
-    def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
+    def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, historydb : HistoryDB = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
 
         """
         tuningproblem: object defining the characteristics of the tuning (See file 'autotuner/autotuner/tuningproblem.py')
@@ -63,17 +63,15 @@ class GPTune(object):
         if (options is None):
             options = Options()
         self.options  = options
-        self.history_db = HistoryDB()
+        if (historydb is None):
+            historydb = HistoryDB()
+        self.historydb = historydb
 
-    def LoadSurrogateModels(self, tuningproblem = None, Igiven = None, modeler="Model_LCM"):
-
-        return
-
-    def LoadSurrogateModel(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
+    def LoadSurrogateModelFunction(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
 
         """ Load history function evaluation data """
 
-        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
 
         """ Update data space """
 
@@ -116,22 +114,22 @@ class GPTune(object):
             if model_uid == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
                 if method == "max_evals":
-                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
-                    hyperparameters = self.history_db.load_MLE_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
-                    hyperparameters = self.history_db.load_AIC_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
-                    hyperparameters = self.history_db.load_BIC_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 else:
-                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
             else:
-                hyperparameters = self.history_db.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
+                (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
 
             modelers[i].gen_model_from_hyperparameters(self.data,
                     hyperparameters,
@@ -168,17 +166,31 @@ class GPTune(object):
 
             input_tuning_parameters = []
             for tuning_parameter_name in tuning_parameter_names:
+            #for tuning_parameter_name in tuning_parameter_names_model_order:
                 input_tuning_parameters.append(point[tuning_parameter_name])
             print ("input_tuning_parameters")
             print (input_tuning_parameters)
-            input_tuning_parameters_transformed = self.problem.PS.transform([input_tuning_parameters])
+            input_tuning_parameters_transformed = self.problem.PS.transform([input_tuning_parameters])[0]
             print ("input_tuning_parameters_transformed")
             print (input_tuning_parameters_transformed)
+
+            #tuning_parameter_names_model_order = parameter_names
+            #print ("tuning_parameter_names_model_order")
+            #print (tuning_parameter_names_model_order)
+            #input_tuning_parameters_transformed_reordered = []
+            #for parameter_name in tuning_parameter_names_model_order:
+            #    print ("parameter_name: ", parameter_name)
+            #    print ("index: ", tuning_parameter_names.index(parameter_name))
+            #    print ("val: ", input_tuning_parameters_transformed[tuning_parameter_names.index(parameter_name)])
+            #    input_tuning_parameters_transformed_reordered.append(
+            #            input_tuning_parameters_transformed[tuning_parameter_names.index(parameter_name)])
+            #print ("input_tuning_parameters_transformed_reordered")
+            #print (input_tuning_parameters_transformed_reordered)
 
             ret = {}
 
             for o in range(self.problem.DO):
-                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed[0]),tid)
+                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed),tid)
 
                 ret[output_names[o]] = np.array(mu).tolist()
 
@@ -201,7 +213,7 @@ class GPTune(object):
         time_model=0
 
         """ Load history function evaluation data """
-        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         if (self.data.P is not None):
@@ -252,22 +264,22 @@ class GPTune(object):
             if model_uids == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
                 if method == "max_evals":
-                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
-                    hyperparameters = self.history_db.load_MLE_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
-                    hyperparameters = self.history_db.load_AIC_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
-                    hyperparameters = self.history_db.load_BIC_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
                 else:
-                    hyperparameters = self.history_db.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, self.data.I, i, kwargs["model_class"])
             else:
-                hyperparameters = self.history_db.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
+                (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
             modelers[i].gen_model_from_hyperparameters(self.data,
                     hyperparameters,
                     **kwargs)
@@ -327,7 +339,7 @@ class GPTune(object):
                         (bestxopt, neg_log_marginal_likelihood,
                                 gradients, iteration) = \
                             modelers[o].train(data = tmpdata, **kwargs)
-                        self.history_db.update_model_LCM(
+                        self.historydb.update_model_LCM(
                                 o,
                                 self.problem,
                                 self.data.I,
@@ -364,7 +376,7 @@ class GPTune(object):
                     I = newdata.I,
                     P = newdata.P,
                     D = newdata.D,
-                    history_db = self.history_db,
+                    history_db = self.historydb,
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
@@ -402,7 +414,7 @@ class GPTune(object):
         time_model=0
 
         """ Load history function evaluation data """
-        self.history_db.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -452,7 +464,7 @@ class GPTune(object):
             self.data.I = self.problem.IS.transform(self.data.I)
 
         if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
-            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.history_db, options = kwargs)
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.historydb, options = kwargs)
 
         sampler = eval(f'{kwargs["sample_class"]}()')
         if (self.data.I is None):
@@ -487,7 +499,7 @@ class GPTune(object):
 
         t1 = time.time_ns()
         if (NSmin<NS1):
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.history_db, options = kwargs)
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -550,7 +562,7 @@ class GPTune(object):
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
                         modelers[o].train(data = tmpdata, **kwargs)
-                    self.history_db.update_model_LCM(
+                    self.historydb.update_model_LCM(
                             o,
                             self.problem,
                             self.data.I,
@@ -589,7 +601,7 @@ class GPTune(object):
                     I = newdata.I,
                     P = newdata.P,
                     D = newdata.D,
-                    history_db = self.history_db,
+                    history_db = self.historydb,
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
@@ -612,8 +624,8 @@ class GPTune(object):
         return (copy.deepcopy(self.data), modelers, stats)
 
     def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
-        if self.history_db.history_db is True:
-            if self.history_db.load_func_eval == True and self.history_db.load_surrogate_model == True:
+        if self.historydb.history_db is True:
+            if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
@@ -717,7 +729,7 @@ class GPTune(object):
 
 #         t1 = time.time_ns()
 #         if (NSmin<NS1):
-#             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.history_db, options = kwargs)
+#             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
 #             if(NSmin==0): # no existing tuning data is available
 #                 self.data.O = tmpO
 #                 self.data.P = tmpP
@@ -819,7 +831,7 @@ class GPTune(object):
 #     #            if (self.mpi_rank == 0):
 
 #             t1 = time.time_ns()
-#             newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, history_db = self.history_db, options = kwargs)
+#             newdata.O = self.computer.evaluate_objective(problem = self.problem, I = newdata.I, P = newdata.P, D = newdata.D, history_db = self.historydb, options = kwargs)
 #             t2 = time.time_ns()
 #             time_fun = time_fun + (t2-t1)/1e9
 #     #                if ((self.mpi_comm is not None) and (self.mpi_size > 1)):
@@ -929,7 +941,7 @@ class GPTune(object):
             # InewNormList.append(InewNorms[i,:])
 
         t1 = time.time_ns()
-        O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, history_db = self.history_db, options = kwargs)
+        O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, history_db = self.historydb, options = kwargs)
         t2 = time.time_ns()
         time_fun = time_fun + (t2-t1)/1e9
 
@@ -1235,12 +1247,12 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
         except:
             print ("[Error] not able to get model load configuration from dict")
 
-    input_space_info = meta_data["problem_space"]["input_space"]
-    parameter_space_info = meta_data["problem_space"]["parameter_space"]
-    output_space_info = meta_data["problem_space"]["output_space"]
+    input_space_info = meta_data["input_space"]
+    parameter_space_info = meta_data["parameter_space"]
+    output_space_info = meta_data["output_space"]
 
     input_space_arr = []
-    for input_space_info in meta_data["problem_space"]["input_space"]:
+    for input_space_info in meta_data["input_space"]:
         name_ = input_space_info["name"]
         type_ = input_space_info["type"]
         transformer_ = input_space_info["transformer"]
@@ -1259,7 +1271,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     IS = Space(input_space_arr)
 
     parameter_space_arr = []
-    for parameter_space_info in meta_data["problem_space"]["parameter_space"]:
+    for parameter_space_info in meta_data["parameter_space"]:
         name_ = parameter_space_info["name"]
         type_ = parameter_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
@@ -1278,7 +1290,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     PS = Space(parameter_space_arr)
 
     output_space_arr = []
-    for output_space_info in meta_data["problem_space"]["output_space"]:
+    for output_space_info in meta_data["output_space"]:
         name_ = output_space_info["name"]
         type_ = output_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
@@ -1307,6 +1319,6 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     gt = GPTune(problem, computer=computer, data=data, options=options)
 
     task_parameters = meta_data["task_parameters"]
-    (models, model_function) = gt.LoadSurrogateModel(Igiven = task_parameters, method = "max_evals")
+    (models, model_function) = gt.LoadSurrogateModelFunction(Igiven = task_parameters, method = "max_evals")
 
     return (models, model_function)
