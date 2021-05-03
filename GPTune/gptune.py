@@ -67,7 +67,7 @@ class GPTune(object):
             historydb = HistoryDB()
         self.historydb = historydb
 
-    def LoadSurrogateModelFunction(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
+    def LoadSurrogateModel(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
 
         """ Load history function evaluation data """
 
@@ -1247,12 +1247,31 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
         except:
             print ("[Error] not able to get model load configuration from dict")
 
-    input_space_info = meta_data["input_space"]
-    parameter_space_info = meta_data["parameter_space"]
-    output_space_info = meta_data["output_space"]
+    input_space_given = meta_data["input_space"]
+    parameter_space_given = meta_data["parameter_space"]
+    output_space_given = meta_data["output_space"]
+    task_parameters_given = meta_data["task_parameters"]
+
+    if "modeler" in meta_data:
+        modeler = meta_data['modeler']
+    else:
+        modeler = 'Model_LCM'
+
+    historydb = HistoryDB()
+    model_data = historydb.load_surrogate_model_meta_data(
+            task_parameters_given,
+            input_space_given,
+            parameter_space_given,
+            output_space_given,
+            0,
+            modeler)
+
+    input_space_info = model_data["input_space"]
+    parameter_space_info = model_data["parameter_space"]
+    output_space_info = model_data["output_space"]
 
     input_space_arr = []
-    for input_space_info in meta_data["input_space"]:
+    for input_space_info in model_data["input_space"]:
         name_ = input_space_info["name"]
         type_ = input_space_info["type"]
         transformer_ = input_space_info["transformer"]
@@ -1271,7 +1290,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     IS = Space(input_space_arr)
 
     parameter_space_arr = []
-    for parameter_space_info in meta_data["parameter_space"]:
+    for parameter_space_info in model_data["parameter_space"]:
         name_ = parameter_space_info["name"]
         type_ = parameter_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
@@ -1290,7 +1309,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     PS = Space(parameter_space_arr)
 
     output_space_arr = []
-    for output_space_info in meta_data["output_space"]:
+    for output_space_info in model_data["output_space"]:
         name_ = output_space_info["name"]
         type_ = output_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
@@ -1312,13 +1331,13 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     computer = Computer(nodes=1, cores=2) # number of nodes/cores is not actually used when reproducing only surrogate models
     data = Data(problem)
     options = Options()
-    if "modeler" in meta_data:
-        options['model_class'] = meta_data['modeler']
+    if "modeler" in model_data:
+        options['model_class'] = model_data['modeler']
     else:
         options['model_class'] = 'Model_LCM'
     gt = GPTune(problem, computer=computer, data=data, options=options)
 
-    task_parameters = meta_data["task_parameters"]
-    (models, model_function) = gt.LoadSurrogateModelFunction(Igiven = task_parameters, method = "max_evals")
+    task_parameters = model_data["task_parameters"]
+    (models, model_function) = gt.LoadSurrogateModel(Igiven = task_parameters, method = "max_evals")
 
-    return (models, model_function)
+    return (model_function)
