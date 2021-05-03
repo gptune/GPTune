@@ -163,6 +163,7 @@ def main():
         NI = len(giventask)
         NS = nrun
         (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+        #(data, model, stats) = gt.MLA_LoadModel(NS=10, Igiven=giventask)
         print("stats: ", stats)
 
         """ Print all input and parameter samples """

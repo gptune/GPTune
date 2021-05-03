@@ -521,9 +521,17 @@ class HistoryDB(dict):
     def check_surrogate_model_problem_match(self,
             surrogate_model : dict,
             task_parameters_given: np.array,
-            input_space_given: Space,
-            parameter_space_given: Space,
-            output_space_given: Space):
+            input_space_given: list,
+            parameter_space_given: list,
+            output_space_given: list):
+
+        #print ("check_surrogate_model_problem_match")
+        #print ("surrogate_model: ", surrogate_model)
+        #print ("task_parameters_given: ", task_parameters_given)
+        #print ("input_space_given: ", input_space_given)
+        #print ("parameter_space_given: ", parameter_space_given)
+        #print ("output_space_given: ", output_space_given)
+
         model_task_parameters = surrogate_model["task_parameters"]
         if len(model_task_parameters) != len(task_parameters_given):
             return False
@@ -610,9 +618,9 @@ class HistoryDB(dict):
                     if (self.check_surrogate_model_problem_match(
                         surrogate_model,
                         Igiven,
-                        tuningproblem.input_space,
-                        tuningproblem.parameter_space,
-                        tuningproblem.output_space) and
+                        self.problem_space_to_dict(tuningproblem.input_space),
+                        self.problem_space_to_dict(tuningproblem.parameter_space),
+                        self.problem_space_to_dict(tuningproblem.output_space)) and
                         surrogate_model["modeler"] == modeler):
                         ret.append(surrogate_model)
 
@@ -644,15 +652,18 @@ class HistoryDB(dict):
                     if (self.check_surrogate_model_problem_match(
                         surrogate_model,
                         input_given,
-                        tuningproblem.input_space,
-                        tuningproblem.parameter_space,
-                        tuningproblem.output_space) and
+                        self.problem_space_to_dict(tuningproblem.input_space),
+                        self.problem_space_to_dict(tuningproblem.parameter_space),
+                        self.problem_space_to_dict(tuningproblem.output_space)) and
                         surrogate_model["modeler"] == modeler and
                         surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
                         if log_likelihood > max_mle:
                             max_mle = log_likelihood
                             max_mle_index = i
+                if (max_mle_index == -1):
+                    print ("Unable to find a model")
+                    return None
 
                 hyperparameters =\
                         history_data["surrogate_model"][max_mle_index]["hyperparameters"]
@@ -689,9 +700,9 @@ class HistoryDB(dict):
                     if (self.check_surrogate_model_problem_match(
                         surrogate_model,
                         input_given,
-                        tuningproblem.input_space,
-                        tuningproblem.parameter_space,
-                        tuningproblem.output_space) and
+                        self.problem_space_to_dict(tuningproblem.input_space),
+                        self.problem_space_to_dict(tuningproblem.parameter_space),
+                        self.problem_space_to_dict(tuningproblem.output_space)) and
                         surrogate_model["modeler"] == modeler and
                         surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
@@ -700,6 +711,9 @@ class HistoryDB(dict):
                         if AIC < min_aic:
                             min_aic = AIC
                             min_aic_index = i
+                if (min_aic_index == -1):
+                    print ("Unable to find a model")
+                    return None
 
                 hyperparameters =\
                         history_data["surrogate_model"][min_aic_index]["hyperparameters"]
@@ -738,9 +752,9 @@ class HistoryDB(dict):
                     if (self.check_surrogate_model_problem_match(
                         surrogate_model,
                         input_given,
-                        tuningproblem.input_space,
-                        tuningproblem.parameter_space,
-                        tuningproblem.output_space) and
+                        self.problem_space_to_dict(tuningproblem.input_space),
+                        self.problem_space_to_dict(tuningproblem.parameter_space),
+                        self.problem_space_to_dict(tuningproblem.output_space)) and
                         surrogate_model["modeler"] == modeler and
                         surrogate_model["objective_id"] == objective):
                         log_likelihood = surrogate_model["log_likelihood"]
@@ -750,6 +764,9 @@ class HistoryDB(dict):
                         if BIC < min_bic:
                             min_bic = BIC
                             min_bic_index = i
+                if (min_bic_index == -1):
+                    print ("Unable to find a model")
+                    return None
 
                 hyperparameters =\
                         history_data["surrogate_model"][min_bic_index]["hyperparameters"]
@@ -786,15 +803,18 @@ class HistoryDB(dict):
                     if (self.check_surrogate_model_problem_match(
                         surrogate_model,
                         input_given,
-                        tuningproblem.input_space,
-                        tuningproblem.parameter_space,
-                        tuningproblem.output_space) and
+                        self.problem_space_to_dict(tuningproblem.input_space),
+                        self.problem_space_to_dict(tuningproblem.parameter_space),
+                        self.problem_space_to_dict(tuningproblem.output_space)) and
                         surrogate_model["modeler"] == modeler and
                         surrogate_model["objective_id"] == objective):
                         num_evals = len(history_data["surrogate_model"][i]["function_evaluations"])
                         if num_evals > max_evals:
                             max_evals = num_evals
                             max_evals_index = i
+                if (max_evals_index == -1):
+                    print ("Unable to find a model")
+                    return None
 
                 hyperparameters =\
                         history_data["surrogate_model"][max_evals_index]["hyperparameters"]
@@ -832,10 +852,10 @@ class HistoryDB(dict):
         return []
 
     def load_surrogate_model_meta_data(self,
-            input_space_given: Space,
-            parameter_space_given: Space,
-            output_space_given: Space,
-            task_parameters_given: Space,
+            task_parameters_given: np.ndarray,
+            input_space_given: dict,
+            parameter_space_given: dict,
+            output_space_given: dict,
             objective: int,
             modeler: str):
             #tuningproblem : TuningProblem,
@@ -873,10 +893,14 @@ class HistoryDB(dict):
                         if num_evals > max_evals:
                             max_evals = num_evals
                             max_evals_index = i
+                if (max_evals_index == -1):
+                    print ("Unable to find a surrogate model")
+                    return None
 
         return history_data["surrogate_model"][max_evals_index]
 
     def problem_space_to_dict(self, space : Space):
+
         dict_arr = []
 
         space_len = len(space)

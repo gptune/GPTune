@@ -69,6 +69,8 @@ class GPTune(object):
 
     def LoadSurrogateModel(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
 
+        print ("LoadSurrogateModel: ", Igiven)
+
         """ Load history function evaluation data """
 
         self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
@@ -115,19 +117,19 @@ class GPTune(object):
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
                 if method == "max_evals":
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
                     (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
                     (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
                     (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 else:
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
             else:
                 (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
 
@@ -263,21 +265,23 @@ class GPTune(object):
             # - not considering edge cases (e.g. no model is available)
             if model_uids == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
+
                 if method == "max_evals":
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
                     (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
                     (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
                     (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
                 else:
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, self.data.I, i, kwargs["model_class"])
+                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+
             else:
                 (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
             modelers[i].gen_model_from_hyperparameters(self.data,
@@ -1312,7 +1316,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     for output_space_info in model_data["output_space"]:
         name_ = output_space_info["name"]
         type_ = output_space_info["type"]
-        transformer_ = parameter_space_info["transformer"]
+        transformer_ = output_space_info["transformer"]
         lower_bound_ = output_space_info["lower_bound"]
         upper_bound_ = output_space_info["upper_bound"]
 
