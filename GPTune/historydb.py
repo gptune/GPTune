@@ -518,19 +518,12 @@ class HistoryDB(dict):
 
         return
 
-    def check_surrogate_model_problem_match(self,
+    def check_surrogate_model_exact_match(self,
             surrogate_model : dict,
             task_parameters_given: np.array,
             input_space_given: list,
             parameter_space_given: list,
             output_space_given: list):
-
-        #print ("check_surrogate_model_problem_match")
-        #print ("surrogate_model: ", surrogate_model)
-        #print ("task_parameters_given: ", task_parameters_given)
-        #print ("input_space_given: ", input_space_given)
-        #print ("parameter_space_given: ", parameter_space_given)
-        #print ("output_space_given: ", output_space_given)
 
         model_task_parameters = surrogate_model["task_parameters"]
         if len(model_task_parameters) != len(task_parameters_given):
@@ -542,6 +535,72 @@ class HistoryDB(dict):
             for j in range(len(task_parameters_given[i])):
                 if model_task_parameters[i][j] != task_parameters_given[i][j]:
                     return False
+
+        for space_model in surrogate_model["input_space"]:
+            space_given = next((item for item in input_space_given if item["name"] == space_model["name"]), None)
+            if space_given == None:
+                return False
+            if space_model["type"] != space_given["type"]:
+                return False
+            if space_model["transformer"] != space_given["transformer"]:
+                return False
+            if space_model["lower_bound"] != space_given["lower_bound"]:
+                return False
+            if space_model["upper_bound"] != space_given["upper_bound"]:
+                return False
+
+        for space_model in surrogate_model["parameter_space"]:
+            space_given = next((item for item in parameter_space_given if item["name"] == space_model["name"]), None)
+            if space_given == None:
+                return False
+            if space_model["type"] != space_given["type"]:
+                return False
+            if space_model["transformer"] != space_given["transformer"]:
+                return False
+            if space_model["lower_bound"] != space_given["lower_bound"]:
+                return False
+            if space_model["upper_bound"] != space_given["upper_bound"]:
+                return False
+
+        for space_model in surrogate_model["output_space"]:
+            space_given = next((item for item in output_space_given if item["name"] == space_model["name"]), None)
+            if space_given == None:
+                return False
+            if space_model["type"] != space_given["type"]:
+                return False
+            if space_model["transformer"] != space_given["transformer"]:
+                return False
+            if space_model["lower_bound"] != space_given["lower_bound"]:
+                return False
+            if space_model["upper_bound"] != space_given["upper_bound"]:
+                return False
+
+        return True
+
+    def check_surrogate_model_usable(self,
+            surrogate_model : dict,
+            task_parameters_given: np.array,
+            input_space_given: list,
+            parameter_space_given: list,
+            output_space_given: list):
+
+        #print ("check_surrogate_model_exact_match")
+        #print ("surrogate_model: ", surrogate_model)
+        #print ("task_parameters_given: ", task_parameters_given)
+        #print ("input_space_given: ", input_space_given)
+        #print ("parameter_space_given: ", parameter_space_given)
+        #print ("output_space_given: ", output_space_given)
+
+        model_task_parameters = surrogate_model["task_parameters"]
+        task_parameter_names_given = [item["name"] for item in input_space_given]
+        task_parameter_names_model = [item["name"] for item in surrogate_model["input_space"]]
+        for input_task in task_parameters_given:
+            input_task_ordered = [
+                    input_task[task_parameter_names_given.index(name)]
+                    for name in task_parameter_names_model]
+            if not input_task_ordered in model_task_parameters:
+                print ("[HistoryDB] Task information is not found")
+                return False
 
         for space_model in surrogate_model["input_space"]:
             space_given = next((item for item in input_space_given if item["name"] == space_model["name"]), None)
@@ -615,7 +674,7 @@ class HistoryDB(dict):
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(num_models):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(
+                    if (self.check_surrogate_model_exact_match(
                         surrogate_model,
                         Igiven,
                         self.problem_space_to_dict(tuningproblem.input_space),
@@ -649,7 +708,7 @@ class HistoryDB(dict):
                 max_mle_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(
+                    if (self.check_surrogate_model_exact_match(
                         surrogate_model,
                         input_given,
                         self.problem_space_to_dict(tuningproblem.input_space),
@@ -697,7 +756,7 @@ class HistoryDB(dict):
                 min_aic_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(
+                    if (self.check_surrogate_model_exact_match(
                         surrogate_model,
                         input_given,
                         self.problem_space_to_dict(tuningproblem.input_space),
@@ -749,7 +808,7 @@ class HistoryDB(dict):
                 min_bic_index = -1
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(
+                    if (self.check_surrogate_model_exact_match(
                         surrogate_model,
                         input_given,
                         self.problem_space_to_dict(tuningproblem.input_space),
@@ -800,7 +859,7 @@ class HistoryDB(dict):
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(
+                    if (self.check_surrogate_model_exact_match(
                         surrogate_model,
                         input_given,
                         self.problem_space_to_dict(tuningproblem.input_space),
@@ -881,7 +940,7 @@ class HistoryDB(dict):
                 max_evals_index = -1 # TODO: if no model is found?
                 for i in range(len(history_data["surrogate_model"])):
                     surrogate_model = history_data["surrogate_model"][i]
-                    if (self.check_surrogate_model_problem_match(surrogate_model,
+                    if (self.check_surrogate_model_usable(surrogate_model,
                         task_parameters_given,
                         input_space_given,
                         parameter_space_given,

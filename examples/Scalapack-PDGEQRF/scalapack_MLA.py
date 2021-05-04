@@ -146,6 +146,8 @@ def main():
     seed(1)
     if ntask == 1:
         giventask = [[mmax,nmax]]
+    elif ntask == 2:
+        giventask = [[mmax,nmax],[int(mmax/2),int(nmax/2)]]
     else:
         giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
     # # giventask = [[2000, 2000]]
