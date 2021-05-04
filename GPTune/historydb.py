@@ -408,7 +408,8 @@ class HistoryDB(dict):
     def update_func_eval(self, problem : Problem,\
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
-            evaluation_result : np.ndarray):
+            evaluation_result : np.ndarray,\
+            source : str = "measure"):
 
         print ("update_func_eval")
         print ("problem.constants")
@@ -466,6 +467,7 @@ class HistoryDB(dict):
                         "software_configuration":self.software_configuration,
                         "evaluation_result":{problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k]
                             for k in range(len(problem.OS))},
+                        "source": source,
                         "time":{
                             "tm_year":now.tm_year,
                             "tm_mon":now.tm_mon,

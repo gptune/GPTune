@@ -196,6 +196,8 @@ class GPTune(object):
 
                 ret[output_names[o]] = np.array(mu).tolist()
 
+            ret["source"] = "model_function"
+
             return ret
 
         return (modelers, model_function)

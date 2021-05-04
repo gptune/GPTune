@@ -107,18 +107,36 @@ class Computer(object):
                 D2 = None
             if(options['RCI_mode']==False):    
                 O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+                source = "measure"
+
+                if len(O2)>0 and type(O2[0]) == type({}):
+                    source = O2[0]["source"]
+
+                    O2_ = []
+                    for O2_each in O2:
+                        O2_.append([O2_each[problem.OS[k].name] for k in range(len(problem.OS))])
+                    O2 = O2_
+
                 tmp = np.array(O2).reshape((len(O2), problem.DO))
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+
+                if history_db is not None:
+                    history_db.update_func_eval(problem = problem,\
+                            task_parameter = I[i], \
+                            tuning_parameter = P[i],\
+                            evaluation_result = tmp,\
+                            source = source)
+
             else:
                 tmp = np.empty( shape=(len(P2), problem.DO))
                 tmp[:] = np.NaN
                 O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
-            
-            if history_db is not None:
-                history_db.update_func_eval(problem = problem,\
-                        task_parameter = I[i], \
-                        tuning_parameter = P[i],\
-                        evaluation_result = tmp)
+
+                if history_db is not None:
+                    history_db.update_func_eval(problem = problem,\
+                            task_parameter = I[i], \
+                            tuning_parameter = P[i],\
+                            evaluation_result = tmp)
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
