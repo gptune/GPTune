@@ -121,7 +121,7 @@ class Computer(object):
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
                 if history_db is not None:
-                    history_db.update_func_eval(problem = problem,\
+                    history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
                             tuning_parameter = P[i],\
                             evaluation_result = tmp,\
@@ -133,7 +133,7 @@ class Computer(object):
                 O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
 
                 if history_db is not None:
-                    history_db.update_func_eval(problem = problem,\
+                    history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
                             tuning_parameter = P[i],\
                             evaluation_result = tmp)

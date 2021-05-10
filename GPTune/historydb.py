@@ -69,6 +69,54 @@ def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
     #return (machine_configuration)
     return (machine_name, processor_model, nodes, cores)
 
+def GetMachineConfigurationDict(meta_description_path = "./.gptune/meta.json"):
+    import ast
+
+    machine_configuration = {}
+
+    if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+        try:
+            machine_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_MACHINE_CONFIGURATION', '{}'))
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    elif os.path.exists(meta_description_path):
+        try:
+            with open(meta_description_path) as f_in:
+                gptune_metadata = json.load(f_in)
+                machine_configuration = gptune_metadata['machine_configuration']
+        except:
+            print ("[HistoryDB] not able to get machine configuration")
+
+    else:
+        print ("[HistoryDB] not able to get machine configuration")
+
+    return (machine_configuration)
+
+def GetSoftwareConfigurationDict(meta_description_path = "./.gptune/meta.json"):
+    import ast
+
+    software_configuration = {}
+
+    if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
+        try:
+            software_configuration = ast.literal_eval(os.environ.get('CKGPTUNE_SOFTWARE_CONFIGURATION', '{}'))
+        except:
+            print ("[HistoryDB] not able to get software configuration")
+
+    elif os.path.exists(meta_description_path):
+        try:
+            with open(meta_description_path) as f_in:
+                gptune_metadata = json.load(f_in)
+                software_configuration = gptune_metadata['software_configuration']
+        except:
+            print ("[HistoryDB] not able to get software configuration")
+
+    else:
+        print ("[HistoryDB] not able to get software configuration")
+
+    return (software_configuration)
+
 def search_item_by_uid(dict_arr, uid):
 
     for item in dict_arr:
@@ -501,13 +549,13 @@ class HistoryDB(dict):
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
 
-    def update_func_eval(self, problem : Problem,\
+    def store_func_eval(self, problem : Problem,\
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
             source : str = "measure"):
 
-        print ("update_func_eval")
+        print ("store_func_eval")
         print ("problem.constants")
         print (problem.constants)
 
@@ -553,16 +601,29 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuple(tuning_parameter_orig),dtype=tuning_dtype).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
 
+                task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
+                tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
+                constants_store = problem.constants
+                machine_configuration_store = self.machine_configuration
+                software_configuration_store = self.software_configuration
+                evaluation_result_store = { problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k] for k in range(len(problem.OS)) }
+
+                if "machine_configuration" in task_parameter_store:
+                    import ast
+                    machine_configuration_store = ast.literal_eval(task_parameter_store["machine_configuration"])
+                    del task_parameter_store["machine_configuration"]
+                if "software_configuration" in task_parameter_store:
+                    import ast
+                    software_configuration_store = ast.literal_eval(task_parameter_store["software_configuration"])
+                    del task_parameter_store["software_configuration"]
+
                 new_function_evaluation_results.append({
-                        "task_parameter":{problem.IS[k].name:task_parameter_orig_list[k]
-                            for k in range(len(problem.IS))},
-                        "tuning_parameter":{problem.PS[k].name:tuning_parameter_orig_list[k]
-                            for k in range(len(problem.PS))},
-                        "constants":problem.constants,
-                        "machine_configuration":self.machine_configuration,
-                        "software_configuration":self.software_configuration,
-                        "evaluation_result":{problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k]
-                            for k in range(len(problem.OS))},
+                        "task_parameter":task_parameter_store,
+                        "tuning_parameter":tuning_parameter_store,
+                        "constants":constants_store,
+                        "machine_configuration":machine_configuration_store,
+                        "software_configuration":software_configuration_store,
+                        "evaluation_result":evaluation_result_store,
                         "source": source,
                         "time":{
                             "tm_year":now.tm_year,
@@ -1170,7 +1231,7 @@ class HistoryDB(dict):
 
         return dict_arr
 
-    def update_model_LCM(self,\
+    def store_model_LCM(self,\
             objective : int,
             problem : Problem,\
             input_given : np.ndarray,\

@@ -326,7 +326,7 @@ class GPTune(object):
                         (bestxopt, neg_log_marginal_likelihood,
                                 gradients, iteration) = \
                             modelers[o].train(data = tmpdata, **kwargs)
-                        self.historydb.update_model_LCM(
+                        self.historydb.store_model_LCM(
                                 o,
                                 self.problem,
                                 self.data.I,
@@ -549,7 +549,7 @@ class GPTune(object):
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
                         modelers[o].train(data = tmpdata, **kwargs)
-                    self.historydb.update_model_LCM(
+                    self.historydb.store_model_LCM(
                             o,
                             self.problem,
                             self.data.I,
