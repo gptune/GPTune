@@ -66,7 +66,16 @@ def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
     else:
         print ("[HistoryDB] not able to get machine configuration")
 
+    #return (machine_configuration)
     return (machine_name, processor_model, nodes, cores)
+
+def search_item_by_uid(dict_arr, uid):
+
+    for item in dict_arr:
+        if (item["uid"] == uid):
+            return item
+
+    return None
 
 class HistoryDB(dict):
 
@@ -405,6 +414,93 @@ class HistoryDB(dict):
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
 
+    def load_model_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, model_data : dict):
+        """ Init history database JSON file """
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            if os.path.exists(json_data_path):
+                print ("[HistoryDB] Found a history database file")
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
+                        history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
+                else:
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+
+                num_tasks = len(Igiven)
+
+                num_loaded_data = 0
+
+                PS_history = [[] for i in range(num_tasks)]
+                OS_history = [[] for i in range(num_tasks)]
+
+                # Assume that all function evaluations of the surrogate model are in the database file
+                for func_eval_uid in model_data["function_evaluations"]:
+                    func_eval = search_item_by_uid(history_data["func_eval"], func_eval_uid)
+                    parameter_arr = []
+                    for k in range(len(problem.PS)):
+                        if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                            parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                        elif type(problem.PS[k]).__name__ == "Integer":
+                            parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                        elif type(problem.PS[k]).__name__ == "Real":
+                            parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                        else:
+                            parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                    task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                    PS_history[task_id].append(parameter_arr)
+                    OS_history[task_id].append(\
+                        [func_eval["evaluation_result"][problem.OS[k].name] \
+                        for k in range(len(problem.OS))])
+                    num_loaded_data += 1
+
+                if (num_loaded_data > 0):
+                    data.I = Igiven #IS_history
+                    data.P = PS_history
+                    data.O=[] # YL: OS is a list of 2D numpy arrays
+                    for i in range(len(OS_history)):
+                        if(len(OS_history[i])==0):
+                            data.O.append(np.empty( shape=(0, problem.DO)))
+                        else:
+                            data.O.append(np.array(OS_history[i]))
+                            if(any(ele==[None] for ele in OS_history[i])):
+                                print ("history data contains null function values")
+                                exit()
+                else:
+                    print ("no history data has been loaded")
+            else:
+                print ("[HistoryDB] Create a JSON file at " + json_data_path)
+
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "surrogate_model":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+                elif self.file_synchronization_method == 'rsync':
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    with open(temp_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
+                else:
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+
     def update_func_eval(self, problem : Problem,\
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
@@ -586,7 +682,7 @@ class HistoryDB(dict):
             parameter_space_given: list,
             output_space_given: list):
 
-        #print ("check_surrogate_model_exact_match")
+        #print ("check_surrogate_model_usable")
         #print ("surrogate_model: ", surrogate_model)
         #print ("task_parameters_given: ", task_parameters_given)
         #print ("input_space_given: ", input_space_given)
@@ -612,10 +708,10 @@ class HistoryDB(dict):
                 return False
             if space_model["transformer"] != space_given["transformer"]:
                 return False
-            if space_model["lower_bound"] != space_given["lower_bound"]:
-                return False
-            if space_model["upper_bound"] != space_given["upper_bound"]:
-                return False
+            #if space_model["lower_bound"] != space_given["lower_bound"]:
+            #    return False
+            #if space_model["upper_bound"] != space_given["upper_bound"]:
+            #    return False
 
         for space_model in surrogate_model["parameter_space"]:
             space_given = next((item for item in parameter_space_given if item["name"] == space_model["name"]), None)
@@ -625,10 +721,10 @@ class HistoryDB(dict):
                 return False
             if space_model["transformer"] != space_given["transformer"]:
                 return False
-            if space_model["lower_bound"] != space_given["lower_bound"]:
-                return False
-            if space_model["upper_bound"] != space_given["upper_bound"]:
-                return False
+            #if space_model["lower_bound"] != space_given["lower_bound"]:
+            #    return False
+            #if space_model["upper_bound"] != space_given["upper_bound"]:
+            #    return False
 
         for space_model in surrogate_model["output_space"]:
             space_given = next((item for item in output_space_given if item["name"] == space_model["name"]), None)
@@ -638,10 +734,10 @@ class HistoryDB(dict):
                 return False
             if space_model["transformer"] != space_given["transformer"]:
                 return False
-            if space_model["lower_bound"] != space_given["lower_bound"]:
-                return False
-            if space_model["upper_bound"] != space_given["upper_bound"]:
-                return False
+            #if space_model["lower_bound"] != space_given["lower_bound"]:
+            #    return False
+            #if space_model["upper_bound"] != space_given["upper_bound"]:
+            #    return False
 
         return True
 
@@ -914,6 +1010,7 @@ class HistoryDB(dict):
 
     def load_surrogate_model_meta_data(self,
             task_parameters_given: np.ndarray,
+            tuning_configuration: dict,
             input_space_given: dict,
             parameter_space_given: dict,
             output_space_given: dict,
@@ -950,15 +1047,86 @@ class HistoryDB(dict):
                         surrogate_model["modeler"] == modeler and
                         surrogate_model["objective_id"] == objective):
 
-                        num_evals = len(history_data["surrogate_model"][i]["function_evaluations"])
-                        if num_evals > max_evals:
-                            max_evals = num_evals
-                            max_evals_index = i
+                        tuning_configuration_match = True
+                        for func_eval_uid in surrogate_model["function_evaluations"]:
+                            func_eval = search_item_by_uid(history_data["func_eval"], func_eval_uid)
+                            #print ("tuning_configuration (machine): ", tuning_configuration["machine_configuration"])
+                            #print ("func_eval (machine):            ", func_eval["machine_configuration"])
+                            if tuning_configuration != None:
+                                if str(tuning_configuration["machine_configuration"]) != str(func_eval["machine_configuration"]):
+                                    #print ("not same")
+                                    tuning_configuration_match = False
+                                    break
+                                #else:
+                                #    print ("same")
+
+                            #if tuning_configuration != None and tuning_configuration["software_configuration"] != func_eval["software_configuration"]:
+                            #    tuning_configuration_match = False
+                            #    break
+                        if tuning_configuration_match:
+                            num_evals = len(history_data["surrogate_model"][i]["function_evaluations"])
+                            if num_evals > max_evals:
+                                max_evals = num_evals
+                                max_evals_index = i
                 if (max_evals_index == -1):
                     print ("Unable to find a surrogate model")
                     return None
 
         return history_data["surrogate_model"][max_evals_index]
+
+    def load_surrogate_model_configurations(self,
+            task_parameters_given: np.ndarray,
+            input_space_given: dict,
+            parameter_space_given: dict,
+            output_space_given: dict,
+            loadable_machine_configurations: dict,
+            loadable_software_configurations: dict,
+            objective: int,
+            modeler: str):
+
+        model_configurations = []
+
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            if os.path.exists(json_data_path):
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                elif self.file_synchronization_method == 'rsync':
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
+                        history_data = json.load(f_in)
+                    os.system("rm " + temp_path)
+                else:
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+
+                for surrogate_model in history_data["surrogate_model"]:
+
+                    if (self.check_surrogate_model_usable(surrogate_model,
+                        task_parameters_given,
+                        input_space_given,
+                        parameter_space_given,
+                        output_space_given) and
+                        surrogate_model["modeler"] == modeler and
+                        surrogate_model["objective_id"] == objective):
+                        #print (surrogate_model)
+
+                        for func_eval_uid in surrogate_model["function_evaluations"]:
+                            func_eval = search_item_by_uid(history_data["func_eval"], func_eval_uid)
+
+                            configuration = {
+                                    "task_parameters": surrogate_model["task_parameters"],
+                                    "machine_configuration": func_eval["machine_configuration"],
+                                    "software_configuration": func_eval["software_configuration"]
+                                    }
+
+                            if configuration not in model_configurations:
+                                model_configurations.append(configuration)
+
+        return (model_configurations)
 
     def problem_space_to_dict(self, space : Space):
 

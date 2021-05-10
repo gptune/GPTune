@@ -3,7 +3,7 @@
     "machine_configuration": {
         "machine_name": "Cori",
         "haswell": {
-            "nodes": 4,
+            "nodes": 8,
             "cores": 32
         }
     },
@@ -21,7 +21,7 @@
     "loadable_machine_configurations": {
         "Cori" : {
             "haswell": {
-                "nodes":4,
+                "nodes":8,
                 "cores":32
             }
         }

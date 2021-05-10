@@ -3,8 +3,8 @@
   "modeler": "Model_LCM",
   "task_parameters": [
     [
-      4000,
-      4000
+      10000,
+      10000
     ]
   ],
   "input_space": [
@@ -13,14 +13,14 @@
       "type": "int",
       "transformer": "normalize",
       "lower_bound": 128,
-      "upper_bound": 4000
+      "upper_bound": 10000
     },
     {
       "name": "n",
       "type": "int",
       "transformer": "normalize",
       "lower_bound": 128,
-      "upper_bound": 4000
+      "upper_bound": 10000
     }
   ],
   "parameter_space": [
@@ -61,5 +61,25 @@
       "lower_bound": -Infinity,
       "upper_bound": Infinity
     }
-  ]
+  ],
+  "loadable_machine_configurations": {
+    "Cori" : {
+      "haswell": {
+        "nodes":[1,8],
+        "cores":32
+      }
+    }
+  },
+  "loadable_software_configurations": {
+    "openmpi": {
+      "version_from":[4,0,1],
+      "version_to":[5,0,0]
+    },
+    "scalapack":{
+      "version_split":[2,1,0]
+    },
+    "gcc": {
+      "version_split": [8,3,0]
+    }
+  }
 }

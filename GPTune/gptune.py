@@ -57,9 +57,6 @@ class GPTune(object):
         if (data is None):
             data = Data(self.problem)
         self.data     = data
-        # print (self.data.I)
-        # print (self.data.P)
-        # print (self.data.O)
         if (options is None):
             options = Options()
         self.options  = options
@@ -67,13 +64,14 @@ class GPTune(object):
             historydb = HistoryDB()
         self.historydb = historydb
 
-    def LoadSurrogateModel(self, Igiven = None, method = "max_evals", model_uid = None, **kwargs):
+    def LoadSurrogateModel(self, model_data : dict, **kwargs):
 
-        print ("LoadSurrogateModel: ", Igiven)
+        Igiven = model_data["task_parameters"]
 
         """ Load history function evaluation data """
 
-        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_model_func_eval(data = self.data, problem = self.problem,
+                Igiven = Igiven, model_data = model_data)
 
         """ Update data space """
 
@@ -110,31 +108,8 @@ class GPTune(object):
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 
         for i in range(self.problem.DO):
-            # current limitations
-            # - workf for only Model_LCM
-            # - not considering edge cases (e.g. no model is available)
-            if model_uid == None:
-                #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
-                if method == "max_evals":
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
-                elif method == "MLE" or method == "mle":
-                    (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
-                elif method == "AIC" or method == "aic":
-                    (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
-                elif method == "BIC" or method == "bic":
-                    (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
-                else:
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
-            else:
-                (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
-
             modelers[i].gen_model_from_hyperparameters(self.data,
-                    hyperparameters,
+                    model_data["hyperparameters"],
                     **kwargs)
 
         def model_function(point):
@@ -143,15 +118,14 @@ class GPTune(object):
             tuning_parameter_names = [self.problem.PS[k].name for k in range(len(self.problem.PS))]
             output_names = [self.problem.OS[k].name for k in range(len(self.problem.OS))]
 
-            print ("task_parameter_names: ", task_parameter_names)
-            print ("tuning_parameter_names: ", tuning_parameter_names)
-            print ("output_names: ", output_names)
-            print ("Igiven: ", Igiven)
+            #print ("task_parameter_names: ", task_parameter_names)
+            #print ("tuning_parameter_names: ", tuning_parameter_names)
+            #print ("output_names: ", output_names)
+            #print ("Igiven: ", Igiven)
 
             input_task = []
             for task_parameter_name in task_parameter_names:
                 input_task.append(point[task_parameter_name])
-            print (input_task)
 
             tid = -1
             for i in range(len(Igiven)):
@@ -166,15 +140,14 @@ class GPTune(object):
                 print ("[Error] cannot find model for the given input task: ", input_task)
                 return None
 
+            bound_checked = True
+
             input_tuning_parameters = []
             for tuning_parameter_name in tuning_parameter_names:
-            #for tuning_parameter_name in tuning_parameter_names_model_order:
+                lower_bound, upper_bound = self.problem.PS.bounds[tuning_parameter_names.index(tuning_parameter_name)]
+                if point[tuning_parameter_name] < lower_bound or point[tuning_parameter_name] > upper_bound:
+                    bound_checked = False
                 input_tuning_parameters.append(point[tuning_parameter_name])
-            print ("input_tuning_parameters")
-            print (input_tuning_parameters)
-            input_tuning_parameters_transformed = self.problem.PS.transform([input_tuning_parameters])[0]
-            print ("input_tuning_parameters_transformed")
-            print (input_tuning_parameters_transformed)
 
             #tuning_parameter_names_model_order = parameter_names
             #print ("tuning_parameter_names_model_order")
@@ -191,10 +164,18 @@ class GPTune(object):
 
             ret = {}
 
-            for o in range(self.problem.DO):
-                (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed),tid)
+            if (bound_checked == True):
+                input_tuning_parameters_transformed = self.problem.PS.transform([input_tuning_parameters])[0]
 
-                ret[output_names[o]] = np.array(mu).tolist()
+                for o in range(self.problem.DO):
+                    (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed),tid)
+
+                    ret[output_names[o]] = np.array(mu).tolist()
+            else:
+                for o in range(self.problem.DO):
+                    # TODO: the value depends on the problem (output) definition
+                    (mu, var) = [[1000000.0]], 0
+                    ret[output_names[o]] = np.array(mu).tolist()
 
             ret["source"] = "model_function"
 
@@ -1236,7 +1217,9 @@ class GPTune_MB(object):
             
         return (copy.deepcopy(self.data), stats, data1_hist)
 
-def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None):
+#### Wrapper Functions
+
+def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None, tuning_configuration:dict = None):
 
     meta_data = {}
 
@@ -1266,11 +1249,14 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
     historydb = HistoryDB()
     model_data = historydb.load_surrogate_model_meta_data(
             task_parameters_given,
+            tuning_configuration,
             input_space_given,
             parameter_space_given,
             output_space_given,
             0,
             modeler)
+
+    #print ("MODEL DATA: ", model_data)
 
     input_space_info = model_data["input_space"]
     parameter_space_info = model_data["parameter_space"]
@@ -1343,7 +1329,50 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None)
         options['model_class'] = 'Model_LCM'
     gt = GPTune(problem, computer=computer, data=data, options=options)
 
-    task_parameters = model_data["task_parameters"]
-    (models, model_function) = gt.LoadSurrogateModel(Igiven = task_parameters, method = "max_evals")
+    (models, model_function) = gt.LoadSurrogateModel(model_data = model_data)
 
     return (model_function)
+
+def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=None):
+
+    meta_data = {}
+
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path) as f_in:
+                meta_data.update(json.load(f_in))
+        except:
+            print ("[Error] not able to get model load configuration from path")
+
+    if meta_dict != None:
+        try:
+            meta_data.update(meta_dict)
+        except:
+            print ("[Error] not able to get model load configuration from dict")
+
+    loadable_machine_configurations = meta_data["loadable_machine_configurations"]
+    loadable_software_configurations = meta_data["loadable_software_configurations"]
+
+    input_space_given = meta_data["input_space"]
+    parameter_space_given = meta_data["parameter_space"]
+    output_space_given = meta_data["output_space"]
+    task_parameters_given = meta_data["task_parameters"]
+
+    if "modeler" in meta_data:
+        modeler = meta_data['modeler']
+    else:
+        modeler = 'Model_LCM'
+
+    historydb = HistoryDB()
+    (model_configurations) = historydb.load_surrogate_model_configurations(
+            task_parameters_given,
+            input_space_given,
+            parameter_space_given,
+            output_space_given,
+            loadable_machine_configurations,
+            loadable_software_configurations,
+            0,
+            modeler)
+
+    return model_configurations
+

@@ -10,9 +10,16 @@ import numpy as np
 
 def main():
 
-    model_function = LoadSurrogateModelFunction()
+    model_configurations = GetSurrogateModelConfigurations()
 
-    giventask = [[4000, 4000]]
+    print ("MODEL CONFIGURATIONS")
+    print (model_configurations)
+
+    print ("LOAD FUNCTION 1")
+
+    model_function = LoadSurrogateModelFunction(tuning_configuration=model_configurations[0])
+
+    giventask = [[10000, 10000]]
     " A quick validation"
     ret = model_function({
         "m": giventask[0][0],
@@ -30,6 +37,39 @@ def main():
         "nb": 1,
         "npernode": 1,
         "p": 1})
+    print ("func return: ", ret)
+
+    print ("LOAD FUNCTION 2")
+
+    model_function = LoadSurrogateModelFunction(tuning_configuration=model_configurations[1])
+
+    giventask = [[10000, 10000]]
+    " A quick validation"
+    ret = model_function({
+        "m": giventask[0][0],
+        "n": giventask[0][1],
+        "mb": 16,
+        "nb": 16,
+        "npernode": 5,
+        "p": 13})
+    print ("func return: ", ret)
+
+    ret = model_function({
+        "m": giventask[0][0],
+        "n": giventask[0][1],
+        "mb": 1,
+        "nb": 1,
+        "npernode": 1,
+        "p": 1})
+    print ("func return: ", ret)
+
+    ret = model_function({
+        "m": giventask[0][0],
+        "n": giventask[0][1],
+        "mb": 15,
+        "nb": 14,
+        "npernode": 5,
+        "p": 257})
     print ("func return: ", ret)
 
 if __name__ == "__main__":

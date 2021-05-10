@@ -24,17 +24,8 @@ import math
 # should always use this name for user-defined objective function
 def objectives(point):
 
-    if point['m'] == 4000 and point['n'] == 4000:
-        print ("Predicted Value from Model Function")
-        ret = model_function({
-            'm': point['m'],
-            'n': point['n'],
-            'mb': point['mb'],
-            'nb': point['nb'],
-            'npernode': point['npernode'],
-            'p': point['p']})
-        return (ret) #ret['r']
-    else:
+    #[TODO: check software configuration] point["software_configuration"] == str(GetSoftwareConfigurationDict()):
+    if point["machine_configuration"] == str(GetMachineConfigurationDict()):
         ######################################### 
         ##### constants defined in TuningProblem
         nodes = point['nodes']
@@ -64,6 +55,8 @@ def objectives(point):
         print(params, ' scalapack time: ', elapsedtime)
 
         return elapsedtime
+    else:
+        return model_functions[str(point["machine_configuration"])](point)
 
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
@@ -74,15 +67,7 @@ def cst3(npernode,p,nodes):
 
 def main():
 
-    global JOBID
-
-    global model_function
-
-    model_function = LoadSurrogateModelFunction()
-
-    # Parse command line arguments
     args = parse_args()
-
     mmax = args.mmax
     nmax = args.nmax
     ntask = args.ntask
@@ -90,6 +75,7 @@ def main():
     nrun = args.nrun
     truns = args.truns
     tla = args.tla
+    global JOBID
     JOBID = args.jobid
     TUNER_NAME = args.optimization
 
@@ -102,22 +88,46 @@ def main():
 
     nprocmax = nodes*cores
 
-    bunit=8     # the block size is multiple of bunit
+    bunit=8
     mmin=128
     nmin=128
 
+    model_configurations = GetSurrogateModelConfigurations()
+    print ("MODEL_CONFIGURATIONS: ", model_configurations)
+    ntask = ntask + len(model_configurations)
+
+    giventask = []
+    for model_configuration in model_configurations:
+        giventask.append([mmax,nmax,str(model_configuration["machine_configuration"])]) #,str(model_configuration["software_configuration"])])
+    giventask.append([mmax,nmax,str(GetMachineConfigurationDict()),str(GetSoftwareConfigurationDict())])
+
+    global model_functions
+    model_functions = {}
+    for model_configuration in model_configurations:
+        tuning_configuration = {
+                "task_parameters": [nmax,nmax],
+                "machine_configuration": model_configuration["machine_configuration"],
+                }
+                #"software_configuration": point["software_configuration"]
+        #print ("TUNING CONFIGURATION: ", tuning_configuration)
+        model_function = LoadSurrogateModelFunction(tuning_configuration=tuning_configuration)
+        model_functions[str(model_configuration["machine_configuration"])] = model_function
+
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
+    machine_configuration = Categoricalnorm([str(model_configuration["machine_configuration"]) for model_configuration in model_configurations] + [str(GetMachineConfigurationDict())], transform="onehot", name="machine_configuration")
+    #software_configuration = Categoricalnorm([str(model_configuration["software_configuration"]) for model_configuration in model_configurations] + [str(GetSoftwareConfigurationDict())], transform="onehot", name="software_configuration")
+    IS = Space([m, n, machine_configuration]) #, software_configuration])
+
     mb = Integer(1, 16, transform="normalize", name="mb")
     nb = Integer(1, 16, transform="normalize", name="nb")
-    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    npernode = Integer(int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
     p = Integer(1, nprocmax, transform="normalize", name="p")
-    r = Real(float("-Inf"), float("Inf"), name="r")
-
-    IS = Space([m, n])
     PS = Space([mb, nb, npernode, p])
+
+    r = Real(float("-Inf"), float("Inf"), name="r")
     OS = Space([r])
-    
+
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     constants={"nodes":nodes,"cores":cores,"bunit":bunit}
     print(IS, PS, OS, constraints)
@@ -140,16 +150,6 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
 
-    seed(1)
-    if ntask == 1:
-        giventask = [[mmax,nmax]]
-    elif ntask == 2:
-        giventask = [[4000,4000],[1000,1000]] #[[mmax,nmax],[int(mmax/2),int(nmax/2)]]
-    else:
-        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
-
-    ntask=len(giventask)
-    
     data = Data(problem)
 
     gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
