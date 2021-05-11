@@ -27,16 +27,16 @@ def main():
         "mb": 16,
         "nb": 16,
         "npernode": 5,
-        "p": 13})
+        "p": 27})
     print ("func return: ", ret)
 
     ret = model_function({
         "m": giventask[0][0],
         "n": giventask[0][1],
-        "mb": 1,
-        "nb": 1,
-        "npernode": 1,
-        "p": 1})
+        "mb": 15,
+        "nb": 16,
+        "npernode": 6,
+        "p": 21})
     print ("func return: ", ret)
 
     print ("LOAD FUNCTION 2")
