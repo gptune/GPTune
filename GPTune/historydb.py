@@ -604,6 +604,8 @@ class HistoryDB(dict):
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
                 constants_store = problem.constants
+                if constants_store == None:
+                    constants_store = {}
                 machine_configuration_store = self.machine_configuration
                 software_configuration_store = self.software_configuration
                 evaluation_result_store = { problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k] for k in range(len(problem.OS)) }

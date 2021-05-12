@@ -2,6 +2,24 @@
 
 rm -rf gptune.db
 Config=cori-haswell-openmpi-gnu-1nodes
+#sbatch -W -C haswell -N 1 -q debug -t 00:30:00 ./run_cori_scalapack.sh MLA ${Config} 15000 1 50
+./run_cori_scalapack.sh MLA ${Config} 15000 1 50
+mv gptune.db ${Config}-15000-50
+mv a.out.log ${Config}-15000-50/a.out.log
+
+rm -rf gptune.db
+Config=cori-haswell-openmpi-gnu-1nodes
+#sbatch -W -C haswell -N 1 -q debug -t 00:30:00 ./run_cori_scalapack.sh MLA ${Config} 20000 1 50
+./run_cori_scalapack.sh MLA ${Config} 20000 1 50
+mv gptune.db ${Config}-20000-50
+mv a.out.log ${Config}-20000-50/a.out.log
+
+exit
+
+echo "ASDFASDFASD"
+
+rm -rf gptune.db
+Config=cori-haswell-openmpi-gnu-1nodes
 #sbatch -W -C haswell -N 1 -q debug -t 00:30:00 ./run_cori_scalapack.sh MLA ${Config} 10000 1 50
 ./run_cori_scalapack.sh MLA ${Config} 10000 1 50
 mv gptune.db ${Config}-10000-50
