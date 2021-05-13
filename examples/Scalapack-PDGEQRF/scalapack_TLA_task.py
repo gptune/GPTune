@@ -24,18 +24,7 @@ import math
 # should always use this name for user-defined objective function
 def objectives(point):
 
-    if point['m'] == 10000 and point['n'] == 10000:
-        return model_function(point)
-        #print ("Predicted Value from Model Function")
-        #ret = model_function({
-        #    'm': point['m'],
-        #    'n': point['n'],
-        #    'mb': point['mb'],
-        #    'nb': point['nb'],
-        #    'npernode': point['npernode'],
-        #    'p': point['p']})
-        #return (ret) #ret['r']
-    else:
+    if point['m'] == tvalue:
         ######################################### 
         ##### constants defined in TuningProblem
         nodes = point['nodes']
@@ -66,6 +55,18 @@ def objectives(point):
 
         return elapsedtime
 
+    else:
+        return model_function[point['m']](point)
+        #print ("Predicted Value from Model Function")
+        #ret = model_function({
+        #    'm': point['m'],
+        #    'n': point['n'],
+        #    'mb': point['mb'],
+        #    'nb': point['nb'],
+        #    'npernode': point['npernode'],
+        #    'p': point['p']})
+        #return (ret) #ret['r']
+
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
 def cst2(nb,npernode,n,p,nodes,bunit):
@@ -75,11 +76,14 @@ def cst3(npernode,p,nodes):
 
 def main():
 
+    global model_functions
+    global tvalue
+
     global JOBID
 
-    global model_function
+    #global model_function
 
-    model_function = LoadSurrogateModelFunction()
+    #model_function = LoadSurrogateModelFunction()
 
     # Parse command line arguments
     args = parse_args()
@@ -93,6 +97,12 @@ def main():
     tla = args.tla
     JOBID = args.jobid
     TUNER_NAME = args.optimization
+
+    tvalue = args.tvalue
+    tvalue2 = args.tvalue2
+    tvalue3 = args.tvalue3
+    tvalue4 = args.tvalue4
+    tvalue5 = args.tvalue5
 
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -142,15 +152,115 @@ def main():
     options.validate(computer=computer)
 
     seed(1)
+    #if ntask == 1:
+    #    giventask = [[mmax,nmax]]
+    #elif ntask == 2:
+    #    giventask = [[mmax,nmax],[int(mmax/5)*4,int(nmax/5)*4]]
+    #else:
+    #    giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+
     if ntask == 1:
-        giventask = [[mmax,nmax]]
-    elif ntask == 2:
-        giventask = [[mmax,nmax],[int(mmax/5)*4,int(nmax/5)*4]]
-    else:
-        giventask = [[randint(mmin,mmax),randint(nmin,nmax)] for i in range(ntask)]
+        return
+    if ntask == 2:
+        giventask = [[tvalue,tvalue],[tvalue2,tvalue2]]
+    elif ntask == 3:
+        giventask = [[tvalue,tvalue],[tvalue2,tvalue2],[tvalue3,tvalue3]]
+    elif ntask == 4:
+        giventask = [[tvalue,tvalue],[tvalue2,tvalue2],[tvalue3,tvalue3],[tvalue4,tvalue4]]
+    elif ntask == 5:
+        giventask = [[tvalue,tavlue],[tvalue2,tvalue2],[tvalue3,tvalue3],[tvalue4,tvalue4],[tvalue5,tvalue5]]
 
     ntask=len(giventask)
-    
+
+    model_functions = {}
+    for i in range(1,len(giventask),1):
+        tvalue_ = giventask[i][0]
+        meta_dict = {
+            "tuning_problem_name":"PDGEQRF",
+            "modeler":"Model_LCM",
+            "task_parameters":[[tvalue_,tvalue_]],
+            "input_space": [
+              {
+                "name": "m",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 128,
+                "upper_bound": 10000
+              },
+              {
+                "name": "n",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 128,
+                "upper_bound": 10000
+              }
+            ],
+            "parameter_space": [
+              {
+                "name": "mb",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 1,
+                "upper_bound": 16
+              },
+              {
+                "name": "nb",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 1,
+                "upper_bound": 16
+              },
+              {
+                "name": "npernode",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 0,
+                "upper_bound": 5
+              },
+              {
+                "name": "p",
+                "type": "int",
+                "transformer": "normalize",
+                "lower_bound": 1,
+                "upper_bound": 32
+              }
+            ],
+            "output_space": [
+              {
+                "name": "r",
+                "type": "real",
+                "transformer": "identity",
+                "lower_bound": -Infinity,
+                "upper_bound": Infinity
+              }
+            ],
+            "loadable_machine_configurations": {
+              "Cori" : {
+                "haswell": {
+                  "nodes":[i for i in range(1,65,1)],
+                  "cores":32
+                },
+                "knl": {
+                  "nodes":[i for i in range(1,65,1)],
+                  "cores":68
+                }
+              }
+            },
+            "loadable_software_configurations": {
+              "openmpi": {
+                "version_from":[4,0,1],
+                "version_to":[5,0,0]
+              },
+              "scalapack":{
+                "version_split":[2,1,0]
+              },
+              "gcc": {
+                "version_split": [8,3,0]
+              }
+            }
+        }
+        model_functions[tvalue_] = LoadSurrogateModelFunction(meta_path=None, meta_dict=meta_dict)
+
     data = Data(problem)
 
     gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
@@ -191,6 +301,12 @@ def parse_args():
     # Experiment related arguments
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
+
+    parser.add_argument('-tvalue', type=int, default=1000, help='Input task t value')
+    parser.add_argument('-tvalue2', type=int, default=1000, help='Input task t value')
+    parser.add_argument('-tvalue3', type=int, default=1000, help='Input task t value')
+    parser.add_argument('-tvalue4', type=int, default=1000, help='Input task t value')
+    parser.add_argument('-tvalue5', type=int, default=1000, help='Input task t value')
 
     args = parser.parse_args()
 

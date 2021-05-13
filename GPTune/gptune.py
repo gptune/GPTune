@@ -1483,7 +1483,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
             0,
             modeler)
 
-    #print ("MODEL DATA: ", model_data)
+    print ("MODEL DATA: ", model_data)
 
     input_space_info = model_data["input_space"]
     parameter_space_info = model_data["parameter_space"]

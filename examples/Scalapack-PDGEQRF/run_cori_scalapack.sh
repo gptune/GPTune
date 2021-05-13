@@ -78,7 +78,43 @@ else
     nprocmin_pernode=1
 fi
 
-cp .gptune/configs/${Config}.json .gptune/meta.json
+if [[ ${7} != "" ]]; then
+    optimization=${7}
+else
+    optimization='GPTune'
+fi
 
-mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out.log
+if [[ ${Scenario} == "MLA" ]]; then
+    cp .gptune/configs/${Config}.json .gptune/meta.json
+
+    mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -optimization ${optimization} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out.log
+
+elif [[ ${Scenario} == "TLA_task" ]]; then
+    tvalue=${mmax}
+
+    if [[ ${8} != "" ]]; then
+        tvalue2=${8}
+    else
+        tvalue2=0
+    fi
+    if [[ ${9} != "" ]]; then
+        tvalue3=${9}
+    else
+        tvalue3=0
+    fi
+    if [[ ${10} != "" ]]; then
+        tvalue4=${10}
+    else
+        tvalue4=0
+    fi
+    if [[ ${11} != "" ]]; then
+        tvalue5=${11}
+    else
+        tvalue5=0
+    fi
+
+    cp .gptune/configs/${Config}.json .gptune/meta.json
+
+    mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -optimization ${optimization} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} -tvalue ${tvalue} -tvalue2 ${tvalue2} -tvalue3 ${tvalue3} -tvalue4 ${tvalue4} -tvalue5 ${tvalue5} | tee a.out.log
+fi
 
