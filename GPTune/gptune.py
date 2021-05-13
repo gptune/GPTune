@@ -1467,6 +1467,7 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
     parameter_space_given = meta_data["parameter_space"]
     output_space_given = meta_data["output_space"]
     task_parameters_given = meta_data["task_parameters"]
+    print ("task_parameters_given: ", task_parameters_given)
 
     if "modeler" in meta_data:
         modeler = meta_data['modeler']

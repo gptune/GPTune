@@ -4,9 +4,31 @@ mkdir -p TLA_experiments
 
 Config=cori-haswell-openmpi-gnu-1nodes
 
+for tvalue in {2000,4000,6000,8000}
+do
+    for nrun in {10,20}
+    do
+        for transfer_task in {2000,4000,6000,8000}
+        do
+            if [[ ${tvalue} != ${transfer_task} ]]; then
+                rm -rf gptune.db
+
+                cp -r TLA_experiments/SLA-GPTune-${Config}-${transfer_task}-50 gptune.db
+                #sbatch -W -C haswell -N 1 -q debug -t 00:30:00 ./run_cori_scalapack.sh TLA_task ${Config} 10000 2 20
+                ./run_cori_scalapack.sh TLA_task ${Config} 10000 2 ${nrun} 1 GPTune ${tvalue} ${transfer_task}
+                mkdir TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}
+                mv gptune.db TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}
+                mv a.out.log TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}/a.out.log
+                exit
+            fi
+        done
+    done
+done
+
+#for optimization in {"opentuner","hpbandster"}
 for optimization in {"GPTune","opentuner","hpbandster"}
 do
-    for tvalue in {2000,4000,6000,8000,10000}
+    for tvalue in {2000,4000,6000,8000}
     do
         for nrun in {10,20,50}
         do
@@ -23,29 +45,6 @@ do
 done
 
 exit
-
-#for tvalue in {0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}
-for tvalue in {2000,4000,6000,8000,10000}
-do
-    for nrun in {10,20}
-    do
-        for transfer_task in {2000,4000,6000,8000,10000}
-        do
-            if [[ ${tvalue} != ${transfer_task} ]]; then
-                rm -rf gptune.db
-
-                cp -r TLA_experiments/SLA-GPTune-${Config}-${transfer_task}-50 gptune.db
-                #sbatch -W -C haswell -N 1 -q debug -t 00:30:00 ./run_cori_scalapack.sh TLA_task ${Config} 10000 2 20
-                ./run_cori_scalapack.sh MLA ${Config} ${tvalue} 2 ${nrun} 1 ${optimization} ${transfer_task}
-                mkdir TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}
-                mv gptune.db TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}
-                mv a.out.log TLA_experiments/TLA-${Config}-${tvalue}-${transfer_task}-${nrun}/a.out.log
-            fi
-        done
-    done
-done
-
-
 
 
 rm -rf gptune.db

@@ -56,7 +56,7 @@ def objectives(point):
         return elapsedtime
 
     else:
-        return model_function[point['m']](point)
+        return model_functions[point['m']](point)
         #print ("Predicted Value from Model Function")
         #ret = model_function({
         #    'm': point['m'],
@@ -170,6 +170,8 @@ def main():
     elif ntask == 5:
         giventask = [[tvalue,tavlue],[tvalue2,tvalue2],[tvalue3,tvalue3],[tvalue4,tvalue4],[tvalue5,tvalue5]]
 
+    print ("giventask: ", giventask)
+
     ntask=len(giventask)
 
     model_functions = {}
@@ -229,9 +231,7 @@ def main():
               {
                 "name": "r",
                 "type": "real",
-                "transformer": "identity",
-                "lower_bound": -Infinity,
-                "upper_bound": Infinity
+                "transformer": "identity"
               }
             ],
             "loadable_machine_configurations": {

@@ -90,25 +90,28 @@ if [[ ${Scenario} == "MLA" ]]; then
     mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -optimization ${optimization} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out.log
 
 elif [[ ${Scenario} == "TLA_task" ]]; then
-    tvalue=${mmax}
-
     if [[ ${8} != "" ]]; then
-        tvalue2=${8}
+        tvalue=${8}
+    else
+        tvalue=0
+    fi
+    if [[ ${9} != "" ]]; then
+        tvalue2=${9}
     else
         tvalue2=0
     fi
-    if [[ ${9} != "" ]]; then
-        tvalue3=${9}
+    if [[ ${10} != "" ]]; then
+        tvalue3=${10}
     else
         tvalue3=0
     fi
-    if [[ ${10} != "" ]]; then
-        tvalue4=${10}
+    if [[ ${11} != "" ]]; then
+        tvalue4=${11}
     else
         tvalue4=0
     fi
-    if [[ ${11} != "" ]]; then
-        tvalue5=${11}
+    if [[ ${12} != "" ]]; then
+        tvalue5=${12}
     else
         tvalue5=0
     fi
