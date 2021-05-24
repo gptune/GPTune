@@ -42,8 +42,8 @@ def data_process_single_exp(args, expid=None):
     # assert TPE_results[0] == 'TPE'
     # assert OpenTuner_results[0] == 'opentuner'
     
-    colors = ['#C33734', '#2ca02c', '#ff7f0e', '#9467bd', '#1f77b4']
-    linestyles = ['solid', 'dashed', 'dashdot', 'dashdot', 'dotted']
+    colors = ['#2ca02c', '#C33734', '#ff7f0e', '#9467bd', '#1f77b4']
+    linestyles = ['dashed', 'dashed', 'dashdot', 'dashdot', 'dotted']
     data_summary = []
     tuners = []
     for item in results_summary:
@@ -135,13 +135,16 @@ def plot_history(args,  data_summary, tuners, colors,
                                 mean_results_set[i],
                                 color=colors[i], 
                                 label=tuners[i], 
-                                linestyle=linestyles[i])
+                                linestyle=linestyles[i],
+                                marker="o")
                 ax.fill_between(bugets_set[i], 
                                 mean_results_set[i]+std_results_set[i], 
                                 mean_results_set[i]-std_results_set[i],
                                 color=colors[i], 
                                 alpha=0.5)
-        ax.legend(fontsize=8)
+                ax.set_xlabel("Tuning cost",fontsize=12)
+                ax.set_ylabel("Runtime",fontsize=12)
+        ax.legend(fontsize=12)
         savepath = os.path.join("./", f"Tuning_history_{filename}.pdf")    
         plt.savefig(savepath)
         print("Figure saved: ", savepath)
