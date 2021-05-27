@@ -187,14 +187,14 @@ def main():
                 "type": "int",
                 "transformer": "normalize",
                 "lower_bound": 128,
-                "upper_bound": 10000
+                "upper_bound": tvalue_
               },
               {
                 "name": "n",
                 "type": "int",
                 "transformer": "normalize",
                 "lower_bound": 128,
-                "upper_bound": 10000
+                "upper_bound": tvalue_
               }
             ],
             "parameter_space": [

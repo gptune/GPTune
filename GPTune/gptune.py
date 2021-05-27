@@ -1565,12 +1565,13 @@ def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=
 
     meta_data = {}
 
-    if os.path.exists(meta_path):
-        try:
-            with open(meta_path) as f_in:
-                meta_data.update(json.load(f_in))
-        except:
-            print ("[Error] not able to get model load configuration from path")
+    if meta_path != None:
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path) as f_in:
+                    meta_data.update(json.load(f_in))
+            except:
+                print ("[Error] not able to get model load configuration from path")
 
     if meta_dict != None:
         try:

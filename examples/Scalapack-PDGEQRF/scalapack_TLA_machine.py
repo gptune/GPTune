@@ -92,9 +92,92 @@ def main():
     mmin=128
     nmin=128
 
-    model_configurations = GetSurrogateModelConfigurations()
+    meta_dict = {
+        "tuning_problem_name":"PDGEQRF",
+        "modeler":"Model_LCM",
+        "task_parameters":[[mmax,nmax]],
+        "input_space": [
+          {
+            "name": "m",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 128,
+            "upper_bound": mmax
+          },
+          {
+            "name": "n",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 128,
+            "upper_bound": nmax
+          }
+        ],
+        "parameter_space": [
+          {
+            "name": "mb",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 16
+          },
+          {
+            "name": "nb",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 16
+          },
+          {
+            "name": "npernode",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 0,
+            "upper_bound": 5
+          },
+          {
+            "name": "p",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 32
+          }
+        ],
+        "output_space": [
+          {
+            "name": "r",
+            "type": "real",
+            "transformer": "identity"
+          }
+        ],
+        "loadable_machine_configurations": {
+          "Cori" : {
+            "haswell": {
+              "nodes":[i for i in range(1,65,1)],
+              "cores":32
+            },
+            "knl": {
+              "nodes":[i for i in range(1,65,1)],
+              "cores":68
+            }
+          }
+        },
+        "loadable_software_configurations": {
+          "openmpi": {
+            "version_from":[4,0,1],
+            "version_to":[5,0,0]
+          },
+          "scalapack":{
+            "version_split":[2,1,0]
+          },
+          "gcc": {
+            "version_split": [8,3,0]
+          }
+        }
+    }
+
+    model_configurations = GetSurrogateModelConfigurations(meta_path=None, meta_dict=meta_dict)
     print ("MODEL_CONFIGURATIONS: ", model_configurations)
-    ntask = ntask + len(model_configurations)
+    #ntask = ntask + len(model_configurations)
 
     giventask = []
     for model_configuration in model_configurations:
@@ -110,7 +193,7 @@ def main():
                 }
                 #"software_configuration": point["software_configuration"]
         #print ("TUNING CONFIGURATION: ", tuning_configuration)
-        model_function = LoadSurrogateModelFunction(tuning_configuration=tuning_configuration)
+        model_function = LoadSurrogateModelFunction(meta_path=None, meta_dict=meta_dict, tuning_configuration=tuning_configuration)
         model_functions[str(model_configuration["machine_configuration"])] = model_function
 
     m = Integer(mmin, mmax, transform="normalize", name="m")
@@ -164,7 +247,7 @@ def main():
     """ Print all input and parameter samples """
     for tid in range(NI):
         print("tid: %d" % (tid))
-        print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+        print("    m:%d n:%d config:%s" % (data.I[tid][0], data.I[tid][1], data.I[tid][2]))
         print("    Ps ", data.P[tid])
         print("    Os ", data.O[tid].tolist())
         print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))

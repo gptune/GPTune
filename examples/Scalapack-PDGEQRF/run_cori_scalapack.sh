@@ -119,5 +119,11 @@ elif [[ ${Scenario} == "TLA_task" ]]; then
     cp .gptune/configs/${Config}.json .gptune/meta.json
 
     mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -optimization ${optimization} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} -tvalue ${tvalue} -tvalue2 ${tvalue2} -tvalue3 ${tvalue3} -tvalue4 ${tvalue4} -tvalue5 ${tvalue5} | tee a.out.log
+
+elif [[ ${Scenario} == "TLA_machine" ]]; then
+
+    cp .gptune/configs/${Config}.json .gptune/meta.json
+
+    mpirun --oversubscribe --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python3 ./scalapack_${Scenario}.py -nprocmin_pernode ${nprocmin_pernode} -optimization ${optimization} -mmax ${mmax} -nmax ${nmax} -ntask ${ntask} -nrun ${nrun} | tee a.out.log
 fi
 
