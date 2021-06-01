@@ -1445,7 +1445,7 @@ class GPTune_MB(object):
 
 #### Wrapper Functions
 
-def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None, tuning_configuration:dict = None):
+def LoadSurrogateModelData(meta_path=None, meta_dict=None, tuning_configuration:dict = None):
 
     meta_data = {}
 
@@ -1485,6 +1485,10 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
             modeler)
 
     print ("MODEL DATA: ", model_data)
+
+    return (model_data)
+
+def CreateGPTuneFromModelData(model_data):
 
     input_space_info = model_data["input_space"]
     parameter_space_info = model_data["parameter_space"]
@@ -1557,9 +1561,78 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
         options['model_class'] = 'Model_LCM'
     gt = GPTune(problem, computer=computer, data=data, options=options)
 
+    return (gt)
+
+def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None, tuning_configuration:dict = None):
+
+    model_data = LoadSurrogateModelData(meta_path, meta_dict, tuning_configuration)
+    gt = CreateGPTuneFromModelData(model_data)
     (models, model_function) = gt.LoadSurrogateModel(model_data = model_data)
 
     return (model_function)
+
+def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:int=5000):
+
+    gt = CreateGPTuneFromModelData(model_data)
+    (models, model_function) = gt.LoadSurrogateModel(model_data = model_data)
+
+    from SALib.sample import saltelli
+    from SALib.analyze import sobol
+    from SALib.test_functions import Ishigami
+    import numpy as np
+
+    num_vars = len(model_data["parameter_space"])
+    parameter_names = []
+    parameter_bounds = []
+    parameter_types = []
+    for parameter_info in model_data["parameter_space"]:
+        parameter_name = parameter_info["name"]
+        parameter_type = parameter_info["type"]
+        lower_bound = parameter_info["lower_bound"]
+        upper_bound = parameter_info["upper_bound"]
+
+        parameter_names.append(parameter_name)
+        parameter_types.append(parameter_type)
+        parameter_bounds.append([lower_bound, upper_bound])
+
+    problem = {
+            'num_vars': num_vars,
+            'names': parameter_names,
+            'bounds': parameter_bounds,
+            }
+
+    # Generate samples
+    parameter_values = saltelli.sample(problem, num_samples)
+    print (parameter_values)
+
+    for i in range(len(parameter_values)):
+        for j in range(num_vars):
+            if parameter_types[j] == "int":
+                parameter_values[i][j] = int(parameter_values[i][j])
+
+    Y = []
+    for i in range(len(parameter_values)):
+        model_input = {}
+        for j in range(num_vars):
+            model_input[parameter_names[j]] = parameter_values[i][j]
+
+        num_task_parameters = len(model_data["input_space"])
+        for j in range(num_task_parameters):
+            model_input[model_data["input_space"][j]["name"]] = task_parameters[j]
+        print (model_input)
+
+        output_name = model_data["output_space"][0]["name"]
+
+        Y.append(model_function(model_input)[output_name][0][0])
+
+    print (Y)
+
+    # Perform analysis
+    Si = sobol.analyze(problem, np.array(Y), print_to_console=True)
+
+    print (Si)
+
+    return Si
 
 def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=None):
 
