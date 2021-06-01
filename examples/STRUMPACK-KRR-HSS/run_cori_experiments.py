@@ -6,9 +6,9 @@ def run_scenarios():
 
     config = "cori-haswell-openmpi-gnu-1nodes"
 
-    for optimization in ["GPTune","opentuner","hpbandster"]:
+    for optimization in ["GPTune","opentuner","hpbandster","Random"]:
         for dataset in ["susy_10Kn","susy_100Kn","mnist_10Kn","mnist_500Kn"]:
-            for nrun in [20]:
+            for nrun in [20,50]:
                 os.system("rm .gptune/meta.json")
                 os.system("cp .gptune/configs/"+config+".json .gptune/meta.json")
 
