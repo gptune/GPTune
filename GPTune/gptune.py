@@ -1571,15 +1571,13 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
 
     return (model_function)
 
-def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:int=5000):
+def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:int=1000):
 
     gt = CreateGPTuneFromModelData(model_data)
     (models, model_function) = gt.LoadSurrogateModel(model_data = model_data)
 
     from SALib.sample import saltelli
     from SALib.analyze import sobol
-    from SALib.test_functions import Ishigami
-    import numpy as np
 
     num_vars = len(model_data["parameter_space"])
     parameter_names = []
@@ -1601,7 +1599,7 @@ def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:
             'bounds': parameter_bounds,
             }
 
-    # Generate samples
+    # Generate new samples for sensitivity analysis from the fitted surrogate model.
     parameter_values = saltelli.sample(problem, num_samples)
     print (parameter_values)
 
@@ -1627,11 +1625,9 @@ def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:
 
     print (Y)
 
-    # Perform analysis
+    # Sensitivity analysis based on the samples drawn from the fitted surrogate model.
     Si = sobol.analyze(problem, np.array(Y), print_to_console=True)
-
-    print (Si)
-
+    #print (Si)
     return Si
 
 def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=None):
