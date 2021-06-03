@@ -10,7 +10,7 @@ from gptune import * # import all
 
 import numpy as np
 
-def test1():
+def load_surrogate_model():
 
     model_configurations = GetSurrogateModelConfigurations()
 
@@ -74,7 +74,7 @@ def test1():
         "p": 257})
     print ("func return: ", ret)
 
-def test2():
+def sensitivity_analysis():
 
     model_data = {
       "hyperparameters": [
@@ -206,11 +206,101 @@ def test2():
       "uid": "88695f66-b4ec-11eb-a944-a7c92100e8b1"
     }
 
-    SensitivityAnalysis(model_data=model_data, task_parameters=[10000,10000], num_samples=1000)
+    SensitivityAnalysis(model_data=model_data, task_parameters=[10000,10000], num_samples=100)
 
     return
 
+def sensitivity_analysis2():
+
+    meta_dict = {
+        "tuning_problem_name":"PDGEQRF",
+        "task_parameters":[[10000,10000]],
+        "input_space": [
+          {
+            "name": "m",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 128,
+            "upper_bound": 10000
+          },
+          {
+            "name": "n",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 128,
+            "upper_bound": 10000
+          }
+        ],
+        "parameter_space": [
+          {
+            "name": "mb",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 16
+          },
+          {
+            "name": "nb",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 16
+          },
+          {
+            "name": "npernode",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 0,
+            "upper_bound": 5
+          },
+          {
+            "name": "p",
+            "type": "int",
+            "transformer": "normalize",
+            "lower_bound": 1,
+            "upper_bound": 32
+          }
+        ],
+        "output_space": [
+          {
+            "name": "r",
+            "type": "real",
+            "transformer": "identity"
+          }
+        ],
+        "loadable_machine_configurations": {
+          "Cori" : {
+            "haswell": {
+              "nodes":[i for i in range(1,65,1)],
+              "cores":32
+            },
+            "knl": {
+              "nodes":[i for i in range(1,65,1)],
+              "cores":68
+            }
+          }
+        },
+        "loadable_software_configurations": {
+          "openmpi": {
+            "version_from":[4,0,1],
+            "version_to":[5,0,0]
+          },
+          "scalapack":{
+            "version_split":[2,1,0]
+          },
+          "gcc": {
+            "version_split": [8,3,0]
+          }
+        }
+    }
+
+    model_data = LoadSurrogateModelData(meta_path=None, meta_dict=meta_dict)
+    print (model_data)
+    SensitivityAnalysis(model_data=model_data, task_parameters=[10000,10000], num_samples=100)
+
+    return
 
 if __name__ == "__main__":
-    #test1()
-    test2()
+    #load_surrogate_model()
+    #sensitivity_analysis()
+    sensitivity_analysis2()
