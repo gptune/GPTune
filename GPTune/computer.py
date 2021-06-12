@@ -20,7 +20,7 @@
 import numpy as np
 from problem import Problem
 from data import Data
-from historydb import HistoryDB
+from database import HistoryDB
 from typing import Collection, Callable
 import mpi4py
 # from mpi4py import MPI
