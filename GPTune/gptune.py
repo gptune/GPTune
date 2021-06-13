@@ -171,11 +171,13 @@ class GPTune(object):
                     (mu, var) = modelers[o].predict(np.array(input_tuning_parameters_transformed),tid)
 
                     ret[output_names[o]] = np.array(mu).tolist()
+                    ret[output_names[o]+"_var"] = var
             else:
                 for o in range(self.problem.DO):
                     # TODO: the value depends on the problem (output) definition
                     (mu, var) = [[1000000.0]], 0
                     ret[output_names[o]] = np.array(mu).tolist()
+                    ret[output_names[o]+"_var"] = var
 
             ret["source"] = "model_function"
 
