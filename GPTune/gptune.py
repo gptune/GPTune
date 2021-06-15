@@ -172,12 +172,14 @@ class GPTune(object):
 
                     ret[output_names[o]] = np.array(mu).tolist()
                     ret[output_names[o]+"_var"] = var
+                    ret[output_names[o]+"_std"] = math.sqrt(var)
             else:
                 for o in range(self.problem.DO):
                     # TODO: the value depends on the problem (output) definition
                     (mu, var) = [[1000000.0]], 0
                     ret[output_names[o]] = np.array(mu).tolist()
                     ret[output_names[o]+"_var"] = var
+                    ret[output_names[o]+"_std"] = math.sqrt(var)
 
             ret["source"] = "model_function"
 
