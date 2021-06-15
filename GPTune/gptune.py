@@ -116,10 +116,12 @@ class GPTune(object):
 
             task_parameter_names = [self.problem.IS[k].name for k in range(len(self.problem.IS))]
             tuning_parameter_names = [self.problem.PS[k].name for k in range(len(self.problem.PS))]
+            tuning_parameter_types = [type(self.problem.PS[k]).__name__ for k in range(len(self.problem.PS))]
             output_names = [self.problem.OS[k].name for k in range(len(self.problem.OS))]
 
             #print ("task_parameter_names: ", task_parameter_names)
             #print ("tuning_parameter_names: ", tuning_parameter_names)
+            #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
             #print ("Igiven: ", Igiven)
 
@@ -144,9 +146,11 @@ class GPTune(object):
 
             input_tuning_parameters = []
             for tuning_parameter_name in tuning_parameter_names:
-                lower_bound, upper_bound = self.problem.PS.bounds[tuning_parameter_names.index(tuning_parameter_name)]
-                if point[tuning_parameter_name] < lower_bound or point[tuning_parameter_name] > upper_bound:
-                    bound_checked = False
+                if tuning_parameter_types[tuning_parameter_names.index(tuning_parameter_name)] == "Integer" or\
+                   tuning_parameter_types[tuning_parameter_names.index(tuning_parameter_name)] == "Integer":
+                    lower_bound, upper_bound = self.problem.PS.bounds[tuning_parameter_names.index(tuning_parameter_name)]
+                    if point[tuning_parameter_name] < lower_bound or point[tuning_parameter_name] > upper_bound:
+                        bound_checked = False
                 input_tuning_parameters.append(point[tuning_parameter_name])
 
             #tuning_parameter_names_model_order = parameter_names
@@ -1501,17 +1505,20 @@ def CreateGPTuneFromModelData(model_data):
         name_ = input_space_info["name"]
         type_ = input_space_info["type"]
         transformer_ = input_space_info["transformer"]
-        lower_bound_ = input_space_info["lower_bound"]
-        upper_bound_ = input_space_info["upper_bound"]
 
         if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            lower_bound_ = input_space_info["lower_bound"]
+            upper_bound_ = input_space_info["upper_bound"]
             input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             input_space_arr.append(input_space)
         elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            lower_bound_ = input_space_info["lower_bound"]
+            upper_bound_ = input_space_info["upper_bound"]
             input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             input_space_arr.append(input_space)
         elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
-            input_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            categories = input_space_info["categories"]
+            input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
             input_space_arr.append(input_space)
     IS = Space(input_space_arr)
 
@@ -1520,17 +1527,20 @@ def CreateGPTuneFromModelData(model_data):
         name_ = parameter_space_info["name"]
         type_ = parameter_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
-        lower_bound_ = parameter_space_info["lower_bound"]
-        upper_bound_ = parameter_space_info["upper_bound"]
 
         if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            lower_bound_ = parameter_space_info["lower_bound"]
+            upper_bound_ = parameter_space_info["upper_bound"]
             parameter_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             parameter_space_arr.append(parameter_space)
         elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            lower_bound_ = parameter_space_info["lower_bound"]
+            upper_bound_ = parameter_space_info["upper_bound"]
             parameter_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             parameter_space_arr.append(parameter_space)
         elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
-            parameter_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            categories = parameter_space_info["categories"]
+            parameter_space = Categoricalnorm(categories, transform=transformer_, name=name_)
             parameter_space_arr.append(parameter_space)
     PS = Space(parameter_space_arr)
 
@@ -1539,17 +1549,20 @@ def CreateGPTuneFromModelData(model_data):
         name_ = output_space_info["name"]
         type_ = output_space_info["type"]
         transformer_ = output_space_info["transformer"]
-        lower_bound_ = output_space_info["lower_bound"]
-        upper_bound_ = output_space_info["upper_bound"]
 
         if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+            lower_bound_ = output_space_info["lower_bound"]
+            upper_bound_ = output_space_info["upper_bound"]
             output_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             output_space_arr.append(output_space)
         elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+            lower_bound_ = output_space_info["lower_bound"]
+            upper_bound_ = output_space_info["upper_bound"]
             output_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
             output_space_arr.append(output_space)
         elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
-            output_space = Category(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+            categories = output_space_info["categories"]
+            output_space = Category(categories, transform=transformer_, name=name_)
             output_space_arr.append(output_space)
     OS = Space(output_space_arr)
 
@@ -1585,16 +1598,26 @@ def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:
     parameter_names = []
     parameter_bounds = []
     parameter_types = []
+    categorical_parameter_values = {}
     for parameter_info in model_data["parameter_space"]:
         parameter_name = parameter_info["name"]
         parameter_type = parameter_info["type"]
-        lower_bound = parameter_info["lower_bound"]
-        upper_bound = parameter_info["upper_bound"]
 
         parameter_names.append(parameter_name)
         parameter_types.append(parameter_type)
-        parameter_bounds.append([lower_bound, upper_bound])
 
+        if parameter_type == "int" or parameter_type == "real":
+            lower_bound = parameter_info["lower_bound"]
+            upper_bound = parameter_info["upper_bound"]
+            parameter_bounds.append([lower_bound, upper_bound])
+        elif parameter_type == "categorical":
+            lower_bound = 0
+            upper_bound = len(parameter_info["categories"])
+            parameter_bounds.append([lower_bound, upper_bound])
+            categorical_parameter_values[parameter_name] = parameter_info["categories"]
+    print ("Categorical_parameter_values: ", categorical_parameter_values)
+
+    parameter_categories = []
     problem = {
             'num_vars': num_vars,
             'names': parameter_names,
@@ -1603,23 +1626,20 @@ def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:
 
     # Generate new samples for sensitivity analysis from the fitted surrogate model.
     parameter_values = saltelli.sample(problem, num_samples)
-    print (parameter_values)
-
-    for i in range(len(parameter_values)):
-        for j in range(num_vars):
-            if parameter_types[j] == "int":
-                parameter_values[i][j] = int(parameter_values[i][j])
 
     Y = []
     for i in range(len(parameter_values)):
         model_input = {}
         for j in range(num_vars):
-            model_input[parameter_names[j]] = parameter_values[i][j]
+            if parameter_types[j] == "int" or parameter_types[j] == "real":
+                model_input[parameter_names[j]] = int(parameter_values[i][j])
+            elif parameter_types[j] == "categorical":
+                model_input[parameter_names[j]] = categorical_parameter_values[parameter_names[j]][int(parameter_values[i][j])]
 
         num_task_parameters = len(model_data["input_space"])
         for j in range(num_task_parameters):
             model_input[model_data["input_space"][j]["name"]] = task_parameters[j]
-        print (model_input)
+        #print (model_input)
 
         output_name = model_data["output_space"][0]["name"]
 
