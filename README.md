@@ -1,38 +1,34 @@
-GPTune Copyright (c) 2019, The Regents of the University of California, through 
-Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
-from the U.S.Dept. of Energy) and the University of California, Berkeley.
-All rights reserved.
+<p align="left">
+<img src="icon.png">
+</p>
 
-If you have questions about your rights to use or distribute this software,
-please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+# **GPTune** (https://gptune.lbl.gov)
 
-NOTICE.  This Software was developed under funding from the U.S. Department
-of Energy and the U.S. Government consequently retains certain rights.  As
-such, the U.S. Government has been granted for itself and others acting on
-its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the
-Software to reproduce, distribute copies to the public, prepare derivative
-works, and perform publicly and display publicly, and to permit other to do so.
+*GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem using Bayesian optimization methodologies.
+## Features
+ - **(High-performance and parallel tuning)** GPTune can tune applications that are specifically designed for the high-performance clusters and exascale computational applications, and is a unique distributed-memory parallel autotuner. 
+ - **(Transfer and multi-objective learning)** GPTune adopts transfer learning through classical single-output and multiple-output Gaussian process surrogate models, along with novel surrogate models, and incorporates various performance models. It also supports multiple-objective tuning over certain applications. 
+ - **(Unified tuning framework)** GPTune supports a unified framework that allows different tuners across different applications from high-performance mathematical libraries to production-level scientific simulations with an easy-to-use python interface. 
+ - **(Historical database)** GPTune incorporates an online historical database (See http://lbl.gptune.gov for details) for tuning results, which further improves the performance.
 
-# [GPTune](https://gptune.lbl.gov)
-
-*GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem.
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
 Our GPTune website at https://gptune.lbl.gov provides a shared database repository where the user can share their tuning performance data with other users.
 
-## Installation using example scripts
+## Installation
+### Installation using example scripts
 The following example build scripts are available for a collection of tested systems. 
 
-### Ubuntu/Debian-like systems supporting apt-get
+#### Ubuntu/Debian-like systems supporting apt-get
 The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
 
-### Mac OS supporting homebrew
+#### Mac OS supporting homebrew
 The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
 
-### NERSC Cori
+#### NERSC Cori
 The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and "compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface (RCI) mode can be used, please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.
 
 
-## Installation from scratch
+### Installation from scratch
 GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume OpenMPI, Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
 export MPICC=path-to-c-compiler-wrapper
@@ -47,7 +43,7 @@ export GPTUNEROOT=path-to-gptune-root-directory
 The rest can be installed as follows:
 
 
-### Install SCALAPACK
+#### Install SCALAPACK
 ```
 cd $GPTUNEROOT
 wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
@@ -73,7 +69,7 @@ export SCALAPACK_LIB="$PWD/install/lib/libscalapack.so"
 ```
 
 
-### Install mpi4py
+#### Install mpi4py
 ```
 cd $GPTUNEROOT
 git clone https://github.com/mpi4py/mpi4py.git
@@ -83,7 +79,7 @@ python setup.py install --user
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-### Install scikit-optimize
+#### Install scikit-optimize
 ```
 cd $GPTUNEROOT
 git clone https://github.com/scikit-optimize/scikit-optimize.git
@@ -92,7 +88,7 @@ pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-### Install autotune
+#### Install autotune
 autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
 ```
 cd $GPTUNEROOT
@@ -103,7 +99,7 @@ pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-### Install GPTune
+#### Install GPTune
 GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, scikit-learn, scipy, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, and pygmo. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
 cd $GPTUNEROOT
@@ -215,11 +211,8 @@ The range of values that the parameter spans should be defined in the *range* ar
 The range of values that the parameter spans should be defined in the *range* argument.
 3. Categorical: defines parameters that take their values in a set or list of values.
 The list of valid values defining the parameter should be defined in the *values* argument.
+(*Note*: If the problems the application targets cannot be defined in a Cartesian space, the user can simply give a list of problems (as a Categorical parameter) in the definition of the task space.)
 
-**_Note_**
-```
-If the problems the application targets cannot be defined in a cartesian space, the user can simply give a list of problems (as a Categorical parameter) in the definition of the task space.
-```
 #### Constraints
 
 Not all points in the task or input spaces correspond to valid problems or parameter configurations.
@@ -262,5 +255,24 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 [**Talk**] [Autotuning exascale applications with Gaussain Process Regression, E-NLA Seminar, October 14, 2020](https://www.youtube.com/watch?v=Xnj8FDquMgI&t=287s)
 
 ## REFERENCES
-
+### Publications
 Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234–246. DOI:https://doi.org/10.1145/3437801.3441621
+
+### BibTeX citation
+```
+@inproceedings{liu2021gptune,
+  title={GPTune: multitask learning for autotuning exascale applications},
+  author={Liu, Yang and Sid-Lakhdar, Wissam M and Marques, Osni and Zhu, Xinran and Meng, Chang and Demmel, James W and Li, Xiaoye S},
+  booktitle={Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+  pages={234--246},
+  year={2021}
+}
+```
+
+### Copyright
+GPTune Copyright (c) 2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S.Dept. of Energy) and the University of California, Berkeley.
+All rights reserved.
+
+If you have questions about your rights to use or distribute this software, please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
+
+NOTICE.  This Software was developed under funding from the U.S. Department of Energy and the U.S. Government consequently retains certain rights.  As such, the U.S. Government has been granted for itself and others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the Software to reproduce, distribute copies to the public, prepare derivative works, and perform publicly and display publicly, and to permit other to do so.
