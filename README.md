@@ -1,8 +1,8 @@
-<p align="left">
-<img src="icon.png">
+<p align="center">
+<img src="GPTune_icon.png" width="200">
 </p>
 
-# **GPTune** (https://gptune.lbl.gov)
+# [**GPTune**](https://gptune.lbl.gov) 
 
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem using Bayesian optimization methodologies.
 ## Features
