@@ -1,0 +1,89 @@
+{
+  "tuning_problem_name": "PDGEQRF",
+  "modeler": "Model_LCM",
+  "task_parameters": [
+    [
+      10000,
+      10000
+    ]
+  ],
+  "input_space": [
+    {
+      "name": "m",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 128,
+      "upper_bound": 10000
+    },
+    {
+      "name": "n",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 128,
+      "upper_bound": 10000
+    }
+  ],
+  "parameter_space": [
+    {
+      "name": "mb",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 1,
+      "upper_bound": 16
+    },
+    {
+      "name": "nb",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 1,
+      "upper_bound": 16
+    },
+    {
+      "name": "npernode",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 0,
+      "upper_bound": 5
+    },
+    {
+      "name": "p",
+      "type": "int",
+      "transformer": "normalize",
+      "lower_bound": 1,
+      "upper_bound": 32
+    }
+  ],
+  "output_space": [
+    {
+      "name": "r",
+      "type": "real",
+      "transformer": "identity",
+      "lower_bound": -Infinity,
+      "upper_bound": Infinity
+    }
+  ],
+  "loadable_machine_configurations": {
+    "Cori" : {
+      "haswell": {
+        "nodes":[1,8],
+        "cores":32
+      },
+      "knl": {
+        "nodes":[1,8],
+        "cores":68
+      }
+    }
+  },
+  "loadable_software_configurations": {
+    "openmpi": {
+      "version_from":[4,0,1],
+      "version_to":[5,0,0]
+    },
+    "scalapack":{
+      "version_split":[2,1,0]
+    },
+    "gcc": {
+      "version_split": [8,3,0]
+    }
+  }
+}
