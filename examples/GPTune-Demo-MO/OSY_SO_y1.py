@@ -78,10 +78,10 @@ def cst3(x1, x2):
 def cst4(x1, x2):
     return 2 - x1 + 3*x2 >= 0
 
-def cst5(x1, x2):
+def cst5(x3, x4):
     return 4 - (x3-3)**2 - x4 >= 0
 
-def cst6(x1, x2):
+def cst6(x5, x6):
     return (x5-3)**2 + x6 - 4 >= 0
 
 def main():
@@ -103,7 +103,7 @@ def main():
 
     problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
     x1 = Real(0., 10., transform="normalize", name="x1")
-    x2 = Real(0., 10.., transform="normalize", name="x2")
+    x2 = Real(0., 10., transform="normalize", name="x2")
     x3 = Real(1., 5., transform="normalize", name="x3")
     x4 = Real(0., 6., transform="normalize", name="x4")
     x5 = Real(1., 5., transform="normalize", name="x5")
@@ -112,7 +112,7 @@ def main():
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
-    parameter_space = Space([x1, x2])
+    parameter_space = Space([x1, x2, x3, x4, x5, x6])
     #output_space = Space([y1, y2])
     output_space = Space([y1])
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3, "cst4": cst4, "cst5": cst5, "cst6": cst6}
