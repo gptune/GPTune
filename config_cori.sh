@@ -17,7 +17,7 @@ PREFIX_PATH=~/.local/cori/3.7-anaconda-2019.10/
 echo $(which python) 
 
 module unload cmake
-module load cmake/3.14.4
+module load cmake/3.20.2
 
 
 ##################################################
@@ -514,6 +514,18 @@ if [[ $BuildExample == 1 ]]; then
 	make install
 	make ex3p_indef
 
+
+	cd $GPTUNEROOT/examples/IMPACT-Z
+	rm -rf IMPACT-Z
+	git clone https://github.com/impact-lbl/IMPACT-Z.git
+	cd IMPACT-Z
+	cp ../impact-z-driver/*.f90 ./src/Contrl/.
+	mkdir -p build 
+	cd build
+	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release
+	make
+	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
+
 fi
 
 
@@ -547,3 +559,4 @@ env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
 cd $GPTUNEROOT
+

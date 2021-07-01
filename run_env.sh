@@ -23,9 +23,9 @@
 ############### Cori
 export machine=cori
 export proc=haswell   # knl,haswell
-export mpi=craympich  # openmpi,craympich
+export mpi=openmpi  # openmpi,craympich
 export compiler=gnu   # gnu, intel	
-export nodes=16  # number of nodes to be used
+export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine

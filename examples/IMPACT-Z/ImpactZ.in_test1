@@ -1,0 +1,69 @@
+!================================================================
+! Optimization test lattice
+!================================================================
+!
+!"4" # of procs in Y direction, "4" # of procs in Z direction
+!NOTE WELL: the product of these numbers must equal the number of
+!            processors that you run on!
+!8 8
+1 1
+!
+!--------------------------------------------------
+!"6" - 6D, "20" - # of particles for each charge state, "2" - nonlinear
+!Lorentz integrator, "0" - no error study, "1" - standard output
+6 78336 1 0 10
+!--------------------------------------------------
+!65x65x129 mesh grid,
+!"0.014" - x pipe width (m), y pipe width (m) and period length (m).
+64 64 64 1 1.063000 1.032500 7.64
+!
+!--------------------------------------------------
+!"16" - input distribution type 16, "0" - no restart, "0" - no sub-cycle,
+!"4" - # of charge states
+!19 0 0 1
+3 0 0 1
+!
+!--------------------------------------------------
+!# of particle list for each charge state
+78336
+!
+!--------------------------------------------------
+!current for each charge state (A) [this has no meaning for a single-specie beam]
+!0.0
+0.13
+!
+!--------------------------------------------------
+!q_i/m_i for each charge state. Here, we normalize each charge state
+!by the mass of reference particle so that the reference particle has 1 AMU mass,
+!but less charge.
+-1.95692801440299d-06
+!
+!--------------------------------------------------
+!parameters for initial distribution. see IMPACTlayer.doc for more information.
+! alpha, beta, norm. emittance 
+-3.6 45.2  0.1d-6   1 1 0. 0.
+-3.6 45.2  0.1d-6   1 1 0. 0.
+! 
+-1.9 19.7  0.13       1 1 0. 0.
+!
+!
+!--------------------------------------------------
+!"0.0" - bunched beam current, "81.0e6" - initial kinetic energy, "931.5016e6" -
+!mass of 1 AMU (MeV/c^2), "0.373..." - charge of reference particle,
+!"1.3d9." reference frequency, "0.0" - initial phase of the reference particle.
+0.13 100.d6 0.511005d+06  -1.0 1.3d9 0.0
+! beam current (in A), ini beam kin en (in eV), particle mass (in eV), q in units of prot charge,
+!                             reference freq in Hz, n/u
+!
+! =======================*** LATTICE ***=======================
+0.300000000000E-01 1 10 0 1.0 /
+0.23 1 10 1 0.359461528897675 -1.0 0.15 0.0 0.0 0.0 0.0 0.0 /
+4.363985 4 10 0 1.0 /
+0.1244 1 10 1 -5.94044715691999 -1.0 0.15 0.0 0.0 0.0 0.0 0.0 /
+0.427898 1 10 0 1.0 /
+0.1244 1 10 1 5.62165035242271 -1.0 0.15 0.0 0.0 0.0 0.0 0.0 /
+4.179215 4 10 0 1.0 /
+0.1244 1 10 1 2.51720396688283 -1.0 0.15 0.0 0.0 0.0 0.0 0.0 /
+0.409812 1 10 0 1.0 /
+0.1244 1 10 1 -9.07460498370551 -1.0 0.15 0.0 0.0 0.0 0.0 0.0 /
+0.49149 1 10 0 1.0 /

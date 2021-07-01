@@ -1,0 +1,7 @@
+5 2 /# of parameters, type of optimizer
+60 62 64 66 68 /row location of the control parameters
+5 5 5 5 5  /column location of the control parameters
+0.12d-6 0.12d-6 /target emittances
+15.0 0.0 15.0 0.0 /target beta_x, alpha_x, beta_y, alpha_y
+0.5 /initial range
+0.359461528897675 -5.94044715691999 5.62165035242271 2.51720396688283 -9.07460498370551 /initial values
