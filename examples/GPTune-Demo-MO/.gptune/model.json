@@ -1,0 +1,46 @@
+{
+  "tuning_problem_name": "GPTune-Demo",
+  "modeler": "Model_LCM",
+  "task_parameters": [
+    [
+      2.0
+    ]
+  ],
+  "input_space": [
+    {
+      "name": "t",
+      "type": "real",
+      "transformer": "normalize",
+      "lower_bound": 0.0,
+      "upper_bound": 10.0
+    }
+  ],
+  "parameter_space": [
+    {
+      "name": "x",
+      "type": "real",
+      "transformer": "normalize",
+      "lower_bound": 0.0,
+      "upper_bound": 1.0
+    }
+  ],
+  "output_space": [
+    {
+      "name": "y",
+      "type": "real",
+      "transformer": "identity",
+      "lower_bound": -Infinity,
+      "upper_bound": Infinity
+    }
+  ],
+  "loadable_machine_configurations": {
+    "mymachine" : {
+      "myprocessor": {
+        "nodes":[1],
+        "cores":2
+      }
+    }
+  },
+  "loadable_software_configurations": {
+  }
+}

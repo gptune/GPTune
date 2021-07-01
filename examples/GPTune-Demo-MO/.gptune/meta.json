@@ -1,0 +1,22 @@
+{
+  "tuning_problem_name": "BNH",
+  "machine_configuration": {
+    "machine_name": "mymachine",
+    "myprocessor": {
+      "nodes": 1,
+      "cores": 2
+    }
+  },
+  "software_configuration": {
+  },
+  "loadable_machine_configurations": {
+    "mymachine": {
+      "myprocessor": {
+        "nodes": 1,
+        "cores": 2
+      }
+    }
+  },
+  "loadable_software_configurations": {
+  }
+}
