@@ -74,8 +74,8 @@ def objectives(point):                  # should always use this name for user-d
 	controlfile = point['controlfile']
 
 	nproc = nodes*cores
-	# nproc = 2**(math.floor(math.log(nproc, 2)))
-	nproc =16 # hardcoded now, nproc=32 will make the objective function slightly different ... 
+	nproc = 2**(math.floor(math.log(nproc, 2)))
+	# nproc =16 # hardcoded now, nproc=32 will make the objective function slightly different ... 
 	nthreads = 1
 	npernode = cores
 
@@ -131,11 +131,21 @@ def main():
 	inputfile    = Categoricalnorm (inputfiles, transform="onehot", name="inputfile")
 	controlfile    = Categoricalnorm (controlfiles, transform="onehot", name="controlfile")
 	# Input parameters
-	quad1 = Real     (-5, 5, transform="normalize", name="quad1")
-	quad2 = Real     (-5, 5, transform="normalize", name="quad2")
-	quad3 = Real     (-5, 5, transform="normalize", name="quad3")
-	quad4 = Real     (-5, 5, transform="normalize", name="quad4")
-	quad5 = Real     (-5, 5, transform="normalize", name="quad5")			
+	# we know that XX = x00*(1+quad) has range [-50,50], so adjust range of quad accordingly
+	file1 = open('matchquad.in_test1', 'r')
+	Lines = file1.readlines()
+	npara = int(Lines[0].split()[0])
+	res = [i for i in Lines[-1].split()]
+	b1 = [-50.0/float(res[i])-1.0 for i in range(npara)]
+	b2 = [50.0/float(res[i])-1.0 for i in range(npara)]
+	lb = [min(b1[i],b2[i]) for i in range(npara)]
+	ub = [max(b1[i],b2[i]) for i in range(npara)]
+	
+	quad1 = Real     (lb[0], ub[0], transform="normalize", name="quad1")
+	quad2 = Real     (lb[1], ub[1], transform="normalize", name="quad2")
+	quad3 = Real     (lb[2], ub[2], transform="normalize", name="quad3")
+	quad4 = Real     (lb[3], ub[3], transform="normalize", name="quad4")
+	quad5 = Real     (lb[4], ub[4], transform="normalize", name="quad5")			
 	# Output parameters
 	mismatch   = Real        (float("-Inf") , float("Inf"),name="mismatch")
 	IS = Space([inputfile,controlfile])
