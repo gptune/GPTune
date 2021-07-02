@@ -19,6 +19,7 @@ import sys
 import numpy as np
 import STRUMPACKKernel as sp
 from mpi4py import MPI
+import time
 
 master = MPI.Comm.Get_parent()
 rank = master.Get_rank()
@@ -43,6 +44,7 @@ h = 1.3
 lam = 3.11
 degree = 1
 nargs = len(sys.argv)
+fidelity = 1
 if (nargs > 1):
     fname = sys.argv[1]
 if (nargs > 2):
@@ -51,6 +53,8 @@ if (nargs > 3):
     lam = float(sys.argv[3])
 if (nargs > 4):
     degree = float(sys.argv[4])
+if (nargs > 5):
+    fidelity = float(sys.argv[5])
 
 # read data
 prec = np.float64
@@ -66,10 +70,17 @@ test_points = np.genfromtxt(
 test_labels = np.genfromtxt(
     fname + '_test_label.csv', delimiter=",", dtype=prec
 )
+
+# select partial traning data by fidelity 
+n=int(fidelity*train_points.shape[0])
+train_points = train_points[:n, :]
+train_labels = train_labels[:n]
+
 n, d = train_points.shape
 m = test_points.shape[0]
+
 if rank == 0:
-    print('n =', n, 'd =', d, 'm =', m)
+    print('n =', n, 'd =', d, 'm =', m, 'fidelity =', fidelity)
 
 
 def quality(p, l):
@@ -90,6 +101,7 @@ if rank == 0:
 
 master.Reduce(sendbuf=[quality(pred, test_labels), MPI.DOUBLE],recvbuf=None,op=MPI.MAX, root=0)
 master.Disconnect() 
+time.sleep(2.0)
 
 
 # # read these again because they were permuted, which shouldn't really
