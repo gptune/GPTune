@@ -140,7 +140,8 @@ def main():
     options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
     options['search_pop_size'] = 1000
     options['search_gen'] = 10
-    options['search_more_samples'] = 4
+    options['search_more_samples'] = 10
+    options['sample_class'] = 'SampleOpenTURNS'
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD

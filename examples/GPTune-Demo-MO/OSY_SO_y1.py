@@ -138,10 +138,7 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    #options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-    #options['search_pop_size'] = 1000
-    #options['search_gen'] = 10
-    #options['search_more_samples'] = 4
+    options['sample_class'] = 'SampleOpenTURNS'
     options['search_single_enforce'] = True
 
     # options['mpi_comm'] = None
