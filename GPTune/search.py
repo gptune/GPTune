@@ -31,6 +31,7 @@ import mpi4py
 
 from problem import Problem
 from computer import Computer
+from options import Options
 from data import Data
 from model import Model
 
@@ -40,9 +41,10 @@ from sys import platform as _platform
 
 class Search(abc.ABC):
 
-    def __init__(self, problem : Problem, computer : Computer):
+    def __init__(self, problem : Problem, computer : Computer, options: Options):
         self.problem = problem
         self.computer = computer
+        self.options = options
 
     @abc.abstractmethod
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
@@ -87,12 +89,13 @@ class Search(abc.ABC):
 
 class SurrogateProblem(object):
 
-    def __init__(self, problem, computer, data, models, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
+    def __init__(self, problem, computer, data, models, options, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
 
         self.problem = problem
         self.computer = computer
         self.data = data
         self.models = models
+        self.options = options
 
         self.tid = tid
 
@@ -103,7 +106,10 @@ class SurrogateProblem(object):
         self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
 
     def get_nobj(self):
-        return self.problem.DO
+        if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
+            return 1
+        else:
+            return self.problem.DO
 
     def get_bounds(self):
 
@@ -126,7 +132,11 @@ class SurrogateProblem(object):
             Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
             phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
             EI.append(-((ymin - mu) * Phi + var * phi))
-        return EI
+
+        if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
+            return [np.prod(EI)]
+        else:
+            return EI
 
     def fitness(self, x):   # x is the normalized space
         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
@@ -161,7 +171,10 @@ class SurrogateProblem(object):
             return self.ei(xNorm)
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
-            return [float("Inf")]* self.problem.DO
+            if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'): # single objective optimizer
+                return [float("Inf")]
+            else: 
+                return [float("Inf")]* self.problem.DO
 
 import pygmo as pg
 
@@ -177,14 +190,14 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        prob = SurrogateProblem(self.problem, self.computer, data, models, tid)
+        prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid)
 
         try:
             udi = eval(f'pg.{kwargs["search_udi"]}()')
         except:
             raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-        if(self.problem.DO==1): # single objective
+        if(kwargs["search_algo"]=='pso' or kwargs["search_algo"]=='cmaes'): # single objective optimizer
             try:
                 algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
             except:
