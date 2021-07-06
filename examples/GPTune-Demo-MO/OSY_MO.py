@@ -29,6 +29,7 @@ from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import * # import all
+import pickle
 
 import argparse
 from mpi4py import MPI
@@ -39,12 +40,9 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
-    parser.add_argument('-cores', type=int, default=2,help='Number of cores per machine node')
-    parser.add_argument('-machine', type=str,default='-1', help='Name of the computer (not hostname)')
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
-    parser.add_argument('-npilot', type=int, default=10, help='Number of runs per task')
+    parser.add_argument('-npilot', type=int, default=10, help='Number of initial runs per task')
 
     args = parser.parse_args()
 
@@ -137,11 +135,11 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-    options['search_pop_size'] = 1000
-    options['search_gen'] = 10
-    options['search_more_samples'] = 10
-    options['sample_class'] = 'SampleOpenTURNS'
+    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
+    # options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+    # options['search_pop_size'] = 1000
+    # options['search_gen'] = 10
+    # options['search_more_samples'] = 4
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
@@ -179,6 +177,12 @@ def main():
             xopts = [data.P[tid][i] for i in front]
             print('    Popts ', xopts)
             print('    Oopts ', fopts.tolist())
+
+    plt.figure()
+    Or = np.array(data.O[tid][front])
+    pickle.dump(Or, open(f"{options['search_algo']}_pareto.pkl", "wb"))  
+
+
 
 if __name__ == "__main__":
     main()

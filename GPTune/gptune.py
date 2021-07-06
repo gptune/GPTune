@@ -277,7 +277,7 @@ class GPTune(object):
                     hyperparameters,
                     **kwargs)
 
-        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         model_reupdate = 0
         if update == -1: # search one sample without updating model; then search next with updating model.
             model_reupdate = -1
@@ -508,7 +508,7 @@ class GPTune(object):
         time_fun = time_fun + (t2-t1)/1e9
 
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
-        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer)')
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         NSmin = min(map(len, self.data.P))
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
