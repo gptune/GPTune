@@ -398,6 +398,8 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "func_eval_time":[],
+            "search_time":[],
             "modeling_time":[],
             "modeling_iteration":[]
         }
@@ -502,6 +504,7 @@ class GPTune(object):
                     self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
 
         t2 = time.time_ns()
+        stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
@@ -587,6 +590,7 @@ class GPTune(object):
                 newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
             # print(more_samples,newdata.P)
             t2 = time.time_ns()
+            stats["search_time"].append((t2-t1)/1e9)
             time_search = time_search + (t2-t1)/1e9
 
             t1 = time.time_ns()
