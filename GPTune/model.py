@@ -391,7 +391,7 @@ if __name__ == '__main__':
     def cst5(point):
         print('this is a dummy definition')
         return point                        
-
+    from mpi4py import MPI
     mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
     mpi_size = mpi_comm.Get_size()
