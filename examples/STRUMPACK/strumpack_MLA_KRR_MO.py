@@ -22,7 +22,7 @@ mpirun -n 1 python ./strumpack_MLA_KRR.py -ntask 1 -nrun 20 -npernode 32
 
 
 where:
-	-npernode is the number of MPIs per node for launching the application code
+    -npernode is the number of MPIs per node for launching the application code
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
 """
@@ -44,7 +44,6 @@ sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
 from gptune import * # import all
 
-
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
@@ -53,8 +52,10 @@ from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
 
+import time
+
 ################################################################################
-def objectives(point):                  # should always use this name for user-defined objective function
+def objectives(point):
     #########################################
     ##### constants defined in TuningProblem
     nodes = point['nodes']
@@ -62,7 +63,7 @@ def objectives(point):                  # should always use this name for user-d
     npernode = point['npernode']
     #########################################
 
-    datafile = point['datafile']
+    datafile = "data/"+str(point['datafile'])
     h = 10**point['h']
     Lambda = 10**point['Lambda']
     p = point['p']
@@ -81,27 +82,27 @@ def objectives(point):                  # should always use this name for user-d
     print('OMP_NUM_THREADS=%d\n' %(nthreads))
     info.Set('env',envstr)
     info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-    
-    # datafile = "data/susy_10Kn"
-    # h = 0.1
-    # Lambda = 3.11
+
     degree = 1	# only used when kernel=ANOVA (degree<=d) in KernelRegressionMPI.py
 
     """ use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
     # print('exec', "%s/testPoisson3dMPIDist"%(RUNDIR), 'args', ['%s'%(gridsize), '1', '--sp_reordering_method', '%s'%(sp_reordering_method),'--sp_matching', '0','--sp_compression', '%s'%(sp_compression1),'--sp_nd_param', '%s'%(sp_nd_param),'--sp_compression_min_sep_size', '%s'%(sp_compression_min_sep_size),'--sp_compression_min_front_size', '%s'%(sp_compression_min_front_size),'--sp_compression_leaf_size', '%s'%(sp_compression_leaf_size)]+extra_str, 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads))
-    comm = MPI.COMM_SELF.Spawn("%s/KernelRegressionMPI.py"%(RUNDIR), args=['%s/%s'%(INPUTDIR,datafile), '%s'%(h),'%s'%(Lambda),'%s'%(degree),'%s'%(p)], maxprocs=nproc,info=info)
+    comm = MPI.COMM_SELF.Spawn("%s/KernelRegressionMPI.py"%(RUNDIR), args=['%s/%s'%(INPUTDIR,datafile), '%s'%(h),'%s'%(Lambda),'%s'%(degree), '%s'%(p)], maxprocs=nproc,info=info)
 
     """ gather the return value using the inter-communicator """
     tmpdata = np.array([0],dtype=np.float64)
     comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT)
+    tmpdata1 = np.array([0],dtype=np.float64)
+    comm.Reduce(sendbuf=None, recvbuf=[tmpdata1,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT)
     comm.Disconnect()
 
-    retval = tmpdata[0]
-    print(params, ' krr prediction accuracy (%): ', retval)
+    print(params, ' krr prediction error: ', tmpdata[0])
+    print(params, ' krr training time: ', tmpdata1[0])
 
-    return [-retval]
-	
+    return [tmpdata[0], tmpdata1[0]]
+
 def main():
+
     # Parse command line arguments
 
     args   = parse_args()
@@ -113,6 +114,10 @@ def main():
     optimization = args.optimization
     nrun = args.nrun
 
+    print ("NPERNODE: ", npernode)
+
+    dataset = args.dataset
+
     TUNER_NAME = args.optimization
     (machine, processor, nodes, cores) = GetMachineConfiguration()
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -120,29 +125,31 @@ def main():
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 
-    datafiles = ["data/susy_10Kn"]
+    #datafiles = ["data/susy_10Kn"]
+    datafiles = [dataset]
 
     # Task input parameters
-    datafile    = Categoricalnorm (datafiles, transform="onehot", name="datafile")
+    datafile = Categoricalnorm (datafiles, transform="onehot", name="datafile")
 
     # Tuning parameters
-    h =  Real(-10, 10, transform="normalize", name="h")
-    Lambda =  Real(-10, 10, transform="normalize", name="Lambda")
-    p = Integer(0.1, 1.0, transform="normalize", name="p") # training fidelity
-    # npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    h = Real(-10, 10, transform="normalize", name="h")
+    Lambda = Real(-10, 10, transform="normalize", name="Lambda")
+    p = Real(0.1, 1.0, transform="normalize", name="p") # oversampling parameter
 
-    result   = Real        (0 , float("Inf"),name="r")
+    # npernode = Integer(int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+
+    error = Real(0, float("Inf"), name="error")
+    training_time = Real(0, float("Inf"), name="training_time")
+
     IS = Space([datafile])
-    # PS = Space([h,Lambda,npernode])
     PS = Space([h,Lambda,p])
-    OS = Space([result])
+    OS = Space([error,training_time])
     constraints = {}
     models = {}
-    constants={"nodes":nodes,"cores":cores,"npernode":npernode}
+    constants = {"nodes":nodes,"cores":cores,"npernode":npernode}
 
     """ Print all input and parameter samples """
     print(IS, PS, OS, constraints, models)
-
 
     problem = TuningProblem(IS, PS, OS, objectives, constraints, constants=constants)
     computer = Computer(nodes = nodes, cores = cores, hosts = None)
@@ -159,10 +166,16 @@ def main():
     options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
     options['verbose'] = False
 
+    # MO
+    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+    options['search_pop_size'] = 1000
+    options['search_gen'] = 50
+    options['search_more_samples'] = 4
+
     options.validate(computer = computer)
 
     # """ Building MLA with the given list of tasks """
-    giventask = [["data/susy_10Kn"]]
+    giventask = [[dataset]]
     data = Data(problem)
 
     if(TUNER_NAME=='GPTune'):
@@ -178,8 +191,23 @@ def main():
             print("tid: %d"%(tid))
             print("    matrix:%s"%(data.I[tid][0]))
             print("    Ps ", data.P[tid])
-            print("    Os ", -data.O[tid])
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+            print("    Os ", data.O[tid])
+            #print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+        """ Print all input and parameter samples """
+        import pygmo as pg
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    matrix:%s"%(data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
+            front = ndf[0]
+            # print('front id: ',front)
+            fopts = data.O[tid][front]
+            xopts = [data.P[tid][i] for i in front]
+            print('    Popts ', xopts)
+            print('    Oopts ', fopts.tolist())
 
     if(TUNER_NAME=='opentuner'):
         NI = ntask
@@ -192,7 +220,7 @@ def main():
             print("tid: %d"%(tid))
             print("    matrix:%s"%(data.I[tid][0]))
             print("    Ps ", data.P[tid])
-            print("    Os ", -data.O[tid])
+            print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='hpbandster'):
@@ -205,9 +233,40 @@ def main():
             print("tid: %d"%(tid))
             print("    matrix:%s"%(data.I[tid][0]))
             print("    Ps ", data.P[tid])
-            print("    Os ", -data.O[tid])
+            print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+    if(TUNER_NAME=='Random'):
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+
+        NI = len(giventask)
+        NS = nrun
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS)
+        print("stats: ", stats)
+
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    matrix:%s"%(data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            #print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', -min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+        """ Print all input and parameter samples """
+        import pygmo as pg
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    matrix:%s"%(data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
+            front = ndf[0]
+            # print('front id: ',front)
+            fopts = data.O[tid][front]
+            xopts = [data.P[tid][i] for i in front]
+            print('    Popts ', xopts)
+            print('    Oopts ', fopts.tolist())
+	
 def parse_args():
 
     parser = argparse.ArgumentParser()
@@ -219,15 +278,17 @@ def parse_args():
     parser.add_argument('-cores', type=int, default=1, help='Number of cores per machine node')
     parser.add_argument('-npernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     parser.add_argument('-machine', type=str, help='Name of the computer (not hostname)')
+
     # Algorithm related arguments
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
 
+    # Input dataset
+    parser.add_argument('-dataset', type=str, default="susy_10Kn", help='Name of the dataset')
 
     args   = parser.parse_args()
     return args
-
 
 if __name__ == "__main__":
 

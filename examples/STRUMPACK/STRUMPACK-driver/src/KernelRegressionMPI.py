@@ -56,6 +56,8 @@ if (nargs > 4):
 if (nargs > 5):
     fidelity = float(sys.argv[5])
 
+print ("h:", h, "lam:", lam, "degree:", degree, "fidelity: ", fidelity)
+
 # read data
 prec = np.float64
 train_points = np.genfromtxt(
@@ -86,12 +88,23 @@ if rank == 0:
 def quality(p, l):
     return 100.*(m - sum(p[i]*l[i] < 0 for i in range(m))) / m
 
+def error(p, l):
+    return 1.0 - (m - sum(p[i]*l[i] < 0 for i in range(m))) / m
+
+start = time.time()
 
 # Kernel ridge regression classification
 # using HSS approximation of the kernel
 K_HSS = sp.STRUMPACKKernel(
     h, lam, degree, kernel='rbf', approximation='HSS', mpi=True, argv=sys.argv)
 K_HSS.fit(train_points, train_labels)
+
+end = time.time()
+training_time = end - start
+print ('TRAINING TIME: ', training_time)
+
+start = time.time()
+
 pred = K_HSS.predict(test_points)
 # check quality, labels are -1 or +1
 
@@ -99,10 +112,15 @@ if rank == 0:
     print('HSS KernelRR quality =', quality(pred, test_labels), '%')
     print("classes:", K_HSS.classes_)
 
-master.Reduce(sendbuf=[quality(pred, test_labels), MPI.DOUBLE],recvbuf=None,op=MPI.MAX, root=0)
-master.Disconnect() 
-time.sleep(2.0)
+end = time.time()
+predict_time = end - start
+#print ('PREDICT TIME: ', predict_time)
 
+master.Reduce(sendbuf=[error(pred, test_labels), MPI.DOUBLE],recvbuf=None,op=MPI.MAX, root=0)
+master.Reduce(sendbuf=[np.array(training_time, dtype='d'), MPI.DOUBLE],recvbuf=None,op=MPI.MAX, root=0)
+master.Disconnect()
+
+time.sleep(10.0)
 
 # # read these again because they were permuted, which shouldn't really
 # # be an issue

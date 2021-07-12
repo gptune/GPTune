@@ -1,0 +1,58 @@
+{
+    "tuning_problem_name": "STRUMPACK-KRR-HSS",
+    "machine_configuration": {
+        "machine_name": "Cori",
+        "haswell": {
+            "nodes": 1,
+            "cores": 32
+        }
+    },
+    "software_configuration": {
+        "openmpi": {
+            "version_split": [4,0,1]
+        },
+        "strumpack": {
+            "version_split": [5,1,1]
+        },
+        "scalapack": {
+            "version_split": [2,1,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
+        },
+        "mkl": {
+            "version_split": [2019,0,3]
+        },
+        "scotch": {
+            "version_split": [6,1,0]
+        }
+    },
+    "loadable_machine_configurations": {
+        "Cori" : {
+            "haswell": {
+                "nodes":1,
+                "cores":32
+            }
+        }
+    },
+    "loadable_software_configurations": {
+        "openmpi": {
+            "version_split": [4,0,1]
+        },
+        "strumpack": {
+            "version_split": [5,1,1]
+        },
+        "scalapack": {
+            "version_split": [2,1,0]
+        },
+        "gcc": {
+            "version_split": [8,3,0]
+        },
+        "mkl": {
+            "version_split": [2019,0,3]
+        },
+        "scotch": {
+            "version_split": [6,1,0]
+        }
+    }
+}
