@@ -302,6 +302,7 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
+cp ../patches/space.py skopt/space/.
 python setup.py build 
 python setup.py install --user
 # env CC=mpicc pip install --user -e .								  

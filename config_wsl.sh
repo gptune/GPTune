@@ -238,6 +238,7 @@
   # cd ../
   # rm -rf scikit-optimize
   # git clone https://github.com/scikit-optimize/scikit-optimize.git
+  # cp ../patches/space.py skopt/space/.
   # cd scikit-optimize/
   # env CC=$MPICC pip3.7 install -e .
  

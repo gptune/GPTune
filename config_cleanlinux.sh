@@ -432,7 +432,7 @@ git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
 python setup.py install 
-# env CC=mpicc pip install  -e .								  
+# env CC=mpicc pip install  -e .
 
 
 
@@ -440,9 +440,10 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
+cp ../patches/space.py skopt/space/.
 python setup.py build 
 python setup.py install 
-# env CC=mpicc pip install  -e .								  
+# env CC=mpicc pip install  -e .
 
 
 

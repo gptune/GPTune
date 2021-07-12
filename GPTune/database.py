@@ -600,6 +600,7 @@ class HistoryDB(dict):
                         np.array(tuning_parameter[i], ndmin=2))[0]
                 tuning_parameter_orig_list = np.array(tuple(tuning_parameter_orig),dtype=tuning_dtype).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
+                evaluation_result_orig_list = [round(val, 6) for val in evaluation_result_orig_list]
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
