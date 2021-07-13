@@ -49,38 +49,28 @@ def parse_args():
     return args
 
 def objectives(point):
-    x1 = point["x1"]
-    x2 = point["x2"]
-    x3 = point["x3"]
-    x4 = point["x4"]
-    x5 = point["x5"]
-    x6 = point["x6"]
-
-    y1 = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2)
-    y2 = x1**2 + x2**2 + x3**2 + x4**2 + x5**2 + x6**2
-
-    print ("OSY_Y1: ", y1)
-    print ("OSY_Y2: ", y2)
+    y1 = point["x1"]
+    y2 = point["x2"]
 
     return [y1, y2]
 
 def cst1(x1, x2):
-    return x1 + x2 -2 >= 0
+    return x1**2 + x2**2 - 1 - 0.1*math.cos(16*math.atan(x1/x2)) >= 0
 
 def cst2(x1, x2):
-    return 6 - x1 - x2 >= 0
+    return (x1-0.5)**2+(x2-0.5)**2 <= 0.5
 
-def cst3(x1, x2):
-    return 2 - x2 + x1 >= 0
-
-def cst4(x1, x2):
-    return 2 - x1 + 3*x2 >= 0
-
-def cst5(x3, x4):
-    return 4 - (x3-3)**2 - x4 >= 0
-
-def cst6(x5, x6):
-    return (x5-3)**2 + x6 - 4 >= 0
+#def cst3(x1):
+#    return x1 >= 0
+#
+#def cst4(x1):
+#    return x1 <= math.pi
+#
+#def cst5(x2):
+#    return x2 >= 0
+#
+#def cst6(x2):
+#    return x2 <= math.pi
 
 def main():
 
@@ -94,28 +84,48 @@ def main():
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    database_metadata = {
+        "tuning_problem_name": "TNK",
+        "machine_configuration": {
+            "machine_name": "mymachine",
+            "myprocessor": {
+                "nodes": 1,
+                "cores": 2
+                }
+            },
+        "software_configuration": {},
+        "loadable_machine_configurations": {
+            "mymachine": {
+                "myprocessor": {
+                    "nodes": 1,
+                    "cores": 2
+                    }
+                }
+            },
+        "loadable_software_configurations": {}
+    }
+
+    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = database_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 
-    problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
-    x1 = Real(0., 10., transform="normalize", name="x1")
-    x2 = Real(0., 10., transform="normalize", name="x2")
-    x3 = Real(1., 5., transform="normalize", name="x3")
-    x4 = Real(0., 6., transform="normalize", name="x4")
-    x5 = Real(1., 5., transform="normalize", name="x5")
-    x6 = Real(0., 10., transform="normalize", name="x6")
+    problem = Categoricalnorm(["TNK"], transform="onehot", name="problem")
+    x1 = Real(0., math.pi, transform="normalize", name="x1")
+    x2 = Real(0., math.pi, transform="normalize", name="x2")
     y1 = Real(float("-Inf"), float("Inf"), name="y1")
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
-    parameter_space = Space([x1, x2, x3, x4, x5, x6])
+    parameter_space = Space([x1, x2])
     output_space = Space([y1, y2])
-    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3, "cst4": cst4, "cst5": cst5, "cst6": cst6}
+    constraints = {"cst1": cst1, "cst2": cst2}
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
+
+    historydb = HistoryDB(meta_dict=database_metadata)
+
     options = Options()
     options['model_restarts'] = 1
 
@@ -135,23 +145,23 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
-    # options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-    # options['search_pop_size'] = 1000
-    # options['search_gen'] = 10
-    # options['search_more_samples'] = 4
+    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
+    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+    options['search_pop_size'] = 1000
+    options['search_gen'] = 10
+    options['search_more_samples'] = 5
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
-    # options['sample_class'] = 'SampleLHSMDU'
+    #options['sample_class'] = 'SampleLHSMDU'
     options['sample_class'] = 'SampleOpenTURNS'
 
     options.validate(computer=computer)
 
-    giventask = [["OSY"]]
+    giventask = [["TNK"]]
 
     NI=len(giventask)
     NS=nrun
@@ -160,7 +170,7 @@ def main():
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
+        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
         (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
         print("stats: ", stats)
 
@@ -182,7 +192,7 @@ def main():
     if True: # python plot
         from pymoo.factory import get_problem
         from pymoo.util.plotting import plot
-        problem = get_problem("osy")
+        problem = get_problem("tnk")
         pareto_front = problem.pareto_front()
         '''Plotting process'''
         pf_X = [pair[0] for pair in pareto_front]
@@ -226,7 +236,7 @@ def main():
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on OSY")
+        plt.title("Tuning on TNK")
         plt.legend(loc="upper right")
         plt.ylabel('Y1')
         plt.xlabel('Y2')
