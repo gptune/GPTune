@@ -107,6 +107,7 @@ class Computer(object):
                 D2 = None
             if(options['RCI_mode']==False):    
                 O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
+
                 source = "measure"
 
                 if len(O2)>0 and type(O2[0]) == type({}):

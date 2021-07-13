@@ -26,7 +26,7 @@ from autotune.problem import TuningProblem
 import uuid
 import time
 
-def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
+def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
 
     # machine configuration values
@@ -48,23 +48,49 @@ def GetMachineConfiguration(meta_description_path = "./.gptune/meta.json"):
         except:
             print ("[HistoryDB] not able to get machine configuration")
 
-    elif os.path.exists(meta_description_path):
-        try:
-            with open(meta_description_path) as f_in:
-                gptune_metadata = json.load(f_in)
-                machine_configuration = gptune_metadata['machine_configuration']
-                machine_name = machine_configuration['machine_name']
-                processor_list = list(machine_configuration.keys())
-                processor_list.remove('machine_name')
-                # YC: we currently assume the application uses only one processor type
-                processor_model = processor_list[0]
-                nodes = machine_configuration[processor_model]['nodes']
-                cores = machine_configuration[processor_model]['cores']
-        except:
-            print ("[HistoryDB] not able to get machine configuration")
-
     else:
-        print ("[HistoryDB] not able to get machine configuration")
+        if meta_path != None or meta_dict != None:
+            metadata = {}
+
+            if meta_path != None and os.path.exists(meta_path):
+                try:
+                    with open(meta_path) as f_in:
+                        metadata.update(json.load(f_in))
+                except:
+                    print ("[Error] not able to load meta description from path")
+
+            if meta_dict != None:
+                try:
+                    metadata.update(meta_dict)
+                except:
+                    print ("[Error] not able to load meta description from dict")
+
+            machine_configuration = metadata['machine_configuration']
+            machine_name = machine_configuration['machine_name']
+            processor_list = list(machine_configuration.keys())
+            processor_list.remove('machine_name')
+            # YC: we currently assume the application uses only one processor type
+            processor_model = processor_list[0]
+            nodes = machine_configuration[processor_model]['nodes']
+            cores = machine_configuration[processor_model]['cores']
+
+        elif os.path.exists("./.gptune/meta.json"):
+            try:
+                with open("./.gptune/meta.json") as f_in:
+                    gptune_metadata = json.load(f_in)
+                    machine_configuration = gptune_metadata['machine_configuration']
+                    machine_name = machine_configuration['machine_name']
+                    processor_list = list(machine_configuration.keys())
+                    processor_list.remove('machine_name')
+                    # YC: we currently assume the application uses only one processor type
+                    processor_model = processor_list[0]
+                    nodes = machine_configuration[processor_model]['nodes']
+                    cores = machine_configuration[processor_model]['cores']
+            except:
+                print ("[HistoryDB] not able to get machine configuration")
+
+        else:
+            print ("[HistoryDB] not able to get machine configuration")
 
     #return (machine_configuration)
     return (machine_name, processor_model, nodes, cores)
@@ -127,7 +153,7 @@ def search_item_by_uid(dict_arr, uid):
 
 class HistoryDB(dict):
 
-    def __init__(self, **kwargs):
+    def __init__(self, meta_path=None, meta_dict=None, **kwargs):
 
         self.tuning_problem_name = None
 
@@ -204,42 +230,59 @@ class HistoryDB(dict):
             os.system("rm -rf test.lock")
 
         # if GPTune is called through Reverse Communication Interface
-        elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
-            with open("./.gptune/meta.json") as f_in:
-                print ("GPTune History Database Init")
-
-                gptune_metadata = json.load(f_in)
-
-                if "tuning_problem_name" in gptune_metadata:
-                    self.tuning_problem_name = gptune_metadata["tuning_problem_name"]
-                else:
-                    self.tuning_problem_name = "Unknown"
-
-                if "history_db_path" in gptune_metadata:
-                    self.history_db_path = gptune_metadata["history_db_path"]
-                else:
-                    os.system("mkdir -p ./gptune.db")
-                    self.history_db_path = "./gptune.db"
-
-                if "machine_configuration" in gptune_metadata:
-                    self.machine_configuration = gptune_metadata["machine_configuration"]
-                if "software_configuration" in gptune_metadata:
-                    self.software_configuration = gptune_metadata["software_configuration"]
-                if "loadable_machine_configurations" in gptune_metadata:
-                    self.loadable_machine_configurations = gptune_metadata["loadable_machine_configurations"]
-                if "loadable_software_configurations" in gptune_metadata:
-                    self.loadable_software_configurations = gptune_metadata["loadable_software_configurations"]
-
-                try:
-                    with FileLock("test.lock", timeout=0):
-                        print ("[HistoryDB] use filelock for synchronization")
-                        self.file_synchronization_method = 'filelock'
-                except:
-                    print ("[HistoryDB] use rsync for synchronization")
-                    self.file_synchronization_method = 'rsync'
-                os.system("rm -rf test.lock")
         else:
-            self.history_db = False
+            metadata = {}
+
+            if meta_path != None or meta_dict != None:
+                if meta_path != None and os.path.exists(meta_path):
+                    try:
+                        with open(meta_path) as f_in:
+                            metadata.update(json.load(f_in))
+                    except:
+                        print ("[Error] not able to load meta description from path")
+                if meta_dict != None:
+                    try:
+                        metadata.update(meta_dict)
+                    except:
+                        print ("[Error] not able to load meta description from dict")
+
+            elif os.path.exists('./.gptune/meta.json'): #or (os.environ.get('GPTUNE_RCI') == 'yes'):
+                with open("./.gptune/meta.json") as f_in:
+                    print ("GPTune History Database Init")
+
+                    metadata = json.load(f_in)
+            else:
+                self.history_db = False
+                raise Exception("History database initialization failed")
+
+            if "tuning_problem_name" in metadata:
+                self.tuning_problem_name = metadata["tuning_problem_name"]
+            else:
+                self.tuning_problem_name = "Unknown"
+
+            if "history_db_path" in metadata:
+                self.history_db_path = metadata["history_db_path"]
+            else:
+                os.system("mkdir -p ./gptune.db")
+                self.history_db_path = "./gptune.db"
+
+            if "machine_configuration" in metadata:
+                self.machine_configuration = metadata["machine_configuration"]
+            if "software_configuration" in metadata:
+                self.software_configuration = metadata["software_configuration"]
+            if "loadable_machine_configurations" in metadata:
+                self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
+            if "loadable_software_configurations" in metadata:
+                self.loadable_software_configurations = metadata["loadable_software_configurations"]
+
+            try:
+                with FileLock("test.lock", timeout=0):
+                    print ("[HistoryDB] use filelock for synchronization")
+                    self.file_synchronization_method = 'filelock'
+            except:
+                print ("[HistoryDB] use rsync for synchronization")
+                self.file_synchronization_method = 'rsync'
+            os.system("rm -rf test.lock")
 
     def check_load_deps(self, func_eval):
 
