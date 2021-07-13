@@ -3,10 +3,10 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.2_3
-gccversion=10.2.0_4
-openblasversion=0.3.13
-lapackversion=3.9.0_1
+pythonversion=3.9.6
+gccversion=11.1.0_1
+openblasversion=0.3.15_1
+lapackversion=3.10.0
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
@@ -44,9 +44,9 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
-	CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-10
-	FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-10
-	CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-10
+	CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-11
+	FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-11
+	CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-11
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
@@ -442,7 +442,7 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-cp ../patches/space.py skopt/space/.
+cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build
 python setup.py install
 # env CC=mpicc pip install  -e .
