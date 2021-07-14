@@ -105,7 +105,7 @@ class GPTune(object):
 
         """ Reproduce surrogate models """
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 
         for i in range(self.problem.DO):
             modelers[i].gen_model_from_hyperparameters(self.data,
@@ -529,6 +529,7 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
+
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
                 if(self.problem.models is not None):
@@ -567,10 +568,36 @@ class GPTune(object):
                             gradients,
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
+                elif (kwargs["model_class"] == "Model_LCM_constrained"):
+                    output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o]
+                    lower_bound = output_space["lower_bound"]
+                    upper_bound = output_space["upper_bound"]
+
+                    for i in range(len(tmpdata.O[0])):
+                        output_result = tmpdata.O[0][i][0]
+                        if output_result < lower_bound or \
+                           output_result > upper_bound:
+                            tmpdata.O[0][i][0] = 999999999.0 #sys.float_info.max
+
+                    (bestxopt, neg_log_marginal_likelihood,
+                            gradients, iteration) = \
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            bestxopt,
+                            neg_log_marginal_likelihood,
+                            gradients,
+                            iteration)
+                    stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     modelers[o].train(data = tmpdata, **kwargs)
                 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
+                    C = modelers[o].M.kern.get_correlation_metric()
+                    print("The correlation matrix C is \n", C)
+                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM_constrained' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
                 elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
@@ -794,10 +821,26 @@ class GPTune(object):
                             gradients,
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
+                elif (kwargs["model_class"] == "Model_LCM_constrained"):
+                    (bestxopt, neg_log_marginal_likelihood,
+                            gradients, iteration) = \
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            bestxopt,
+                            neg_log_marginal_likelihood,
+                            gradients,
+                            iteration)
+                    stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     modelers[o].train(data = tmpdata, **kwargs)
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
+                    C = modelers[o].M.kern.get_correlation_metric()
+                    print("The correlation matrix C is \n", C)
+                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM_constrained' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
                 elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
