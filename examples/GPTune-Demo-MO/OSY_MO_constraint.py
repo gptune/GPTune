@@ -115,7 +115,7 @@ def main():
     x4 = Real(0., 6., transform="normalize", name="x4")
     x5 = Real(1., 5., transform="normalize", name="x5")
     x6 = Real(0., 10., transform="normalize", name="x6")
-    y1 = Real(float("-Inf"), -150, name="y1")
+    y1 = Real(float("-Inf"), -150, name="y1", optimize=False)
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
@@ -146,7 +146,7 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
+    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
     options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
     options['search_pop_size'] = 1000
     options['search_gen'] = 10

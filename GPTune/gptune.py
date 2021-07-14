@@ -580,8 +580,8 @@ class GPTune(object):
                                output_result > upper_bound:
                                 out_of_range = True
 
-                        if out_of_range == True:
-                            tmpdata.O[0][i][0] = 999999999.0 #sys.float_info.max
+                        if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
 
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
