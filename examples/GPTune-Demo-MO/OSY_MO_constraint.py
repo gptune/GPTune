@@ -59,9 +59,6 @@ def objectives(point):
     y1 = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2)
     y2 = x1**2 + x2**2 + x3**2 + x4**2 + x5**2 + x6**2
 
-    print ("OSY_Y1: ", y1)
-    print ("OSY_Y2: ", y2)
-
     return [y1, y2]
 
 def cst1(x1, x2):
@@ -86,7 +83,7 @@ def main():
     TUNER_NAME = args.optimization
 
     database_metadata = {
-        "tuning_problem_name": "OSY",
+        "tuning_problem_name": "OSY_constraint",
         "machine_configuration": {
             "machine_name": "mymachine",
             "myprocessor": {
@@ -118,7 +115,7 @@ def main():
     x4 = Real(0., 6., transform="normalize", name="x4")
     x5 = Real(1., 5., transform="normalize", name="x5")
     x6 = Real(0., 10., transform="normalize", name="x6")
-    y1 = Real(float("-Inf"), float("Inf"), name="y1")
+    y1 = Real(float("-Inf"), -150, name="y1")
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
@@ -157,7 +154,7 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_LCM_constrained' #'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
