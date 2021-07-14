@@ -569,14 +569,18 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 elif (kwargs["model_class"] == "Model_LCM_constrained"):
-                    output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o]
-                    lower_bound = output_space["lower_bound"]
-                    upper_bound = output_space["upper_bound"]
-
                     for i in range(len(tmpdata.O[0])):
-                        output_result = tmpdata.O[0][i][0]
-                        if output_result < lower_bound or \
-                           output_result > upper_bound:
+                        out_of_range = False
+                        for o_ in range(self.problem.DO):
+                            output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                            lower_bound = output_space["lower_bound"]
+                            upper_bound = output_space["upper_bound"]
+                            output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][0][i]
+                            if output_result < lower_bound or \
+                               output_result > upper_bound:
+                                out_of_range = True
+
+                        if out_of_range == True:
                             tmpdata.O[0][i][0] = 999999999.0 #sys.float_info.max
 
                     (bestxopt, neg_log_marginal_likelihood,
