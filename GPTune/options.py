@@ -61,7 +61,7 @@ class Options(dict):
 
 
         """ Options for the search phase """
-        search_class = 'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
+        search_class = 'SearchPyGMO' #'SearchCMO' #'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
         search_threads = None  # Number of threads in each thread group handling one task
         search_processes = 1  # Reserved option
         search_multitask_threads = None # Number of threads groups each handling one task
