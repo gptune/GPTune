@@ -132,6 +132,7 @@ class SurrogateProblem(object):
             Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
             phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
             EI.append(-((ymin - mu) * Phi + var * phi))
+            # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             return [np.prod(EI)]
