@@ -135,7 +135,8 @@ class SurrogateProblem(object):
             # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
-            return [np.prod(EI)]
+            EI_prod = np.prod(EI)
+            return [-1.0*EI_prod if EI_prod>0 else EI_prod]
         else:
             return EI
 

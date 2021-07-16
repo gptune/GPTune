@@ -125,7 +125,8 @@ class SampleLHSMDU(Sample):
 
         if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
 
-            lhs = lhsmdu.resample()
+            #lhs = lhsmdu.resample() # YC: this can fall into too clustered samples if there are many constraints
+            lhs = lhsmdu.sample(len(space), n_samples)
 
         else:
 
