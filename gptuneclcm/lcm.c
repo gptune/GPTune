@@ -155,6 +155,7 @@ fun_jac_struct* initialize
     // MPI ScaLAPACK related parameters
     int mb,
     int maxtries,
+    double jitter,
     int nprow,
     int npcol,
     MPI_Comm comm
@@ -174,6 +175,7 @@ fun_jac_struct* initialize
     z->X      = X;
     z->Y      = Y;
     z->maxtries      = maxtries;
+    z->jitter      = jitter;
 
     // MPI ScaLAPACK related parameters
     z->mpi_comm = comm;
@@ -454,7 +456,7 @@ for (int p = 0; p < 8; p++)
 	if(z->prowid!=-1 && z->pcolid!=-1){
         info=1;
         int ntry=0;
-        double jitter = 1e-8;
+        double jitter = z->jitter;
         while(info>0 && ntry<z->maxtries){
             
         # pragma omp parallel private ( k, li, gi, ljstart, tmppid ) shared ( z )
@@ -478,7 +480,7 @@ for (int p = 0; p < 8; p++)
                 }
             }     
 
-            // printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
+            printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
 
             pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 

@@ -65,6 +65,7 @@ def objectives(point):                  # should always use this name for user-d
 	cores = point['cores']	
 	#########################################
 
+	# # retval = max(-18,np.log(point['quad']**2.0)/np.log(10.0))
 	# # retval = np.log(point['quad']**2.0)/np.log(10.0)
 	# retval = point['quad']**2.0
 	# print(point['quad'], ' impact-z objective: ', retval)
@@ -217,9 +218,9 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
-	# options['search_pop_size'] = 10000
+	options['search_pop_size'] = 10000
 	options['sample_class'] = 'SampleOpenTURNS'
 	options.validate(computer = computer)
 

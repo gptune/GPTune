@@ -191,6 +191,7 @@ class LCM(GPy.kern.Kern):
     def train_kernel(self, X, Y, computer, kwargs):
         npernode = int(computer.cores/kwargs['model_threads'])
         maxtries = kwargs['model_max_jitter_try']
+        jitter = kwargs['model_jitter']
         mpi_size=kwargs['model_processes']  # this makes sure every rank belongs to the blacs grid
         nprow = int(np.sqrt(mpi_size))
         npcol = mpi_size // nprow
@@ -205,7 +206,7 @@ class LCM(GPy.kern.Kern):
         X = np.concatenate([np.concatenate([X[i], np.ones((len(X[i]), 1)) * i], axis=1) for i in range(len(X))])
         Y = np.array(list(itertools.chain.from_iterable(Y)))
 
-        _ = mpi_comm.bcast(("init", (self, X, Y, maxtries)), root=mpi4py.MPI.ROOT)
+        _ = mpi_comm.bcast(("init", (self, X, Y, maxtries,jitter)), root=mpi4py.MPI.ROOT)
 
         _log_lim_val = np.log(np.finfo(np.float64).max)
         _exp_lim_val = np.finfo(np.float64).max
@@ -391,6 +392,7 @@ if __name__ == "__main__":
                     ("context", c_int),\
                     ("Kdesc", POINTER(c_int)),\
                     ("alphadesc", POINTER(c_int)),\
+                    ("jitter", c_double),\
                     ("distY", POINTER(c_double)),\
                     ("buffer", POINTER(c_double)),\
                     ("mpi_comm", POINTER(c_mpi_comm_t))]
@@ -417,7 +419,7 @@ if __name__ == "__main__":
 
         if (res[0] == "init"):
 
-            (ker_lcm, X, Y, maxtries) = res[1]
+            (ker_lcm, X, Y, maxtries,jitter) = res[1]
             mb = min(mb, max(1,min(X.shape[0]//nprow, X.shape[0]//npcol)))   # YL: mb <=32 doesn't seem reasonable, comment this line out ?
             # # print('mb',mb,'nprow',nprow,'npcol',npcol)
             cliblcm.initialize.restype = POINTER(fun_jac_struct)
@@ -430,6 +432,7 @@ if __name__ == "__main__":
                     Y.ctypes.data_as(POINTER(c_double)),\
                     c_int(mb),\
                     c_int(maxtries),\
+                    c_double(jitter),\
                     c_int(nprow),\
                     c_int(npcol),\
                     c_mpi_comm_t.from_address(mpi4py.MPI._addressof(mpi4py.MPI.COMM_WORLD)))

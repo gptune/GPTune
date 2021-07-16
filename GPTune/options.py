@@ -53,6 +53,7 @@ class Options(dict):
         model_restart_processes = None  # Number of MPIs each handling one random start
         model_restart_threads = None   # Number of threads each handling one random start
         model_max_iters = 15000   # Number of maximum iterations for the optimizers
+        model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression

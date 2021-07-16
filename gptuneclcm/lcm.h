@@ -87,6 +87,7 @@ typedef struct
     int context;       // BLACS context
     int Kdesc[9];      // ScaLAPACK K matrix descriptor
     int alphadesc[9];  // ScaLAPACK alpha vector descriptor
+    double jitter;     // The staring jittering parameter
     double* distY;     // Distributed version of the Y array
     double* buffer;    // buffer for MPI communications and for internal copies
     MPI_Comm mpi_comm; // MPI communicator
@@ -108,6 +109,7 @@ fun_jac_struct* initialize
     // MPI ScaLAPACK related parameters
     int mb,
     int maxtries,
+    double jitter,
     int nprow,
     int npcol,
     MPI_Comm comm
