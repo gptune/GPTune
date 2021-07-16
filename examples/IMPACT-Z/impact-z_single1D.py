@@ -40,6 +40,7 @@ import mpi4py
 from mpi4py import MPI
 from array import array
 import math
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
@@ -64,11 +65,16 @@ def objectives(point):                  # should always use this name for user-d
 	cores = point['cores']	
 	#########################################
 
-	quad1 = point['quad1']
-	quad2 = point['quad2']
-	quad3 = point['quad3']
-	quad4 = point['quad4']
-	quad5 = point['quad5']
+	# # retval = np.log(point['quad']**2.0)/np.log(10.0)
+	# retval = point['quad']**2.0
+	# print(point['quad'], ' impact-z objective: ', retval)
+	# return retval
+
+	quad1 = 0.0 # point['quad']
+	quad2 = 0.0 # point['quad']
+	quad3 = point['quad']
+	quad4 = 0.0 # point['quad']
+	quad5 = 0.0 # point['quad']
 	inputfile = point['inputfile']
 	controlfile = point['controlfile']
 
@@ -99,10 +105,41 @@ def objectives(point):                  # should always use this name for user-d
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MIN,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()
 	   
+	# retval = np.log(tmpdata[0])/np.log(10.0)
 	retval = tmpdata[0]
 	print(params, ' impact-z objective: ', retval)
 
 	return [retval] 
+
+def predict_aug(modeler, gt, point,tid):   # point is the orginal space
+	x =point['quad']
+	xNorm = gt.problem.PS.transform([[x]])
+	xi0 = gt.problem.PS.inverse_transform(np.array(xNorm, ndmin=2))
+	xi=xi0[0]
+
+	IOrig = gt.data.I[tid]
+
+	# point0 = gt.data.D
+	point2 = {gt.problem.IS[k].name: IOrig[k] for k in range(gt.problem.DI)}
+	point  = {gt.problem.PS[k].name: xi[k] for k in range(gt.problem.DP)}
+	# point.update(point0)
+	point.update(point2)
+	# print("point", point)
+
+	xNorm = gt.problem.PS.transform(xi0)[0]
+	if(gt.problem.models is not None):
+		if(gt.problem.driverabspath is not None):
+			modulename = Path(gt.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+			sys.path.append(gt.problem.driverabspath) # add path to sys
+			module = importlib.import_module(modulename) # import driver name as a module
+		else:
+			raise Exception('performance models require passing driverabspath to GPTune')
+		# modeldata= self.problem.models(point)
+		modeldata= module.models(point)
+		xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+		# print(xNorm)
+	(mu, var) = modeler[0].predict(xNorm, tid=tid)
+	return (mu, var)
 
 			
 def main():
@@ -146,18 +183,19 @@ def main():
 	# quad4 = Real     (lb[3], ub[3], transform="normalize", name="quad4")
 	# quad5 = Real     (lb[4], ub[4], transform="normalize", name="quad5")			
 	
-	quad1 = Real     (-0.05, 0.05, transform="normalize", name="quad1")
-	quad2 = Real     (-0.05, 0.05, transform="normalize", name="quad2")
-	quad3 = Real     (-0.05, 0.05, transform="normalize", name="quad3")
-	quad4 = Real     (-0.05, 0.05, transform="normalize", name="quad4")
-	quad5 = Real     (-0.05, 0.05, transform="normalize", name="quad5")			
+	quad = Real     (-1, 1, transform="normalize", name="quad")
+	# quad2 = Real     (-1, 1, transform="normalize", name="quad2")
+	# quad3 = Real     (-1, 1, transform="normalize", name="quad3")
+	# quad4 = Real     (-1, 1, transform="normalize", name="quad4")
+	# quad5 = Real     (-1, 1, transform="normalize", name="quad5")			
 	
 
 
 	# Output parameters
 	mismatch   = Real        (float("-Inf") , float("Inf"),name="mismatch")
 	IS = Space([inputfile,controlfile])
-	PS = Space([quad1, quad2, quad3, quad4, quad5])
+	# PS = Space([quad1, quad2, quad3, quad4, quad5])
+	PS = Space([quad])
 	OS = Space([mismatch])
 	constraints = {}
 	models = {}
@@ -190,8 +228,8 @@ def main():
 	giventask = [["ImpactZ.in_test1","matchquad.in_test1"]]
 	# giventask = [["big.rua"]]	
 	data = Data(problem)
-	Pdefault = [0,0,0,0,0]
-	data.P = [[Pdefault]] * ntask
+	# Pdefault = [0,0,0,0,0]
+	# data.P = [[Pdefault]] * ntask
 
 	if(TUNER_NAME=='GPTune'):
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
@@ -208,6 +246,53 @@ def main():
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
+		# fig = plt.figure(figsize=[12.8, 9.6])
+		x = np.arange(-1, 1., 0.0001)
+		for tid in range(len(data.I)):
+			fig = plt.figure(figsize=[12.8, 9.6])
+			p = data.I[tid]
+			t = p[0]
+			I_orig=p
+			kwargst = {IS[k].name: I_orig[k] for k in range(len(IS))}
+			# y=np.zeros([len(x),1])
+			y_mean=np.zeros([len(x)])
+			y_std=np.zeros([len(x)])
+			for i in range(len(x)):
+				P_orig=[x[i]]
+				kwargs = {PS[k].name: P_orig[k] for k in range(len(PS))}
+				kwargs.update(kwargst)
+				kwargs.update(constants)
+				# y[i]=objectives(kwargs)
+				if(TUNER_NAME=='GPTune'):
+					(y_mean[i],var) = predict_aug(model, gt, kwargs,tid)
+					y_std[i]=np.sqrt(var)
+					# print(y_mean[i],y_std[i],y[i])
+			fontsize=40
+			plt.rcParams.update({'font.size': 40})
+			# plt.plot(x, y, 'b',lw=2,label='true')
+
+			plt.plot(x, y_mean, 'k', lw=3, zorder=9, label='prediction')
+			plt.fill_between(x, y_mean - y_std, y_mean + y_std,alpha=0.2, color='k')
+			# print(data.P[tid])
+			plt.scatter(data.P[tid], data.O[tid], c='r', s=50, zorder=10, edgecolors=(0, 0, 0),label='sample')
+
+			plt.xlabel('x',fontsize=fontsize+2)
+			# plt.ylabel('log(y)',fontsize=fontsize+2)
+			plt.ylabel('y',fontsize=fontsize+2)
+			# plt.title('t=%f'%t,fontsize=fontsize+2)
+			# print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())
+			# legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+			legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
+			# annot_min(x,y)
+			# plt.show()
+			plt.show(block=False)
+			plt.pause(0.5)
+			# input("Press [enter] to continue.")
+			fig.savefig('surrogate1D.pdf')
+
+
 
 	if(TUNER_NAME=='opentuner'):
 		NI = len(giventask)
@@ -235,6 +320,11 @@ def main():
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
+
+
+
 
 
 def parse_args():
