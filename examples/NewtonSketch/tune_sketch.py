@@ -74,8 +74,8 @@ def objectives(point):
 
     return [time_spent]
 
-def cst1(m):
-    return int(d*m) >= 1 and int(d*m) <= d
+def cst1(sketch_size):
+    return int(d*sketch_size) >= 1 and int(d*sketch_size) <= d
 
 def main():
 
