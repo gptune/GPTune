@@ -74,7 +74,7 @@ def objectives(point):
 
     return [time_spent]
 
-def cst1(sketch_size):
+def cst1(d, sketch_size):
     return int(d*sketch_size) >= 1 and int(d*sketch_size) <= d
 
 def main():
@@ -105,7 +105,21 @@ def main():
     output_space = Space([wall_clock_time])
     constraints = {"cst1": cst1}
 
-    problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None, None)
+    giventask = [["cifar-10"]]
+
+    global A, b, n, d, lambd, lreg
+    if giventask[0][0] == 'cifar-10':
+        A, b = generate_dataset.load_data('cifar-10')
+    else:
+        A, b = generate_dataset.load_data('synthetic_orthogonal')
+    n, d = A.shape
+    lambd = 1e-4
+    lreg = LogisticRegression(A, b, lambd)
+    x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
+
+    constants={"n":n, "d":d, "lambd":lambd}
+
+    problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None, constants=constants)
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
@@ -123,21 +137,10 @@ def main():
     options['sample_class'] = 'SampleOpenTURNS'
     options.validate(computer=computer)
 
-    giventask = [["cifar-10"]]
-    global A, b, n, d, lambd, lreg
-    if giventask[0][0] == 'cifar-10':
-        A, b = generate_dataset.load_data('cifar-10')
-    else:
-        A, b = generate_dataset.load_data('synthetic_orthogonal')
-    n, d = A.shape
-    lambd = 1e-4
-    lreg = LogisticRegression(A, b, lambd)
-    x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
+    TUNER_NAME = os.environ['TUNER_NAME']
 
     NI=len(giventask)
     NS=nrun
-
-    TUNER_NAME = os.environ['TUNER_NAME']
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)

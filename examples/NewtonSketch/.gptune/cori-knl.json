@@ -1,0 +1,22 @@
+{
+    "tuning_problem_name": "newtonsketch",
+    "machine_configuration": {
+        "machine_name": "Cori",
+        "knl": {
+            "nodes": 1,
+            "cores": 68
+        }
+    },
+    "software_configuration": {
+    },
+    "loadable_machine_configurations": {
+        "Cori": {
+            "knl": {
+                "nodes": 1,
+                "cores": 68
+            }
+        }
+    },
+    "loadable_software_configurations": {
+    }
+}

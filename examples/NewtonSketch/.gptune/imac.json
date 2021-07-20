@@ -1,0 +1,22 @@
+{
+    "tuning_problem_name": "newtonsketch",
+    "machine_configuration": {
+        "machine_name": "iMac",
+        "Intel Core i7": {
+            "nodes": 1,
+            "cores": 8
+        }
+    },
+    "software_configuration": {
+    },
+    "loadable_machine_configurations": {
+        "iMac": {
+            "Intel Core i7": {
+                "nodes": 1,
+                "cores": 8
+            }
+        }
+    },
+    "loadable_software_configurations": {
+    }
+}
