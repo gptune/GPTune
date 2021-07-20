@@ -21,6 +21,9 @@ import sys
 import os
 import logging
 
+sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+sys.path.insert(0, os.path.abspath(__file__ + "/newtonsketch/"))
+
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
@@ -29,8 +32,6 @@ from gptune import *
 import argparse
 import numpy as np
 import time
-
-sys.path.insert(0, os.path.abspath(__file__ + "/newtonsketch/"))
 
 import torch
 import torch.optim as optim
@@ -73,6 +74,9 @@ def objectives(point):
 
     return [time_spent]
 
+def cst1(m):
+    return int(d*m) >= 1 and int(d*m) <= d
+
 def main():
 
     global nodes
@@ -99,7 +103,9 @@ def main():
     input_space = Space([dataset])
     parameter_space = Space([sketch, sketch_size, sparsity_parameter])
     output_space = Space([wall_clock_time])
-    problem = TuningProblem(input_space, parameter_space, output_space, objectives, {}, None, None)
+    constraints = {"cst1": cst1}
+
+    problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None, None)
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
