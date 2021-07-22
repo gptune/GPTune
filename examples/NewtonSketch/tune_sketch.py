@@ -78,6 +78,9 @@ def objectives(point):
 def cst1(d, sketch_size):
     return int(d*sketch_size) >= 1
 
+def cst2(nnz, n):
+    return int(nnz*n) >= 1
+
 def main():
 
     global nodes
@@ -111,13 +114,13 @@ def main():
 
     sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
     sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
-    sparsity_parameter = Integer(1, n, transform="normalize", name="sparsity_parameter")
+    sparsity_parameter = Real(0., 1.0, transform="normalize", name="sparsity_parameter")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
     input_space = Space([datasets])
     parameter_space = Space([sketch, sketch_size, sparsity_parameter])
     output_space = Space([wall_clock_time])
-    constraints = {"cst1": cst1}
+    constraints = {"cst1": cst1, "cst2": cst2}
 
     constants={"n":n, "d":d, "lambd":lambd}
 
