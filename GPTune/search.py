@@ -123,15 +123,19 @@ class SurrogateProblem(object):
         """ Expected Improvement """
         EI=[]
         for o in range(self.problem.DO):
-            ymin = self.data.O[self.tid][:,o].min()
-            (mu, var) = self.models[o].predict(x, tid=self.tid)
-            mu = mu[0][0]
-            var = max(1e-18, var[0][0])
-            std = np.sqrt(var)
-            chi = (ymin - mu) / std
-            Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-            phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-            EI.append(-((ymin - mu) * Phi + var * phi))
+            optimize = self.problem.OS[o].optimize
+            if optimize == False:
+                print ("o: ", self.problem.OS[o].name, "is not optimize")
+            else:
+                ymin = self.data.O[self.tid][:,o].min()
+                (mu, var) = self.models[o].predict(x, tid=self.tid)
+                mu = mu[0][0]
+                var = max(1e-18, var[0][0])
+                std = np.sqrt(var)
+                chi = (ymin - mu) / std
+                Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                EI.append(-((ymin - mu) * Phi + var * phi))
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             EI_prod = np.prod(EI)
