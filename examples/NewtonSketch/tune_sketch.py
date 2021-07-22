@@ -48,6 +48,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-dataset', type=str, default='cifar-10', help='Dataset')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-npilot', type=int, default=10, help='Number of initial runs per task')
 
@@ -64,7 +65,7 @@ def objectives(point):
 
     print ("Dataset: ", dataset, "n: ", n, "d: ", d, "sketch: ", sketch, "lambda: ", lambd, "m: ", m, "nnz: ", nnz, "error_tolerance: ", error_tolerance)
 
-    _, losses_, times_ = lreg.ihs_tuning(sketch_size=m, sketch=sketch, nnz=None, error_tolerance=error_tolerance)
+    _, losses_, times_ = lreg.ihs_tuning(sketch_size=m, sketch=sketch, nnz=nnz, error_tolerance=error_tolerance)
 
     print (losses_)
     print (times_)
@@ -75,7 +76,7 @@ def objectives(point):
     return [time_spent]
 
 def cst1(d, sketch_size):
-    return int(d*sketch_size) >= 1 and int(d*sketch_size) <= d
+    return int(d*sketch_size) >= 1
 
 def main():
 
@@ -84,38 +85,39 @@ def main():
 
     # Parse command line arguments
     args = parse_args()
+    dataset = args.dataset
     nrun = args.nrun
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-    os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = TUNER_NAME
-
-    dataset = Categoricalnorm(["cifar-10"], transform="onehot", name="dataset")
-
-    sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
-    sketch_size = Real(0., 1., transform="normalize", name="sketch_size")
-    sparsity_parameter = Real(0., 1., transform="normalize", name="sparsity_parameter")
-    wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
-
-    input_space = Space([dataset])
-    parameter_space = Space([sketch, sketch_size, sparsity_parameter])
-    output_space = Space([wall_clock_time])
-    constraints = {"cst1": cst1}
-
-    giventask = [["cifar-10"]]
-
     global A, b, n, d, lambd, lreg
-    if giventask[0][0] == 'cifar-10':
+    if dataset == 'cifar-10':
         A, b = generate_dataset.load_data('cifar-10')
+    elif dataset == 'synthetic_high_coherence':
+        A, b = generate_dataset.load_data('synthetic_high_coherence')
     else:
         A, b = generate_dataset.load_data('synthetic_orthogonal')
     n, d = A.shape
     lambd = 1e-4
     lreg = LogisticRegression(A, b, lambd)
     x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
+
+    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+    os.environ['MACHINE_NAME'] = machine
+    os.environ['TUNER_NAME'] = TUNER_NAME
+
+    datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
+
+    sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
+    sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
+    sparsity_parameter = Integer(1, n, transform="normalize", name="sparsity_parameter")
+    wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
+
+    input_space = Space([datasets])
+    parameter_space = Space([sketch, sketch_size, sparsity_parameter])
+    output_space = Space([wall_clock_time])
+    constraints = {"cst1": cst1}
 
     constants={"n":n, "d":d, "lambd":lambd}
 
@@ -139,6 +141,7 @@ def main():
 
     TUNER_NAME = os.environ['TUNER_NAME']
 
+    giventask = [[dataset]]
     NI=len(giventask)
     NS=nrun
 
