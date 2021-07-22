@@ -124,7 +124,7 @@ class SurrogateProblem(object):
         EI=[]
         for o in range(self.problem.DO):
             optimize = self.problem.OS[o].optimize
-            if optimize == False:
+            if (self.options['search_algo']=='pso' and optimize == False):
                 print ("o: ", self.problem.OS[o].name, "is not optimize")
             else:
                 ymin = self.data.O[self.tid][:,o].min()
