@@ -113,8 +113,10 @@ def main():
     problem = Categoricalnorm(["TNK"], transform="onehot", name="problem")
     x1 = Real(0., math.pi, transform="normalize", name="x1")
     x2 = Real(0., math.pi, transform="normalize", name="x2")
-    y1 = Real(float("-Inf"), float("Inf"), name="y1")
-    y2 = Real(0.6, 1.0, name="y2")
+    y1 = Real(0., 0.6, name="y1")
+    #y1 = Real(float("-Inf"), float("Inf"), name="y1")
+    #y2 = Real(0.6, 1.0, name="y2")
+    y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
     parameter_space = Space([x1, x2])
@@ -145,11 +147,11 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
-    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-    options['search_pop_size'] = 1000
-    options['search_gen'] = 10
-    options['search_more_samples'] = 5
+    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
+    #options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+    #options['search_pop_size'] = 1000
+    #options['search_gen'] = 10
+    #options['search_more_samples'] = 5
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
@@ -236,7 +238,7 @@ def main():
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on TNK")
+        plt.title("Tuning on TNK (constrained LCM)")
         plt.legend(loc="upper right")
         plt.xlabel('Y1')
         plt.ylabel('Y2')

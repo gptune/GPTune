@@ -115,7 +115,7 @@ def main():
     x4 = Real(0., 6., transform="normalize", name="x4")
     x5 = Real(1., 5., transform="normalize", name="x5")
     x6 = Real(0., 10., transform="normalize", name="x6")
-    y1 = Real(float("-Inf"), -150, name="y1", optimize=False)
+    y1 = Real(float("-Inf"), -150, name="y1") #, optimize=False)
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
@@ -139,25 +139,16 @@ def main():
     options['objective_nprocmax'] = 1
 
     options['model_processes'] = 1
-    # options['model_threads'] = 1
-    # options['model_restart_processes'] = 1
-
-    # options['search_multitask_processes'] = 1
-    # options['search_multitask_threads'] = 1
-    # options['search_threads'] = 16
 
     ## disable the following lines to use product of individual EIs as a single-valued acquisition function
     options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
     options['search_pop_size'] = 1000
-    options['search_gen'] = 10
+    options['search_gen'] = 50
+    #options['search_gen'] = 10
     options['search_more_samples'] = 4
 
-    # options['mpi_comm'] = None
-    #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM_constrained' #'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
-    # options['sample_algo'] = 'MCS'
-    # options['sample_class'] = 'SampleLHSMDU'
     options['sample_class'] = 'SampleOpenTURNS'
 
     options.validate(computer=computer)
@@ -223,21 +214,22 @@ def main():
         pf_Y = [pair[1] for pair in pareto_front]
         plt.plot(pf_X, pf_Y, color='red')
 
-        #for i in range(len(OS)):
-        #    label = PS[i]
-        #    x = y1[i]
-        #    y = y2[i]
-        #    plt.annotate(label, # this is the text
-        #                 (x,y), # this is the point to label
-        #                 textcoords="offset points", # how to position the text
-        #                 xytext=(0,10), # distance from text to points (x,y)
-        #                 ha='center') # horizontal alignment can be left, right or center
+        for i in range(len(OS)):
+            label = i+1
+            #label = PS[i]
+            x = y1[i]
+            y = y2[i]
+            plt.annotate(label, # this is the text
+                         (x,y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,10), # distance from text to points (x,y)
+                         ha='center') # horizontal alignment can be left, right or center
 
         y1 = y1[npilot:nrun]
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on OSY")
+        plt.title("Tuning on OSY (constrained LCM + NSGA2)")
         plt.legend(loc="upper right")
         plt.xlabel('Y1')
         plt.ylabel('Y2')

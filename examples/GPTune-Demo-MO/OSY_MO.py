@@ -149,11 +149,11 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
+    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
     options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
     options['search_pop_size'] = 1000
-    options['search_gen'] = 10
-    options['search_more_samples'] = 4
+    options['search_gen'] = 50
+    options['search_more_samples'] = 5
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
@@ -240,7 +240,7 @@ def main():
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on OSY")
+        plt.title("Tuning on OSY (MO)")
         plt.legend(loc="upper right")
         plt.xlabel('Y1')
         plt.ylabel('Y2')

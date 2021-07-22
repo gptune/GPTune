@@ -236,7 +236,7 @@ def main():
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on TNK")
+        plt.title("Tuning on TNK (NSGA2)")
         plt.legend(loc="upper right")
         plt.ylabel('Y1')
         plt.xlabel('Y2')
