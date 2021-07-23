@@ -78,8 +78,8 @@ def objectives(point):
 def cst1(d, sketch_size):
     return int(d*sketch_size) >= 1
 
-def cst2(nnz, n):
-    return int(nnz*n) >= 1
+def cst2(sparsity_parameter, n):
+    return int(sparsity_parameter*n) >= 1
 
 def main():
 
