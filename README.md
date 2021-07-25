@@ -5,6 +5,43 @@
 # [**GPTune**](https://gptune.lbl.gov) 
 
 *GPTune* is an autotuning framework that relies on multitask and transfer learnings to help solve the underlying black-box optimization problem using Bayesian optimization methodologies.
+
+Table of Contents
+=================
+
+* [<a href="https://gptune.lbl.gov" rel="nofollow"><strong>GPTune</strong></a>](#gptune)
+   * [Features](#features)
+   * [Installation](#installation)
+      * [Installation using example scripts](#installation-using-example-scripts)
+         * [Ubuntu/Debian-like systems supporting apt-get](#ubuntudebian-like-systems-supporting-apt-get)
+         * [Mac OS supporting homebrew](#mac-os-supporting-homebrew)
+         * [NERSC Cori](#nersc-cori)
+      * [Installation from scratch](#installation-from-scratch)
+         * [Install SCALAPACK](#install-scalapack)
+         * [Install mpi4py](#install-mpi4py)
+         * [Install scikit-optimize](#install-scikit-optimize)
+         * [Install autotune](#install-autotune)
+         * [Install GPTune](#install-gptune)
+   * [Examples](#examples)
+      * [GPTune-Demo](#gptune-demo)
+      * [SCALAPCK QR](#scalapck-qr)
+      * [SuperLU_DIST](#superlu_dist)
+   * [Usage](#usage)
+      * [Problem description](#problem-description)
+         * [Spaces](#spaces)
+         * [Parameters](#parameters)
+         * [Constraints](#constraints)
+         * [Objective Function](#objective-function)
+         * [Performance Models](#performance-models)
+      * [GPTune invocation](#gptune-invocation)
+   * [Resources](#resources)
+   * [References](#references)
+      * [Publications](#publications)
+      * [BibTeX citation](#bibtex-citation)
+      * [Copyright](#copyright)
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
 ## Features
  - **(High-performance and parallel tuning)** GPTune can tune applications that are specifically designed for the high-performance clusters and exascale computational applications, and is a unique distributed-memory parallel autotuner. 
  - **(Transfer and multi-objective learning)** GPTune adopts transfer learning through classical single-output and multiple-output Gaussian process surrogate models, along with novel surrogate models, and incorporates various performance models. It also supports multiple-objective tuning over certain applications. 
@@ -254,7 +291,7 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 [**Talk**] [Autotuning exascale applications with Gaussain Process Regression, E-NLA Seminar, October 14, 2020](https://www.youtube.com/watch?v=Xnj8FDquMgI&t=287s)
 
-## REFERENCES
+## References
 ### Publications
 Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234–246. DOI:https://doi.org/10.1145/3437801.3441621
 
