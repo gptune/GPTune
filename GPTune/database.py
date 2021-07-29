@@ -1319,6 +1319,9 @@ class HistoryDB(dict):
             #    task_parameter_dict = {problem.IS[k].name:task_parameter_orig_list[i][k] for k in range(len(problem.IS))}
             #    task_parameter_dict_list.append(task_parameter_dict)
 
+            objective_dict = self.problem_space_to_dict(problem.OS)[objective]
+            objective_dict["objective_id"] = objective
+
             new_surrogate_models.append({
                     "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
@@ -1328,7 +1331,7 @@ class HistoryDB(dict):
                     "parameter_space":self.problem_space_to_dict(problem.PS),
                     "output_space":self.problem_space_to_dict(problem.OS),
                     "modeler":"Model_LCM",
-                    "objective_id":objective,
+                    "objective":objective_dict,
                     "time":{
                         "tm_year":now.tm_year,
                         "tm_mon":now.tm_mon,
