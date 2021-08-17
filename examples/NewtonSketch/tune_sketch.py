@@ -59,21 +59,29 @@ def parse_args():
 def objectives(point):
     dataset = point['dataset']
     sketch = point['sketch']
+    n = point["n"]
+    d = point["d"]
     m = int(d*point['sketch_size'])
     nnz = point['sparsity_parameter']*point["d"]/point["n"]
-    error_tolerance = 1e-6
+    lambd = point['lambd']
+    error_threshold = point['error_threshold']
+    niter = point['niter']
 
-    print ("Dataset: ", dataset, "n: ", n, "d: ", d, "sketch: ", sketch, "lambda: ", lambd, "m: ", m, "nnz: ", nnz, "error_tolerance: ", error_tolerance)
+    print ("Dataset: ", dataset, "n: ", n, "d: ", d, "sketch: ", sketch, "lambda: ", lambd, "m: ", m, "nnz: ", nnz, "error_threshold: ", error_threshold, "niter: ", niter)
 
-    _, losses_, times_ = lreg.ihs_tuning(sketch_size=m, sketch=sketch, nnz=nnz, error_tolerance=error_tolerance)
+    times_spent = []
+    for i in range(niter):
+        _, losses_, times_ = lreg.ihs_tuning(sketch_size=m, sketch=sketch, nnz=nnz, error_threshold=error_threshold)
 
-    print (losses_)
-    print (times_)
+        print (losses_)
+        print (times_)
 
-    time_spent = times_[-1]
-    loss_final = losses_[-1]
+        time_spent = times_[-1]
+        times_spent.append(time_spent)
 
-    return [time_spent]
+        loss_final = losses_[-1]
+
+    return [times_spent]
 
 def cst1(d, sketch_size):
     return int(d*sketch_size) >= 1
@@ -96,17 +104,25 @@ def main():
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
-    global A, b, n, d, lambd, lreg
+    global A, b, lreg
     if dataset == 'cifar-10':
-        A, b = generate_dataset.load_data('cifar-10')
+        A, b = generate_dataset.load_data('cifar-10', n=50000, d=2000)
+        lambd = 1e-4
+        error_threshold = 1e-6
     elif dataset == 'susy_100Kn':
         A, b = generate_dataset.load_data('susy_100Kn')
+        lambd = 1e-4
+        error_threshold = 1e-10
     elif dataset == 'synthetic_high_coherence':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=2**16, d=2**10)
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=16384, d=256, df=2)
+        lambd = 1e-4
+        error_threshold = 1e-6
     else:
         A, b = generate_dataset.load_data('synthetic_orthogonal')
+        lambd = 1e-4
+        error_threshold = 1e-6
     n, d = A.shape
-    lambd = 1e-4
+    niter = 5
     lreg = LogisticRegression(A, b, lambd)
     x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
 
@@ -118,8 +134,8 @@ def main():
     datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
 
     sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
-    sketch_size = Real(0., 5., transform="normalize", name="sketch_size")
-    sparsity_parameter = Real(0., 5.0, transform="normalize", name="sparsity_parameter")
+    sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
+    sparsity_parameter = Real(1./d, n/d, transform="normalize", name="sparsity_parameter")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
     input_space = Space([datasets])
@@ -127,7 +143,7 @@ def main():
     output_space = Space([wall_clock_time])
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
 
-    constants={"n":n, "d":d, "lambd":lambd}
+    constants={"n":n, "d":d, "lambd":lambd, "error_threshold":error_threshold, "niter":niter}
 
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None, constants=constants)
 
