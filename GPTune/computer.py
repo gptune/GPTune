@@ -118,7 +118,8 @@ class Computer(object):
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
                             tuning_parameter = P[i],\
-                            evaluation_result = tmp)
+                            evaluation_result = tmp,\
+                            evaluation_detail = tmp)
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
@@ -199,23 +200,31 @@ class Computer(object):
                 if D2 is not None:
                     kwargs.update(D2)
                 o = module.objectives(kwargs)
-                #print('kwargs',kwargs,'o',o)
+                # print('kwargs',kwargs,'o',o)
+
+                o_eval = []
 
                 if type(o) == type({}): # predicted by model
                     source = o["source"]
-                    O2_ = [o[problem.OS[k].name] for k in range(len(problem.OS))]
-                else:
+                    o_eval = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                else: # type(o) == type([]): # list
                     source = "measure"
-                    O2_ = [o]
+                    for i in range(len(o)):
+                        if type(o[i]) == type([]):
+                            o_eval.append(np.average(o[i]))
+                        else:
+                            o_eval.append(o[i])
 
                 if history_db is not None:
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = T2, \
                             tuning_parameter = [P2[j]],\
-                            evaluation_result = np.array(O2_).reshape((len(O2_), problem.DO)), \
+                            evaluation_result = [o_eval], \
+                            evaluation_detail = [o], \
                             source = source)
+                            #np.array(O2_).reshape((len(O2_), problem.DO)), \
 
-                O2.append(o)
+                O2.append(o_eval)
 
         return O2
 

@@ -596,6 +596,7 @@ class HistoryDB(dict):
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
+            evaluation_detail : np.ndarray,\
             source : str = "measure"):
 
         print ("store_func_eval")
@@ -644,6 +645,7 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuple(tuning_parameter_orig),dtype=tuning_dtype).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
                 evaluation_result_orig_list = [round(val, 6) for val in evaluation_result_orig_list]
+                evaluation_detail_orig_list = np.array(evaluation_detail[i]).tolist()
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
@@ -653,6 +655,11 @@ class HistoryDB(dict):
                 machine_configuration_store = self.machine_configuration
                 software_configuration_store = self.software_configuration
                 evaluation_result_store = { problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k] for k in range(len(problem.OS)) }
+                evaluation_detail_store = { problem.OS[k].name:{} for k in range(len(problem.OS)) }
+                for k in range(len(problem.OS)):
+                    evaluation_detail_store[problem.OS[k].name] = {}
+                    evaluation_detail_store[problem.OS[k].name]["evaluations"] = evaluation_detail_orig_list[k]
+                    evaluation_detail_store[problem.OS[k].name]["objective_scheme"] = "average"
 
                 if "machine_configuration" in task_parameter_store:
                     import ast
@@ -670,6 +677,7 @@ class HistoryDB(dict):
                         "machine_configuration":machine_configuration_store,
                         "software_configuration":software_configuration_store,
                         "evaluation_result":evaluation_result_store,
+                        "evaluation_detail":evaluation_detail_store,
                         "source": source,
                         "time":{
                             "tm_year":now.tm_year,

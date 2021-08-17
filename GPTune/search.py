@@ -292,7 +292,10 @@ if __name__ == '__main__':
         return point
     def cst5(point):
         print('this is a dummy definition')
-        return point          
+        return point
+    def cst6(point):
+        print('this is a dummy definition')
+        return point
     from mpi4py import MPI
     mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
