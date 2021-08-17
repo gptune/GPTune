@@ -60,7 +60,7 @@ def objectives(point):
     dataset = point['dataset']
     sketch = point['sketch']
     m = int(d*point['sketch_size'])
-    nnz = point['sparsity_parameter']
+    nnz = point['sparsity_parameter']*point["d"]/point["n"]
     error_tolerance = 1e-6
 
     print ("Dataset: ", dataset, "n: ", n, "d: ", d, "sketch: ", sketch, "lambda: ", lambd, "m: ", m, "nnz: ", nnz, "error_tolerance: ", error_tolerance)
@@ -78,8 +78,11 @@ def objectives(point):
 def cst1(d, sketch_size):
     return int(d*sketch_size) >= 1
 
-def cst2(sparsity_parameter, n):
-    return int(sparsity_parameter*n) >= 1
+def cst2(sparsity_parameter, n, d):
+    return int(sparsity_parameter*d/n*n) >= 1
+
+def cst3(sparsity_parameter, n, d):
+    return int(sparsity_parameter*d/n*n) <= n
 
 def main():
 
@@ -96,8 +99,10 @@ def main():
     global A, b, n, d, lambd, lreg
     if dataset == 'cifar-10':
         A, b = generate_dataset.load_data('cifar-10')
+    elif dataset == 'susy_100Kn':
+        A, b = generate_dataset.load_data('susy_100Kn')
     elif dataset == 'synthetic_high_coherence':
-        A, b = generate_dataset.load_data('synthetic_high_coherence')
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=2**16, d=2**10)
     else:
         A, b = generate_dataset.load_data('synthetic_orthogonal')
     n, d = A.shape
@@ -113,14 +118,14 @@ def main():
     datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
 
     sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
-    sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
-    sparsity_parameter = Real(0., 1.0, transform="normalize", name="sparsity_parameter")
+    sketch_size = Real(0., 5., transform="normalize", name="sketch_size")
+    sparsity_parameter = Real(0., 5.0, transform="normalize", name="sparsity_parameter")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
     input_space = Space([datasets])
     parameter_space = Space([sketch, sketch_size, sparsity_parameter])
     output_space = Space([wall_clock_time])
-    constraints = {"cst1": cst1, "cst2": cst2}
+    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
 
     constants={"n":n, "d":d, "lambd":lambd}
 
