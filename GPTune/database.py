@@ -25,6 +25,7 @@ from autotune.space import *
 from autotune.problem import TuningProblem
 import uuid
 import time
+import requests
 
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
@@ -409,6 +410,32 @@ class HistoryDB(dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+            #URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+            URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
+
+            try:
+                r = requests.post(url = URL, data={"access_token":"","tuning_problem_name":"OSY"})
+                if r.status_code == 200:
+                    if not os.path.exists(json_data_path): #TODO: check
+                        with open(json_data_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "surrogate_model":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+
+                    func_eval_list_downloaded = json.loads(r.text)["perf_data"]
+                    print ("FUNC_EVAL_LIST_DOWNLOADED: ", func_eval_list_downloaded)
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["func_eval"] += func_eval_list_downloaded #TODO: uid check
+                    with open(json_data_path, "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+                else:
+                    print ("request status_code: ", r.status_code)
+            except:
+                print ("direct download failed")
+
             if os.path.exists(json_data_path):
                 print ("[HistoryDB] Found a history database file")
                 if self.file_synchronization_method == 'filelock':
