@@ -198,7 +198,7 @@ def main():
             y1.append(o[0])
             y2.append(o[1])
 
-        plt.plot(y1, y2, 'o', color='black', label='Search')
+        plt.plot(y1, y2, 'o', color='red', label='Search')
 
         '''Pareto frontier selection process'''
         sorted_list = sorted([[y1[i], y2[i]] for i in range(len(y1))], reverse=False)
@@ -222,9 +222,9 @@ def main():
         #                 xytext=(0,10), # distance from text to points (x,y)
         #                 ha='center') # horizontal alignment can be left, right or center
 
-        y1 = y1[npilot:nrun]
-        y2 = y2[npilot:nrun]
-        plt.plot(y1, y2, 'o', color='red', label='Search')
+        #y1 = y1[npilot:nrun]
+        #y2 = y2[npilot:nrun]
+        #plt.plot(y1, y2, 'o', color='red', label='Search')
 
         plt.title("Tuning on OSY")
         plt.legend(loc="upper right")

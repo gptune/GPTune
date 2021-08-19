@@ -411,11 +411,11 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
 
-            #URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
-            URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
+            URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+            #URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
 
             try:
-                r = requests.post(url = URL, data={"access_token":"","tuning_problem_name":"OSY"})
+                r = requests.post(url = URL, data={"access_token":"","tuning_problem_name":self.tuning_problem_name}, verify=False)
                 if r.status_code == 200:
                     if not os.path.exists(json_data_path): #TODO: check
                         with open(json_data_path, "w") as f_out:
