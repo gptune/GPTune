@@ -697,7 +697,7 @@ class HistoryDB(dict):
                     software_configuration_store = ast.literal_eval(task_parameter_store["software_configuration"])
                     del task_parameter_store["software_configuration"]
 
-                new_function_evaluation_results.append({
+                function_evaluation_document = {
                         "task_parameter":task_parameter_store,
                         "tuning_parameter":tuning_parameter_store,
                         "constants":constants_store,
@@ -718,7 +718,29 @@ class HistoryDB(dict):
                             "tm_isdst":now.tm_isdst
                             },
                         "uid":str(uid)
-                    })
+                    }
+
+                new_function_evaluation_results.append(function_evaluation_document)
+
+                URL = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
+                #URL = "http://127.0.0.1:8000/repo/direct-upload/" # debug
+
+                print ("function_evaluation_document: ", str(function_evaluation_document))
+
+                try:
+                    r = requests.post(url = URL,
+                            data={
+                                "access_token":"", #TODO: access_token
+                                "tuning_problem_name":self.tuning_problem_name,
+                                "function_evaluation_document":json.dumps(function_evaluation_document),
+                                },
+                            verify=False)
+                    if r.status_code == 200:
+                        print ("direct upload success")
+                    else:
+                        print ("request status_code: ", r.status_code)
+                except:
+                    print ("direct upload failed")
 
             if self.file_synchronization_method == 'filelock':
                 with FileLock(json_data_path+".lock"):
