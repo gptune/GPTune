@@ -49,12 +49,13 @@ def objectives(point):
     n = point["n"]
     k = point["k"]
     nb = point["nb"]
+    nthreads = point["nthreads"]
     pada = point["pada"]
     padb = point["padb"]
     padc = point["padc"]
     niter = point['niter']
 
-    command = f"plasmatest dgemm --iter={niter} --dim={m}:{n}:{k} --nb={nb} --pada={pada} --padb={padb} --padc={padc}"
+    command = f"OMP_NUM_THREADS={nthreads} plasmatest dgemm --iter={niter} --dim={m}:{n}:{k} --nb={nb} --pada={pada} --padb={padb} --padc={padc}"
     print (command)
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output, errors = p.communicate()
@@ -79,6 +80,7 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "DGEMM",
         "tuning_problem_category": "PLASMA",
+        "historydb_access_token": os.getenv("HISTORYDB_ACCESS_TOKEN"),
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }
@@ -94,15 +96,16 @@ def main():
 
     giventask = [[4096,4096,4096]]
 
-    m = Integer(128, 40960, transform="normalize", name="m")
-    n = Integer(128, 40960, transform="normalize", name="n")
-    k = Integer(128, 40960, transform="normalize", name="k")
-    nb = Integer(1, giventask[0][0], transform="normalize", name="nb")
+    m = Integer(128, 4096, transform="normalize", name="m")
+    n = Integer(128, 4096, transform="normalize", name="n")
+    k = Integer(128, 4096, transform="normalize", name="k")
+    nb = Integer(1, 1024, transform="normalize", name="nb")
+    nthreads = Integer(1, 64, transform="normalize", name="nthreads")
     runtime = Real(float("-Inf"), float("Inf"), name="runtime")
     #gflops = Real(float("-Inf"), float("Inf"), name="gflops")
 
     input_space = Space([m, n, k])
-    parameter_space = Space([nb])
+    parameter_space = Space([nb, nthreads])
     output_space = Space([runtime])
     constraints = {}
     constants={"pada":0, "padb":0, "padc":0, "niter":5}
