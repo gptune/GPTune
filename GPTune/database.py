@@ -157,6 +157,7 @@ class HistoryDB(dict):
     def __init__(self, meta_path=None, meta_dict=None, **kwargs):
 
         self.tuning_problem_name = None
+        self.tuning_problem_category = None
 
         """ Options """
         self.history_db = True
@@ -261,6 +262,11 @@ class HistoryDB(dict):
             else:
                 self.tuning_problem_name = "Unknown"
 
+            if "tuning_problem_category" in metadata:
+                self.tuning_problem_category = metadata["tuning_problem_category"]
+            else:
+                self.tuning_problem_category = "Unknown"
+
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
             else:
@@ -280,7 +286,7 @@ class HistoryDB(dict):
                 for spack_loaded_item in spack_loaded_items:
                     import subprocess
 
-                    stdout, stderr = subprocess.Popen("spack find --json superlu-dist", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                    stdout, stderr = subprocess.Popen("spack find --json "+spack_loaded_item, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
                     json_data = json.loads(stdout)[0]
 
@@ -443,11 +449,16 @@ class HistoryDB(dict):
             #URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
 
             try:
-                r = requests.post(url = URL, data={"access_token":"","tuning_problem_name":self.tuning_problem_name}, verify=False)
+                r = requests.post(url = URL,
+                        data={"access_token":"",
+                            "tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category},
+                        verify=False)
                 if r.status_code == 200:
                     if not os.path.exists(json_data_path): #TODO: check
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -541,6 +552,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -548,6 +560,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -556,6 +569,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -628,6 +642,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -635,6 +650,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -643,6 +659,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -760,6 +777,7 @@ class HistoryDB(dict):
                             data={
                                 "access_token":"", #TODO: access_token
                                 "tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "function_evaluation_document":json.dumps(function_evaluation_document),
                                 },
                             verify=False)
