@@ -230,7 +230,7 @@ class HistoryDB(dict):
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
-        # if GPTune is called through Reverse Communication Interface
+        # if GPTune is called through MPI spawning or Reverse Communication Interface
         else:
             metadata = {}
 
@@ -275,7 +275,35 @@ class HistoryDB(dict):
                 self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
             if "loadable_software_configurations" in metadata:
                 self.loadable_software_configurations = metadata["loadable_software_configurations"]
+            if "spack" in metadata:
+                spack_loaded_items = metadata["spack"]
+                for spack_loaded_item in spack_loaded_items:
+                    import subprocess
 
+                    stdout, stderr = subprocess.Popen("spack find --json superlu-dist", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+                    json_data = json.loads(stdout)[0]
+
+                    software_name = json_data["name"]
+                    version_split = [int(v) for v in json_data["version"].split(".")]
+
+                    self.software_configuration[software_name] = { "version_split" : version_split }
+
+                    for software_depend in json_data["dependencies"]:
+                        software_depend_json = json_data["dependencies"][software_depend]
+                        hash_value = software_depend_json["hash"]
+                        types = software_depend_json["type"]
+                        if "build" in types and "link" in types:
+                            stdout, stderr = subprocess.Popen("spack find --json "+software_depend, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                            software_depend_spec_found = json.loads(stdout)
+                            for software_depend_spec in software_depend_spec_found:
+                                if software_depend_spec["hash"] == hash_value:
+                                    software_depend_name = software_depend_spec["name"]
+                                    version_split = [int(v) for v in software_depend_spec["version"].split(".")]
+                                    self.software_configuration[software_depend_name] = { "version_split" : version_split }
+                                    break
+
+                    print (self.software_configuration)
             try:
                 with FileLock("test.lock", timeout=0):
                     print ("[HistoryDB] use filelock for synchronization")
