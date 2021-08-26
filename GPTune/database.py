@@ -158,6 +158,7 @@ class HistoryDB(dict):
 
         self.tuning_problem_name = None
         self.tuning_problem_category = None
+        self.historydb_access_code = ""
 
         """ Options """
         self.history_db = True
@@ -266,6 +267,11 @@ class HistoryDB(dict):
                 self.tuning_problem_category = metadata["tuning_problem_category"]
             else:
                 self.tuning_problem_category = "Unknown"
+
+            if "historydb_access_code" in metadata:
+                self.historydb_access_code = metadata["historydb_access_code"]
+            else:
+                self.historydb_access_code = ""
 
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
@@ -445,12 +451,12 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
 
-            URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
-            #URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
+            #URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+            URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
 
             try:
                 r = requests.post(url = URL,
-                        data={"access_token":"",
+                        data={"access_token":self.historydb_access_code,
                             "tuning_problem_name":self.tuning_problem_name,
                             "tuning_problem_category":self.tuning_problem_category},
                         verify=False)
@@ -767,15 +773,16 @@ class HistoryDB(dict):
 
                 new_function_evaluation_results.append(function_evaluation_document)
 
-                URL = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
-                #URL = "http://127.0.0.1:8000/repo/direct-upload/" # debug
+                #URL = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
+                URL = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
                 print ("function_evaluation_document: ", str(function_evaluation_document))
+                print ("ACCESS_TOKEN: ", self.historydb_access_code)
 
                 try:
                     r = requests.post(url = URL,
                             data={
-                                "access_token":"", #TODO: access_token
+                                "access_token":self.historydb_access_code,
                                 "tuning_problem_name":self.tuning_problem_name,
                                 "tuning_problem_category":self.tuning_problem_category,
                                 "function_evaluation_document":json.dumps(function_evaluation_document),
