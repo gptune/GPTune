@@ -158,7 +158,6 @@ class HistoryDB(dict):
 
         self.tuning_problem_name = None
         self.tuning_problem_category = None
-        self.historydb_access_token = ""
 
         """ Options """
         self.history_db = True
@@ -166,6 +165,14 @@ class HistoryDB(dict):
         self.save_model = True
         self.load_func_eval = True
         self.load_surrogate_model = False
+
+        """ Crowd repository options """
+        self.use_crowd_repo = False
+        self.historydb_access_token = ""
+        self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+        # self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
+        self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
+        #self.crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
         """ Path to JSON data files """
         self.history_db_path = "./"
@@ -268,6 +275,14 @@ class HistoryDB(dict):
             else:
                 self.tuning_problem_category = "Unknown"
 
+            if "use_crowd_repo" in metadata:
+                if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
+                    self.use_crowd_repo = True
+                else:
+                    self.use_crowd_repo = False
+            else:
+                self.use_crowd_repo = False
+
             if "historydb_access_token" in metadata:
                 self.historydb_access_token = metadata["historydb_access_token"]
             else:
@@ -294,26 +309,29 @@ class HistoryDB(dict):
 
                     stdout, stderr = subprocess.Popen("spack find --json "+spack_loaded_item, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-                    json_data = json.loads(stdout)[0]
+                    try:
+                        json_data = json.loads(stdout)[0]
 
-                    software_name = json_data["name"]
-                    version_split = [int(v) for v in json_data["version"].split(".")]
+                        software_name = json_data["name"]
+                        version_split = [int(v) for v in json_data["version"].split(".")]
 
-                    self.software_configuration[software_name] = { "version_split" : version_split }
+                        self.software_configuration[software_name] = { "version_split" : version_split }
 
-                    for software_depend in json_data["dependencies"]:
-                        software_depend_json = json_data["dependencies"][software_depend]
-                        hash_value = software_depend_json["hash"]
-                        types = software_depend_json["type"]
-                        if "build" in types and "link" in types:
-                            stdout, stderr = subprocess.Popen("spack find --json "+software_depend, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-                            software_depend_spec_found = json.loads(stdout)
-                            for software_depend_spec in software_depend_spec_found:
-                                if software_depend_spec["hash"] == hash_value:
-                                    software_depend_name = software_depend_spec["name"]
-                                    version_split = [int(v) for v in software_depend_spec["version"].split(".")]
-                                    self.software_configuration[software_depend_name] = { "version_split" : version_split }
-                                    break
+                        for software_depend in json_data["dependencies"]:
+                            software_depend_json = json_data["dependencies"][software_depend]
+                            hash_value = software_depend_json["hash"]
+                            types = software_depend_json["type"]
+                            if "build" in types and "link" in types:
+                                stdout, stderr = subprocess.Popen("spack find --json "+software_depend, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                                software_depend_spec_found = json.loads(stdout)
+                                for software_depend_spec in software_depend_spec_found:
+                                    if software_depend_spec["hash"] == hash_value:
+                                        software_depend_name = software_depend_spec["name"]
+                                        version_split = [int(v) for v in software_depend_spec["version"].split(".")]
+                                        self.software_configuration[software_depend_name] = { "version_split" : version_split }
+                                        break
+                    except:
+                        print ("spack find failed: ", spack_loaded_item)
 
                     print (self.software_configuration)
             try:
@@ -451,35 +469,33 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
 
-            URL = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
-            #URL = "http://127.0.0.1:8000/repo/direct-download/" # debug
+            if self.use_crowd_repo == True:
+                try:
+                    r = requests.post(url = self.crowd_repo_download_url,
+                            data={"access_token":self.historydb_access_token,
+                                "tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category},
+                            verify=False)
+                    if r.status_code == 200:
+                        if not os.path.exists(json_data_path): #TODO: check
+                            with open(json_data_path, "w") as f_out:
+                                json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "surrogate_model":[],
+                                    "func_eval":[]}
+                                json.dump(json_data, f_out, indent=2)
 
-            try:
-                r = requests.post(url = URL,
-                        data={"access_token":self.historydb_access_token,
-                            "tuning_problem_name":self.tuning_problem_name,
-                            "tuning_problem_category":self.tuning_problem_category},
-                        verify=False)
-                if r.status_code == 200:
-                    if not os.path.exists(json_data_path): #TODO: check
+                        func_eval_list_downloaded = json.loads(r.text)["perf_data"]
+                        print ("FUNC_EVAL_LIST_DOWNLOADED: ", func_eval_list_downloaded)
+                        with open(json_data_path, "r") as f_in:
+                            json_data = json.load(f_in)
+                            json_data["func_eval"] += func_eval_list_downloaded #TODO: uid check
                         with open(json_data_path, "w") as f_out:
-                            json_data = {"tuning_problem_name":self.tuning_problem_name,
-                                "tuning_problem_category":self.tuning_problem_category,
-                                "surrogate_model":[],
-                                "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
-
-                    func_eval_list_downloaded = json.loads(r.text)["perf_data"]
-                    print ("FUNC_EVAL_LIST_DOWNLOADED: ", func_eval_list_downloaded)
-                    with open(json_data_path, "r") as f_in:
-                        json_data = json.load(f_in)
-                        json_data["func_eval"] += func_eval_list_downloaded #TODO: uid check
-                    with open(json_data_path, "w") as f_out:
-                        json.dump(json_data, f_out, indent=2)
-                else:
-                    print ("request status_code: ", r.status_code)
-            except:
-                print ("direct download failed")
+                    else:
+                        print ("request status_code: ", r.status_code)
+                except:
+                    print ("direct download failed")
 
             if os.path.exists(json_data_path):
                 print ("[HistoryDB] Found a history database file")
@@ -773,27 +789,25 @@ class HistoryDB(dict):
 
                 new_function_evaluation_results.append(function_evaluation_document)
 
-                URL = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
-                #URL = "http://127.0.0.1:8000/repo/direct-upload/" # debug
+                if self.use_crowd_repo == True:
+                    print ("function_evaluation_document: ", str(function_evaluation_document))
+                    print ("ACCESS_TOKEN: ", self.historydb_access_token)
 
-                print ("function_evaluation_document: ", str(function_evaluation_document))
-                print ("ACCESS_TOKEN: ", self.historydb_access_token)
-
-                try:
-                    r = requests.post(url = URL,
-                            data={
-                                "access_token":self.historydb_access_token,
-                                "tuning_problem_name":self.tuning_problem_name,
-                                "tuning_problem_category":self.tuning_problem_category,
-                                "function_evaluation_document":json.dumps(function_evaluation_document),
-                                },
-                            verify=False)
-                    if r.status_code == 200:
-                        print ("direct upload success")
-                    else:
-                        print ("request status_code: ", r.status_code)
-                except:
-                    print ("direct upload failed")
+                    try:
+                        r = requests.post(url = self.crowd_repo_upload_url,
+                                data={
+                                    "access_token":self.historydb_access_token,
+                                    "tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "function_evaluation_document":json.dumps(function_evaluation_document),
+                                    },
+                                verify=False)
+                        if r.status_code == 200:
+                            print ("direct upload success")
+                        else:
+                            print ("request status_code: ", r.status_code)
+                    except:
+                        print ("direct upload failed")
 
             if self.file_synchronization_method == 'filelock':
                 with FileLock(json_data_path+".lock"):
