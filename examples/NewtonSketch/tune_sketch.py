@@ -106,15 +106,59 @@ def main():
 
     global A, b, lreg
     if dataset == 'cifar-10':
-        A, b = generate_dataset.load_data('cifar-10', n=50000, d=2000)
+        A, b = generate_dataset.load_data('cifar-10', n=2**14, d=1000)
         lambd = 1e-4
         error_threshold = 1e-6
     elif dataset == 'susy_100Kn':
-        A, b = generate_dataset.load_data('susy_100Kn')
+        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-10
+    elif dataset == 'susy_100Kn_0':
+        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-10
+    elif dataset == 'susy_100Kn_1':
+        A, b = generate_dataset.load_data('susy_100Kn', nth=1)
+        lambd = 1e-4
+        error_threshold = 1e-10
+    elif dataset == 'susy_100Kn_2':
+        A, b = generate_dataset.load_data('susy_100Kn', nth=2)
+        lambd = 1e-4
+        error_threshold = 1e-10
+    elif dataset == 'susy_100Kn_3':
+        A, b = generate_dataset.load_data('susy_100Kn', nth=3)
+        lambd = 1e-4
+        error_threshold = 1e-10
+    elif dataset == 'susy_100Kn_4':
+        A, b = generate_dataset.load_data('susy_100Kn', nth=4)
         lambd = 1e-4
         error_threshold = 1e-10
     elif dataset == 'synthetic_high_coherence':
         A, b = generate_dataset.load_data('synthetic_high_coherence', n=16384, d=256, df=2)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_10Kn":
+        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_10Kn_0":
+        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_10Kn_1":
+        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=1)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_20Kn":
+        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_20Kn_0":
+        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
+        lambd = 1e-4
+        error_threshold = 1e-6
+    elif dataset == "epsilon_normalized_20Kn_1":
+        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=1)
         lambd = 1e-4
         error_threshold = 1e-6
     else:
@@ -134,8 +178,16 @@ def main():
     datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
 
     sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
-    sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
-    sparsity_parameter = Real(1./d, n/d, transform="normalize", name="sparsity_parameter")
+    if "epsilon_normalized" in dataset:
+        sketch_size = Real(0., 1., transform="normalize", name="sketch_size")
+    elif "susy" in dataset:
+        sketch_size = Real(0., 100.0, transform="normalize", name="sketch_size")
+    else:
+        sketch_size = Real(0., 10., transform="normalize", name="sketch_size")
+    if "susy" in dataset:
+        sparsity_parameter = Real(1./d, 100, transform="normalize", name="sparsity_parameter")
+    else:
+        sparsity_parameter = Real(1./d, n/d, transform="normalize", name="sparsity_parameter")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
     input_space = Space([datasets])
