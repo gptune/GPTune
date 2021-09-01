@@ -19,23 +19,18 @@
 
 import sys
 import os
-import logging
-
+import subprocess
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
-logging.getLogger('matplotlib.font_manager').disabled = True
 
 from gptune import *
 import argparse
 import numpy as np
 import time
 
-import subprocess
-
 def parse_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-npilot', type=int, default=10, help='Number of initial runs per task')
 
@@ -44,72 +39,74 @@ def parse_args():
     return args
 
 def objectives(point):
+
     m = point["m"]
     n = point["n"]
-    k = point["k"]
     nb = point["nb"]
     nthreads = point["nthreads"]
     ib = point["ib"]
     pada = point["pada"]
     niter = point['niter']
+    bind = point['bind']
 
-    command = f"OMP_NUM_THREADS={nthreads} plasmatest dgeqrf --iter={niter} --dim={m}:{n}:{k} --nb={nb} --ib={ib} --pada={pada}"
+    command = f"OMP_NUM_THREADS={nthreads} OMP_PROC_BIND={bind} plasmatest dgeqrf --iter={niter} --dim={m}x{n} --nb={nb} --ib={ib} --pada={pada}"
     print (command)
 
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output, errors = p.communicate()
-    print(output)
-    print(errors)
+    print (output)
+    print (errors)
 
     runtime = [float(output.split()[13 + 10 * i]) for i in range(niter)]
     #gflops = [float(output.split()[14 + 10 * i]) for i in range(niter)]
 
     return [runtime]
 
-def main():
+def cst1(nb, bunit):
+    return nb%bunit == 0
 
-    import matplotlib.pyplot as plt
-    global nodes
-    global cores
+def cst2(ib, bunit):
+    return ib%bunit == 0
+
+def cst3(nb, ib):
+    return nb >= ib
+
+def main():
 
     args = parse_args()
     nrun = args.nrun
     npilot = args.npilot
-    TUNER_NAME = args.optimization
 
     tuning_metadata = {
         "tuning_problem_name": "DGEQRF",
         "tuning_problem_category": "PLASMA",
-        "historydb_access_token": os.getenv("HISTORYDB_ACCESS_TOKEN"),
+        "use_crowd_repo": "no",
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }
         },
-        "spack": ["plasma"],
-        "software_configuration": {}
+        "spack": ["plasma"]
     }
 
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = TUNER_NAME
 
-    giventask = [[4096,4096,4096]]
+    giventask = [[100000,128]]
 
-    m = Integer(128, 4096, transform="normalize", name="m")
-    n = Integer(128, 4096, transform="normalize", name="n")
-    k = Integer(128, 4096, transform="normalize", name="k")
-    nb = Integer(1, 1024, transform="normalize", name="nb")
-    ib = Integer(1, 1024, transform="normalize", name="ib")
+    m = Integer(1, 100000, transform="normalize", name="m")
+    n = Integer(1, 128, transform="normalize", name="n")
+    nb = Integer(1, 10000, transform="normalize", name="nb")
+    ib = Integer(1, 10000, transform="normalize", name="ib")
     nthreads = Integer(1, 64, transform="normalize", name="nthreads")
     runtime = Real(float("-Inf"), float("Inf"), name="runtime")
     #gflops = Real(float("-Inf"), float("Inf"), name="gflops")
 
-    input_space = Space([m, n, k])
+    input_space = Space([m, n])
     parameter_space = Space([nb, ib, nthreads])
     output_space = Space([runtime])
-    constraints = {}
-    constants={"pada":0, "niter":5}
+    constraints = {"cst1":  cst1, "cst2": cst2, "cst3": cst3}
+    constants={"pada":0, "bunit": 2, "niter":5, "bind":"true"}
 
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, constants=constants)
     historydb = HistoryDB(meta_dict=tuning_metadata)
@@ -118,35 +115,28 @@ def main():
     options = Options()
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
-
     options['objective_evaluation_parallelism'] = False
     options['objective_multisample_threads'] = 1
     options['objective_multisample_processes'] = 1
-    options['objective_nprocmax'] = 1
-    options['model_processes'] = 1
-    options['model_class'] = 'Model_LCM'
-    options['verbose'] = False
+    options['model_class'] = 'Model_GPy_LCM'
     options['sample_class'] = 'SampleOpenTURNS'
     options.validate(computer=computer)
 
     NI=len(giventask)
     NS=nrun
 
-    TUNER_NAME = os.environ['TUNER_NAME']
+    data = Data(problem)
+    gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
+    (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
+    print("stats: ", stats)
 
-    if(TUNER_NAME=='GPTune'):
-        data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
-        print("stats: ", stats)
-
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%f " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+    """ Print all input and parameter samples """
+    for tid in range(NI):
+        print("tid: %d" % (tid))
+        print("    t:%f " % (data.I[tid][0]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid].tolist())
+        print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 if __name__ == "__main__":
     main()

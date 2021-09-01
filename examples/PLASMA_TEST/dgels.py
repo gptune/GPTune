@@ -42,16 +42,16 @@ def objectives(point):
 
     m = point["m"]
     n = point["n"]
-    k = point["k"]
+    nrhs = point["nrhs"]
     nb = point["nb"]
+    ib = point["ib"]
     nthreads = point["nthreads"]
     pada = point["pada"]
     padb = point["padb"]
-    padc = point["padc"]
     niter = point['niter']
     bind = point['bind']
 
-    command = f"OMP_NUM_THREADS={nthreads} OMP_PROC_BIND={bind} plasmatest dgemm --iter={niter} --dim={m}x{n}x{k} --nb={nb} --pada={pada} --padb={padb} --padc={padc}"
+    command = f"OMP_NUM_THREADS={nthreads} OMP_PROC_BIND={bind} plasmatest dgels --iter={niter} --dim={m}x{n} --nrhs={nrhs} --nb={nb} --ib={ib} --pada={pada} --padb={padb}"
     print (command)
 
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -59,13 +59,19 @@ def objectives(point):
     print (output)
     print (errors)
 
-    runtime = [float(output.split()[17 + 19 * i]) for i in range(niter)]
+    runtime = [float(output.split()[15 + 12 * i]) for i in range(niter)]
     #gflops = [float(output.split()[14 + 10 * i]) for i in range(niter)]
 
     return [runtime]
 
 def cst1(nb, bunit):
     return nb%bunit == 0
+
+def cst2(ib, bunit):
+    return ib%bunit == 0
+
+def cst3(nb, ib):
+    return nb >= ib
 
 def main():
 
@@ -74,7 +80,7 @@ def main():
     npilot = args.npilot
 
     tuning_metadata = {
-        "tuning_problem_name": "DGEMM",
+        "tuning_problem_name": "DGELS",
         "tuning_problem_category": "PLASMA",
         "use_crowd_repo": "no",
         "machine_configuration": {
@@ -86,22 +92,24 @@ def main():
 
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+    os.environ['MACHINE_NAME'] = machine
 
-    giventask = [[4096,4096,4096]]
+    giventask = [[100000,128]]
 
-    m = Integer(128, 4096, transform="normalize", name="m")
-    n = Integer(128, 4096, transform="normalize", name="n")
-    k = Integer(128, 4096, transform="normalize", name="k")
-    nb = Integer(1, 1024, transform="normalize", name="nb")
+    m = Integer(1, 100000, transform="normalize", name="m")
+    n = Integer(1, 128, transform="normalize", name="n")
+    nrhs = Integer(1, 10000, transform="normalize", name="nrhs")
+    nb = Integer(1, 10000, transform="normalize", name="nb")
+    ib = Integer(1, 10000, transform="normalize", name="ib")
     nthreads = Integer(1, 64, transform="normalize", name="nthreads")
     runtime = Real(float("-Inf"), float("Inf"), name="runtime")
     #gflops = Real(float("-Inf"), float("Inf"), name="gflops")
 
-    input_space = Space([m, n, k])
-    parameter_space = Space([nb, nthreads])
+    input_space = Space([m, n])
+    parameter_space = Space([nrhs, nb, ib, nthreads])
     output_space = Space([runtime])
-    constraints = {"cst1": cst1}
-    constants={"pada":0, "padb":0, "padc":0, "bunit":2, "niter":5, "bind":"true"}
+    constraints = {"cst1":  cst1, "cst2": cst2, "cst3": cst3}
+    constants={"pada":0, "padb":0, "bunit": 2, "niter":5, "bind":"true"}
 
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, constants=constants)
     historydb = HistoryDB(meta_dict=tuning_metadata)
