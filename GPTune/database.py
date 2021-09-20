@@ -168,9 +168,9 @@ class HistoryDB(dict):
 
         """ Crowd repository options """
         self.use_crowd_repo = False
-        self.historydb_access_token = ""
+        self.historydb_api_key = ""
         self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
-        # self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
+        #self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
         self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
         #self.crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
@@ -283,10 +283,10 @@ class HistoryDB(dict):
             else:
                 self.use_crowd_repo = False
 
-            if "historydb_access_token" in metadata:
-                self.historydb_access_token = metadata["historydb_access_token"]
+            if "historydb_api_key" in metadata:
+                self.historydb_api_key = metadata["historydb_api_key"]
             else:
-                self.historydb_access_token = ""
+                self.historydb_api_key = ""
 
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
@@ -471,9 +471,9 @@ class HistoryDB(dict):
 
             if self.use_crowd_repo == True:
                 try:
-                    r = requests.post(url = self.crowd_repo_download_url,
-                            data={"access_token":self.historydb_access_token,
-                                "tuning_problem_name":self.tuning_problem_name,
+                    r = requests.get(url = self.crowd_repo_download_url,
+                            headers={"x-api-key":self.historydb_api_key},
+                            params={"tuning_problem_name":self.tuning_problem_name,
                                 "tuning_problem_category":self.tuning_problem_category},
                             verify=False)
                     if r.status_code == 200:
@@ -791,16 +791,14 @@ class HistoryDB(dict):
 
                 if self.use_crowd_repo == True:
                     print ("function_evaluation_document: ", str(function_evaluation_document))
-                    print ("ACCESS_TOKEN: ", self.historydb_access_token)
+                    print ("API_KEY: ", self.historydb_api_key)
 
                     try:
                         r = requests.post(url = self.crowd_repo_upload_url,
-                                data={
-                                    "access_token":self.historydb_access_token,
-                                    "tuning_problem_name":self.tuning_problem_name,
+                                headers={"x-api-key":self.historydb_api_key},
+                                data={"tuning_problem_name":self.tuning_problem_name,
                                     "tuning_problem_category":self.tuning_problem_category,
-                                    "function_evaluation_document":json.dumps(function_evaluation_document),
-                                    },
+                                    "function_evaluation_document":json.dumps(function_evaluation_document)},
                                 verify=False)
                         if r.status_code == 200:
                             print ("direct upload success")
