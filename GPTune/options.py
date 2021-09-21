@@ -46,6 +46,7 @@ class Options(dict):
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
+        model_output_constraint = False # True: if Model_LCM is used, check output range constraint and disregard out-of-range output (put a large value)
         model_threads = None  # Number of threads used for building one GP model in Model_LCM
         model_processes = None # Number of MPIs used for building one GP model in Model_LCM
         model_groups = 1  # Reserved option

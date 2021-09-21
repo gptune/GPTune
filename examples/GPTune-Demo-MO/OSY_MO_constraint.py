@@ -147,7 +147,8 @@ def main():
     #options['search_gen'] = 10
     options['search_more_samples'] = 4
 
-    options['model_class'] = 'Model_LCM_constrained' #'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_output_constraint'] = True
     options['verbose'] = False
     options['sample_class'] = 'SampleOpenTURNS'
 
