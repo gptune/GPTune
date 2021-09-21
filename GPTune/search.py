@@ -124,8 +124,14 @@ class SurrogateProblem(object):
         EI=[]
         for o in range(self.problem.DO):
             optimize = self.problem.OS[o].optimize
+            # YC: If PSO is given by user, for no-optimize objectives we can simply ignore the objectives' outputs in EI product
             if (self.options['search_algo']=='pso' and optimize == False):
-                print ("o: ", self.problem.OS[o].name, "is not optimize")
+                #print ("o: ", self.problem.OS[o].name, "is not optimize")
+                continue
+            # YC: If NSGA2 is given by user (e.g. more than three objectives tuning and one no-optimize objective), for no-optimize objectives we still need to return some value for running NSGA2. Maybe we can fix this later.
+            elif (optimize == False):
+                #print ("o: ", self.problem.OS[o].name, "is not optimize")
+                EI.append(0)
             else:
                 ymin = self.data.O[self.tid][:,o].min()
                 (mu, var) = self.models[o].predict(x, tid=self.tid)
