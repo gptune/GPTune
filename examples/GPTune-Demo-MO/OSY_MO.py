@@ -65,21 +65,12 @@ def objectives(point):
     return [y1, y2]
 
 def cst1(x1, x2):
-    return x1 + x2 -2 >= 0
+    return (x1+x2-2 >= 0) and (6-x1-x2 >=0) and (2-x2+x1 >= 0) and (2-x1+3*x2 >= 0)
 
-def cst2(x1, x2):
-    return 6 - x1 - x2 >= 0
-
-def cst3(x1, x2):
-    return 2 - x2 + x1 >= 0
-
-def cst4(x1, x2):
-    return 2 - x1 + 3*x2 >= 0
-
-def cst5(x3, x4):
+def cst2(x3, x4):
     return 4 - (x3-3)**2 - x4 >= 0
 
-def cst6(x5, x6):
+def cst3(x5, x6):
     return (x5-3)**2 + x6 - 4 >= 0
 
 def main():
@@ -94,7 +85,28 @@ def main():
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    database_metadata = {
+        "tuning_problem_name": "OSY",
+        "machine_configuration": {
+            "machine_name": "mymachine",
+            "myprocessor": {
+                "nodes": 1,
+                "cores": 2
+                }
+            },
+        "software_configuration": {},
+        "loadable_machine_configurations": {
+            "mymachine": {
+                "myprocessor": {
+                    "nodes": 1,
+                    "cores": 2
+                    }
+                }
+            },
+        "loadable_software_configurations": {}
+    }
+
+    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = database_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -112,8 +124,10 @@ def main():
     input_space = Space([problem])
     parameter_space = Space([x1, x2, x3, x4, x5, x6])
     output_space = Space([y1, y2])
-    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3, "cst4": cst4, "cst5": cst5, "cst6": cst6}
+    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+
+    historydb = HistoryDB(meta_dict=database_metadata)
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
@@ -135,11 +149,11 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    ### disable the following lines to use product of individual EIs as a single-valued acquisition function
-    # options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-    # options['search_pop_size'] = 1000
-    # options['search_gen'] = 10
-    # options['search_more_samples'] = 4
+    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
+    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+    options['search_pop_size'] = 1000
+    options['search_gen'] = 50
+    options['search_more_samples'] = 5
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
@@ -160,7 +174,7 @@ def main():
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
+        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
         (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
         print("stats: ", stats)
 
@@ -226,10 +240,10 @@ def main():
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on OSY")
+        plt.title("Tuning on OSY (MO)")
         plt.legend(loc="upper right")
-        plt.ylabel('Y1')
-        plt.xlabel('Y2')
+        plt.xlabel('Y1')
+        plt.ylabel('Y2')
         #plt.ylim([0,100])
         plt.show()
 

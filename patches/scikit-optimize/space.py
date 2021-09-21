@@ -250,7 +250,7 @@ class Real(Dimension):
 
     """
     def __init__(self, low, high, prior="uniform", base=10, transform=None,
-                 name=None, dtype=np.float):
+                 name=None, dtype=np.float, optimize=True):
         if high <= low:
             raise ValueError("the lower bound {} has to be less than the"
                              " upper bound {}".format(low, high))
@@ -267,6 +267,7 @@ class Real(Dimension):
         self._rvs = None
         self.transformer = None
         self.transform_ = transform
+        self.optimize = optimize
         if isinstance(self.dtype, str) and self.dtype\
                 not in ['float', 'float16', 'float32', 'float64']:
             raise ValueError("dtype must be 'float', 'float16', 'float32'"
@@ -436,7 +437,7 @@ class Integer(Dimension):
 
     """
     def __init__(self, low, high, prior="uniform", base=10, transform=None,
-                 name=None, dtype=np.int64):
+                 name=None, dtype=np.int64, optimize=True):
         if high <= low:
             raise ValueError("the lower bound {} has to be less than the"
                              " upper bound {}".format(low, high))
@@ -451,6 +452,7 @@ class Integer(Dimension):
         self.name = name
         self.dtype = dtype
         self.transform_ = transform
+        self.optimize = optimize
         self._rvs = None
         self.transformer = None
 

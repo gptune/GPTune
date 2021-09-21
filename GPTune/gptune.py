@@ -105,7 +105,7 @@ class GPTune(object):
 
         """ Reproduce surrogate models """
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 
         for i in range(self.problem.DO):
             modelers[i].gen_model_from_hyperparameters(self.data,
@@ -529,6 +529,7 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
+
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
                 if(self.problem.models is not None):
@@ -555,6 +556,21 @@ class GPTune(object):
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
                 if (kwargs["model_class"] == "Model_LCM"):
+                    if (kwargs["model_output_constraint"] == True):
+                        for i in range(len(tmpdata.O[0])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][0][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
+
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
                         modelers[o].train(data = tmpdata, **kwargs)

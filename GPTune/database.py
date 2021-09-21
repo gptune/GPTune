@@ -1267,12 +1267,16 @@ class HistoryDB(dict):
                 dict_["lower_bound"] = lower_bound
                 dict_["upper_bound"] = upper_bound
 
+                dict_["optimize"] = space[i].optimize
+
             elif space_type_name == "Integer":
                 dict_["type"] = "int"
 
                 lower_bound, upper_bound = space.bounds[i]
                 dict_["lower_bound"] = lower_bound
                 dict_["upper_bound"] = upper_bound
+
+                dict_["optimize"] = space[i].optimize
 
             elif space_type_name == "Categoricalnorm":
                 dict_["type"] = "categorical"
