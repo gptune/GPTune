@@ -123,18 +123,6 @@ class SurrogateProblem(object):
         """ Expected Improvement """
         EI=[]
         for o in range(self.problem.DO):
-<<<<<<< HEAD
-            ymin = self.data.O[self.tid][:,o].min()
-            (mu, var) = self.models[o].predict(x, tid=self.tid)
-            mu = mu[0][0]
-            var = max(1e-18, var[0][0])
-            std = np.sqrt(var)
-            chi = (ymin - mu) / std
-            Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-            phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-            EI.append(-((ymin - mu) * Phi + var * phi))
-            # EI.append(mu)
-=======
             optimize = self.problem.OS[o].optimize
             # YC: If PSO is given by user, for no-optimize objectives we can simply ignore the objectives' outputs in EI product
             if (self.options['search_algo']=='pso' and optimize == False):
@@ -154,7 +142,7 @@ class SurrogateProblem(object):
                 Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
                 phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
                 EI.append(-((ymin - mu) * Phi + var * phi))
->>>>>>> constrained_moo
+                # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             EI_prod = np.prod(EI)
