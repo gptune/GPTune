@@ -25,6 +25,7 @@ from autotune.space import *
 from autotune.problem import TuningProblem
 import uuid
 import time
+import requests
 
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
@@ -156,6 +157,7 @@ class HistoryDB(dict):
     def __init__(self, meta_path=None, meta_dict=None, **kwargs):
 
         self.tuning_problem_name = None
+        self.tuning_problem_category = None
 
         """ Options """
         self.history_db = True
@@ -163,6 +165,14 @@ class HistoryDB(dict):
         self.save_model = True
         self.load_func_eval = True
         self.load_surrogate_model = False
+
+        """ Crowd repository options """
+        self.use_crowd_repo = False
+        self.historydb_api_key = ""
+        self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+        #self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
+        self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
+        #self.crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
         """ Path to JSON data files """
         self.history_db_path = "./"
@@ -229,7 +239,7 @@ class HistoryDB(dict):
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
-        # if GPTune is called through Reverse Communication Interface
+        # if GPTune is called through MPI spawning or Reverse Communication Interface
         else:
             metadata = {}
 
@@ -260,6 +270,24 @@ class HistoryDB(dict):
             else:
                 self.tuning_problem_name = "Unknown"
 
+            if "tuning_problem_category" in metadata:
+                self.tuning_problem_category = metadata["tuning_problem_category"]
+            else:
+                self.tuning_problem_category = "Unknown"
+
+            if "use_crowd_repo" in metadata:
+                if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
+                    self.use_crowd_repo = True
+                else:
+                    self.use_crowd_repo = False
+            else:
+                self.use_crowd_repo = False
+
+            if "historydb_api_key" in metadata:
+                self.historydb_api_key = metadata["historydb_api_key"]
+            else:
+                self.historydb_api_key = ""
+
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
             else:
@@ -274,7 +302,38 @@ class HistoryDB(dict):
                 self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
             if "loadable_software_configurations" in metadata:
                 self.loadable_software_configurations = metadata["loadable_software_configurations"]
+            if "spack" in metadata:
+                spack_loaded_items = metadata["spack"]
+                for spack_loaded_item in spack_loaded_items:
+                    import subprocess
 
+                    stdout, stderr = subprocess.Popen("spack find --json "+spack_loaded_item, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+                    try:
+                        json_data = json.loads(stdout)[0]
+
+                        software_name = json_data["name"]
+                        version_split = [int(v) for v in json_data["version"].split(".")]
+
+                        self.software_configuration[software_name] = { "version_split" : version_split }
+
+                        for software_depend in json_data["dependencies"]:
+                            software_depend_json = json_data["dependencies"][software_depend]
+                            hash_value = software_depend_json["hash"]
+                            types = software_depend_json["type"]
+                            if "build" in types and "link" in types:
+                                stdout, stderr = subprocess.Popen("spack find --json "+software_depend, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                                software_depend_spec_found = json.loads(stdout)
+                                for software_depend_spec in software_depend_spec_found:
+                                    if software_depend_spec["hash"] == hash_value:
+                                        software_depend_name = software_depend_spec["name"]
+                                        version_split = [int(v) for v in software_depend_spec["version"].split(".")]
+                                        self.software_configuration[software_depend_name] = { "version_split" : version_split }
+                                        break
+                    except:
+                        print ("spack find failed: ", spack_loaded_item)
+
+                    print (self.software_configuration)
             try:
                 with FileLock("test.lock", timeout=0):
                     print ("[HistoryDB] use filelock for synchronization")
@@ -409,6 +468,35 @@ class HistoryDB(dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+            if self.use_crowd_repo == True:
+                try:
+                    r = requests.get(url = self.crowd_repo_download_url,
+                            headers={"x-api-key":self.historydb_api_key},
+                            params={"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category},
+                            verify=False)
+                    if r.status_code == 200:
+                        if not os.path.exists(json_data_path): #TODO: check
+                            with open(json_data_path, "w") as f_out:
+                                json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "surrogate_model":[],
+                                    "func_eval":[]}
+                                json.dump(json_data, f_out, indent=2)
+
+                        func_eval_list_downloaded = json.loads(r.text)["perf_data"]
+                        print ("FUNC_EVAL_LIST_DOWNLOADED: ", func_eval_list_downloaded)
+                        with open(json_data_path, "r") as f_in:
+                            json_data = json.load(f_in)
+                            json_data["func_eval"] += func_eval_list_downloaded #TODO: uid check
+                        with open(json_data_path, "w") as f_out:
+                            json.dump(json_data, f_out, indent=2)
+                    else:
+                        print ("request status_code: ", r.status_code)
+                except:
+                    print ("direct download failed")
+
             if os.path.exists(json_data_path):
                 print ("[HistoryDB] Found a history database file")
                 if self.file_synchronization_method == 'filelock':
@@ -486,6 +574,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -493,6 +582,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -501,6 +591,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -573,6 +664,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -580,6 +672,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -588,6 +681,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -670,7 +764,7 @@ class HistoryDB(dict):
                     software_configuration_store = ast.literal_eval(task_parameter_store["software_configuration"])
                     del task_parameter_store["software_configuration"]
 
-                new_function_evaluation_results.append({
+                function_evaluation_document = {
                         "task_parameter":task_parameter_store,
                         "tuning_parameter":tuning_parameter_store,
                         "constants":constants_store,
@@ -691,7 +785,27 @@ class HistoryDB(dict):
                             "tm_isdst":now.tm_isdst
                             },
                         "uid":str(uid)
-                    })
+                    }
+
+                new_function_evaluation_results.append(function_evaluation_document)
+
+                if self.use_crowd_repo == True:
+                    print ("function_evaluation_document: ", str(function_evaluation_document))
+                    print ("API_KEY: ", self.historydb_api_key)
+
+                    try:
+                        r = requests.post(url = self.crowd_repo_upload_url,
+                                headers={"x-api-key":self.historydb_api_key},
+                                data={"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "function_evaluation_document":json.dumps(function_evaluation_document)},
+                                verify=False)
+                        if r.status_code == 200:
+                            print ("direct upload success")
+                        else:
+                            print ("request status_code: ", r.status_code)
+                    except:
+                        print ("direct upload failed")
 
             if self.file_synchronization_method == 'filelock':
                 with FileLock(json_data_path+".lock"):

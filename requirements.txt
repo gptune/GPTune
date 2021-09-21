@@ -12,3 +12,4 @@ opentuner
 hpbandster
 pygmo
 filelock 
+requests
