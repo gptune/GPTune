@@ -60,7 +60,8 @@ def objectives(point):
     print (errors)
 
     runtime = [float(output.split()[15 + 12 * i]) for i in range(niter)]
-    #gflops = [float(output.split()[14 + 10 * i]) for i in range(niter)]
+    #gflops = [float(output.split()[16 + 12 * i]) for i in range(niter)]
+    #error = [float(output.split()[14 + 12 * i]) for i in range(niter)]
 
     return [runtime]
 
@@ -79,34 +80,62 @@ def main():
     nrun = args.nrun
     npilot = args.npilot
 
+    #tuning_metadata = {
+    #    "tuning_problem_name": "DGELS",
+    #    "tuning_problem_category": "PLASMA",
+    #    "use_crowd_repo": "no",
+    #    "machine_configuration": {
+    #        "machine_name": "Cori",
+    #        "haswell": { "nodes": 1, "cores": 32 }
+    #    },
+    #    "spack": ["plasma"]
+    #}
+
     tuning_metadata = {
-        "tuning_problem_name": "DGELS",
+        "tuning_problem_name": "PLASMA-DGELS-TUNING-1",
         "tuning_problem_category": "PLASMA",
-        "use_crowd_repo": "no",
+        "historydb_api_key":os.getenv("HISTORYDB_API_KEY",""),
+        "use_crowd_repo": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }
         },
         "spack": ["plasma"]
+        "loadable_machine_configurations": {
+            "Cori" : {
+                "haswell": {
+                    "nodes":1,
+                    "cores":32
+                }
+            }
+        },
+        "loadable_software_configurations": {
+            "openblas": {
+                "version_split":[0,3,17]
+            },
+            "plasma":{
+                "version_split":[20,9,20]
+            },
+        }
     }
 
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
 
-    giventask = [[100000,128]]
+    giventask = [[100000,2000,1]]
 
     m = Integer(1, 100000, transform="normalize", name="m")
-    n = Integer(1, 128, transform="normalize", name="n")
-    nrhs = Integer(1, 10000, transform="normalize", name="nrhs")
-    nb = Integer(1, 10000, transform="normalize", name="nb")
-    ib = Integer(1, 10000, transform="normalize", name="ib")
+    n = Integer(1, 2000, transform="normalize", name="n")
+    nrhs = Integer(1, 1000, transform="normalize", name="nrhs")
+    nb = Integer(1, 1000, transform="normalize", name="nb")
+    ib = Integer(1, 1000, transform="normalize", name="ib")
     nthreads = Integer(1, 64, transform="normalize", name="nthreads")
     runtime = Real(float("-Inf"), float("Inf"), name="runtime")
     #gflops = Real(float("-Inf"), float("Inf"), name="gflops")
 
-    input_space = Space([m, n])
-    parameter_space = Space([nrhs, nb, ib, nthreads])
+    input_space = Space([m, n, nrhs])
+    parameter_space = Space([nb, ib, nthreads])
     output_space = Space([runtime])
     constraints = {"cst1":  cst1, "cst2": cst2, "cst3": cst3}
     constants={"pada":0, "padb":0, "bunit": 2, "niter":5, "bind":"true"}
