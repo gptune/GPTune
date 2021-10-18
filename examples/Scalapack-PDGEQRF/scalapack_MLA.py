@@ -138,7 +138,8 @@ def main():
         }
     }
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
+#    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
+    (machine, processor, nodes, cores) = GetMachineConfiguration()    
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
     os.environ['MACHINE_NAME'] = machine
