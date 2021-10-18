@@ -8,5 +8,6 @@ lhsmdu
 ipyparallel
 opentuner
 hpbandster
+requests
 scikit-optimize
 requests
