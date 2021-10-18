@@ -3,9 +3,9 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.6
-gccversion=11.1.0_1
-openblasversion=0.3.15_1
+pythonversion=3.9.7_1
+gccversion=11.2.0
+openblasversion=0.3.18
 lapackversion=3.10.0
 
 export ModuleEnv='mac-intel-openmpi-gnu'
