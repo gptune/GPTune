@@ -6,7 +6,7 @@ rm -rf ~/.local/lib
 ##################################################
 
 export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 ##################################################
 ##################################################
@@ -95,6 +95,7 @@ cmake .. \
 make -j32
 cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
+
 
 if [[ $BuildExample == 1 ]]; then
 
@@ -319,3 +320,6 @@ env CC=$MPICC pip install --user -e .
 cd $GPTUNEROOT
 cp ./patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.
 
+cd $GPTUNEROOT
+python setup.py build 
+python setup.py install --user
