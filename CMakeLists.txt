@@ -244,6 +244,10 @@ include(GNUInstallDirs)
 install(TARGETS _gptuneclcm LIBRARY DESTINATION gptuneclcm
   # DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+install(TARGETS pdqrdriver RUNTIME DESTINATION gptuneclcm
+  # DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 install(FILES ${headers}
   DESTINATION gptuneclcm
   # DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
