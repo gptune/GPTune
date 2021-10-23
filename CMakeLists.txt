@@ -118,12 +118,21 @@ ENDFOREACH()
 find_package(OpenMP)
 ## include(FindOpenMP)  # Strumpack uses this
 
-if(OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${CMAKE_C_FLAGS}")
-  set(OpenMP_C_FLAGS_EXPORT "${OpenMP_C_FLAGS}")  
+if(OPENMP_FORTRAN_FOUND)
   set(CMAKE_Fortran_FLAGS "${OpenMP_Fortran_FLAGS} ${CMAKE_Fortran_FLAGS}")
-  set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "${CMAKE_C_IMPLICIT_LINK_LIBRARIES} ${OpenMP_C_FLAGS}")
+  set(OpenMP_Fortran_FLAGS_EXPORT "${OpenMP_Fortran_FLAGS}")
+  set(CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES "${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES} ${OpenMP_Fortran_FLAGS}")
 endif()
+
+if(OPENMP_CXX_FOUND)
+  set(CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+  set(OpenMP_CXX_FLAGS_EXPORT "${OpenMP_CXX_FLAGS}")
+  set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES} ${OpenMP_CXX_FLAGS}")
+endif()
+
+
+
+
 
 
  # #--------------------- BLAS ---------------------
@@ -215,17 +224,17 @@ set_target_properties(_gptuneclcm PROPERTIES
 set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/Scalapack-PDGEQRF/scalapack-driver/src/")
 include_directories(${SOURCE_DIR_SCALAPACK_EX})
 #set(sources_scalapack_example "${SOURCE_DIR_SCALAPACK_EX}/pdqrdriver.f ${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f")
-set(sources_scalapack_example 
+set(sources_scalapack_example
 ${SOURCE_DIR_SCALAPACK_EX}/pdqrdriver.f
-${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdmatgen.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdgeqrrv.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdlafchk.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdgeqlrv.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdgerqrv.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdtzrzrv.f 
-${SOURCE_DIR_SCALAPACK_EX}/pdgelqrv.f 
-${SOURCE_DIR_SCALAPACK_EX}/pmatgeninc.f 
+${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f
+${SOURCE_DIR_SCALAPACK_EX}/pdmatgen.f
+${SOURCE_DIR_SCALAPACK_EX}/pdgeqrrv.f
+${SOURCE_DIR_SCALAPACK_EX}/pdlafchk.f
+${SOURCE_DIR_SCALAPACK_EX}/pdgeqlrv.f
+${SOURCE_DIR_SCALAPACK_EX}/pdgerqrv.f
+${SOURCE_DIR_SCALAPACK_EX}/pdtzrzrv.f
+${SOURCE_DIR_SCALAPACK_EX}/pdgelqrv.f
+${SOURCE_DIR_SCALAPACK_EX}/pmatgeninc.f
 )
 add_executable(pdqrdriver ${sources_scalapack_example})
 target_link_libraries(pdqrdriver ${MPI_Fortran_LIBRARIES} ${BLAS_LIB} ${LAPACK_LIB} ${SCALAPACK_LIB} m)
@@ -257,4 +266,4 @@ install(FILES ${headers}
 # configure_file(_gptuneclcm.pc.in gptune.pc @ONLY)
 # install(FILES _gptuneclcm.pc
 # 	DESTINATION gptuneclcm/pkgconfig)
-	
+
