@@ -3,10 +3,10 @@
 // required approvals from the U.S.Dept. of Energy) and the University of
 // California, Berkeley.  All rights reserved.
 //
-// If you have questions about your rights to use or distribute this software, 
+// If you have questions about your rights to use or distribute this software,
 // please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
 //
-// NOTICE. This Software was developed under funding from the U.S. Department 
+// NOTICE. This Software was developed under funding from the U.S. Department
 // of Energy and the U.S. Government consequently retains certain rights.
 // As such, the U.S. Government has been granted for itself and others acting
 // on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
@@ -17,7 +17,9 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "math.h"
+#ifdef _OPENMP
 #include "omp.h"
+#endif
 #include "mpi.h"
 
 #include "lcm.h"
@@ -50,10 +52,10 @@ void K
     const int NT,  // #of tasks
     const int NL,  // #of latent functions in LCM
     const int m,   // #row dimension of K
-    const int n,   // #column dimension of K 
+    const int n,   // #column dimension of K
     // Input arrays
-    const double* restrict const theta, // size DI*NL, length scales for each Gaussian kernel k_q 
-    const double* restrict const var,  // size NL, variance for each Gaussian kernel k_q 
+    const double* restrict const theta, // size DI*NL, length scales for each Gaussian kernel k_q
+    const double* restrict const var,  // size NL, variance for each Gaussian kernel k_q
     const double* restrict const BS,   // parameter matrices of size NT*NT of for each kernel k_q
     const double*          const X1,   // YL: This function will only be called by GPy, which seems to assume column major for X1 and X2 once inside K
     const double*          const X2,
@@ -63,17 +65,21 @@ void K
 {
     int i, j, d, q, idxi, idxj;
     double *dists, sum;
+#ifdef _OPENMP
 # pragma omp parallel private ( i, j, d, q, idxi, idxj, sum, dists ) shared ( C )
+#endif
     {
         dists = (double *) malloc(DI * sizeof(double));
 
+#ifdef _OPENMP
 # pragma omp for collapse(2)
+#endif
         for (i = 0; i < m; i++)
         {
             for (j = 0; j < n; j++)
             {
-                // idxi = (int) X1[i * (DI+1) + DI];  
-                // idxj = (int) X2[j * (DI+1) + DI];   
+                // idxi = (int) X1[i * (DI+1) + DI];
+                // idxj = (int) X2[j * (DI+1) + DI];
 
                 idxi = (int) X1[m * DI + i];
                 idxj = (int) X2[n * DI + j];
@@ -206,11 +212,11 @@ printf("%s %d: %d %d\n", __FILE__, __LINE__, nprow, npcol); fflush(stdout); MPI_
 printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout); MPI_Barrier( z->mpi_comm );
 #endif
 //printf("##### %d %d %d %d %d %d\n", z->pid, z->context, (z->nprow), (z->npcol), (z->prowid), (z->pcolid)); fflush(stdout);
-    
+
     z->mb = mb;
     // z->lr = numroc_( &m, &mb, &(z->prowid), &i_zero, &nprow );
     // z->lc = numroc_( &m, &mb, &(z->pcolid), &i_zero, &npcol );
-	
+
 	z->lr = PB_Cnumroc( m, 0, mb, mb, (z->prowid), i_zero, nprow );
 	z->lc = PB_Cnumroc( m, 0, mb, mb, (z->pcolid), i_zero, npcol );
 #ifdef DEBUG
@@ -230,29 +236,38 @@ printf("%s %d: alphadesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->a
 	}else{
 		z->Kdesc[1]=-1;
 		z->alphadesc[1]=-1;
-	} 
-	
+	}
+
     // Allocate shared arrays
- 
+
     z->dists  = (double *) malloc(z->lr * z->lc * DI * sizeof(double));
     z->exps   = (double *) malloc(z->lr * z->lc * NL * sizeof(double));
     z->alpha  = (double *) malloc(z->lr              * sizeof(double));
     z->distY  = (double *) malloc(z->lr              * sizeof(double));
     z->K      = (double *) malloc(z->lr * z->lc      * sizeof(double));
     z->buffer = (double *) malloc(z->nparam          * sizeof(double));
-
+#ifdef _OPENMP
     nth = omp_get_max_threads();
+#else
+    nth = 1;
+#endif
     z->gradients_TPS = (double **) malloc(nth * sizeof(double*));
-
+#ifdef _OPENMP
 # pragma omp parallel private ( li, gi, lj, gj, d, idx, tid, delta ) shared ( z )
+#endif
     {
         // Allocate private arrays
-
+        #ifdef _OPENMP
         tid = omp_get_thread_num();
+        #else
+        tid = 0;
+        #endif
         z->gradients_TPS[tid] = (double *) calloc(z->nparam, sizeof(double));
 
 //# pragma omp for collapse(3)
+#ifdef _OPENMP
 # pragma omp for
+#endif
         for (li = 0; li < z->lr; li++)
         {
             // Compute element-wise square distances
@@ -278,14 +293,19 @@ printf("%s %d: alphadesc %d %d %d %d %d %d %d %d %d\n", __FILE__, __LINE__, z->a
 void finalize
 (
     // fun_jac_struct structure
-    fun_jac_struct* z 
+    fun_jac_struct* z
 )
 {
+#ifdef _OPENMP
 # pragma omp parallel shared ( z )
+#endif
     {
         // Deallocate private arrays
-
+        #ifdef _OPENMP
         int tid = omp_get_thread_num();
+        #else
+        int tid = 0;
+        #endif
         free(z->gradients_TPS[tid]);
     }
 
@@ -300,7 +320,7 @@ void finalize
     free(z->K);
     free(z->buffer);
 
-    
+
 	if(z->context!=-1){
 	// blacs_gridexit_( &(z->context) );
     Cblacs_gridexit( z->context );
@@ -330,10 +350,10 @@ double fun_jac // negloglike_and_grads
 
     double* theta = params;                 // length scales of each kernel k_q
     double* var   = theta + z->NL * z->DI;  // variance of each kernel k_q
-    double* kappa = var   + z->NL;          // YL: diagonal regularizer added to B_q  
+    double* kappa = var   + z->NL;          // YL: diagonal regularizer added to B_q
     double* sigma = kappa + z->NL * z->NT;  // diagonal matrix D of variances in LCM
     double* ws    = sigma + z->NT;          // W_q used to form B_q
-    
+
     double* Kcopy;
     if(z->lr * z->lc>0)
         Kcopy = (double *) malloc(z->lr * z->lc      * sizeof(double));
@@ -342,16 +362,21 @@ double fun_jac // negloglike_and_grads
 
     double neg_log_marginal_likelihood = 0.;
 
-    t1 = omp_get_wtime();
+    //t1 = omp_get_wtime();
 
     for (k = 0; k < z->nparam ; k++)
     {
         z->buffer[k] = 0.;
     }
-
+#ifdef _OPENMP
 # pragma omp parallel private ( k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, sum, info, tmppid ) shared ( z, theta, var, kappa, sigma, ws )
+#endif
     {
+        #ifdef _OPENMP
         int tid = omp_get_thread_num();
+        #else
+        int tid = 0;
+        #endif
 
         // Initialize private arrays
 
@@ -359,14 +384,16 @@ double fun_jac // negloglike_and_grads
         {
             z->gradients_TPS[tid][k] = 0.;
         }
-
+#ifdef _OPENMP
 # pragma omp for
+#endif
         for (k = 0; k < z->lr * z->lc; k++)
         {
             z->K[k] = 0.;
         }
-
+#ifdef _OPENMP
 # pragma omp for
+#endif
         for (li = 0; li < z->lr; li++)
         {
             rl2g(z, li, z->prowid, &gi);
@@ -380,7 +407,7 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
-				if(gi<=gj){  //only store the upper triangular part 
+				if(gi<=gj){  //only store the upper triangular part
 	#ifdef DEBUG
 	printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, lj, gj, idxj); fflush(stdout);
 	#endif
@@ -409,18 +436,19 @@ printf("%s %d: %d %d %d %d\n", __FILE__, __LINE__, z->pid, li, gi, idxi); fflush
 				}
                 // printf("nima %5d%5d\n",idxi,idxj);
             }
-			
-            cg2l(z, gi, &ljstart, &tmppid);			
+
+            cg2l(z, gi, &ljstart, &tmppid);
             if (z->pcolid == tmppid)
             {
 //@                z->K[li * z->lc + ljstart] += sigma[idxi] + 1e-8;
-                z->K[ljstart * z->lr + li] += sigma[idxi];    
+                z->K[ljstart * z->lr + li] += sigma[idxi];
                 // printf("%5d%5d%14f\n",ljstart,li,z->K[ljstart * z->lr + li]);
             }
         }
 
-
+#ifdef _OPENMP
 # pragma omp for
+#endif
         for (k = 0; k < z->lr * z->lc; k++)
         {
             Kcopy[k] = z->K[k];
@@ -452,40 +480,44 @@ for (int p = 0; p < 8; p++)
     /**************************************************************************************************/
 
     // Compute dL_dK
-    
+
 	if(z->prowid!=-1 && z->pcolid!=-1){
         info=1;
         int ntry=0;
         double jitter = z->jitter;
         while(info>0 && ntry<z->maxtries){
-            
+        #ifdef _OPENMP
         # pragma omp parallel private ( k, li, gi, ljstart, tmppid ) shared ( z )
-            {            
+        #endif
+            {
+        #ifdef _OPENMP
         # pragma omp for
+        #endif
                 for (k = 0; k < z->lr * z->lc; k++)
                 {
                     z->K[k] = Kcopy[k];
                 }
-            
 
+        #ifdef _OPENMP
         # pragma omp for
+        #endif
                 for (li = 0; li < z->lr; li++)
                 {
                     rl2g(z, li, z->prowid, &gi);
-                    cg2l(z, gi, &ljstart, &tmppid);			
+                    cg2l(z, gi, &ljstart, &tmppid);
                     if (z->pcolid == tmppid)
                     {
-                        z->K[ljstart * z->lr + li] += jitter;    
+                        z->K[ljstart * z->lr + li] += jitter;
                     }
                 }
-            }     
+            }
 
-            printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
+            printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);
 
             pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 
-            jitter*=10;   
-            ntry++;         
+            jitter*=10;
+            ntry++;
 
         }
 
@@ -552,20 +584,20 @@ for (int p = 0; p < 8; p++)
     {
         z->alpha[li] = z->distY[li];
     }
-	
+
 	if(z->prowid!=-1 && z->pcolid!=-1){
 		pdpotrs_( &uplo, &(z->m), &i_one, z->K, &i_one, &i_one, &(z->Kdesc), z->alpha, &i_one, &i_one, &(z->alphadesc), &info );
 
 		pdpotri_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 	}
-//YL: check https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html for the gradient computation	
-	
-	
-	
+//YL: check https://gpy.readthedocs.io/en/deploy/GPy.likelihoods.html for the gradient computation
+
+
+
     double dot = 0.;
-	if(z->prowid!=-1 && z->pcolid!=-1){	
+	if(z->prowid!=-1 && z->pcolid!=-1){
 		pddot_ (&(z->m), &dot, z->alpha, &i_one, &i_one, z->alphadesc, &i_one, z->distY,  &i_one, &i_one, z->alphadesc, &i_one);
-	}	
+	}
     MPI_Bcast( &dot, 1, MPI_DOUBLE, z->alphadesc[6]*z->npcol + z->alphadesc[7], z->mpi_comm );
 //printf("@@@@@ %d %f\n", z->pid, dot); fflush(stdout);
 
@@ -576,11 +608,15 @@ for (int p = 0; p < 8; p++)
 		pdsyrk_( &uplo, &trans, &(z->m), &i_one, &d_half, z->alpha, &i_one, &i_one, z->alphadesc, &d_mhalf, dL_dK, &i_one, &i_one, z->Kdesc);
 	}
     /**************************************************************************************************/
-
+#ifdef _OPENMP
 # pragma omp parallel private ( k, li, gi, lj, ljstart, gj, d, q, idxi, idxj, idxk, sum, ws2, kk, a, dldk, info, tmppid ) shared ( z, theta, var, kappa, sigma, ws )
+#endif
     {
+        #ifdef _OPENMP
         int tid = omp_get_thread_num();
-
+        #else
+        int tid = 0;
+        #endif
         // Unpack gradients_TPS
 
         double* theta_gradients_TPS = z->gradients_TPS[tid];
@@ -590,8 +626,9 @@ for (int p = 0; p < 8; p++)
         double* ws_gradients_TPS    = sigma_gradients_TPS + z->NT;
 
         // Compute gradients
-
+#ifdef _OPENMP
 # pragma omp for
+#endif
         for (li = 0; li < z->lr; li++)
         {
 
@@ -612,7 +649,7 @@ for (int p = 0; p < 8; p++)
                     ws2 = ws[q * z->NT + idxi] * ws[q * z->NT + idxi];
                     kk = kappa[q * z->NT + idxi];
                     a = dldk * z->exps[(li * z->lc + ljstart) * z->NL + q];
-                    var_gradients_TPS[q] += 0; // This makes sure variance is fixed 
+                    var_gradients_TPS[q] += 0; // This makes sure variance is fixed
                     // var_gradients_TPS[q] += (ws2+kk) * a;
                     a *= var[q];  // a is kq in the ppopp21 paper
                     kappa_gradients_TPS[q * z->NT + idxi] += a*kappa[q * z->NT + idxi];
@@ -631,8 +668,8 @@ for (int p = 0; p < 8; p++)
             {
                 cl2g(z, lj, z->pcolid, &gj);
                 idxj = (int) z->X[gj * (z->DI + 1) + z->DI];
-				if (gi < gj){		
-					
+				if (gi < gj){
+
 	//@                idxk = li * z->lc + lj;
 					idxk = lj * z->lr + li;
 					dldk = dL_dK[idxk];
@@ -664,13 +701,14 @@ for (int p = 0; p < 8; p++)
                             ws_gradients_TPS[q * z->NT + idxj] += ws[q * z->NT + idxi]*ws[q * z->NT + idxj] * a;
                         }
 					}
-				}	
+				}
             }
         }
 
         // Reduce private arrays
-
+#ifdef _OPENMP
 # pragma omp critical
+#endif
         {
             for (k = 0; k < z->nparam; k++)
             {
@@ -680,8 +718,8 @@ for (int p = 0; p < 8; p++)
     }
 
     MPI_Allreduce(z->buffer, gradients, z->nparam, MPI_DOUBLE, MPI_SUM, z->mpi_comm);
-    
-    t2 = omp_get_wtime();
+
+    // t2 = omp_get_wtime();
     // if (z->pid == 0){
     //     printf("time in fun_jac: %e\n",t2-t1);
     //     fflush(stdout);
