@@ -691,6 +691,7 @@ class HistoryDB(dict):
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
             evaluation_detail : np.ndarray,\
+            additional_output : dict,\
             source : str = "measure"):
 
         print ("store_func_eval")
@@ -728,6 +729,11 @@ class HistoryDB(dict):
             # transform to the original parameter space
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]
             task_parameter_orig_list = np.array(tuple(task_parameter_orig),dtype=task_dtype).tolist()
+
+            if additional_output == None:
+                additional_output_store = {}
+            else:
+                additional_output_store = additional_output
 
             num_evals = len(tuning_parameter)
             for i in range(num_evals):
@@ -772,6 +778,7 @@ class HistoryDB(dict):
                         "software_configuration":software_configuration_store,
                         "evaluation_result":evaluation_result_store,
                         "evaluation_detail":evaluation_detail_store,
+                        "additional_output": additional_output_store,
                         "source": source,
                         "time":{
                             "tm_year":now.tm_year,

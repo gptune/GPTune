@@ -199,7 +199,16 @@ class Computer(object):
                     kwargs.update(problem.constants)
                 if D2 is not None:
                     kwargs.update(D2)
-                o = module.objectives(kwargs)
+                o_ = module.objectives(kwargs)
+                print('kwargs',kwargs,'o_',o_)
+                if len(o_) == 1:
+                    o = o_
+                    additional_output = None
+                elif len(o_) == 2:
+                    o = o_[0]
+                    additional_output = o_[1]
+                #print (len(o))
+                print('kwargs',kwargs,'o',o)
                 # print('kwargs',kwargs,'o',o)
 
                 o_eval = []
@@ -221,6 +230,7 @@ class Computer(object):
                             tuning_parameter = [P2[j]],\
                             evaluation_result = [o_eval], \
                             evaluation_detail = [o], \
+                            additional_output = additional_output,
                             source = source)
                             #np.array(O2_).reshape((len(O2_), problem.DO)), \
 
