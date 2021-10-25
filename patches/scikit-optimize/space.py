@@ -273,9 +273,9 @@ class Real(Dimension):
             raise ValueError("dtype must be 'float', 'float16', 'float32'"
                              "or 'float64'"
                              " got {}".format(self.dtype))
-        elif isinstance(self.dtype, type) and self.dtype\
-                not in [float, np.float, np.float16, np.float32, np.float64]:
-            raise ValueError("dtype must be float, np.float"
+        elif isinstance(self.dtype, type) and \
+                not np.issubdtype(self.dtype, np.floating):
+            raise ValueError("dtype must be a np.floating subtype;"
                              " got {}".format(self.dtype))
 
         if transform is None:
