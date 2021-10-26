@@ -78,7 +78,6 @@ def objectives(point):
 
         time_spent = times_[-1]
         times_spent.append(time_spent)
-
         loss_final = losses_[-1]
 
     return [times_spent]
@@ -104,12 +103,23 @@ def main():
     TUNER_NAME = args.optimization
 
     tuning_metadata = {
-        "tuning_problem_name": "less_sparse",
+        "tuning_problem_name": "less_sparse-"+dataset,
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }
-        }
+        },
+        "software_configuration": {},
+        "loadable_machine_configurations": {
+            "Cori": {
+                "haswell": {
+                    "nodes": 1,
+                    "cores": 32
+                }
+            }
+        },
+        "loadable_software_configurations": {}
     }
+
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
@@ -120,68 +130,20 @@ def main():
         A, b = generate_dataset.load_data('cifar-10', n=2**14, d=1000)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == 'susy_100Kn':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_0':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_1':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=1)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_2':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=2)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_3':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=3)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_4':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=4)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'synthetic_high_coherence_10000_200':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=10000, d=200, df=1)
+    elif dataset == 'synthetic_high_coherence_10000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=10000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == 'synthetic_high_coherence_100000_200':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=100000, d=200, df=1)
+    elif dataset == 'synthetic_high_coherence_20000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=20000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == 'synthetic_high_coherence_10000_500':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=10000, d=500, df=1)
+    elif dataset == 'synthetic_high_coherence_100000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=100000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == 'synthetic_high_coherence_100000_500':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=100000, d=500, df=1)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn_0":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn_1":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=1)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn_0":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn_1":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=1)
+    elif dataset == "epsilon_normalized_20Kn_spread":
+        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', option="spread")
         lambd = 1e-4
         error_threshold = 1e-6
     elif dataset == "epsilon_normalized_100Kn_spread":
@@ -193,14 +155,21 @@ def main():
         lambd = 1e-4
         error_threshold = 1e-6
     n, d = A.shape
-    niter = 5
+    niter = 3
     lreg = LogisticRegression(A, b, lambd)
     x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
 
     datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
 
     sketch = Categoricalnorm(["less_sparse"], transform="onehot", name="sketch")
-    sketch_size = Real(1./d, n/d, transform="normalize", name="sketch_size")
+    if "susy" in dataset:
+        sketch_size = Real(1./d, 1000, transform="normalize", name="sketch_size")
+    elif "synthetic_high_coherence" in dataset:
+        sketch_size = Real(1./d, 0.1, transform="normalize", name="sketch_size")
+    elif "epsilon" in dataset:
+        sketch_size = Real(1./d, 2.0, transform="normalize", name="sketch_size")
+    else:
+        sketch_size = Real(1./d, n/d, transform="normalize", name="sketch_size")
     sparsity_parameter = Real(1./d, n/d, transform="normalize", name="sparsity_parameter")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
@@ -224,7 +193,7 @@ def main():
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
     options['model_processes'] = 1
-    options['model_class'] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options['sample_class'] = 'SampleOpenTURNS'
     options.validate(computer=computer)

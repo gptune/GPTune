@@ -83,7 +83,7 @@ def objectives(point):
 
     return [times_spent]
 
-def cst1(d, sketch_size):
+def cst1(sketch_size, n, d):
     num_sketch_rows = int(d*sketch_size)
     return num_sketch_rows >= 1 and num_sketch_rows <= n
 
@@ -103,61 +103,37 @@ def main():
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
+    tuning_metadata = {
+        "tuning_problem_name": "gaussian-"+dataset,
+        "machine_configuration": {
+            "machine_name": "Cori",
+            "haswell": { "nodes": 1, "cores": 32 }
+        }
+    }
+    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
+    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+    os.environ['MACHINE_NAME'] = machine
+    os.environ['TUNER_NAME'] = TUNER_NAME
+
     global A, b, lreg
     if dataset == 'cifar-10':
         A, b = generate_dataset.load_data('cifar-10', n=2**14, d=1000)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == 'susy_100Kn':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_0':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_1':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=1)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_2':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=2)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_3':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=3)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'susy_100Kn_4':
-        A, b = generate_dataset.load_data('susy_100Kn', nth=4)
-        lambd = 1e-4
-        error_threshold = 1e-10
-    elif dataset == 'synthetic_high_coherence':
-        A, b = generate_dataset.load_data('synthetic_high_coherence', n=16384, d=256, df=1)
+    elif dataset == 'synthetic_high_coherence_10000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=10000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
+    elif dataset == 'synthetic_high_coherence_20000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=20000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn_0":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=0)
+    elif dataset == 'synthetic_high_coherence_100000_2000':
+        A, b = generate_dataset.load_data('synthetic_high_coherence', n=100000, d=2000, df=1)
         lambd = 1e-4
         error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_10Kn_1":
-        A, b = generate_dataset.load_data('epsilon_normalized_10Kn', nth=1)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn_0":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=0)
-        lambd = 1e-4
-        error_threshold = 1e-6
-    elif dataset == "epsilon_normalized_20Kn_1":
-        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', nth=1)
+    elif dataset == "epsilon_normalized_20Kn_spread":
+        A, b = generate_dataset.load_data('epsilon_normalized_20Kn', option="spread")
         lambd = 1e-4
         error_threshold = 1e-6
     elif dataset == "epsilon_normalized_100Kn_spread":
@@ -173,16 +149,17 @@ def main():
     lreg = LogisticRegression(A, b, lambd)
     x, losses = lreg.solve_exactly(n_iter=20, eps=1e-15)
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-    os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = TUNER_NAME
-
     datasets = Categoricalnorm([dataset], transform="onehot", name="dataset")
 
     sketch = Categoricalnorm(["gaussian"], transform="onehot", name="sketch")
-    sketch_size = Real(1./d, n/d, transform="normalize", name="sketch_size")
-    #sparsity_parameter = Real(1./d, n/d, transform="normalize", name="sparsity_parameter")
+    if "susy" in dataset:
+        sketch_size = Real(1./d, 1000, transform="normalize", name="sketch_size")
+    elif "synthetic_high_coherence" in dataset:
+        sketch_size = Real(1./d, 0.1, transform="normalize", name="sketch_size")
+    elif "epsilon" in dataset:
+        sketch_size = Real(1./d, 2.0, transform="normalize", name="sketch_size")
+    else:
+        sketch_size = Real(1./d, n/d, transform="normalize", name="sketch_size")
     wall_clock_time = Real(float("-Inf"), float("Inf"), name="wall_clock_time")
 
     input_space = Space([datasets])
@@ -193,7 +170,7 @@ def main():
     constants={"n":n, "d":d, "lambd":lambd, "error_threshold":error_threshold, "niter":niter, "sparsity_parameter":n/d}
 
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None, constants=constants)
-
+    historydb = HistoryDB(meta_dict=tuning_metadata)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     options = Options()
@@ -205,7 +182,7 @@ def main():
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
     options['model_processes'] = 1
-    options['model_class'] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options['sample_class'] = 'SampleOpenTURNS'
     options.validate(computer=computer)
@@ -218,7 +195,7 @@ def main():
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
         (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
         print("stats: ", stats)
 
