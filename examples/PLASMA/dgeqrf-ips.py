@@ -27,6 +27,9 @@ import argparse
 import numpy as np
 import time
 
+import sysv_ipc
+import signal
+
 def parse_args():
 
     parser = argparse.ArgumentParser()
@@ -37,6 +40,27 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
+def runtime_estimate(ips):
+    global best_ips
+    global best_runtime
+    print("best_ips: ", best_ips)
+    print("best_runtime: ", best_runtime)
+
+    scaling = float(best_ips/ips)
+    runtime_estimate = best_runtime * scaling
+
+    return runtime_estimate
+
+def ips_update(ips, runtime):
+    global best_ips
+    global best_runtime
+
+    if best_ips == 0 or runtime < best_runtime:
+        best_ips = ips
+        best_runtime = runtime
+
+    return
 
 def objectives(point):
 
@@ -49,17 +73,54 @@ def objectives(point):
     niter = point['niter']
     bind = point['bind']
 
-    command = f"OMP_NUM_THREADS={nthreads} OMP_PROC_BIND={bind} plasmatest dgeqrf --iter={niter} --dim={m}x{n} --nb={nb} --ib={ib} --pada={pada}"
+    command = f"LD_PRELOAD=./reference_profiler/librefprof.so OMP_NUM_THREADS={nthreads} OMP_PROC_BIND={bind} plasmatest dgeqrf --iter={niter} --dim={m}x{n} --nb={nb} --ib={ib} --pada={pada}"
     print (command)
 
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+    ips_list = []
+    n_samples = 0
+    while p.poll() == None:
+        time.sleep(1)
+
+        try:
+            #print(p.pid)
+            memory = sysv_ipc.SharedMemory(1234567+p.pid)
+            memory_value = memory.read()
+            cpu_x87_instructions = int.from_bytes(memory_value, "little")
+            print ("cpu_x87_instructions: ", cpu_x87_instructions)
+        except:
+            continue
+
+        if cpu_x87_instructions == 0:
+            continue
+        ips = cpu_x87_instructions
+        ips_list.append(ips)
+
+        n_samples += 1
+        if n_samples < 5:
+            continue
+
+        ips_average = np.average(ips_list)
+        estimated_runtime = runtime_estimate(ips_average)
+        print ("ips_average: ", ips_average)
+        print ("estimated_runtime: ", estimated_runtime)
+        print ("best_runtime: ", best_runtime)
+        if estimated_runtime > 2*best_runtime:
+            print ("terminate the parameter configuration")
+            p.kill()
+            #os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+            return {"source": "estimation", "runtime": estimated_runtime}
+
     output, errors = p.communicate()
     print (output)
     print (errors)
 
     runtime = [float(output.split()[13 + 10 * i]) for i in range(niter)]
     runtime_avg = np.average(runtime)
-    #gflops = [float(output.split()[14 + 10 * i]) for i in range(niter)]
+    ips_average = np.average(ips_list)
+
+    ips_update(ips_average, runtime_avg)
 
     return [runtime_avg]
 
@@ -74,12 +135,17 @@ def cst3(nb, ib):
 
 def main():
 
+    global best_ips
+    global best_runtime
+    best_ips = 0
+    best_runtime = 0
+
     args = parse_args()
     nrun = args.nrun
     npilot = args.npilot
 
     tuning_metadata = {
-        "tuning_problem_name": "DGEQRF",
+        "tuning_problem_name": "DGEQRF-IPS",
         "tuning_problem_category": "PLASMA",
         "use_crowd_repo": "no",
         "machine_configuration": {
@@ -93,6 +159,7 @@ def main():
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
 
+    #giventask = [[100000,2000]]
     giventask = [[100000,2000]]
 
     m = Integer(1, 100000, transform="normalize", name="m")

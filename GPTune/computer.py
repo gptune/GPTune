@@ -200,15 +200,12 @@ class Computer(object):
                 if D2 is not None:
                     kwargs.update(D2)
                 o_ = module.objectives(kwargs)
-                print('kwargs',kwargs,'o_',o_)
-                if len(o_) == 1:
+                if type(o_) == type({}) or len(o_) == 1:
                     o = o_
                     additional_output = None
                 elif len(o_) == 2:
                     o = o_[0]
                     additional_output = o_[1]
-                #print (len(o))
-                print('kwargs',kwargs,'o',o)
                 # print('kwargs',kwargs,'o',o)
 
                 o_eval = []
@@ -216,6 +213,7 @@ class Computer(object):
                 if type(o) == type({}): # predicted by model
                     source = o["source"]
                     o_eval = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                    o_detail = [o[problem.OS[k].name] for k in range(len(problem.OS))]
                 else: # type(o) == type([]): # list
                     source = "measure"
                     for i in range(len(o)):
@@ -223,13 +221,14 @@ class Computer(object):
                             o_eval.append(np.average(o[i]))
                         else:
                             o_eval.append(o[i])
+                    o_detail = o
 
                 if history_db is not None:
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = T2, \
                             tuning_parameter = [P2[j]],\
                             evaluation_result = [o_eval], \
-                            evaluation_detail = [o], \
+                            evaluation_detail = [o_detail], \
                             additional_output = additional_output,
                             source = source)
                             #np.array(O2_).reshape((len(O2_), problem.DO)), \
