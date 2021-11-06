@@ -441,7 +441,11 @@ class HistoryDB(dict):
         for i in range(len(Igiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
-                if (func_eval["task_parameter"][problem.IS[j].name] != Igiven[i][j]):
+                if type(Igiven[i][j]) == float:
+                    given_value = round(Igiven[i][j], 6)
+                else:
+                    given_value = Igiven[i][j]
+                if (func_eval["task_parameter"][problem.IS[j].name] != given_value):
                     compare_all_elems = False
                     break
             if compare_all_elems == True:
