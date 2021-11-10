@@ -26,6 +26,8 @@ from autotune.problem import TuningProblem
 import uuid
 import time
 import requests
+import os
+import subprocess
 
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
@@ -33,8 +35,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
     # machine configuration values
     machine_name = "mymachine"
     processor_model = "unknown"
-    nodes = 1
-    cores = 2
+    num_nodes = 1
+    num_cores = 2
 
     if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
         try:
@@ -44,8 +46,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
             processor_list.remove('machine_name')
             # YC: we currently assume the application uses only one processor type
             processor_model = processor_list[0]
-            nodes = machine_configuration[processor_model]['nodes']
-            cores = machine_configuration[processor_model]['cores']
+            num_nodes = machine_configuration[processor_model]['nodes']
+            num_cores = machine_configuration[processor_model]['cores']
         except:
             print ("[HistoryDB] not able to get machine configuration")
 
@@ -68,12 +70,37 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
 
             machine_configuration = metadata['machine_configuration']
             machine_name = machine_configuration['machine_name']
-            processor_list = list(machine_configuration.keys())
-            processor_list.remove('machine_name')
-            # YC: we currently assume the application uses only one processor type
-            processor_model = processor_list[0]
-            nodes = machine_configuration[processor_model]['nodes']
-            cores = machine_configuration[processor_model]['cores']
+            if "slurm" in machine_configuration and machine_configuration["slurm"] == "yes":
+                machine_name = machine_configuration["machine_name"]
+                num_nodes = int(os.getenv("SLURM_NNODES"))
+
+                import re
+                command = "lscpu | grep -E '^Thread|^Core|^Socket|^CPU\('"
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                output, errors = p.communicate()
+                output_elems = re.split(': |\n', output)
+                num_logical_cores = int(output_elems[1])
+                num_threads_per_core = int(output_elems[3])
+                num_cores = int(num_logical_cores/num_threads_per_core)
+                cores_per_socket = int(output_elems[5])
+                num_sockets = int(output_elems[7])
+
+                command = "sqs | grep " + str(os.getenv("SLURM_JOB_ID"))
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                sqs_output, errors = p.communicate()
+                processor_model = sqs_output.split()[10]
+
+                command = "scontrol show hostnames"
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                output, errors = p.communicate()
+                node_list = output.split("\n")[0:-1]
+            else:
+                processor_list = list(machine_configuration.keys())
+                processor_list.remove('machine_name')
+                # YC: we currently assume the application uses only one processor type
+                processor_model = processor_list[0]
+                num_nodes = machine_configuration[processor_model]['nodes']
+                num_cores = machine_configuration[processor_model]['cores']
 
         elif os.path.exists("./.gptune/meta.json"):
             try:
@@ -85,8 +112,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
                     processor_list.remove('machine_name')
                     # YC: we currently assume the application uses only one processor type
                     processor_model = processor_list[0]
-                    nodes = machine_configuration[processor_model]['nodes']
-                    cores = machine_configuration[processor_model]['cores']
+                    num_nodes = machine_configuration[processor_model]['nodes']
+                    num_cores = machine_configuration[processor_model]['cores']
             except:
                 print ("[HistoryDB] not able to get machine configuration")
 
@@ -94,7 +121,7 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
             print ("[HistoryDB] not able to get machine configuration")
 
     #return (machine_configuration)
-    return (machine_name, processor_model, nodes, cores)
+    return (machine_name, processor_model, num_nodes, num_cores)
 
 def GetMachineConfigurationDict(meta_description_path = "./.gptune/meta.json"):
     import ast
@@ -295,7 +322,48 @@ class HistoryDB(dict):
                 self.history_db_path = "./gptune.db"
 
             if "machine_configuration" in metadata:
-                self.machine_configuration = metadata["machine_configuration"]
+                machine_configuration = metadata["machine_configuration"]
+                if "slurm" in machine_configuration and machine_configuration["slurm"] == "yes":
+                    machine_name = machine_configuration["machine_name"]
+                    num_nodes = int(os.getenv("SLURM_NNODES"))
+
+                    import re
+                    import subprocess
+                    command = "lscpu | grep -E '^Thread|^Core|^Socket|^CPU\('"
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    output, errors = p.communicate()
+                    output_elems = re.split(': |\n', output)
+                    num_logical_cores = int(output_elems[1])
+                    num_threads_per_core = int(output_elems[3])
+                    num_cores = int(num_logical_cores/num_threads_per_core)
+                    cores_per_socket = int(output_elems[5])
+                    num_sockets = int(output_elems[7])
+
+                    command = "sqs | grep " + str(os.getenv("SLURM_JOB_ID"))
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    sqs_output, errors = p.communicate()
+                    architecture_feature = sqs_output.split()[10]
+
+                    command = "scontrol show hostnames"
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    output, errors = p.communicate()
+                    node_list = output.split("\n")[0:-1]
+
+                    self.machine_configuration = {
+                        "machine_name": machine_name,
+                        architecture_feature: {
+                            "num_nodes":num_nodes,
+                            "node_list":node_list,
+                            "num_cores":num_cores,
+                            "num_logical_cores":num_logical_cores,
+                            "num_threads_per_core":num_threads_per_core,
+                            "cores_per_socket":cores_per_socket,
+                            "num_sockets":num_sockets
+                        }
+                    }
+
+                else:
+                    self.machine_configuration = metadata["machine_configuration"]
             if "software_configuration" in metadata:
                 self.software_configuration = metadata["software_configuration"]
             if "loadable_machine_configurations" in metadata:
