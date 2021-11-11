@@ -232,6 +232,9 @@ class HistoryDB(dict):
         """ Process uid """
         self.process_uid = str(uuid.uuid1())
 
+        """ Check machine and software configurations when loading historical data"""
+        self.load_check = True
+
         # if history database is requested by CK-GPTune
         if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
             print ("CK-GPTune History Database Init")
@@ -321,6 +324,10 @@ class HistoryDB(dict):
                 os.system("mkdir -p ./gptune.db")
                 self.history_db_path = "./gptune.db"
 
+            if "no_load_check" in metadata:
+                if metadata["no_load_check"] == "yes":
+                    self.load_check = False
+
             if "machine_configuration" in metadata:
                 machine_configuration = metadata["machine_configuration"]
                 if "slurm" in machine_configuration and machine_configuration["slurm"] == "yes":
@@ -366,10 +373,6 @@ class HistoryDB(dict):
                     self.machine_configuration = metadata["machine_configuration"]
             if "software_configuration" in metadata:
                 self.software_configuration = metadata["software_configuration"]
-            if "loadable_machine_configurations" in metadata:
-                self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
-            if "loadable_software_configurations" in metadata:
-                self.loadable_software_configurations = metadata["loadable_software_configurations"]
             if "spack" in metadata:
                 spack_loaded_items = metadata["spack"]
                 for spack_loaded_item in spack_loaded_items:
@@ -402,6 +405,13 @@ class HistoryDB(dict):
                         print ("spack find failed: ", spack_loaded_item)
 
                     print (self.software_configuration)
+            if "loadable_machine_configurations" in metadata:
+                self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
+            else:
+                self.loadable_machine_configurations = self.machine_configuration
+            if "loadable_software_configurations" in metadata:
+                self.loadable_software_configurations = metadata["loadable_software_configurations"]
+
             try:
                 with FileLock("test.lock", timeout=0):
                     print ("[HistoryDB] use filelock for synchronization")
@@ -593,7 +603,7 @@ class HistoryDB(dict):
                 OS_history = [[] for i in range(num_tasks)]
 
                 for func_eval in history_data["func_eval"]:
-                    if (self.check_load_deps(func_eval)):
+                    if self.load_check == False or self.check_load_deps(func_eval):
                         task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
                         if (task_id != -1):
                             # # current policy: skip loading the func eval result
