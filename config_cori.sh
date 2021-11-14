@@ -402,7 +402,7 @@ if [[ $BuildExample == 1 ]]; then
 	mkdir build
 	cd build
 	cmake .. \
-		-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
+		-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC"\
 		-DCMAKE_CXX_FLAGS="" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
@@ -554,7 +554,6 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
