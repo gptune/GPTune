@@ -97,36 +97,17 @@ class Computer(object):
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None):  # P and I are in the normalized space
         O = []
         for i in range(len(I)):
-            t = I[i]
-            I_orig = problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
-            # kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+            T2 = I[i]
             P2 = P[i]
             if D is not None:
                 D2 = D[i]
             else:
                 D2 = None
             if(options['RCI_mode']==False):    
-                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, I_orig=I_orig, P2=P2, D2=D2, options = options)
-
-                source = "measure"
-
-                if len(O2)>0 and type(O2[0]) == type({}):
-                    source = O2[0]["source"]
-
-                    O2_ = []
-                    for O2_each in O2:
-                        O2_.append([O2_each[problem.OS[k].name] for k in range(len(problem.OS))])
-                    O2 = O2_
+                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options)
 
                 tmp = np.array(O2).reshape((len(O2), problem.DO))
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
-
-                if history_db is not None:
-                    history_db.store_func_eval(problem = problem,\
-                            task_parameter = I[i], \
-                            tuning_parameter = P[i],\
-                            evaluation_result = tmp,\
-                            source = source)
 
             else:
                 tmp = np.empty( shape=(len(P2), problem.DO))
@@ -137,7 +118,8 @@ class Computer(object):
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
                             tuning_parameter = P[i],\
-                            evaluation_result = tmp)
+                            evaluation_result = tmp,\
+                            evaluation_detail = tmp)
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
@@ -145,7 +127,9 @@ class Computer(object):
 
         return O
 
-    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, I_orig: Collection=None, P2 : np.ndarray = None, D2 : dict=None, options:dict=None):  # P2 is in the normalized space
+    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None):  # T2 and P2 are in the normalized space
+
+        I_orig = problem.IS.inverse_transform(np.array(T2, ndmin=2))[0]
 
         if(problem.driverabspath is not None and options['distributed_memory_parallelism']):
             modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
@@ -160,7 +144,6 @@ class Computer(object):
 
         if (pids is None):
             pids = list(range(len(P2)))
-
 
         if (options['distributed_memory_parallelism'] and options['objective_evaluation_parallelism'] and i_am_manager):
             from mpi4py import MPI
@@ -188,6 +171,8 @@ class Computer(object):
                     if(len(O2)<len(P2)):
                         O2.append(Otmp[offset[p]+it])
 
+            # TODO: HistoryDB function evaluation store
+
         elif (options['shared_memory_parallelism'] and options['objective_evaluation_parallelism']):
             with concurrent.futures.ThreadPoolExecutor(max_workers = options['objective_multisample_threads']) as executor:
                 def fun(pid):
@@ -201,6 +186,8 @@ class Computer(object):
                     # print(kwargs)
                     return module.objectives(kwargs)
                 O2 = list(executor.map(fun, pids, timeout=None, chunksize=1))
+
+                # TODO: HistoryDB function evaluation store
         else:
 
             for j in pids:
@@ -212,13 +199,43 @@ class Computer(object):
                     kwargs.update(problem.constants)
                 if D2 is not None:
                     kwargs.update(D2)
-                o = module.objectives(kwargs)
+                o_ = module.objectives(kwargs)
+                if type(o_) == type({}) or len(o_) == 1:
+                    o = o_
+                    additional_output = None
+                elif len(o_) == 2:
+                    o = o_[0]
+                    additional_output = o_[1]
                 # print('kwargs',kwargs,'o',o)
-                O2.append(o)
+
+                o_eval = []
+
+                if type(o) == type({}): # predicted by model
+                    source = o["source"]
+                    o_eval = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                    o_detail = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                else: # type(o) == type([]): # list
+                    source = "measure"
+                    for i in range(len(o)):
+                        if type(o[i]) == type([]):
+                            o_eval.append(np.average(o[i]))
+                        else:
+                            o_eval.append(o[i])
+                    o_detail = o
+
+                if history_db is not None:
+                    history_db.store_func_eval(problem = problem,\
+                            task_parameter = T2, \
+                            tuning_parameter = [P2[j]],\
+                            evaluation_result = [o_eval], \
+                            evaluation_detail = [o_detail], \
+                            additional_output = additional_output,
+                            source = source)
+                            #np.array(O2_).reshape((len(O2_), problem.DO)), \
+
+                O2.append(o_eval)
+
         return O2
-
-
-
 
 
     def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None):

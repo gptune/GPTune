@@ -86,7 +86,7 @@
       CHARACTER*6        PASSED
       CHARACTER*7        ROUT
       CHARACTER*8        ROUTCHK
-      CHARACTER*200       FILEDIR
+      CHARACTER*1000       FILEDIR
       CHARACTER*1000      STRING
       LOGICAL            CHECK
       INTEGER            I, IAM, IASEED, ICTXT, IMIDPAD, INFO, IPA,

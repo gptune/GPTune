@@ -46,6 +46,7 @@ class Options(dict):
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
+        model_output_constraint = False # True: if Model_LCM is used, check output range constraint and disregard out-of-range output (put a large value)
         model_threads = None  # Number of threads used for building one GP model in Model_LCM
         model_processes = None # Number of MPIs used for building one GP model in Model_LCM
         model_groups = 1  # Reserved option
@@ -62,7 +63,7 @@ class Options(dict):
 
 
         """ Options for the search phase """
-        search_class = 'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
+        search_class = 'SearchPyGMO' #'SearchCMO' #'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
         search_threads = None  # Number of threads in each thread group handling one task
         search_processes = 1  # Reserved option
         search_multitask_threads = None # Number of threads groups each handling one task
@@ -94,7 +95,7 @@ class Options(dict):
     def validate(self, computer, **kwargs):
 
         """  modify the options as needed """
-        if (self['model_class']=='Model_LCM' and self['RCI_mode']==True):
+        if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):
             self['model_class']='Model_GPy_LCM'
 
         if (self['distributed_memory_parallelism'] and self['shared_memory_parallelism']):
@@ -122,7 +123,7 @@ class Options(dict):
             self['model_restart_processes'] = 1
             self['model_restart_threads'] = 1
 
-        if (self['model_class']=='Model_LCM'):
+        if (self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained'):
             if(self['model_processes'] is None):
                 if (self['distributed_memory_parallelism']):
                     self['model_processes'] = max(1,math.floor(((computer.cores*computer.nodes-1)/(self['model_restart_processes'])-1)/self['model_restart_threads']))

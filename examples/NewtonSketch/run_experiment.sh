@@ -1,12 +1,17 @@
-#git clone https://github.com/younghyunc/newtonsketch
+#!/bin/bash -l
 
-cp .gptune/cori-haswell.json .gptune/meta.json
+#git clone https://github.com/younghyunc/newtonsketch
+#cp .gptune/cori-haswell.json .gptune/meta.json
 
 cd ../../
 source env.sh
 cd -
 export PYTHONPATH=$PYTHONPATH:$PWD/newtonsketch
 
-mpirun -n 1 python tune_sketch.py -dataset susy_100Kn -nrun 40 -npilot 20 | tee susy_100Kn.a.out
-mpirun -n 1 python tune_sketch.py -dataset synthetic_high_coherence -nrun 40 -npilot 20 | tee synthetic_high_coherence.a.out
-mpirun -n 1 python tune_sketch.py -dataset cifar-10 -nrun 40 -npilot 20 | tee cifar-10.a.out
+mpirun -n 1 python tune_rrs.py -dataset epsilon_normalized_20Kn_spread -nrun 20 -npilot 10 | tee gptune.db/rrs_epsilon_normalized_20Kn_spread.a.out
+mpirun -n 1 python tune_rrs.py -dataset epsilon_normalized_100Kn_spread -nrun 20 -npilot 10 | tee gptune.db/rrs_epsilon_normalized_100Kn_spread.a.out
+mpirun -n 1 python tune_gaussian.py -dataset epsilon_normalized_20Kn_spread -nrun 20 -npilot 10 | tee gptune.db/gaussian_epsilon_normalized_20Kn_spread.a.out
+mpirun -n 1 python tune_gaussian.py -dataset epsilon_normalized_100Kn_spread -nrun 20 -npilot 10 | tee gptune.db/gaussian_epsilon_normalized_100Kn_spread.a.out
+mpirun -n 1 python tune_less_sparse.py -dataset epsilon_normalized_20Kn_spread -nrun 200 -npilot 100 | tee gptune.db/less_sparse_epsilon_normalized_20Kn_spread.a.out
+mpirun -n 1 python tune_less_sparse.py -dataset epsilon_normalized_100Kn_spread -nrun 200 -npilot 100 | tee gptune.db/less_sparse_epsilon_normalized_100Kn_spread.a.out
+

@@ -19,22 +19,19 @@
 
 import sys
 import os
-import mpi4py
-import logging
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
-logging.getLogger('matplotlib.font_manager').disabled = True
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
-import pickle
+from gptune import *
 
 import argparse
-from mpi4py import MPI
 import numpy as np
 import time
+
+import math
 
 def parse_args():
 
@@ -49,28 +46,26 @@ def parse_args():
     return args
 
 def objectives(point):
-    y1 = point["x1"]
-    y2 = point["x2"]
 
-    return [y1, y2]
+    # DTLZ1 problem
+    # We use the mathmatical model obtained from Pymoo test programs
+    # (https://pymoo.org/problems/many/dtlz.html)
 
-def cst1(x1, x2):
-    return x1**2 + x2**2 - 1 - 0.1*math.cos(16*math.atan(x1/x2)) >= 0
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
 
-def cst2(x1, x2):
-    return (x1-0.5)**2+(x2-0.5)**2 <= 0.5
+    #g_xm = 100 *(3 +\
+    #        ((x1-0.5)**2 - np.cos(20*3.141592*(x1-0.5))) +\
+    #        ((x2-0.5)**2 - np.cos(20*3.141592*(x2-0.5))) +\
+    #        ((x3-0.5)**2 - np.cos(20*3.141592*(x3-0.5))))
+    g_xm = 100 * (1 + ((x3-0.5)**2 - np.cos(20*3.141592*(x3-0.5))))
 
-#def cst3(x1):
-#    return x1 >= 0
-#
-#def cst4(x1):
-#    return x1 <= math.pi
-#
-#def cst5(x2):
-#    return x2 >= 0
-#
-#def cst6(x2):
-#    return x2 <= math.pi
+    f1x = 1.0/2.0*x1*x2*(1+g_xm)
+    f2x = 1.0/2.0*x1*(1-x2)*(1+g_xm)
+    f3x = 1.0/2.0*(1-x1)*(1+g_xm)
+
+    return [f1x, f2x, f3x]
 
 def main():
 
@@ -84,48 +79,46 @@ def main():
     npilot = args.npilot
     TUNER_NAME = args.optimization
 
-    database_metadata = {
-        "tuning_problem_name": "TNK",
+    tuning_metadata = {
+        "tuning_problem_name": "DTLZ1",
         "machine_configuration": {
             "machine_name": "mymachine",
-            "myprocessor": {
-                "nodes": 1,
-                "cores": 2
-                }
-            },
+            "myprocessor": { "nodes": 1, "cores": 2}
+        },
         "software_configuration": {},
         "loadable_machine_configurations": {
             "mymachine": {
                 "myprocessor": {
                     "nodes": 1,
                     "cores": 2
-                    }
                 }
-            },
-        "loadable_software_configurations": {}
+            }
+        }
     }
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = database_metadata)
+    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 
-    problem = Categoricalnorm(["TNK"], transform="onehot", name="problem")
-    x1 = Real(0., math.pi, transform="normalize", name="x1")
-    x2 = Real(0., math.pi, transform="normalize", name="x2")
+    problem = Categoricalnorm(["DTLZ1"], transform="onehot", name="problem")
+    x1 = Real(0., 1., transform="normalize", name="x1")
+    x2 = Real(0., 1., transform="normalize", name="x2")
+    x3 = Real(0., 1., transform="normalize", name="x3")
+
     y1 = Real(float("-Inf"), float("Inf"), name="y1")
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
+    y3 = Real(float("-Inf"), float("Inf"), name="y3")
 
     input_space = Space([problem])
-    parameter_space = Space([x1, x2])
-    output_space = Space([y1, y2])
-    constraints = {"cst1": cst1, "cst2": cst2}
+    parameter_space = Space([x1, x2, x3])
+    output_space = Space([y1, y2, y3])
+    constraints = {}
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
 
+    historydb = HistoryDB(meta_dict=tuning_metadata)
+
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
-
-    historydb = HistoryDB(meta_dict=database_metadata)
-
     options = Options()
     options['model_restarts'] = 1
 
@@ -146,22 +139,18 @@ def main():
     # options['search_threads'] = 16
 
     ## disable the following lines to use product of individual EIs as a single-valued acquisition function
-    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
     options['search_pop_size'] = 1000
-    options['search_gen'] = 10
+    options['search_gen'] = 50
     options['search_more_samples'] = 5
 
-    # options['mpi_comm'] = None
-    #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
-    # options['sample_algo'] = 'MCS'
-    #options['sample_class'] = 'SampleLHSMDU'
     options['sample_class'] = 'SampleOpenTURNS'
 
     options.validate(computer=computer)
 
-    giventask = [["TNK"]]
+    giventask = [["DTLZ1"]]
 
     NI=len(giventask)
     NS=nrun
@@ -188,64 +177,6 @@ def main():
             xopts = [data.P[tid][i] for i in front]
             print('    Popts ', xopts)
             print('    Oopts ', fopts.tolist())
-
-    if True: # python plot
-        from pymoo.factory import get_problem
-        from pymoo.util.plotting import plot
-        problem = get_problem("tnk")
-        pareto_front = problem.pareto_front()
-        '''Plotting process'''
-        pf_X = [pair[0] for pair in pareto_front]
-        pf_Y = [pair[1] for pair in pareto_front]
-        plt.plot(pf_X, pf_Y, color='magenta', label='Truth')
-
-        PS = data.P[0]
-        OS = data.O[0]
-
-        y1 = []
-        y2 = []
-        for o in OS:
-            y1.append(o[0])
-            y2.append(o[1])
-
-        plt.plot(y1, y2, 'o', color='black', label='Search')
-
-        '''Pareto frontier selection process'''
-        sorted_list = sorted([[y1[i], y2[i]] for i in range(len(y1))], reverse=False)
-        pareto_front = [sorted_list[0]]
-        for pair in sorted_list[1:]:
-            if pair[1] <= pareto_front[-1][1]:
-                pareto_front.append(pair)
-
-        '''Plotting process'''
-        pf_X = [pair[0] for pair in pareto_front]
-        pf_Y = [pair[1] for pair in pareto_front]
-        plt.plot(pf_X, pf_Y, color='red')
-
-        #for i in range(len(OS)):
-        #    label = PS[i]
-        #    x = y1[i]
-        #    y = y2[i]
-        #    plt.annotate(label, # this is the text
-        #                 (x,y), # this is the point to label
-        #                 textcoords="offset points", # how to position the text
-        #                 xytext=(0,10), # distance from text to points (x,y)
-        #                 ha='center') # horizontal alignment can be left, right or center
-
-        y1 = y1[npilot:nrun]
-        y2 = y2[npilot:nrun]
-        plt.plot(y1, y2, 'o', color='red', label='Search')
-
-        plt.title("Tuning on TNK (NSGA2)")
-        plt.legend(loc="upper right")
-        plt.ylabel('Y1')
-        plt.xlabel('Y2')
-        #plt.ylim([0,100])
-        plt.show()
-
-        #plt.figure()
-        #Or = np.array(data.O[tid][front])
-        #pickle.dump(Or, open(f"{options['search_algo']}_pareto.pkl", "wb"))
 
 if __name__ == "__main__":
     main()

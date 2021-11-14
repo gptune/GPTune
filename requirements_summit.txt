@@ -11,3 +11,4 @@ opentuner
 hpbandster
 filelock 
 pybind11
+requests

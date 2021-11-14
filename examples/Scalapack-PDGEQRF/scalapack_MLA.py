@@ -96,7 +96,50 @@ def main():
     JOBID = args.jobid
     TUNER_NAME = args.optimization
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    tuning_metadata = {
+        "tuning_problem_name": "PDGEQRF",
+        "machine_configuration": {
+            "machine_name": "Cori",
+            "haswell": {
+                "nodes": 1,
+                "cores": 32
+            }
+        },
+        "software_configuration": {
+            "openmpi": {
+                "version_split": [4,0,1]
+            },
+            "scalapack": {
+                "version_split": [2,1,0]
+            },
+            "gcc": {
+                "version_split": [8,3,0]
+            }
+        },
+        "loadable_machine_configurations": {
+            "Cori" : {
+                "haswell": {
+                    "nodes":1,
+                    "cores":32
+                }
+            }
+        },
+        "loadable_software_configurations": {
+            "openmpi": {
+                "version_from":[4,0,1],
+                "version_to":[5,0,0]
+            },
+            "scalapack":{
+                "version_split":[2,1,0]
+            },
+            "gcc": {
+                "version_split": [8,3,0]
+            }
+        }
+    }
+
+#    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
+    (machine, processor, nodes, cores) = GetMachineConfiguration()    
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
     os.environ['MACHINE_NAME'] = machine
@@ -126,6 +169,7 @@ def main():
     print(IS, PS, OS, constraints)
 
     problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
+    historydb = HistoryDB(meta_dict=tuning_metadata)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     """ Set and validate options """
@@ -159,7 +203,7 @@ def main():
     data = Data(problem)
     if(TUNER_NAME=='GPTune'):
 
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
 
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
@@ -236,12 +280,9 @@ def parse_args():
     # 0 means interactive execution (not batch)
     parser.add_argument('-jobid', type=int, default=-1, help='ID of the batch job')
 
-
-
     args = parser.parse_args()
 
     return args
-
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,26 @@
+# General information
+
+This tuning example contains some GPTune tuning drivers and scripts for tuning
+ScaLAPACK's PDGEQRF routine. In particular, here we provide some tuning examples
+of using GPTune's TLA features.
+
+Some example drivers are:
+
+- scalapack_TLA_machine.py: transferring a model trained on different machine
+- scalapack_TLA_task.py: transferring a model trained for different tasks
+
+If you want to reproduce experiments in our ATMG paper, Cho et al., "Enhancing
+Autotuning Capability with a History Database", there are two options:
+
+1. You can first run some PDGEQRF tuning from scratch to collect initial
+performance data and build a model (maybe you can train a model for the number
+of samples described in the paper), then transfer the model to run autotuning
+(for a new task), following the approach in our GPTune driver code and
+experiment scripts.
+
+2. Or, you can visit our repository at https://gptune.lbl.gov/repo/dashboard and
+query surrogate model and performance data from PDGEQRF-ATMG, then you can use
+it to transfer a model instead of collecting initial performance data samples.
+
+For more information and questions, please contact Younghyun Cho
+<younghyun@berkeley.edu> or GPTune team <gptune-dev@lbl.gov>

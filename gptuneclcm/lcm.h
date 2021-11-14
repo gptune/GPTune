@@ -3,10 +3,10 @@
 // required approvals from the U.S.Dept. of Energy) and the University of
 // California, Berkeley.  All rights reserved.
 //
-// If you have questions about your rights to use or distribute this software, 
+// If you have questions about your rights to use or distribute this software,
 // please contact Berkeley Lab's Intellectual Property Office at IPO@lbl.gov.
 //
-// NOTICE. This Software was developed under funding from the U.S. Department 
+// NOTICE. This Software was developed under funding from the U.S. Department
 // of Energy and the U.S. Government consequently retains certain rights.
 // As such, the U.S. Government has been granted for itself and others acting
 // on its behalf a paid-up, nonexclusive, irrevocable, worldwide license in
@@ -24,16 +24,29 @@ void blacs_get(const int *ConTxt, const int *what, int *val);
 void blacs_gridinit(int *ConTxt, const char *layout, const int *nprow, const int *npcol);
 void blacs_gridmap(int *ConTxt, const int *usermap, const int *ldup, const int *nprow0, const int *npcol0);
 void blacs_gridinfo(int *ConTxt, int *nprow, int *npcol, int *myprow, int *mypcol );
+void Cblacs_gridinfo(int ConTxt, int *nprow, int *npcol, int *myprow, int *mypcol );
 void descinit(int* desc, const int* m, const int* n, const int* mb, const int* nb, const int* irsrc, const int* icsrc, const int* ictxt, const int* lld, int* info);
+void descinit_(int (*)[9], const int* m, const int* n, const int* mb, const int* nb, const int* irsrc, const int* icsrc, const int* ictxt, const int* lld, int* info);
 void blacs_gridexit(const int *ConTxt);
 void blacs_exit(const int *notDone);
+void Cblacs_gridinit(int *ConTxt, char *order, int nprow, int npcol);
+int Csys2blacs_handle(MPI_Comm SysCtxt);
+void Cblacs_gridexit(int ConTxt);
+
 
 // ScaLAPACK
 int numroc(int* n, int* nb, int* iproc, int* isrcproc, int* nprocs);
+int PB_Cnumroc(int, int, int, int, int, int, int);
 void pdpotrf(const char* uplo, const int* n, double* a, const int* ia, const int* ja, const int* desca, int* info);
 void pdgemr2d (int *m , int *n , double *a , int *ia , int *ja , int *desca , double *b , int *ib , int *jb , int *descb , int *ictxt );
 void pdpotrs(const char* uplo, const int* n, const int* nrhs, const double* a, const int* ia, const int* ja, const int* desca, double* b, const int* ib, const int* jb, const int* descb, int* info);
 void pdpotri(const char* uplo, const int* n, double* a, const int* ia, const int* ja, const int* desca, int* info);
+void pdpotrf_(const char* uplo, const int* n, double* a, const int* ia, const int* ja, const int (*)[9], int* info);
+void pdgemr2d_ (int *m , int *n , double *a , int *ia , int *ja , int *desca , double *b , int *ib , int *jb , int *descb , int *ictxt );
+void pdpotrs_(const char* uplo, const int* n, const int* nrhs, const double* a, const int* ia, const int* ja, int (*)[9], double* b, const int* ib, const int* jb, int (*)[9], int* info);
+void pdpotri_(const char* uplo, const int* n, double* a, const int* ia, const int* ja, int (*)[9], int* info);
+
+
 
 // PBLAS
 void pddot_(int * N, double * DOT, double * X, int * IX, int * JX, int * DESCX, int * INCX, double * Y, int * IY, int * JY, int * DESCY, int * INCY);
@@ -78,7 +91,7 @@ typedef struct
     int mb;            // Blocking factor used to distribute the rows of the global matrix K in ScaLAPACK
     int lr;            // Local number of rows of K matrix
     int lc;            // Local number of columns of K matrix
-    int maxtries;      // Max number of jittering 
+    int maxtries;      // Max number of jittering
     int nprow;         // Number of rows process
     int npcol;         // Number of columns process
     int pid;           // Process ID in communicator mpi_comm
@@ -118,7 +131,7 @@ fun_jac_struct* initialize
 void finalize
 (
     // fun_jac_struct structure
-    fun_jac_struct* z 
+    fun_jac_struct* z
 );
 
 double fun_jac // negloglike_and_grads

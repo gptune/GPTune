@@ -25,6 +25,9 @@ from autotune.space import *
 from autotune.problem import TuningProblem
 import uuid
 import time
+import requests
+import os
+import subprocess
 
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
@@ -32,8 +35,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
     # machine configuration values
     machine_name = "mymachine"
     processor_model = "unknown"
-    nodes = 1
-    cores = 2
+    num_nodes = 1
+    num_cores = 2
 
     if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
         try:
@@ -43,8 +46,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
             processor_list.remove('machine_name')
             # YC: we currently assume the application uses only one processor type
             processor_model = processor_list[0]
-            nodes = machine_configuration[processor_model]['nodes']
-            cores = machine_configuration[processor_model]['cores']
+            num_nodes = machine_configuration[processor_model]['nodes']
+            num_cores = machine_configuration[processor_model]['cores']
         except:
             print ("[HistoryDB] not able to get machine configuration")
 
@@ -67,12 +70,37 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
 
             machine_configuration = metadata['machine_configuration']
             machine_name = machine_configuration['machine_name']
-            processor_list = list(machine_configuration.keys())
-            processor_list.remove('machine_name')
-            # YC: we currently assume the application uses only one processor type
-            processor_model = processor_list[0]
-            nodes = machine_configuration[processor_model]['nodes']
-            cores = machine_configuration[processor_model]['cores']
+            if "slurm" in machine_configuration and machine_configuration["slurm"] == "yes":
+                machine_name = machine_configuration["machine_name"]
+                num_nodes = int(os.getenv("SLURM_NNODES"))
+
+                import re
+                command = "lscpu | grep -E '^Thread|^Core|^Socket|^CPU\('"
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                output, errors = p.communicate()
+                output_elems = re.split(': |\n', output)
+                num_logical_cores = int(output_elems[1])
+                num_threads_per_core = int(output_elems[3])
+                num_cores = int(num_logical_cores/num_threads_per_core)
+                cores_per_socket = int(output_elems[5])
+                num_sockets = int(output_elems[7])
+
+                command = "sqs | grep " + str(os.getenv("SLURM_JOB_ID"))
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                sqs_output, errors = p.communicate()
+                processor_model = sqs_output.split()[10]
+
+                command = "scontrol show hostnames"
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                output, errors = p.communicate()
+                node_list = output.split("\n")[0:-1]
+            else:
+                processor_list = list(machine_configuration.keys())
+                processor_list.remove('machine_name')
+                # YC: we currently assume the application uses only one processor type
+                processor_model = processor_list[0]
+                num_nodes = machine_configuration[processor_model]['nodes']
+                num_cores = machine_configuration[processor_model]['cores']
 
         elif os.path.exists("./.gptune/meta.json"):
             try:
@@ -84,8 +112,8 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
                     processor_list.remove('machine_name')
                     # YC: we currently assume the application uses only one processor type
                     processor_model = processor_list[0]
-                    nodes = machine_configuration[processor_model]['nodes']
-                    cores = machine_configuration[processor_model]['cores']
+                    num_nodes = machine_configuration[processor_model]['nodes']
+                    num_cores = machine_configuration[processor_model]['cores']
             except:
                 print ("[HistoryDB] not able to get machine configuration")
 
@@ -93,7 +121,7 @@ def GetMachineConfiguration(meta_path=None, meta_dict=None):
             print ("[HistoryDB] not able to get machine configuration")
 
     #return (machine_configuration)
-    return (machine_name, processor_model, nodes, cores)
+    return (machine_name, processor_model, num_nodes, num_cores)
 
 def GetMachineConfigurationDict(meta_description_path = "./.gptune/meta.json"):
     import ast
@@ -156,6 +184,7 @@ class HistoryDB(dict):
     def __init__(self, meta_path=None, meta_dict=None, **kwargs):
 
         self.tuning_problem_name = None
+        self.tuning_problem_category = None
 
         """ Options """
         self.history_db = True
@@ -163,6 +192,14 @@ class HistoryDB(dict):
         self.save_model = True
         self.load_func_eval = True
         self.load_surrogate_model = False
+
+        """ Crowd repository options """
+        self.use_crowd_repo = False
+        self.historydb_api_key = ""
+        self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
+        #self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
+        self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
+        #self.crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
         """ Path to JSON data files """
         self.history_db_path = "./"
@@ -194,6 +231,9 @@ class HistoryDB(dict):
 
         """ Process uid """
         self.process_uid = str(uuid.uuid1())
+
+        """ Check machine and software configurations when loading historical data"""
+        self.load_check = True
 
         # if history database is requested by CK-GPTune
         if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
@@ -229,7 +269,7 @@ class HistoryDB(dict):
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
-        # if GPTune is called through Reverse Communication Interface
+        # if GPTune is called through MPI spawning or Reverse Communication Interface
         else:
             metadata = {}
 
@@ -260,18 +300,115 @@ class HistoryDB(dict):
             else:
                 self.tuning_problem_name = "Unknown"
 
+            if "tuning_problem_category" in metadata:
+                self.tuning_problem_category = metadata["tuning_problem_category"]
+            else:
+                self.tuning_problem_category = "Unknown"
+
+            if "use_crowd_repo" in metadata:
+                if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
+                    self.use_crowd_repo = True
+                else:
+                    self.use_crowd_repo = False
+            else:
+                self.use_crowd_repo = False
+
+            if "historydb_api_key" in metadata:
+                self.historydb_api_key = metadata["historydb_api_key"]
+            else:
+                self.historydb_api_key = ""
+
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
             else:
                 os.system("mkdir -p ./gptune.db")
                 self.history_db_path = "./gptune.db"
 
+            if "no_load_check" in metadata:
+                if metadata["no_load_check"] == "yes":
+                    self.load_check = False
+
             if "machine_configuration" in metadata:
-                self.machine_configuration = metadata["machine_configuration"]
+                machine_configuration = metadata["machine_configuration"]
+                if "slurm" in machine_configuration and machine_configuration["slurm"] == "yes":
+                    machine_name = machine_configuration["machine_name"]
+                    num_nodes = int(os.getenv("SLURM_NNODES"))
+
+                    import re
+                    import subprocess
+                    command = "lscpu | grep -E '^Thread|^Core|^Socket|^CPU\('"
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    output, errors = p.communicate()
+                    output_elems = re.split(': |\n', output)
+                    num_logical_cores = int(output_elems[1])
+                    num_threads_per_core = int(output_elems[3])
+                    num_cores = int(num_logical_cores/num_threads_per_core)
+                    cores_per_socket = int(output_elems[5])
+                    num_sockets = int(output_elems[7])
+
+                    command = "sqs | grep " + str(os.getenv("SLURM_JOB_ID"))
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    sqs_output, errors = p.communicate()
+                    architecture_feature = sqs_output.split()[10]
+
+                    command = "scontrol show hostnames"
+                    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    output, errors = p.communicate()
+                    node_list = output.split("\n")[0:-1]
+
+                    self.machine_configuration = {
+                        "machine_name": machine_name,
+                        architecture_feature: {
+                            "num_nodes":num_nodes,
+                            "node_list":node_list,
+                            "num_cores":num_cores,
+                            "num_logical_cores":num_logical_cores,
+                            "num_threads_per_core":num_threads_per_core,
+                            "cores_per_socket":cores_per_socket,
+                            "num_sockets":num_sockets
+                        }
+                    }
+
+                else:
+                    self.machine_configuration = metadata["machine_configuration"]
             if "software_configuration" in metadata:
                 self.software_configuration = metadata["software_configuration"]
+            if "spack" in metadata:
+                spack_loaded_items = metadata["spack"]
+                for spack_loaded_item in spack_loaded_items:
+                    import subprocess
+
+                    stdout, stderr = subprocess.Popen("spack find --json "+spack_loaded_item, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+                    try:
+                        json_data = json.loads(stdout)[0]
+
+                        software_name = json_data["name"]
+                        version_split = [int(v) for v in json_data["version"].split(".")]
+
+                        self.software_configuration[software_name] = { "version_split" : version_split }
+
+                        for software_depend in json_data["dependencies"]:
+                            software_depend_json = json_data["dependencies"][software_depend]
+                            hash_value = software_depend_json["hash"]
+                            types = software_depend_json["type"]
+                            if "build" in types and "link" in types:
+                                stdout, stderr = subprocess.Popen("spack find --json "+software_depend, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+                                software_depend_spec_found = json.loads(stdout)
+                                for software_depend_spec in software_depend_spec_found:
+                                    if software_depend_spec["hash"] == hash_value:
+                                        software_depend_name = software_depend_spec["name"]
+                                        version_split = [int(v) for v in software_depend_spec["version"].split(".")]
+                                        self.software_configuration[software_depend_name] = { "version_split" : version_split }
+                                        break
+                    except:
+                        print ("spack find failed: ", spack_loaded_item)
+
+                    print (self.software_configuration)
             if "loadable_machine_configurations" in metadata:
                 self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
+            else:
+                self.loadable_machine_configurations = self.machine_configuration
             if "loadable_software_configurations" in metadata:
                 self.loadable_software_configurations = metadata["loadable_software_configurations"]
 
@@ -382,7 +519,11 @@ class HistoryDB(dict):
         for i in range(len(Igiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
-                if (func_eval["task_parameter"][problem.IS[j].name] != Igiven[i][j]):
+                if type(Igiven[i][j]) == float:
+                    given_value = round(Igiven[i][j], 6)
+                else:
+                    given_value = Igiven[i][j]
+                if (func_eval["task_parameter"][problem.IS[j].name] != given_value):
                     compare_all_elems = False
                     break
             if compare_all_elems == True:
@@ -409,6 +550,35 @@ class HistoryDB(dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+            if self.use_crowd_repo == True:
+                try:
+                    r = requests.get(url = self.crowd_repo_download_url,
+                            headers={"x-api-key":self.historydb_api_key},
+                            params={"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category},
+                            verify=False)
+                    if r.status_code == 200:
+                        if not os.path.exists(json_data_path): #TODO: check
+                            with open(json_data_path, "w") as f_out:
+                                json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "surrogate_model":[],
+                                    "func_eval":[]}
+                                json.dump(json_data, f_out, indent=2)
+
+                        func_eval_list_downloaded = json.loads(r.text)["perf_data"]
+                        print ("FUNC_EVAL_LIST_DOWNLOADED: ", func_eval_list_downloaded)
+                        with open(json_data_path, "r") as f_in:
+                            json_data = json.load(f_in)
+                            json_data["func_eval"] += func_eval_list_downloaded #TODO: uid check
+                        with open(json_data_path, "w") as f_out:
+                            json.dump(json_data, f_out, indent=2)
+                    else:
+                        print ("request status_code: ", r.status_code)
+                except:
+                    print ("direct download failed")
+
             if os.path.exists(json_data_path):
                 print ("[HistoryDB] Found a history database file")
                 if self.file_synchronization_method == 'filelock':
@@ -433,7 +603,7 @@ class HistoryDB(dict):
                 OS_history = [[] for i in range(num_tasks)]
 
                 for func_eval in history_data["func_eval"]:
-                    if (self.check_load_deps(func_eval)):
+                    if self.load_check == False or self.check_load_deps(func_eval):
                         task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
                         if (task_id != -1):
                             # # current policy: skip loading the func eval result
@@ -486,6 +656,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -493,6 +664,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -501,6 +673,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -573,6 +746,7 @@ class HistoryDB(dict):
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
@@ -580,6 +754,7 @@ class HistoryDB(dict):
                     temp_path = json_data_path + "." + self.process_uid + ".temp"
                     with open(temp_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -588,6 +763,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "w") as f_out:
                         json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
@@ -596,6 +772,8 @@ class HistoryDB(dict):
             task_parameter : np.ndarray,\
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
+            evaluation_detail : np.ndarray,\
+            additional_output : dict,\
             source : str = "measure"):
 
         print ("store_func_eval")
@@ -634,6 +812,11 @@ class HistoryDB(dict):
             task_parameter_orig = problem.IS.inverse_transform(np.array(task_parameter, ndmin=2))[0]
             task_parameter_orig_list = np.array(tuple(task_parameter_orig),dtype=task_dtype).tolist()
 
+            if additional_output == None:
+                additional_output_store = {}
+            else:
+                additional_output_store = additional_output
+
             num_evals = len(tuning_parameter)
             for i in range(num_evals):
                 uid = uuid.uuid1()
@@ -644,6 +827,7 @@ class HistoryDB(dict):
                 tuning_parameter_orig_list = np.array(tuple(tuning_parameter_orig),dtype=tuning_dtype).tolist()
                 evaluation_result_orig_list = np.array(evaluation_result[i]).tolist()
                 evaluation_result_orig_list = [round(val, 6) for val in evaluation_result_orig_list]
+                evaluation_detail_orig_list = np.array(evaluation_detail[i]).tolist()
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
@@ -653,6 +837,11 @@ class HistoryDB(dict):
                 machine_configuration_store = self.machine_configuration
                 software_configuration_store = self.software_configuration
                 evaluation_result_store = { problem.OS[k].name:None if np.isnan(evaluation_result_orig_list[k]) else evaluation_result_orig_list[k] for k in range(len(problem.OS)) }
+                evaluation_detail_store = { problem.OS[k].name:{} for k in range(len(problem.OS)) }
+                for k in range(len(problem.OS)):
+                    evaluation_detail_store[problem.OS[k].name] = {}
+                    evaluation_detail_store[problem.OS[k].name]["evaluations"] = evaluation_detail_orig_list[k]
+                    evaluation_detail_store[problem.OS[k].name]["objective_scheme"] = "average"
 
                 if "machine_configuration" in task_parameter_store:
                     import ast
@@ -663,13 +852,15 @@ class HistoryDB(dict):
                     software_configuration_store = ast.literal_eval(task_parameter_store["software_configuration"])
                     del task_parameter_store["software_configuration"]
 
-                new_function_evaluation_results.append({
+                function_evaluation_document = {
                         "task_parameter":task_parameter_store,
                         "tuning_parameter":tuning_parameter_store,
                         "constants":constants_store,
                         "machine_configuration":machine_configuration_store,
                         "software_configuration":software_configuration_store,
                         "evaluation_result":evaluation_result_store,
+                        "evaluation_detail":evaluation_detail_store,
+                        "additional_output": additional_output_store,
                         "source": source,
                         "time":{
                             "tm_year":now.tm_year,
@@ -683,7 +874,27 @@ class HistoryDB(dict):
                             "tm_isdst":now.tm_isdst
                             },
                         "uid":str(uid)
-                    })
+                    }
+
+                new_function_evaluation_results.append(function_evaluation_document)
+
+                if self.use_crowd_repo == True:
+                    print ("function_evaluation_document: ", str(function_evaluation_document))
+                    print ("API_KEY: ", self.historydb_api_key)
+
+                    try:
+                        r = requests.post(url = self.crowd_repo_upload_url,
+                                headers={"x-api-key":self.historydb_api_key},
+                                data={"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "function_evaluation_document":json.dumps(function_evaluation_document)},
+                                verify=False)
+                        if r.status_code == 200:
+                            print ("direct upload success")
+                        else:
+                            print ("request status_code: ", r.status_code)
+                    except:
+                        print ("direct upload failed")
 
             if self.file_synchronization_method == 'filelock':
                 with FileLock(json_data_path+".lock"):
@@ -1259,12 +1470,16 @@ class HistoryDB(dict):
                 dict_["lower_bound"] = lower_bound
                 dict_["upper_bound"] = upper_bound
 
+                dict_["optimize"] = space[i].optimize
+
             elif space_type_name == "Integer":
                 dict_["type"] = "int"
 
                 lower_bound, upper_bound = space.bounds[i]
                 dict_["lower_bound"] = lower_bound
                 dict_["upper_bound"] = upper_bound
+
+                dict_["optimize"] = space[i].optimize
 
             elif space_type_name == "Categoricalnorm":
                 dict_["type"] = "categorical"
@@ -1319,6 +1534,9 @@ class HistoryDB(dict):
             #    task_parameter_dict = {problem.IS[k].name:task_parameter_orig_list[i][k] for k in range(len(problem.IS))}
             #    task_parameter_dict_list.append(task_parameter_dict)
 
+            objective_dict = self.problem_space_to_dict(problem.OS)[objective]
+            objective_dict["objective_id"] = objective
+
             new_surrogate_models.append({
                     "hyperparameters":bestxopt.tolist(),
                     "model_stats":model_stats,
@@ -1328,7 +1546,7 @@ class HistoryDB(dict):
                     "parameter_space":self.problem_space_to_dict(problem.PS),
                     "output_space":self.problem_space_to_dict(problem.OS),
                     "modeler":"Model_LCM",
-                    "objective_id":objective,
+                    "objective":objective_dict,
                     "time":{
                         "tm_year":now.tm_year,
                         "tm_mon":now.tm_mon,

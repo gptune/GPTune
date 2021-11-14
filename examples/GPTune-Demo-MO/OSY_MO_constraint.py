@@ -49,28 +49,26 @@ def parse_args():
     return args
 
 def objectives(point):
-    y1 = point["x1"]
-    y2 = point["x2"]
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
+    x4 = point["x4"]
+    x5 = point["x5"]
+    x6 = point["x6"]
+
+    y1 = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2)
+    y2 = x1**2 + x2**2 + x3**2 + x4**2 + x5**2 + x6**2
 
     return [y1, y2]
 
 def cst1(x1, x2):
-    return x1**2 + x2**2 - 1 - 0.1*math.cos(16*math.atan(x1/x2)) >= 0
+    return (x1+x2-2 >= 0) and (6-x1-x2 >=0) and (2-x2+x1 >= 0) and (2-x1+3*x2 >= 0)
 
-def cst2(x1, x2):
-    return (x1-0.5)**2+(x2-0.5)**2 <= 0.5
+def cst2(x3, x4):
+    return 4 - (x3-3)**2 - x4 >= 0
 
-#def cst3(x1):
-#    return x1 >= 0
-#
-#def cst4(x1):
-#    return x1 <= math.pi
-#
-#def cst5(x2):
-#    return x2 >= 0
-#
-#def cst6(x2):
-#    return x2 <= math.pi
+def cst3(x5, x6):
+    return (x5-3)**2 + x6 - 4 >= 0
 
 def main():
 
@@ -85,7 +83,7 @@ def main():
     TUNER_NAME = args.optimization
 
     database_metadata = {
-        "tuning_problem_name": "TNK",
+        "tuning_problem_name": "OSY_constraint",
         "machine_configuration": {
             "machine_name": "mymachine",
             "myprocessor": {
@@ -110,22 +108,25 @@ def main():
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 
-    problem = Categoricalnorm(["TNK"], transform="onehot", name="problem")
-    x1 = Real(0., math.pi, transform="normalize", name="x1")
-    x2 = Real(0., math.pi, transform="normalize", name="x2")
-    y1 = Real(float("-Inf"), float("Inf"), name="y1")
+    problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+    x1 = Real(0., 10., transform="normalize", name="x1")
+    x2 = Real(0., 10., transform="normalize", name="x2")
+    x3 = Real(1., 5., transform="normalize", name="x3")
+    x4 = Real(0., 6., transform="normalize", name="x4")
+    x5 = Real(1., 5., transform="normalize", name="x5")
+    x6 = Real(0., 10., transform="normalize", name="x6")
+    y1 = Real(float("-Inf"), -150, name="y1") #, optimize=False)
     y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
     input_space = Space([problem])
-    parameter_space = Space([x1, x2])
+    parameter_space = Space([x1, x2, x3, x4, x5, x6])
     output_space = Space([y1, y2])
-    constraints = {"cst1": cst1, "cst2": cst2}
+    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
     problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
-
-    computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     historydb = HistoryDB(meta_dict=database_metadata)
 
+    computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
     options['model_restarts'] = 1
 
@@ -138,30 +139,22 @@ def main():
     options['objective_nprocmax'] = 1
 
     options['model_processes'] = 1
-    # options['model_threads'] = 1
-    # options['model_restart_processes'] = 1
-
-    # options['search_multitask_processes'] = 1
-    # options['search_multitask_threads'] = 1
-    # options['search_threads'] = 16
 
     ## disable the following lines to use product of individual EIs as a single-valued acquisition function
-    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
     options['search_pop_size'] = 1000
-    options['search_gen'] = 10
-    options['search_more_samples'] = 5
+    options['search_gen'] = 50
+    #options['search_gen'] = 10
+    options['search_more_samples'] = 4
 
-    # options['mpi_comm'] = None
-    #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_output_constraint'] = True
     options['verbose'] = False
-    # options['sample_algo'] = 'MCS'
-    #options['sample_class'] = 'SampleLHSMDU'
     options['sample_class'] = 'SampleOpenTURNS'
 
     options.validate(computer=computer)
 
-    giventask = [["TNK"]]
+    giventask = [["OSY"]]
 
     NI=len(giventask)
     NS=nrun
@@ -192,7 +185,7 @@ def main():
     if True: # python plot
         from pymoo.factory import get_problem
         from pymoo.util.plotting import plot
-        problem = get_problem("tnk")
+        problem = get_problem("osy")
         pareto_front = problem.pareto_front()
         '''Plotting process'''
         pf_X = [pair[0] for pair in pareto_front]
@@ -222,24 +215,25 @@ def main():
         pf_Y = [pair[1] for pair in pareto_front]
         plt.plot(pf_X, pf_Y, color='red')
 
-        #for i in range(len(OS)):
-        #    label = PS[i]
-        #    x = y1[i]
-        #    y = y2[i]
-        #    plt.annotate(label, # this is the text
-        #                 (x,y), # this is the point to label
-        #                 textcoords="offset points", # how to position the text
-        #                 xytext=(0,10), # distance from text to points (x,y)
-        #                 ha='center') # horizontal alignment can be left, right or center
+        for i in range(len(OS)):
+            label = i+1
+            #label = PS[i]
+            x = y1[i]
+            y = y2[i]
+            plt.annotate(label, # this is the text
+                         (x,y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,10), # distance from text to points (x,y)
+                         ha='center') # horizontal alignment can be left, right or center
 
         y1 = y1[npilot:nrun]
         y2 = y2[npilot:nrun]
         plt.plot(y1, y2, 'o', color='red', label='Search')
 
-        plt.title("Tuning on TNK (NSGA2)")
+        plt.title("Tuning on OSY (constrained LCM + NSGA2)")
         plt.legend(loc="upper right")
-        plt.ylabel('Y1')
-        plt.xlabel('Y2')
+        plt.xlabel('Y1')
+        plt.ylabel('Y2')
         #plt.ylim([0,100])
         plt.show()
 

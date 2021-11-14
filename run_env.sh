@@ -13,19 +13,20 @@
 # export nodes=1  # number of nodes to be used
 
 
-# # ################ Any mac os machine that has used config_macbook.sh to build GPTune
-# export machine=mac
-# export proc=intel   
-# export mpi=openmpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
-
-############### Cori
-export machine=cori
-export proc=haswell   # knl,haswell
-export mpi=openmpi  # openmpi,craympich
-export compiler=gnu   # gnu, intel	
+# ################ Any mac os machine that has used config_macbook.zsh to build GPTune
+export machine=mac
+export proc=intel   
+export mpi=openmpi  
+export compiler=gnu   
 export nodes=1  # number of nodes to be used
+
+
+# ############### Cori
+# export machine=cori
+# export proc=haswell   # knl,haswell
+# export mpi=openmpi  # openmpi,craympich
+# export compiler=gnu   # gnu, intel	
+# export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -83,11 +84,11 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
-
     if [[ $MPIFromSource = 1 ]]; then
         export PATH=$PWD/openmpi-4.0.1/bin:$PATH
         export MPIRUN="$PWD/openmpi-4.0.1/bin/mpirun"
         export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+        export DYLD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$DYLD_LIBRARY_PATH
     else
         export MPIRUN=
         export PATH=$PATH
@@ -101,10 +102,8 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     fi    
     
     export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/build/
-	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
+#	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
 	export PATH=$PWD/env/bin/:$PATH
-	export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
-	export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
 
 	export SCALAPACK_LIB=$PWD/scalapack-2.1.0/build/install/lib/libscalapack.dylib
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
