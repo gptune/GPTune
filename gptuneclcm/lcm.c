@@ -480,7 +480,7 @@ for (int p = 0; p < 8; p++)
                 }
             }     
 
-            printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
+            // printf("trial %d of max %d trials, jitter: %e\n",ntry, z->maxtries, jitter);       
 
             pdpotrf_( &uplo, &(z->m), z->K, &i_one, &i_one, &(z->Kdesc), &info );
 
