@@ -41,10 +41,11 @@ from sys import platform as _platform
 
 class Search(abc.ABC):
 
-    def __init__(self, problem : Problem, computer : Computer, options: Options):
+    def __init__(self, problem : Problem, computer : Computer, options: Options, models_transfer=None):
         self.problem = problem
         self.computer = computer
         self.options = options
+        self.models_transfer = models_transfer
 
     @abc.abstractmethod
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
@@ -89,7 +90,7 @@ class Search(abc.ABC):
 
 class SurrogateProblem(object):
 
-    def __init__(self, problem, computer, data, models, options, tid):   # data is in the normalized space, IOrig and POrig are then generated in the original space
+    def __init__(self, problem, computer, data, models, options, tid, models_transfer):   # data is in the normalized space, IOrig and POrig are then generated in the original space
 
         self.problem = problem
         self.computer = computer
@@ -98,6 +99,8 @@ class SurrogateProblem(object):
         self.options = options
 
         self.tid = tid
+
+        self.models_transfer = models_transfer
 
         self.D     = self.data.D[tid]
         self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
@@ -133,16 +136,52 @@ class SurrogateProblem(object):
                 #print ("o: ", self.problem.OS[o].name, "is not optimize")
                 EI.append(0)
             else:
-                ymin = self.data.O[self.tid][:,o].min()
-                (mu, var) = self.models[o].predict(x, tid=self.tid)
-                mu = mu[0][0]
-                var = max(1e-18, var[0][0])
-                std = np.sqrt(var)
-                chi = (ymin - mu) / std
-                Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                EI.append(-((ymin - mu) * Phi + var * phi))
-                # EI.append(mu)
+                if self.models_transfer == None:
+                    ymin = self.data.O[self.tid][:,o].min()
+                    (mu, var) = self.models[o].predict(x, tid=self.tid)
+                    mu = mu[0][0]
+                    var = max(1e-18, var[0][0])
+                    std = np.sqrt(var)
+                    chi = (ymin - mu) / std
+                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                    EI.append(-((ymin - mu) * Phi + var * phi))
+                    # EI.append(mu)
+                else:
+                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                    xi=xi0[0]
+
+                    if (any(xx==xi for xx in self.POrig)):
+                        cond = False
+                    else:
+                        point0 = self.D
+                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                        point.update(point0)
+                        point.update(point2)
+                        # print("point", point)
+                        cond = self.computer.evaluate_constraints(self.problem, point)
+                    #print ("POINT: ", point)
+                    #print ("ASDF: ", self.problem.OS[o].name)
+                    #print ("OUTPUT: ", [self.problem.OS[k].name for k in range(self.problem.DO)])
+
+                    ymin = self.data.O[self.tid][:,o].min()
+                    (mu, var) = self.models[o].predict(x, tid=self.tid)
+                    mu_transfer = 0
+                    var_transfer = 0
+                    for model_transfer in self.models_transfer:
+                        ret = model_transfer(point)
+                        print (ret)
+                        mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
+                        var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                    mu = mu[0][0] + mu_transfer
+                    var = max(1e-18, var[0][0] + var_transfer)
+                    std = np.sqrt(var)
+                    chi = (ymin - mu) / std
+                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                    EI.append(-((ymin - mu) * Phi + var * phi))
+                    # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             EI_prod = np.prod(EI)
@@ -203,7 +242,7 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid)
+        prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
         try:
             udi = eval(f'pg.{kwargs["search_udi"]}()')
