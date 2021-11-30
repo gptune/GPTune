@@ -773,7 +773,7 @@ class HistoryDB(dict):
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
             evaluation_detail : np.ndarray,\
-            additional_output : dict,\
+            additional_output : dict = None,\
             source : str = "measure"):
 
         print ("store_func_eval")
