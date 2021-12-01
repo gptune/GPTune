@@ -110,8 +110,8 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR"
     mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR 
-elif [[ $ModuleEnv == *"craympich"* ]]; then
-############ craympich
+elif [[ $ModuleEnv == *"mpich"* ]]; then
+############ mpich
     echo "srun -n $nproc $BINDIR/pdqrdriver $RUNDIR"
     srun -n $nproc $BINDIR/pdqrdriver $RUNDIR 
 elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
