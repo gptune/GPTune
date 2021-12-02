@@ -27,17 +27,26 @@ import sys
 from sys import platform
 import time
 
-ROOTDIR = os.path.abspath(__file__ + "/../../build")
 
-if platform == "linux" or platform == "linux2":
-    cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.so')
-elif platform == "darwin":
-    cliblcm = ctypes.cdll.LoadLibrary(ROOTDIR + '/lib_gptuneclcm.dylib')
-elif platform == "win32":
-    raise Exception(f"Windows is not yet supported")
-
-
-
+try:
+    DLLDIR = os.path.dirname(os.path.abspath(__file__))
+    if platform == "linux" or platform == "linux2":
+        cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.so')
+    elif platform == "darwin":
+        cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.dylib')
+    elif platform == "win32":
+        raise Exception(f"Windows is not yet supported")
+except:
+    try:
+        DLLDIR = os.path.abspath(__file__ + "/../../build")
+        if platform == "linux" or platform == "linux2":
+            cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.so')
+        elif platform == "darwin":
+            cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.dylib')
+        elif platform == "win32":
+            raise Exception(f"Windows is not yet supported")
+    except:
+        raise Exception(f"Cannot find the lib_gptuneclcm library")
 
 
 ####################################################################################################

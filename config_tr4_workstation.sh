@@ -93,8 +93,7 @@ cmake .. \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
-cp lib_gptuneclcm.so ../.
-# cp pdqrdriver ../
+make install
 
 
 if [[ $BuildExample == 1 ]]; then
@@ -319,6 +318,6 @@ env CC=$MPICC pip install --user -e .
 cd $GPTUNEROOT
 cp ./patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.
 
-cd $GPTUNEROOT
-python setup.py build 
-python setup.py install --user
+# cd $GPTUNEROOT
+# python setup.py build 
+# python setup.py install --user

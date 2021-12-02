@@ -94,13 +94,14 @@ cmake .. \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
+	-DGPTUNE_INSTALL_PATH=$PWD \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DCMAKE_Fortran_FLAGS="-fopenmp" \
 	-DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
 	-DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
 	-DTPL_SCALAPACK_LIBRARIES="$SCALAPACK_LIB"
-make
-cp lib_gptuneclcm.dylib ../.
+make install
+# cp lib_gptuneclcm.dylib ../.
 # cp pdqrdriver ../
 
 

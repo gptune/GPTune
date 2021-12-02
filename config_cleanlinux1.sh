@@ -1,70 +1,83 @@
 #!/bin/bash
 
+##################################################
+##################################################
 
-if [[ $(dnsdomainname) != "summit.olcf.ornl.gov" ]]; then
-	echo "This script can only be used for Summit"
+export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
+BuildExample=0 # whether to build all examples
+MPIFromSource=1 # whether to build openmpi from source
+
+if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
+	echo "This script can only be used for Ubuntu or Debian systems"
 	exit
 fi
 
-module swap xl gcc/7.4.0
-module load essl
-module load netlib-lapack
-module load netlib-scalapack
-module load cmake
-module load cuda/10.1.243
-module load python/3.7.0-anaconda3-5.3.0
-module load boost
-
-# rm -rf  ~/.cache/pip
-# rm -rf ~/.local/cori/
-# rm -rf ~/.local/lib/python3.7
-
-PREFIX_PATH=~/.local/summit/anaconda3/5.3.0/3.7
-
-
-echo $(which python) 
-
-
-
-
-##################################################
-##################################################
-machine=summit
-proc=power9   # knl,haswell
-mpi=spectrummpi  # openmpi,craympich
-compiler=gnu   # gnu, intel	
-
-
-BuildExample=0 # whether to build all examples
-
-export ModuleEnv=$machine-$proc-$mpi-$compiler
-
-
 ##################################################
 ##################################################
 
-echo "The ModuleEnv is $ModuleEnv"
-if [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
-	GPTUNEROOT=$PWD
-	BLAS_LIB="${OLCF_ESSL_ROOT}/lib64/libessl.so;${OLCF_NETLIB_LAPACK_ROOT}/lib64/liblapack.so;${OLCF_NETLIB_LAPACK_ROOT}/lib64/libblas.so"
-	LAPACK_LIB="${OLCF_ESSL_ROOT}/lib64/libessl.so;${OLCF_NETLIB_LAPACK_ROOT}/lib64/liblapack.so;${OLCF_NETLIB_LAPACK_ROOT}/lib64/libblas.so"
-	SCALAPACK_LIB="${OLCF_NETLIB_SCALAPACK_ROOT}/lib/libscalapack.so"
-	MPICC=mpicc
-	MPICXX=mpiCC
-	MPIF90=mpif90
+
+export GPTUNEROOT=$PWD
+
+############### Yang's tr4 machine
+if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
+	
+	CC=gcc-8
+	FTN=gfortran-8
+	CPP=g++-8
+
+	if [[ $MPIFromSource = 1 ]]; then
+		export PATH=$PATH:$GPTUNEROOT/openmpi-4.1.0/bin
+		export MPICC="$GPTUNEROOT/openmpi-4.1.0/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.1.0/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.1.0/bin/mpif90"
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.0/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.0/lib:$LIBRARY_PATH  		
+	else
+
+		#######################################
+		#  define the following as needed
+		export MPICC=
+		export MPICXX=
+		export MPIF90=
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$LIBRARY_PATH 
+		export PATH=$PATH 
+		########################################
+
+		if [[ -z "$MPICC" ]]; then
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			exit
+		fi
+	fi
+	export PATH=$GPTUNEROOT/env/bin/:$PATH
+	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
+	export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
 
-else
-    echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
-    exit
-fi 
 
-export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+fi
+###############
+
+
+
+
+
+#set up environment variables, these are also needed when running GPTune 
+################################### 
+
+
+
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
+
+
+
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
 export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
@@ -75,36 +88,128 @@ export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/inclu
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
 export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
-export TBB_ROOT=$GPTUNEROOT/oneTBB/build
-export pybind11_DIR=$PREFIX_PATH/lib/python3.7/site-packages/pybind11/share/cmake/pybind11
-export BOOST_ROOT=$OLCF_BOOST_ROOT
-export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
-	cd $GPTUNEROOT
-	rm -rf GPy
-	git clone https://github.com/SheffieldML/GPy.git
-	cd GPy
-	cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
-	cp ../patches/GPy/stationary.py ./GPy/kern/src/.
-	cp ../patches/GPy/choleskies.py ./GPy/util/.
-	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
-	python setup.py install --prefix=$PREFIX_PATH
 
-	cd $GPTUNEROOT
-	git clone https://github.com/openturns/openturns.git
-	cd openturns
-	mkdir build
-	cd build
-	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .
-	make install -j16
 
-	cd $GPTUNEROOT
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_summit.txt
 
+
+
+
+# install dependencies using apt-get and virtualenv
+###################################
+
+apt-get update -y 
+apt-get upgrade -y 
+apt-get dist-upgrade -y  
+apt-get install dialog apt-utils -y 
+apt-get install build-essential software-properties-common -y 
+add-apt-repository ppa:ubuntu-toolchain-r/test -y 
+apt-get update -y 
+apt-get install gcc-8 g++-8 gfortran-8 -y  
+# apt-get install gcc-9 g++-9 gfortran-9 -y  
+# apt-get install gcc-10 g++-10 gfortran-10 -y  
+
+
+apt-get install libffi-dev -y
+apt-get install libssl-dev -y
+
+# apt-get install libblas-dev  -y
+# apt-get install liblapack-dev -y
+apt-get install cmake -y
+apt-get install git -y
+apt-get install vim -y
+apt-get install autoconf automake libtool -y
+apt-get install zlib1g-dev -y
+apt-get install wget -y
+apt-get install libsm6 -y
+apt-get install libbz2-dev -y
+apt-get install libsqlite3-dev -y
+apt-get install jq -y
 
 
 cd $GPTUNEROOT
+apt purge --auto-remove cmake -y
+version=3.19
+build=1
+wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
+tar -xzvf cmake-$version.$build.tar.gz
+cd cmake-$version.$build/
+./bootstrap
+make -j32
+make install
+export PATH=$GPTUNEROOT/cmake-$version.$build/bin/:$PATH
+
+
+cd $GPTUNEROOT
+rm -rf Python-3.7.9
+wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
+tar -xvf Python-3.7.9.tgz
+cd Python-3.7.9
+./configure --prefix=$PWD CC=$CC
+make -j32
+make altinstall
+PY=$PWD/bin/python3.7  # this makes sure virtualenv uses the correct python version
+PIP=$PWD/bin/pip3.7
+
+
+cd $GPTUNEROOT
+$PIP install virtualenv 
+rm -rf env
+$PY -m venv env
+source env/bin/activate
+# unalias pip  # this makes sure virtualenv install packages at its own site-packages directory
+# unalias python
+
+
+pip install --upgrade  -r requirements.txt
+
+# manually install dependencies from cmake and make
+###################################
+cd $GPTUNEROOT
+git clone https://github.com/xianyi/OpenBLAS
+cd OpenBLAS
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN -j32
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
+
+
+if [[ $MPIFromSource = 1 ]]; then
+	cd $GPTUNEROOT
+	wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.0.tar.bz2
+	bzip2 -d openmpi-4.1.0.tar.bz2
+	tar -xvf openmpi-4.1.0.tar 
+	cd openmpi-4.1.0/ 
+	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+	make -j32
+	make install
+fi
+
+# if openmpi, scalapack needs to be built from source
+if [[ $ModuleEnv == *"openmpi"* ]]; then
+cd $GPTUNEROOT
+rm -rf scalapack-2.1.0.tgz*
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
 rm -rf build
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=./install \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}"
+make -j32
+make install
+fi
+
+
+cd $GPTUNEROOT
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -124,9 +229,8 @@ cmake .. \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
-make -j16
-make install
-# cp lib_gptuneclcm.so ../.
+make -j32
+cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
@@ -142,10 +246,10 @@ if [[ $BuildExample == 1 ]]; then
 	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
 	mkdir -p install
 	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install -j16 > make_parmetis_install.log 2>&1
+	make install > make_parmetis_install.log 2>&1
 
 	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
 	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 	mkdir -p build
 	cd build
@@ -161,17 +265,14 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_C_COMPILER=$MPICC \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	 	-DCMAKE_INSTALL_PREFIX=. \
-	 	-DCMAKE_INSTALL_LIBDIR=./lib \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn -j16
-	make pzdrive_spawn -j16
-	make install
+	make pddrive_spawn
+	make pzdrive_spawn
 
 
 	cd $GPTUNEROOT/examples/Hypre
@@ -179,9 +280,9 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/hypre-space/hypre.git
 	cd hypre/src/
 	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make -j16
+	make
 	cp ../../hypre-driver/src/ij.c ./test/.
-	make test -j16
+	make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
@@ -207,7 +308,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DMPI=ON \
 		-DEXAMPLES=ON \
 		-DCOVERALLS=OFF 
-	make -j16
+	make
 	cd ../../
 	mkdir build
 	cd build
@@ -226,8 +327,8 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
 		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	make -j16
-	make install -j16
+	make -j32
+	make install -j32
 
 
 
@@ -323,55 +424,15 @@ if [[ $BuildExample == 1 ]]; then
 fi
 
 
-cd $GPTUNEROOT
-wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz
-tar -xvf jq-1.6.tar.gz
-cd jq-1.6
-autoreconf -i
-./configure --disable-maintainer-mode
-make -j16
 
-
-cd $GPTUNEROOT
-rm -rf oneTBB
-git clone https://github.com/oneapi-src/oneTBB.git
-cd oneTBB
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-make -j16
-make install
-git clone https://github.com/wjakob/tbb.git
-cp tbb/include/tbb/tbb_stddef.h include/tbb/.
-
-cd $GPTUNEROOT
-rm -rf pagmo2
-git clone https://github.com/esa/pagmo2.git
-cd pagmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-make -j16
-make install
-#cp lib/cmake/pagmo/*.cmake . 
-
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-make -j16
-make install
 
 cd $GPTUNEROOT
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+python setup.py install 
+# env CC=mpicc pip install  -e .								  
 
 
 
@@ -379,10 +440,9 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+python setup.py install 
+# env CC=mpicc pip install  -e .								  
 
 
 
@@ -390,10 +450,12 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
+cp ../patches/autotune/problem.py autotune/.
+env CC=$MPICC pip install  -e .
 
 
-cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
+
+
 cd $GPTUNEROOT
-
+cp ./patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
 

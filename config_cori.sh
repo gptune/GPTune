@@ -315,8 +315,8 @@ cmake .. \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
-make
-cp lib_gptuneclcm.so ../.
+make install
+# cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
