@@ -27,26 +27,36 @@ import sys
 from sys import platform
 import time
 
+if platform == "linux" or platform == "linux2":
+    pos='.so'
+elif platform == "darwin":
+    pos='.dylib'
+elif platform == "win32":
+    raise Exception(f"Windows is not yet supported")
 
-try:
-    DLLDIR = os.path.dirname(os.path.abspath(__file__))
-    if platform == "linux" or platform == "linux2":
-        cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.so')
-    elif platform == "darwin":
-        cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.dylib')
-    elif platform == "win32":
-        raise Exception(f"Windows is not yet supported")
-except:
-    try:
-        DLLDIR = os.path.abspath(__file__ + "/../../build")
-        if platform == "linux" or platform == "linux2":
-            cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.so')
-        elif platform == "darwin":
-            cliblcm = ctypes.cdll.LoadLibrary(DLLDIR + '/lib_gptuneclcm.dylib')
-        elif platform == "win32":
-            raise Exception(f"Windows is not yet supported")
-    except:
-        raise Exception(f"Cannot find the lib_gptuneclcm library")
+
+DLLFOUND=False
+INSTALLDIR=os.getenv('GPTUNE_INSTALL_PATH')
+
+DLL = os.path.abspath(__file__ + "/../../build")+'/lib_gptuneclcm%s'%(pos)
+if(os.path.exists(DLL)):
+    DLLFOUND=True
+elif(INSTALLDIR is not None):
+    DLL = INSTALLDIR+"/gptune"+'/lib_gptuneclcm%s'%(pos)
+    if(os.path.exists(DLL)):
+        DLLFOUND=True
+else:
+    for p in sys.path:
+        if("gptune" in p):
+            DLL=p+'/lib_gptuneclcm%s'%(pos)
+            if(os.path.exists(DLL)):
+                DLLFOUND=True
+                break
+
+if(DLLFOUND == True):
+    cliblcm = ctypes.cdll.LoadLibrary(DLL)
+else:
+    raise Exception(f"Cannot find the lib_gptuneclcm library. Try to set env variable GPTUNE_INSTALL_PATH correctly.")
 
 
 ####################################################################################################

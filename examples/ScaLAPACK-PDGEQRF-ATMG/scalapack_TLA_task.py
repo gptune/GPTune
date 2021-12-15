@@ -109,7 +109,28 @@ def main():
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
-    os.system("mkdir -p scalapack-driver/bin/%s; cp ../../build/pdqrdriver scalapack-driver/bin/%s/.;" %(machine, machine))
+    os.system("mkdir -p scalapack-driver/bin/%s;" %(machine))
+    DRIVERFOUND=False
+    INSTALLDIR=os.getenv('GPTUNE_INSTALL_PATH')
+    DRIVER = os.path.abspath(__file__ + "/../../../build/pdqrdriver")
+    if(os.path.exists(DRIVER)):
+        DRIVERFOUND=True
+    elif(INSTALLDIR is not None):
+        DRIVER = INSTALLDIR+"/gptune/pdqrdriver"
+        if(os.path.exists(DRIVER)):
+            DRIVERFOUND=True
+    else:
+        for p in sys.path:
+            if("gptune" in p):
+                DRIVER=p+"/pdqrdriver"
+                if(os.path.exists(DRIVER)):
+                    DRIVERFOUND=True
+                    break
+    
+    if(DRIVERFOUND == True):
+        os.system("cp %s scalapack-driver/bin/%s/.;" %(DRIVER,machine))
+    else:
+        raise Exception(f"pdqrdriver cannot be located. Try to set env variable GPTUNE_INSTALL_PATH correctly.")
 
     nprocmax = nodes*cores
 
