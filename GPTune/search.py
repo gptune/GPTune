@@ -101,13 +101,68 @@ class SurrogateProblem(object):
 
         self.tid = tid
 
-        self.models_transfer = models_transfer
-
         self.D     = self.data.D[tid]
         self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
 
         # self.POrig = self.data.P[tid]
         self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
+
+        self.models_transfer = models_transfer
+        if (self.models_transfer != None and self.options['regression_weights'] == True):
+            self.models_weights = self.compute_weights()
+            with open("models_weights.log", "a") as f_out:
+                for i in range(len(self.models_weights)):
+                    if i > 0:
+                        f_out.write(",")
+                    f_out.write(str(self.models_weights[i]))
+                f_out.write("\n")
+
+    def compute_weights(self):
+        for o in range(self.problem.DO):
+            ymin = self.data.O[self.tid][:,o].min()
+            ymin_index = self.data.O[self.tid][:,o].tolist().index(ymin)
+            x_list = self.data.P[self.tid][:]
+            x_star = x_list[ymin_index]
+            y_list = self.data.O[self.tid][:,o]
+            LHS = [(-1.0*y_elem)-(-1.0*ymin) for y_elem in y_list]
+            print ("LHS: ", LHS)
+            RHS = []
+            for x_sample in x_list:
+                point = self.D
+                point.update({self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)})
+                point_x_sample = point.copy()
+                point_x_star = point.copy()
+                for k in range(self.problem.DP):
+                    point_x_sample[self.problem.PS[k].name] = x_sample[k]
+                for k in range(self.problem.DP):
+                    point_x_star[self.problem.PS[k].name] = x_star[k]
+                #print ("point_x_sample: ", point_x_sample)
+                #print ("point_x_star: ", point_x_star)
+                RHS_row = []
+                (mu, var) = self.models[o].predict(x_sample, tid=self.tid)
+                mu = mu[0][0]
+                (mu_star, var_star) = self.models[o].predict(x_star, tid=self.tid)
+                mu_star = mu_star[0][0]
+                RHS_elem = (-1.0*mu)-(-1.0*mu_star)
+                #print ("RHS_elem: ", RHS_elem)
+                RHS_row.append(RHS_elem)
+                for model_transfer in self.models_transfer:
+                    ret = model_transfer(point_x_sample)
+                    mu = ret[self.problem.OS[o].name][0][0]
+                    ret = model_transfer(point_x_star)
+                    mu_star = ret[self.problem.OS[o].name][0][0]
+                    RHS_elem = (-1.0*mu)-(-1.0*mu_star)
+                    #print ("RHS_elem: ", RHS_elem)
+                    RHS_row.append(RHS_elem)
+                RHS.append(RHS_row)
+            print ("RHS: ", RHS)
+
+            LHS = np.array(LHS)
+            RHS = np.array(RHS)
+            X = np.linalg.lstsq(RHS, LHS)
+            models_weights = X[0]
+            print ("models_weights: ", models_weights)
+            return models_weights
 
     def get_nobj(self):
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
@@ -165,56 +220,17 @@ class SurrogateProblem(object):
                             cond = self.computer.evaluate_constraints(self.problem, point)
 
                         ymin = self.data.O[self.tid][:,o].min()
-                        ymin_index = self.data.O[self.tid][:,o].tolist().index(ymin)
-                        x_list = self.data.P[self.tid][:]
-                        x_star = x_list[ymin_index]
-                        y_list = self.data.O[self.tid][:,o]
-                        LHS = [(-1.0*y_elem)-(-1.0*ymin) for y_elem in y_list]
-                        print ("LHS: ", LHS)
-                        RHS = []
-                        for x_sample in x_list:
-                            point_x_sample = point.copy()
-                            point_x_star = point.copy()
-                            for k in range(self.problem.DP):
-                                point_x_sample[self.problem.PS[k].name] = x_sample[k]
-                            for k in range(self.problem.DP):
-                                point_x_star[self.problem.PS[k].name] = x_star[k]
-                            RHS_row = []
-                            (mu, var) = self.models[o].predict(x_sample, tid=self.tid)
-                            mu = mu[0][0]
-                            (mu_star, var_star) = self.models[o].predict(x_star, tid=self.tid)
-                            mu_star = mu_star[0][0]
-                            RHS_elem = (-1.0*mu)-(-1.0*mu_star)
-                            #print ("RHS_elem: ", RHS_elem)
-                            RHS_row.append(RHS_elem)
-                            for model_transfer in self.models_transfer:
-                                ret = model_transfer(point_x_sample)
-                                mu = ret[self.problem.OS[o].name][0][0]
-                                ret = model_transfer(point_x_star)
-                                mu_star = ret[self.problem.OS[o].name][0][0]
-                                RHS_elem = (-1.0*mu)-(-1.0*mu_star)
-                                #print ("RHS_elem: ", RHS_elem)
-                                RHS_row.append(RHS_elem)
-                            RHS.append(RHS_row)
-                        print ("RHS: ", RHS)
-
-                        LHS = np.array(LHS)
-                        RHS = np.array(RHS)
-                        X = np.linalg.lstsq(RHS, LHS)
-                        weights = X[0]
-                        print ("weights: ", weights)
-
                         (mu, var) = self.models[o].predict(x, tid=self.tid)
                         mu_transfer = 0
                         var_transfer = 0
                         for i in range(len(self.models_transfer)):
                             model_transfer = self.models_transfer[i]
                             ret = model_transfer(point)
-                            print (ret)
-                            mu_transfer += weights[i+1]*ret[self.problem.OS[o].name][0][0]
-                            var_transfer += weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
-                        mu = weights[0]*mu[0][0] + mu_transfer
-                        var = max(1e-18, weights[0]*var[0][0] + var_transfer)
+                            #print (ret)
+                            mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
+                            var_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
+                        mu = self.models_weights[0]*mu[0][0] + mu_transfer
+                        var = max(1e-18, self.models_weights[0]*var[0][0] + var_transfer)
                         std = np.sqrt(var)
                         chi = (ymin - mu) / std
                         Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
@@ -386,7 +402,11 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
+        print ("SEARCH!")
+
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
+
+        print ("prob: ", prob)
 
         try:
             udi = eval(f'pg.{kwargs["search_udi"]}()')
