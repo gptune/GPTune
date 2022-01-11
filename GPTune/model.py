@@ -34,6 +34,7 @@ class Model(abc.ABC):
         self.problem = problem
         self.computer = computer
         self.M = None
+        self.M_last = None
 
     @abc.abstractmethod
     def train(self, data : Data, **kwargs):
@@ -47,6 +48,11 @@ class Model(abc.ABC):
 
     @abc.abstractmethod
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+
+        raise Exception("Abstract method")
+
+    @abc.abstractmethod
+    def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         raise Exception("Abstract method")
 
@@ -66,6 +72,8 @@ class Model_GPy_LCM(Model):
 #model_layers=2
 
     def train(self, data : Data, **kwargs):
+        import copy
+        self.M_last = copy.deepcopy(self.M)
 
         multitask = len(data.I) > 1
 
@@ -104,7 +112,6 @@ class Model_GPy_LCM(Model):
 
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
-
 
         resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
@@ -157,6 +164,18 @@ class Model_GPy_LCM(Model):
 
         return (mu, var)
 
+    def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+
+        x = np.empty((1, points.shape[0] + 1))
+        x[0,:-1] = points
+        x[0,-1] = tid
+        if self.M_last != None:
+            (mu, var) = self.M_last.predict_noiseless(x)
+        else:
+            (mu, var) = self.M.predict_noiseless(x)
+
+        return (mu, var)
+
     def get_correlation_metric(self, delta):
         print("In model.py, delta = ", delta)
         Q = delta # number of latent processes 
@@ -179,6 +198,8 @@ class Model_GPy_LCM(Model):
 class Model_LCM(Model):
 
     def train(self, data : Data, **kwargs):
+        import copy
+        self.M_last = copy.deepcopy(self.M)
 
         return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
@@ -282,6 +303,19 @@ class Model_LCM(Model):
         x[0,:-1] = points
         x[0,-1] = tid
         (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
+
+        return (mu, var)
+
+    # make prediction on a single sample point of a specific task tid
+    def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+
+        x = np.empty((1, points.shape[0] + 1))
+        x[0,:-1] = points
+        x[0,-1] = tid
+        if self.M_last != None:
+            (mu, var) = self.M_last.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
+        else:
+            (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
 
         return (mu, var)
 

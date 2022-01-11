@@ -96,6 +96,7 @@ class SurrogateProblem(object):
         self.computer = computer
         self.data = data
         self.models = models
+        self.models_last = models
         self.options = options
 
         self.tid = tid
@@ -136,52 +137,195 @@ class SurrogateProblem(object):
                 #print ("o: ", self.problem.OS[o].name, "is not optimize")
                 EI.append(0)
             else:
-                if self.models_transfer == None:
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu = mu[0][0]
-                    var = max(1e-18, var[0][0])
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
-                else:
-                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                    xi=xi0[0]
-
-                    if (any(xx==xi for xx in self.POrig)):
-                        cond = False
+                if self.options['regression_weights'] == True:
+                    if self.models_transfer == None:
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
                     else:
-                        point0 = self.D
-                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                        point.update(point0)
-                        point.update(point2)
-                        # print("point", point)
-                        cond = self.computer.evaluate_constraints(self.problem, point)
-                    #print ("POINT: ", point)
-                    #print ("ASDF: ", self.problem.OS[o].name)
-                    #print ("OUTPUT: ", [self.problem.OS[k].name for k in range(self.problem.DO)])
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
 
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu_transfer = 0
-                    var_transfer = 0
-                    for model_transfer in self.models_transfer:
-                        ret = model_transfer(point)
-                        print (ret)
-                        mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                        var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
-                    mu = mu[0][0] + mu_transfer
-                    var = max(1e-18, var[0][0] + var_transfer)
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            # print("point", point)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        ymin = self.data.O[self.tid][:,o].min()
+                        ymin_index = self.data.O[self.tid][:,o].tolist().index(ymin)
+                        x_list = self.data.P[self.tid][:]
+                        x_star = x_list[ymin_index]
+                        y_list = self.data.O[self.tid][:,o]
+                        LHS = [(-1.0*y_elem)-(-1.0*ymin) for y_elem in y_list]
+                        print ("LHS: ", LHS)
+                        RHS = []
+                        for x_sample in x_list:
+                            point_x_sample = point.copy()
+                            point_x_star = point.copy()
+                            for k in range(self.problem.DP):
+                                point_x_sample[self.problem.PS[k].name] = x_sample[k]
+                            for k in range(self.problem.DP):
+                                point_x_star[self.problem.PS[k].name] = x_star[k]
+                            RHS_row = []
+                            (mu, var) = self.models[o].predict(x_sample, tid=self.tid)
+                            mu = mu[0][0]
+                            (mu_star, var_star) = self.models[o].predict(x_star, tid=self.tid)
+                            mu_star = mu_star[0][0]
+                            RHS_elem = (-1.0*mu)-(-1.0*mu_star)
+                            #print ("RHS_elem: ", RHS_elem)
+                            RHS_row.append(RHS_elem)
+                            for model_transfer in self.models_transfer:
+                                ret = model_transfer(point_x_sample)
+                                mu = ret[self.problem.OS[o].name][0][0]
+                                ret = model_transfer(point_x_star)
+                                mu_star = ret[self.problem.OS[o].name][0][0]
+                                RHS_elem = (-1.0*mu)-(-1.0*mu_star)
+                                #print ("RHS_elem: ", RHS_elem)
+                                RHS_row.append(RHS_elem)
+                            RHS.append(RHS_row)
+                        print ("RHS: ", RHS)
+
+                        LHS = np.array(LHS)
+                        RHS = np.array(RHS)
+                        X = np.linalg.lstsq(RHS, LHS)
+                        weights = X[0]
+                        print ("weights: ", weights)
+
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu_transfer = 0
+                        var_transfer = 0
+                        for i in range(len(self.models_transfer)):
+                            model_transfer = self.models_transfer[i]
+                            ret = model_transfer(point)
+                            print (ret)
+                            mu_transfer += weights[i+1]*ret[self.problem.OS[o].name][0][0]
+                            var_transfer += weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
+                        mu = weights[0]*mu[0][0] + mu_transfer
+                        var = max(1e-18, weights[0]*var[0][0] + var_transfer)
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
+                elif self.options['dynamic_weights'] == True:
+                    if self.models_transfer == None:
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
+                    else:
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
+
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            # print("point", point)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        ymin = self.data.O[self.tid][:,o].min()
+                        ylast = self.data.O[self.tid][-1,o]
+                        (mu_last, var_last) = self.models[o].predict_last(self.data.P[self.tid][-1], tid=self.tid)
+                        lhs = ((-1.0*ylast)-(-1.0*ymin))
+                        rhs = ((-1.0*mu_last[0][0])-(-1.0*ymin))
+                        weight_main = lhs/rhs
+
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu_transfer = 0
+                        var_transfer = 0
+                        for model_transfer in self.models_transfer:
+                            point2 = point.copy()
+                            #print ("point2: ", point2)
+                            x_last = self.data.P[self.tid][-1]
+                            for k in range(self.problem.DP):
+                                point2[self.problem.PS[k].name] = x_last[k]
+                            ret = model_transfer(point2)
+                            mu_last = ret[self.problem.OS[o].name][0][0]
+                            lhs = ((-1.0*ylast)-(-1.0*ymin))
+                            rhs = ((-1.0*mu_last)-(-1.0*ymin))
+                            weight_transfer = lhs/rhs
+
+                            ret = model_transfer(point)
+                            print (ret)
+                            mu_transfer += weight_transfer*ret[self.problem.OS[o].name][0][0]
+                            var_transfer += weight_transfer*ret[self.problem.OS[o].name+"_var"][0][0]
+                        mu = weight_main*mu[0][0] + mu_transfer
+                        var = max(1e-18, weight_main*var[0][0] + var_transfer)
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
+                else:
+                    if self.models_transfer == None:
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
+                    else:
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
+
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            # print("point", point)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu_transfer = 0
+                        var_transfer = 0
+                        for model_transfer in self.models_transfer:
+                            ret = model_transfer(point)
+                            print (ret)
+                            mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
+                            var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                        mu = mu[0][0] + mu_transfer
+                        var = max(1e-18, var[0][0] + var_transfer)
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             EI_prod = np.prod(EI)

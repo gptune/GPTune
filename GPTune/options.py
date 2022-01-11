@@ -76,6 +76,8 @@ class Options(dict):
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
 
+        regression_weights = False
+        dynamic_weights = False
 
         """ Options for the multi-arm bandit algorithm """
         budget_min = 0.1 # minimum budget
