@@ -139,9 +139,9 @@ class SurrogateProblem(object):
                 #print ("point_x_sample: ", point_x_sample)
                 #print ("point_x_star: ", point_x_star)
                 RHS_row = []
-                (mu, var) = self.models[o].predict(x_sample, tid=self.tid)
+                (mu, var) = self.models[o].predict_last(x_sample, tid=self.tid)
                 mu = mu[0][0]
-                (mu_star, var_star) = self.models[o].predict(x_star, tid=self.tid)
+                (mu_star, var_star) = self.models[o].predict_last(x_star, tid=self.tid)
                 mu_star = mu_star[0][0]
                 RHS_elem = (-1.0*mu)-(-1.0*mu_star)
                 #print ("RHS_elem: ", RHS_elem)
