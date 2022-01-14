@@ -118,6 +118,13 @@ class SurrogateProblem(object):
                 f_out.write("\n")
 
     def compute_weights(self):
+        #This function computes the weights for surrogate models to be combined.
+        #The formula that defines the regression, which determines the weights:
+        #In the setting where we want to see which surrogate contributes the most to the maximum. 
+        #For the j-th model out of N surrogates, suppose that (xmax,ymax) is the observed maximum.
+        #y_j-ymax=\sum_{i=1}^{d} w_i mean_i(x_j)-mean_i(xmax)+\epsilon_{j},j=1,\cdots,N
+        #LHS: difference to the response maximum y-ymax as response variable.
+        #RHS: a linear model using x-xmax as predictors.
         for o in range(self.problem.DO):
             ymin = self.data.O[self.tid][:,o].min()
             ymin_index = self.data.O[self.tid][:,o].tolist().index(ymin)
@@ -159,8 +166,9 @@ class SurrogateProblem(object):
 
             LHS = np.array(LHS)
             RHS = np.array(RHS)
-            X = np.linalg.lstsq(RHS, LHS)
-            models_weights = X[0]
+            #solve the linear system defined by above.
+            LSTSQ_SOL = np.linalg.lstsq(RHS, LHS)
+            models_weights = LSTSQ_SOL[0]
             print ("models_weights: ", models_weights)
             return models_weights
 
