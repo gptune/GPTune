@@ -162,7 +162,10 @@ class SurrogateProblem(object):
             X = np.linalg.lstsq(RHS, LHS)
             models_weights = X[0]
             print ("models_weights: ", models_weights)
-            return models_weights
+            print ("models_weights_sum: ", np.sum(models_weights))
+            models_weights_normalized = models_weights / np.sum(models_weights)
+            print ("models_weights_normalized: ", models_weights_normalized)
+            return models_weights_normalized
 
     def get_nobj(self):
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
