@@ -103,12 +103,17 @@ class SurrogateProblem(object):
 
         self.D     = self.data.D[tid]
         self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
+        print ("self.IOrig: ", self.IOrig)
 
         # self.POrig = self.data.P[tid]
-        self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
+        if self.data.P is not None:
+            self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
+        else:
+            self.POrig = [[]]
+        print ("self.POrig: ", self.POrig)
 
         self.models_transfer = models_transfer
-        if (self.models_transfer != None and self.options['regression_weights'] == True):
+        if (self.models != None and self.models_transfer != None and self.options['regression_weights'] == True):
             self.models_weights = self.compute_weights()
             with open("models_weights.log", "a") as f_out:
                 for i in range(len(self.models_weights)):
@@ -126,6 +131,15 @@ class SurrogateProblem(object):
         #LHS: difference to the response maximum y-ymax as response variable.
         #RHS: a linear model using x-xmax as predictors.
         for o in range(self.problem.DO):
+            if len(self.data.O[self.tid][:,o]) == 1:
+                models_weights = [1]
+                for model_transfer in self.models_transfer:
+                    models_weights.append(1)
+                models_weights = np.array(models_weights)
+                models_weights = models_weights/np.sum(models_weights)
+                print ("models_weights: ", models_weights)
+                return models_weights
+
             ymin = self.data.O[self.tid][:,o].min()
             ymin_index = self.data.O[self.tid][:,o].tolist().index(ymin)
             x_list = self.data.P[self.tid][:]
@@ -215,6 +229,39 @@ class SurrogateProblem(object):
                         phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
                         EI.append(-((ymin - mu) * Phi + var * phi))
                         # EI.append(mu)
+                    elif self.models_transfer is not None and self.models is None:
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
+
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            # print("point", point)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        #ymin = self.data.O[self.tid][:,o].min()
+                        #(mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu_transfer = 0
+                        var_transfer = 0
+                        for i in range(len(self.models_transfer)):
+                            model_transfer = self.models_transfer[i]
+                            ret = model_transfer(point)
+                            #print (ret)
+                            mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
+                            var_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name+"_var"][0][0]
+                        EI.append(1.0/mu_transfer)
+                        #var = max(1e-18, self.models_weights[0]*var[0][0] + var_transfer)
+                        #std = np.sqrt(var)
+                        #chi = (ymin - mu) / std
+                        #Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        #phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        #EI.append(-((ymin - mu) * Phi + var * phi))
+                        ## EI.append(mu)
                     else:
                         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
                         xi=xi0[0]

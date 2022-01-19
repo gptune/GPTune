@@ -162,11 +162,11 @@ class GPTune(object):
 
             tid = 0
 
-            print ("task_parameter_names: ", task_parameter_names)
-            print ("tuning_parameter_names: ", tuning_parameter_names)
-            print ("tuning_parameter_types: ", tuning_parameter_types)
-            print ("output_names: ", output_names)
-            print ("Igiven: ", Igiven)
+            #print ("task_parameter_names: ", task_parameter_names)
+            #print ("tuning_parameter_names: ", tuning_parameter_names)
+            #print ("tuning_parameter_types: ", tuning_parameter_types)
+            #print ("output_names: ", output_names)
+            #print ("Igiven: ", Igiven)
 
             input_task = Igiven[tid]
 
@@ -648,9 +648,22 @@ class GPTune(object):
         if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
+        print ("NS1: ", NS1)
+        if NS1 == 0:
+            NS1 = 1
+        #if NS1 == 0:
+        #    NS1 = 1
+        #    tmpP = [(self.problem.PS.transform([[128,24]])), (self.problem.PS.transform([[128,24]]))]
+        #    print (tmpP)
+        #    if(self.data.P is not None):
+        #        for i in range(len(self.data.P)):
+        #            NSi = self.data.P[i].shape[0]
+        #            tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        #else:
         if (NSmin<NS1):
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            print ("tmpP: ", tmpP)
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
                     NSi = self.data.P[i].shape[0]
@@ -680,7 +693,12 @@ class GPTune(object):
         modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
-        NSmin = min(map(len, self.data.P))
+        if self.data.P != None:
+            NSmin = min(map(len, self.data.P))
+        else:
+            NSmin = 0
+        print ("NSmin: ", NSmin)
+        print ("NS: ", NS)
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
 
             if(self.problem.models_update is not None):
@@ -901,13 +919,33 @@ class GPTune(object):
         if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
-        if (NSmin<NS1):
-            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-            tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+        print ("NS1: ", NS1)
+        if NS1 == 0:
+            NS1 = 1
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
+            print ("SEARCHER_TLA GENERATED")
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
+            tmpP = [x[1][0] for x in res]
+            print ("tmpP: ", tmpP)
+            #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+            #    NSi = self.data.P[i].shape[0]
+            #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            ## print(more_samples,newdata.P)
+
+
+            #tmpP = [(self.problem.PS.transform([[128,24]]))]
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
                     NSi = self.data.P[i].shape[0]
                     tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        else:
+            if (NSmin<NS1):
+                check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                if(self.data.P is not None):
+                    for i in range(len(self.data.P)):
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
         if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
             raise Exception("len(self.data.O) !=len(self.data.I)")
