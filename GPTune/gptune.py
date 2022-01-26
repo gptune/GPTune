@@ -1709,7 +1709,9 @@ def BuildSurrogateModel(metadata_path="./.gptune/model.json", metadata =None, fu
         options['model_class'] = meta_data['modeler']
     else:
         options['model_class'] = 'Model_LCM'
-    gt = GPTune(problem, computer=computer, data=data, options=options)
+    historydb = HistoryDB(meta_dict=meta_data)
+    gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb)
+    #gt = GPTune(problem, computer=computer, data=data, options=options)
     (models, model_function) = gt.GenSurrogateModel(meta_data["task_parameter"], function_evaluations)
 
     return (model_function)
