@@ -53,7 +53,6 @@ import time
 
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
-from callcgp import cGP
 
 
 
@@ -252,6 +251,7 @@ def main():
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='cgp'):
+        from callcgp import cGP
         options['EXAMPLE_NAME_CGP']='GPTune-Demo'
         options['N_PILOT_CGP']=int(NS/2)
         options['N_SEQUENTIAL_CGP']=NS-options['N_PILOT_CGP']
