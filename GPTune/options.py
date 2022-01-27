@@ -83,6 +83,24 @@ class Options(dict):
         budget_base = 2 # the number of arms is floor{log_{budget_base}{budget_max/budget_min}}+1
         fidelity_map = None
 
+        """ Options for cGP """
+        N_PILOT_CGP=20      # number of initial samples
+        N_SEQUENTIAL_CGP=20 # number of sequential samples
+        RND_SEED_CGP=1      # random seed (int)
+        EXAMPLE_NAME_CGP='obj_name_dummy' # name of the objective function for logging purpose     
+        METHOD_CGP='FREQUENTIST' # 'FREQUENTIST' or 'BAYESIAN
+        #parameters HMC Bayesian sampling when METHOD_CGP='BAYESIAN'
+        N_BURNIN_CGP=500
+        N_MCMCSAMPLES_CGP=500
+        N_INFERENCE_CGP=500
+        EXPLORATION_RATE_CGP=1.0 #Exploration rate is the probability (between 0 and 1) of following the next step produced by acquisition function.
+        NO_CLUSTER_CGP=False #If NO_CLUSTER = True, a simple GP will be used.
+        N_NEIGHBORS_CGP=3 # number of neighbors for deciding cluster components  
+        CLUSTER_METHOD_CGP='BGM' #Cluster method: BGM or KMeans
+        N_COMPONENTS_CGP=3 # maximal number of clusters
+        ACQUISITION_CGP='EI' #acquisition function: EI or MSPE
+        BIGVAL_CGP=1e12 #return this big value in the objective function when constraints are not respected
+
         self.update(locals())
         self.update(kwargs)
         self.pop('self')
