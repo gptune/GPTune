@@ -17,8 +17,10 @@
 import cGP.cGP_constrained_module as cgpc
 import numpy as np
 from autotune.problem import TuningProblem
+from problem import Problem
 from options import Options
 from computer import Computer
+from database import HistoryDB
 from typing import Collection
 import skopt.space
 from skopt.space import *
@@ -35,17 +37,22 @@ from scipy.optimize import LinearConstraint
 
 class cGP_constrained_gptune(cgpc.cGP_constrained):
 
-    def __init__(self, t, tp, computer, options):
+    def __init__(self, t, tp, computer, options, historydb : HistoryDB = None):
 
         super().__init__(options)
         self.tp          = tp
         self.computer    = computer
         self.t           = t
+        self.problem  = Problem(tp, driverabspath=None, models_update=None)
         self.NS          = self.N_PILOT + self.N_SEQUENTIAL
         self.count_runs  = 0
         self.timefun     = 0
         print(options)
+        self.options = options
         self.bigval=options['BIGVAL_CGP']
+        if (historydb is None):
+            historydb = HistoryDB()
+        self.historydb = historydb
 
     def get_bounds(self,restrict):
         #if restrict == 1:
@@ -67,6 +74,7 @@ class cGP_constrained_gptune(cgpc.cGP_constrained):
         return linear_constraint
         
     def f_truth(self,X):
+
         t1 = time.time_ns()
         t = self.t
         x =[]
@@ -83,7 +91,21 @@ class cGP_constrained_gptune(cgpc.cGP_constrained):
         cond = check_constraints(kwargs2)
 
         if (cond):
-            y = float(self.tp.objective(kwargs2)[0])
+            #y = float(self.tp.objective(kwargs2)[0])
+
+            transform_T = self.tp.input_space.transform([np.array(t)])[0]
+            transform_X = self.tp.parameter_space.transform(np.array(X))
+            result = self.computer.evaluate_objective_onetask(
+                    problem = self.problem,
+                    i_am_manager = True,
+                    T2 = transform_T,
+                    P2 = transform_X,
+                    D2 = {},
+                    history_db = self.historydb,
+                    options = self.options
+                    )
+            y = result[0][0]
+            #print ("evaluate_objective_onetask result: ", result)
         else:
             y = self.bigval
 

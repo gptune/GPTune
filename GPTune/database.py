@@ -421,6 +421,42 @@ class HistoryDB(dict):
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
+
+            ####
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            if os.path.exists(json_data_path):
+                print ("[HistoryDB] Found a history database file")
+            else:
+                print ("[HistoryDB] Create a JSON file at " + json_data_path)
+
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
+                                "surrogate_model":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+                elif self.file_synchronization_method == 'rsync':
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    with open(temp_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
+                else:
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+
+
+
     def check_load_deps(self, func_eval):
 
         ''' check machine configuration dependencies '''
