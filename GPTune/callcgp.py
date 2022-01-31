@@ -43,7 +43,7 @@ class cGP_constrained_gptune(cgpc.cGP_constrained):
         self.tp          = tp
         self.computer    = computer
         self.t           = t
-        self.problem  = Problem(tp, driverabspath=None, models_update=None)
+        self.problem     = Problem(tp, driverabspath=None, models_update=None)
         self.NS          = self.N_PILOT + self.N_SEQUENTIAL
         self.count_runs  = 0
         self.timefun     = 0
