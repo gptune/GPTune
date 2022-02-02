@@ -125,7 +125,7 @@ class SurrogateProblem(object):
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
         #The formula that defines the regression, which determines the weights:
-        #In the setting where we want to see which surrogate contributes the most to the maximum. 
+        #In the setting where we want to see which surrogate contributes the most to the maximum.
         #For the j-th model out of N surrogates, suppose that (xmax,ymax) is the observed maximum.
         #y_j-ymax=\sum_{i=1}^{d} w_i mean_i(x_j)-mean_i(xmax)+\epsilon_{j},j=1,\cdots,N
         #LHS: difference to the response maximum y-ymax as response variable.
@@ -145,7 +145,10 @@ class SurrogateProblem(object):
             x_list = self.data.P[self.tid][:]
             x_star = x_list[ymin_index]
             y_list = self.data.O[self.tid][:,o]
-            LHS = [(-1.0*y_elem)-(-1.0*ymin) for y_elem in y_list]
+            if self.options["regression_weights_no_scale"] == True:
+                LHS = [(-1.0*float(y_elem))-(-1.0*(ymin)) for y_elem in y_list]
+            else:
+                LHS = [(-1.0*float(y_elem/ymin))-(-1.0*(ymin/ymin)) for y_elem in y_list]
             print ("LHS: ", LHS)
             RHS = []
             for x_sample in x_list:
@@ -157,22 +160,42 @@ class SurrogateProblem(object):
                     point_x_sample[self.problem.PS[k].name] = x_sample[k]
                 for k in range(self.problem.DP):
                     point_x_star[self.problem.PS[k].name] = x_star[k]
-                #print ("point_x_sample: ", point_x_sample)
-                #print ("point_x_star: ", point_x_star)
+
+                x_sample_orig = self.problem.PS.inverse_transform(np.array(x_sample, ndmin=2))[0]
+                x_star_orig = self.problem.PS.inverse_transform(np.array(x_star, ndmin=2))[0]
+                point_x_sample_orig = point.copy()
+                point_x_star_orig = point.copy()
+                for k in range(self.problem.DP):
+                    point_x_sample_orig[self.problem.PS[k].name] = x_sample_orig[k]
+                for k in range(self.problem.DP):
+                    point_x_star_orig[self.problem.PS[k].name] = x_star_orig[k]
+
+                print ("point_x_sample: ", point_x_sample)
+                print ("point_x_star: ", point_x_star)
+                print ("point_x_sample_orig: ", point_x_sample_orig)
+                print ("point_x_star_orig: ", point_x_star_orig)
+
                 RHS_row = []
                 (mu, var) = self.models[o].predict_last(x_sample, tid=self.tid)
                 mu = mu[0][0]
                 (mu_star, var_star) = self.models[o].predict_last(x_star, tid=self.tid)
                 mu_star = mu_star[0][0]
-                RHS_elem = (-1.0*mu)-(-1.0*mu_star)
-                #print ("RHS_elem: ", RHS_elem)
+                if self.options["regression_weights_no_scale"] == True:
+                    RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
+                else:
+                    RHS_elem = (-1.0*float(mu/mu_star))-(-1.0*(mu_star/mu_star))
+                print ("RHS_elem (current task): ", RHS_elem)
                 RHS_row.append(RHS_elem)
                 for model_transfer in self.models_transfer:
-                    ret = model_transfer(point_x_sample)
+                    ret = model_transfer(point_x_sample_orig)
+                    print ("RET: ", ret)
                     mu = ret[self.problem.OS[o].name][0][0]
-                    ret = model_transfer(point_x_star)
+                    ret = model_transfer(point_x_star_orig)
                     mu_star = ret[self.problem.OS[o].name][0][0]
-                    RHS_elem = (-1.0*mu)-(-1.0*mu_star)
+                    if self.options["regression_weights_no_scale"] == True:
+                        RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
+                    else:
+                        RHS_elem = (-1.0*float(mu/mu_star))-(-1.0*(mu_star/mu_star))
                     #print ("RHS_elem: ", RHS_elem)
                     RHS_row.append(RHS_elem)
                 RHS.append(RHS_row)

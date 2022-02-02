@@ -77,6 +77,7 @@ class Options(dict):
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
 
         regression_weights = False
+        regression_weights_no_scale = False
         dynamic_weights = False
 
         """ Options for the multi-arm bandit algorithm """
