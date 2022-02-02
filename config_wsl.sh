@@ -243,6 +243,14 @@
   # cd scikit-optimize/
   # env CC=$MPICC pip3.7 install -e .
  
+
+  cd $GPTUNEROOT
+  rm -rf cGP
+  git clone https://github.com/gptune/cGP
+  cd cGP/
+  python3.7 setup.py install &>>build_gptune.log
+
+
   cd ../
   rm -rf autotune
   git clone https://github.com/ytopt-team/autotune.git

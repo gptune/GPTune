@@ -549,6 +549,12 @@ python setup.py install --prefix=$PREFIX_PATH
 # env CC=mpicc pip install --user -e .								  
 
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install --prefix=$PREFIX_PATH
+
 
 cd $GPTUNEROOT
 rm -rf autotune

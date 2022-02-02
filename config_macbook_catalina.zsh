@@ -328,6 +328,14 @@ pip install --user -e .
 
 
 cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install 
+
+
+
+cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/

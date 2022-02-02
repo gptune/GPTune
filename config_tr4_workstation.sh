@@ -307,6 +307,11 @@ python setup.py build
 python setup.py install --user
 # env CC=mpicc pip install --user -e .								  
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install --user
 
 
 cd $GPTUNEROOT

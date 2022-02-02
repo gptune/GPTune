@@ -448,6 +448,11 @@ python setup.py install
 # env CC=mpicc pip install  -e .
 
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install 
 
 cd $GPTUNEROOT
 rm -rf autotune
