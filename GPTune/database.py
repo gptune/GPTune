@@ -324,6 +324,16 @@ class HistoryDB(dict):
                 os.system("mkdir -p ./gptune.db")
                 self.history_db_path = "./gptune.db"
 
+            if "load_func_eval" in metadata:
+                if metadata["load_func_eval"] == "yes" or metadata["load_func_eval"] == "y":
+                    self.load_func_eval = True
+                elif metadata["load_func_eval"] == "no" or metadata["load_func_eval"] == "n":
+                    self.load_func_eval = False
+                else:
+                    self.load_func_eval = False
+            else:
+                self.load_func_eval = False
+
             if "no_load_check" in metadata:
                 if metadata["no_load_check"] == "yes":
                     self.load_check = False
@@ -1399,7 +1409,7 @@ class HistoryDB(dict):
                         parameter_space_given,
                         output_space_given) and
                         surrogate_model["modeler"] == modeler and
-                        surrogate_model["objective_id"] == objective):
+                        surrogate_model["objective"]["objective_id"] == objective):
 
                         tuning_configuration_match = True
                         for func_eval_uid in surrogate_model["function_evaluations"]:

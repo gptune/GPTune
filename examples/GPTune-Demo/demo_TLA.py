@@ -170,7 +170,28 @@ def main():
     TUNER_NAME = args.optimization
     perfmodel = args.perfmodel
 
-    (machine, processor, nodes, cores) = GetMachineConfiguration()
+    tuning_metadata = {
+        "tuning_problem_name": "GPTune-Demo",
+        "use_crowd_repo": "no",
+        "load_func_eval": "no",
+        "machine_configuration": {
+            "machine_name": "mymachine",
+            "haswell": { "nodes": 1, "cores": 2 }
+        },
+        "software_configuration": {},
+        "loadable_machine_configurations": {
+            "mymachine": {
+                "myprocessor": {
+                    "nodes": 1,
+                    "cores": 2
+                }
+            }
+        },
+        "loadable_software_configurations": {
+        }
+    }
+
+    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -186,7 +207,7 @@ def main():
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
     else:
         problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
-
+    historydb = HistoryDB(meta_dict=tuning_metadata)
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
     options['model_restarts'] = 1
@@ -251,9 +272,8 @@ def main():
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA_Clean(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
-        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
+        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):

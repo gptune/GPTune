@@ -212,8 +212,8 @@ class Computer(object):
 
                 if type(o) == type({}): # predicted by model
                     source = o["source"]
-                    o_eval = [o[problem.OS[k].name] for k in range(len(problem.OS))]
-                    o_detail = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                    o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                    o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
                 else: # type(o) == type([]): # list
                     source = "measure"
                     for i in range(len(o)):
