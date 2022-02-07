@@ -330,9 +330,9 @@ class HistoryDB(dict):
                 elif metadata["load_func_eval"] == "no" or metadata["load_func_eval"] == "n":
                     self.load_func_eval = False
                 else:
-                    self.load_func_eval = False
+                    self.load_func_eval = True
             else:
-                self.load_func_eval = False
+                self.load_func_eval = True
 
             if "no_load_check" in metadata:
                 if metadata["no_load_check"] == "yes":
