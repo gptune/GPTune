@@ -77,7 +77,7 @@ class Computer(object):
                     sig = inspect.signature(cst)
                     for varname in point:
                         if (varname in sig.parameters):
-                            kwargs2[varname] = point[varname]              
+                            kwargs2[varname] = point[varname]
                     cond = cst(**kwargs2)
                 except Exception as inst:
                     if (isinstance(inst, TypeError)):
@@ -94,7 +94,8 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None):  # P and I are in the normalized space
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None): # P and I are in the normalized space
+
         O = []
         for i in range(len(I)):
             T2 = I[i]
@@ -103,8 +104,49 @@ class Computer(object):
                 D2 = D[i]
             else:
                 D2 = None
-            if(options['RCI_mode']==False):    
+            if(options['RCI_mode']==False):
                 O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options)
+
+                tmp = np.array(O2).reshape((len(O2), problem.DO))
+                O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
+
+            else:
+                tmp = np.empty( shape=(len(P2), problem.DO))
+                tmp[:] = np.NaN
+                O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
+
+                if history_db is not None:
+                    history_db.store_func_eval(problem = problem,\
+                            task_parameter = I[i], \
+                            tuning_parameter = P[i],\
+                            evaluation_result = tmp,\
+                            evaluation_detail = tmp)
+
+        if(options['RCI_mode']==True):
+            print('RCI: GPTune returns\n')
+            exit()
+
+        return O
+
+    def evaluate_objective_TLA(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None, models_transfer : list = None):  # P and I are in the normalized space
+
+        num_given_tasks = len(I)
+        num_source_tasks = len(models_transfer)
+        num_target_tasks = num_given_tasks - num_source_tasks
+
+        O = []
+        for i in range(len(I)):
+            T2 = I[i]
+            P2 = P[i]
+            if D is not None:
+                D2 = D[i]
+            else:
+                D2 = None
+            if(options['RCI_mode']==False):
+                if i >= num_target_tasks:
+                    O2 = self.model_predict_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, model_transfer=models_transfer[i-num_target_tasks])
+                else:
+                    O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options)
 
                 tmp = np.array(O2).reshape((len(O2), problem.DO))
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
@@ -232,6 +274,76 @@ class Computer(object):
                             additional_output = additional_output,
                             source = source)
                             #np.array(O2_).reshape((len(O2_), problem.DO)), \
+
+                O2.append(o_eval)
+
+        return O2
+
+    def model_predict_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None, model_transfer:list=None):  # T2 and P2 are in the normalized space
+
+        I_orig = problem.IS.inverse_transform(np.array(T2, ndmin=2))[0]
+
+        if(problem.driverabspath is not None and options['distributed_memory_parallelism']):
+            modulename = Path(problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+            sys.path.append(problem.driverabspath) # add path to sys
+            module = importlib.import_module(modulename) # import driver name as a module
+            # func = getattr(module, funcName)
+        else:
+            module =problem
+
+        O2=[]
+        kwargst = {problem.IS[k].name: I_orig[k] for k in range(problem.DI)}
+
+        if (pids is None):
+            pids = list(range(len(P2)))
+
+        if (options['distributed_memory_parallelism'] and options['objective_evaluation_parallelism'] and i_am_manager):
+            print ("unsupported yet")
+        elif (options['shared_memory_parallelism'] and options['objective_evaluation_parallelism']):
+            print ("unsupported yet")
+        else:
+            for j in pids:
+                x = P2[j]
+                x_orig = problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                kwargs = {problem.PS[k].name: x_orig[k] for k in range(problem.DP)}
+                kwargs.update(kwargst)
+                if(problem.constants is not None):
+                    kwargs.update(problem.constants)
+                if D2 is not None:
+                    kwargs.update(D2)
+                o_ = model_transfer(kwargs)
+                print (o_)
+                if type(o_) == type({}) or len(o_) == 1:
+                    o = o_
+                    additional_output = None
+                elif len(o_) == 2:
+                    o = o_[0]
+                    additional_output = o_[1]
+
+                o_eval = []
+
+                if type(o) == type({}): # predicted by model
+                    source = o["source"]
+                    o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                    o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                else: # type(o) == type([]): # list
+                    source = "measure"
+                    for i in range(len(o)):
+                        if type(o[i]) == type([]):
+                            o_eval.append(np.average(o[i]))
+                        else:
+                            o_eval.append(o[i])
+                    o_detail = o
+
+                #if history_db is not None:
+                #    history_db.store_func_eval(problem = problem,\
+                #            task_parameter = T2, \
+                #            tuning_parameter = [P2[j]],\
+                #            evaluation_result = [o_eval], \
+                #            evaluation_detail = [o_detail], \
+                #            additional_output = additional_output,
+                #            source = source)
+                #            #np.array(O2_).reshape((len(O2_), problem.DO)), \
 
                 O2.append(o_eval)
 

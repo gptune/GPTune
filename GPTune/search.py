@@ -113,7 +113,7 @@ class SurrogateProblem(object):
         print ("self.POrig: ", self.POrig)
 
         self.models_transfer = models_transfer
-        if (self.models != None and self.models_transfer != None and self.options['regression_weights'] == True):
+        if (self.models != None and self.models_transfer != None and self.options['TLA_method'] == 'Regression'):
             self.models_weights = self.compute_weights()
             with open("models_weights.log", "a") as f_out:
                 for i in range(len(self.models_weights)):
@@ -145,7 +145,7 @@ class SurrogateProblem(object):
             x_list = self.data.P[self.tid][:]
             x_star = x_list[ymin_index]
             y_list = self.data.O[self.tid][:,o]
-            if self.options["regression_weights_no_scale"] == True:
+            if self.options['TLA_method'] == 'Regression_No_Scale':
                 LHS = [(-1.0*float(y_elem))-(-1.0*(ymin)) for y_elem in y_list]
             else:
                 LHS = [(-1.0*float(y_elem/ymin))-(-1.0*(ymin/ymin)) for y_elem in y_list]
@@ -180,7 +180,7 @@ class SurrogateProblem(object):
                 mu = mu[0][0]
                 (mu_star, var_star) = self.models[o].predict_last(x_star, tid=self.tid)
                 mu_star = mu_star[0][0]
-                if self.options["regression_weights_no_scale"] == True:
+                if self.options['TLA_method'] == 'Regression_No_Scale':
                     RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
                 else:
                     RHS_elem = (-1.0*float(mu/mu_star))-(-1.0*(mu_star/mu_star))
@@ -192,7 +192,7 @@ class SurrogateProblem(object):
                     mu = ret[self.problem.OS[o].name][0][0]
                     ret = model_transfer(point_x_star_orig)
                     mu_star = ret[self.problem.OS[o].name][0][0]
-                    if self.options["regression_weights_no_scale"] == True:
+                    if self.options['TLA_method'] == 'Regression_No_Scale':
                         RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
                     else:
                         RHS_elem = (-1.0*float(mu/mu_star))-(-1.0*(mu_star/mu_star))
@@ -240,19 +240,19 @@ class SurrogateProblem(object):
                 #print ("o: ", self.problem.OS[o].name, "is not optimize")
                 EI.append(0)
             else:
-                if self.options['regression_weights'] == True:
-                    if self.models_transfer == None:
-                        ymin = self.data.O[self.tid][:,o].min()
-                        (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu = mu[0][0]
-                        var = max(1e-18, var[0][0])
-                        std = np.sqrt(var)
-                        chi = (ymin - mu) / std
-                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
-                    elif self.models_transfer is not None and self.models is None:
+                if self.models_transfer == None:
+                    ymin = self.data.O[self.tid][:,o].min()
+                    (mu, var) = self.models[o].predict(x, tid=self.tid)
+                    mu = mu[0][0]
+                    var = max(1e-18, var[0][0])
+                    std = np.sqrt(var)
+                    chi = (ymin - mu) / std
+                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                    EI.append(-((ymin - mu) * Phi + var * phi))
+                    # EI.append(mu)
+                elif self.options['TLA_method'] == 'Regression':
+                    if self.models_transfer is not None and self.models is None:
                         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
                         xi=xi0[0]
 
@@ -264,27 +264,16 @@ class SurrogateProblem(object):
                             point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
                             point.update(point0)
                             point.update(point2)
-                            # print("point", point)
                             cond = self.computer.evaluate_constraints(self.problem, point)
 
-                        #ymin = self.data.O[self.tid][:,o].min()
-                        #(mu, var) = self.models[o].predict(x, tid=self.tid)
                         mu_transfer = 0
                         var_transfer = 0
                         for i in range(len(self.models_transfer)):
                             model_transfer = self.models_transfer[i]
                             ret = model_transfer(point)
-                            #print (ret)
                             mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
                             var_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name+"_var"][0][0]
                         EI.append(1.0/mu_transfer)
-                        #var = max(1e-18, self.models_weights[0]*var[0][0] + var_transfer)
-                        #std = np.sqrt(var)
-                        #chi = (ymin - mu) / std
-                        #Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        #phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        #EI.append(-((ymin - mu) * Phi + var * phi))
-                        ## EI.append(mu)
                     else:
                         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
                         xi=xi0[0]
@@ -297,7 +286,6 @@ class SurrogateProblem(object):
                             point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
                             point.update(point0)
                             point.update(point2)
-                            # print("point", point)
                             cond = self.computer.evaluate_constraints(self.problem, point)
 
                         ymin = self.data.O[self.tid][:,o].min()
@@ -307,7 +295,6 @@ class SurrogateProblem(object):
                         for i in range(len(self.models_transfer)):
                             model_transfer = self.models_transfer[i]
                             ret = model_transfer(point)
-                            #print (ret)
                             mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
                             var_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
                         mu = self.models_weights[0]*mu[0][0] + mu_transfer
@@ -318,111 +305,48 @@ class SurrogateProblem(object):
                         phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
                         EI.append(-((ymin - mu) * Phi + var * phi))
                         # EI.append(mu)
-                elif self.options['dynamic_weights'] == True:
-                    if self.models_transfer == None:
-                        ymin = self.data.O[self.tid][:,o].min()
-                        (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu = mu[0][0]
-                        var = max(1e-18, var[0][0])
-                        std = np.sqrt(var)
-                        chi = (ymin - mu) / std
-                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
+                elif self.options['TLA_method'] == 'LCM':
+                    ymin = self.data.O[self.tid][:,o].min()
+                    (mu, var) = self.models[o].predict(x, tid=self.tid)
+                    mu = mu[0][0]
+                    var = max(1e-18, var[0][0])
+                    std = np.sqrt(var)
+                    chi = (ymin - mu) / std
+                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                    EI.append(-((ymin - mu) * Phi + var * phi))
+                    # EI.append(mu)
+                elif self.options['TLA_method'] == 'Sum':
+                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                    xi=xi0[0]
+
+                    if (any(xx==xi for xx in self.POrig)):
+                        cond = False
                     else:
-                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                        xi=xi0[0]
+                        point0 = self.D
+                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                        point.update(point0)
+                        point.update(point2)
+                        cond = self.computer.evaluate_constraints(self.problem, point)
 
-                        if (any(xx==xi for xx in self.POrig)):
-                            cond = False
-                        else:
-                            point0 = self.D
-                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                            point.update(point0)
-                            point.update(point2)
-                            # print("point", point)
-                            cond = self.computer.evaluate_constraints(self.problem, point)
-
-                        ymin = self.data.O[self.tid][:,o].min()
-                        ylast = self.data.O[self.tid][-1,o]
-                        (mu_last, var_last) = self.models[o].predict_last(self.data.P[self.tid][-1], tid=self.tid)
-                        lhs = ((-1.0*ylast)-(-1.0*ymin))
-                        rhs = ((-1.0*mu_last[0][0])-(-1.0*ymin))
-                        weight_main = lhs/rhs
-
-                        (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu_transfer = 0
-                        var_transfer = 0
-                        for model_transfer in self.models_transfer:
-                            point2 = point.copy()
-                            #print ("point2: ", point2)
-                            x_last = self.data.P[self.tid][-1]
-                            for k in range(self.problem.DP):
-                                point2[self.problem.PS[k].name] = x_last[k]
-                            ret = model_transfer(point2)
-                            mu_last = ret[self.problem.OS[o].name][0][0]
-                            lhs = ((-1.0*ylast)-(-1.0*ymin))
-                            rhs = ((-1.0*mu_last)-(-1.0*ymin))
-                            weight_transfer = lhs/rhs
-
-                            ret = model_transfer(point)
-                            print (ret)
-                            mu_transfer += weight_transfer*ret[self.problem.OS[o].name][0][0]
-                            var_transfer += weight_transfer*ret[self.problem.OS[o].name+"_var"][0][0]
-                        mu = weight_main*mu[0][0] + mu_transfer
-                        var = max(1e-18, weight_main*var[0][0] + var_transfer)
-                        std = np.sqrt(var)
-                        chi = (ymin - mu) / std
-                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
-                else:
-                    if self.models_transfer == None:
-                        ymin = self.data.O[self.tid][:,o].min()
-                        (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu = mu[0][0]
-                        var = max(1e-18, var[0][0])
-                        std = np.sqrt(var)
-                        chi = (ymin - mu) / std
-                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
-                    else:
-                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                        xi=xi0[0]
-
-                        if (any(xx==xi for xx in self.POrig)):
-                            cond = False
-                        else:
-                            point0 = self.D
-                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                            point.update(point0)
-                            point.update(point2)
-                            # print("point", point)
-                            cond = self.computer.evaluate_constraints(self.problem, point)
-
-                        ymin = self.data.O[self.tid][:,o].min()
-                        (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu_transfer = 0
-                        var_transfer = 0
-                        for model_transfer in self.models_transfer:
-                            ret = model_transfer(point)
-                            print (ret)
-                            mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                            var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
-                        mu = mu[0][0] + mu_transfer
-                        var = max(1e-18, var[0][0] + var_transfer)
-                        std = np.sqrt(var)
-                        chi = (ymin - mu) / std
-                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
+                    ymin = self.data.O[self.tid][:,o].min()
+                    (mu, var) = self.models[o].predict(x, tid=self.tid)
+                    mu_transfer = 0
+                    var_transfer = 0
+                    for model_transfer in self.models_transfer:
+                        ret = model_transfer(point)
+                        print (ret)
+                        mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
+                        var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                    mu = mu[0][0] + mu_transfer
+                    var = max(1e-18, var[0][0] + var_transfer)
+                    std = np.sqrt(var)
+                    chi = (ymin - mu) / std
+                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                    EI.append(-((ymin - mu) * Phi + var * phi))
+                    # EI.append(mu)
 
         if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
             EI_prod = np.prod(EI)

@@ -831,6 +831,7 @@ class HistoryDB(dict):
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
+                task_parameter_store.pop("tla_id", None)
                 constants_store = problem.constants
                 if constants_store == None:
                     constants_store = {}

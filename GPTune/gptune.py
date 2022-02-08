@@ -831,8 +831,16 @@ class GPTune(object):
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
 
-    def TLA3(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
-        print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
+    def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
+        print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+        if self.options['TLA_method'] == 'Regression':
+            return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
+        elif self.options['TLA_method'] == 'LCM':
+            return self.TLA_LCM(NS, NS1, NI, Igiven, models_transfer)
+        elif self.options['TLA_method'] == 'Sum':
+            return self.TLA_Sum(NS, NS1, NI, Igiven, models_transfer)
+
+    def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1078,6 +1086,323 @@ class GPTune(object):
                     D = newdata.D,
                     history_db = self.historydb,
                     options = kwargs)
+            t2 = time.time_ns()
+            time_fun = time_fun + (t2-t1)/1e9
+            self.data.merge(newdata)
+            NSmin = min(map(len, self.data.P))
+
+        # denormalize the data as the user always work in the original space
+        if self.data.I is not None:    # from 2D numpy array to a list of lists
+            self.data.I = self.problem.IS.inverse_transform(self.data.I)
+        if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+            self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
+
+        t4 = time.time_ns()
+        stats['time_total'] = (t4-t3)/1e9
+        stats['time_fun'] = time_fun
+        stats['time_model'] = time_model
+        stats['time_search'] = time_search
+        stats['time_sample_init'] = time_sample_init
+
+        return (copy.deepcopy(self.data), modelers, stats)
+
+    def TLA_LCM(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+        stats = {
+            "time_total": 0,
+            "time_sample_init": 0,
+            "time_fun": 0,
+            "time_search": 0,
+            "time_model": 0,
+            "func_eval_time":[],
+            "search_time":[],
+            "modeling_time":[],
+            "modeling_iteration":[]
+        }
+        time_fun=0
+        time_sample_init=0
+        time_search=0
+        time_model=0
+
+        print ("Igiven")
+        print (Igiven)
+
+        print ("self data I")
+        print (self.data.I)
+        print ("self data P")
+        print (self.data.P)
+
+        """ Redefine input space """
+        input_space = self.historydb.problem_space_to_dict(self.problem.IS)
+        input_space_arr = []
+        for input_space_info in input_space:
+            name_ = input_space_info["name"]
+            type_ = input_space_info["type"]
+            transformer_ = input_space_info["transformer"]
+
+            if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+                categories = input_space_info["categories"]
+                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+        num_source_tasks = len(models_transfer)
+        num_target_tasks = len(Igiven)
+        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
+        IS = Space(input_space_arr)
+
+        self.tuningproblem.update_input_space(IS)
+        self.problem.IS = IS
+
+        """ Redefine the given tasks with source tasks """
+        newIgiven = []
+        for i in range(num_target_tasks):
+            newIgiven.append(Igiven[i]+[i])
+
+        for i in range(num_source_tasks):
+            newIgiven.append(Igiven[0]+[i+num_target_tasks])
+
+        NI = NI + num_source_tasks
+
+        print ("Igiven: ", Igiven)
+        print ("newIgiven: ", newIgiven)
+
+        """ Load history function evaluation data """
+        if self.historydb.load_func_eval == True:
+            self.historydb.load_history_func_eval(self.data, self.problem, newIgiven)
+
+        np.set_printoptions(suppress=False,precision=4)
+        NSmin=0
+        NSmax=0
+        if (self.data.P is not None):
+            NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
+            NSmax = max(map(len, self.data.P))
+
+        # """ Set (additional) number of samples for autotuning """
+        # NS = NSmin + NS
+        if(NSmax>0):
+            if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
+                print('\nexisting data has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
+                return (copy.deepcopy(self.data), None,stats)
+            else:
+                print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
+
+        t3 = time.time_ns()
+
+        t1 = time.time_ns()
+
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+        """ Multi-task Learning Autotuning """
+
+        if (NS1 is not None and NS1>NS):
+            raise Exception("NS1>NS")
+        if (NS1 is None):
+            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
+
+        if(newIgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = newIgiven
+
+        ########## normalize the data as the user always work in the original space
+        if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+            tmp=[]
+            for x in self.data.P:
+                if(len(x)>0):
+                    xNorm = self.problem.PS.transform(x)
+                    tmp.append(xNorm)
+                else:
+                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
+            self.data.P=tmp
+        if self.data.I is not None: # from a list of lists to a 2D numpy array
+            self.data.I = self.problem.IS.transform(self.data.I)
+
+        if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
+            self.data.O = self.computer.evaluate_objective_TLA(self.problem, self.data.I, self.data.P, self.data.D, self.historydb, options = kwargs, models_transfer=models_transfer)
+
+        sampler = eval(f'{kwargs["sample_class"]}()')
+        if (self.data.I is None):
+
+            if (NI is None):
+                raise Exception("Number of problems to be generated (NI) is not defined")
+
+            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
+            self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
+            # print("riji",type(self.data.I),type(self.data.I[0]))
+            self.data.D = [{}] * NI
+        else:
+            if (self.data.D is None):
+                self.data.D = [{}] * NI
+
+        if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
+            raise Exception("len(self.data.P) !=len(self.data.I)")
+
+        print ("NS1: ", NS1)
+        if NS1 == 0:
+            NS1 = 1
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
+            print ("SEARCHER_TLA GENERATED")
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
+            tmpP = [x[1][0] for x in res]
+            print ("tmpP: ", tmpP)
+            #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+            #    NSi = self.data.P[i].shape[0]
+            #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            ## print(more_samples,newdata.P)
+
+
+            #tmpP = [(self.problem.PS.transform([[128,24]]))]
+            if(self.data.P is not None):
+                for i in range(len(self.data.P)):
+                    NSi = self.data.P[i].shape[0]
+                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        else:
+            if (NSmin<NS1):
+                check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                if(self.data.P is not None):
+                    for i in range(len(self.data.P)):
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+
+        if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
+            raise Exception("len(self.data.O) !=len(self.data.I)")
+
+        t2 = time.time_ns()
+        time_sample_init = time_sample_init + (t2-t1)/1e9
+
+        t1 = time.time_ns()
+        if (NSmin<NS1):
+            tmpO = self.computer.evaluate_objective_TLA(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, models_transfer=models_transfer)
+            if(self.data.P is None): # no existing tuning data is available
+                self.data.O = tmpO
+                self.data.P = tmpP
+            else:
+                for i in range(len(self.data.P)):
+                    self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
+                    self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
+
+        t2 = time.time_ns()
+        stats["func_eval_time"].append((t2-t1)/1e9)
+        time_fun = time_fun + (t2-t1)/1e9
+
+        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        self.models_transfer = models_transfer
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = self.models_transfer)')
+        optiter = 0
+        NSmin = min(map(len, self.data.P))
+        while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
+
+            if(self.problem.models_update is not None):
+                ########## denormalize the data as the user always work in the original space
+                tmpdata = copy.deepcopy(self.data)
+                if tmpdata.I is not None:    # from 2D numpy array to a list of lists
+                    tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
+                if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                    tmpdata.P = [self.problem.PS.inverse_transform(x) for x in tmpdata.P]
+                self.problem.models_update(tmpdata)
+                self.data.D = tmpdata.D
+
+            newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
+            print("MLA iteration: ", optiter)
+            stats["modeling_iteration"].append(0)
+            optiter = optiter + 1
+            t1 = time.time_ns()
+            for o in range(self.problem.DO):
+
+                tmpdata = copy.deepcopy(self.data)
+                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                if(self.problem.models is not None):
+                    for i in range(len(tmpdata.P)):
+                        points0 = tmpdata.D[i]
+                        t = tmpdata.I[i]
+                        I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                        points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
+                        modeldata=[]
+                        for p in range(len(tmpdata.P[i])):
+                            x = tmpdata.P[i][p]
+                            x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                            points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
+                            points.update(points1)
+                            points.update(points0)
+                            if(self.problem.constants is not None):
+                                points.update(self.problem.constants)
+                            modeldata.append(self.problem.models(points))
+                        modeldata=np.array(modeldata)
+                        tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+                for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
+                    tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
+                    tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
+                # print(tmpdata.P[0])
+                #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
+                if (kwargs["model_class"] == "Model_LCM"):
+                    if (kwargs["model_output_constraint"] == True):
+                        for i in range(len(tmpdata.O[0])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][0][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
+
+                    (bestxopt, neg_log_marginal_likelihood,
+                            gradients, iteration) = \
+                        modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            bestxopt,
+                            neg_log_marginal_likelihood,
+                            gradients,
+                            iteration)
+                    stats["modeling_iteration"][optiter-1] += iteration
+                else:
+                    modelers[o].train(data = tmpdata, **kwargs)
+
+                if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
+                    C = modelers[o].M.kern.get_correlation_metric()
+                    print("The correlation matrix C is \n", C)
+                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                    C = modelers[o].get_correlation_metric(len(self.data.I))
+                    print("The correlation matrix C is \n", C)
+
+            t2 = time.time_ns()
+            stats["modeling_time"].append((t2-t1)/1e9)
+            time_model = time_model + (t2-t1)/1e9
+
+            t1 = time.time_ns()
+            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+
+            newdata.P = [x[1][0] for x in res]
+            for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+                NSi = self.data.P[i].shape[0]
+                newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            # print(more_samples,newdata.P)
+            t2 = time.time_ns()
+            stats["search_time"].append((t2-t1)/1e9)
+            time_search = time_search + (t2-t1)/1e9
+
+            t1 = time.time_ns()
+            newdata.O = self.computer.evaluate_objective_TLA(problem = self.problem,
+                    I = newdata.I,
+                    P = newdata.P,
+                    D = newdata.D,
+                    history_db = self.historydb,
+                    options = kwargs,
+                    models_transfer = models_transfer)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
             self.data.merge(newdata)

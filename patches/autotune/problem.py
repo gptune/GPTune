@@ -58,3 +58,6 @@ class TuningProblem:
         self.constraints = constraints
         self.models = models
         self.constants = constants
+
+    def update_input_space(self, input_space):
+        self.input_space = input_space
