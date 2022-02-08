@@ -336,7 +336,6 @@ class SurrogateProblem(object):
                     var_transfer = 0
                     for model_transfer in self.models_transfer:
                         ret = model_transfer(point)
-                        print (ret)
                         mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
                         var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
                     mu = mu[0][0] + mu_transfer
