@@ -11,8 +11,8 @@ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 # Project version numbers
 project(gptuneclcm C CXX Fortran)
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "0")
+set(VERSION_MAJOR "2")
+set(VERSION_MINOR "1")
 set(VERSION_BugFix "0")
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BugFix})
 
@@ -203,6 +203,21 @@ endif()
 if(MPI_CXX_FOUND )
     set(CMAKE_CXX_FLAGS "${MPI_CXX_COMPILE_FLAGS} ${CMAKE_CXX_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}" )
+endif()
+
+
+# added a few compiler flags for Fortran
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-ffree-line-length-none" COMPILER_GNU)
+if (COMPILER_GNU)
+set(CMAKE_Fortran_FLAGS "-fno-range-check -ffree-line-length-none -ffixed-line-length-none -fimplicit-none -lpthread ${CMAKE_Fortran_FLAGS}")
+check_fortran_compiler_flag("-fallow-argument-mismatch" GNU10)
+if (GNU10)
+set(CMAKE_Fortran_FLAGS "-fallow-argument-mismatch ${CMAKE_Fortran_FLAGS}")
+endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(CMAKE_Fortran_FLAGS "-fno-range-check -fbacktrace -fbounds-check -Wconversion ${CMAKE_Fortran_FLAGS}")
+endif()
 endif()
 
 
