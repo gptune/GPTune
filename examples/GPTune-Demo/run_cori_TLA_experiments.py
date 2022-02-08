@@ -15,8 +15,9 @@ def merge_db(db_files_list):
     nargs = len(db_files_list)
 
     print ("nargs: ", nargs)
+    print ("db_files_list: ", db_files_list)
 
-    for i in range(1, nargs, 1):
+    for i in range(0, nargs, 1):
 
         with open(db_files_list[i], "r") as f_in:
             json_data = json.load(f_in)

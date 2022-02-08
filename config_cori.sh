@@ -9,9 +9,9 @@ fi
 
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
-rm -rf ~/.local/lib/python3.7
-module load python/3.7-anaconda-2019.10
-PREFIX_PATH=~/.local/cori/3.7-anaconda-2019.10/
+rm -rf ~/.local/lib/python3.8
+module load python/3.8-anaconda-2020.11
+PREFIX_PATH=~/.local/cori/3.8-anaconda-2020.11/
 
 
 echo $(which python) 
@@ -237,7 +237,7 @@ else
     exit
 fi 
 
-export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
@@ -314,7 +314,8 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DGPTUNE_INSTALL_PATH="${PREFIX_PATH}/lib/python3.8/site-packages"
 make install
 # cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
