@@ -29,6 +29,12 @@ import requests
 import os
 import subprocess
 
+def version_number_conversion(version_split):
+    strings = [str(digit) for digit in version_split]
+    a_string = "".join(strings)
+    version_value = int(a_string)
+    return version_value
+
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
 
@@ -465,8 +471,6 @@ class HistoryDB(dict):
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
 
-
-
     def check_load_deps(self, func_eval):
 
         ''' check machine configuration dependencies '''
@@ -514,12 +518,12 @@ class HistoryDB(dict):
             #software_name = loadable_software_configurations[software_name][option]['name']
             if software_name in software_configuration.keys():
                 version_split = software_configuration[software_name]['version_split']
-                version_value = version_split[0]*100+version_split[1]*10+version_split[2]
+                version_value = version_number_conversion(version_split)
                 #print ("software_name: " + software_name + " version_value: " + str(version_value))
 
                 if 'version_split' in loadable_software_configurations[software_name].keys():
                     version_dep_split = loadable_software_configurations[software_name]['version_split']
-                    version_dep_value = version_dep_split[0]*100+version_dep_split[1]*10+version_dep_split[2]
+                    version_dep_value = version_number_conversion(version_dep_split)
 
                     if version_dep_value == version_value:
                         deps_passed = True
@@ -527,7 +531,7 @@ class HistoryDB(dict):
                 if 'version_from' in loadable_software_configurations[software_name].keys() and \
                    'version_to' not in loadable_software_configurations[software_name].keys():
                     version_dep_from_split = loadable_software_configurations[software_name]['version_from']
-                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    version_dep_from_value = version_number_conversion(version_dep_from_split)
 
                     if version_dep_from_value <= version_value:
                         deps_passed = True
@@ -535,7 +539,7 @@ class HistoryDB(dict):
                 if 'version_from' not in loadable_software_configurations[software_name].keys() and \
                    'version_to' in loadable_software_configurations[software_name].keys():
                     version_dep_to_split = loadable_software_configurations[software_name]['version_to']
-                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
+                    version_dep_to_value = version_number_conversion(version_dep_to_split)
 
                     if version_dep_to_value >= version_value:
                         deps_passed = True
@@ -543,11 +547,10 @@ class HistoryDB(dict):
                 if 'version_from' in loadable_software_configurations[software_name].keys() and \
                    'version_to' in loadable_software_configurations[software_name].keys():
                     version_dep_from_split = loadable_software_configurations[software_name]['version_from']
-                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    version_dep_from_value = version_number_conversion(version_dep_from_split)
 
                     version_dep_to_split = loadable_software_configurations[software_name]['version_to']
-                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
-
+                    version_dep_to_value = version_number_conversion(version_dep_to_split)
                     if version_dep_from_value <= version_value and \
                        version_dep_to_value >= version_value:
                         deps_passed = True

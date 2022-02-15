@@ -321,7 +321,7 @@ cd autotune/
 env CC=$MPICC pip install --user -e .
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.
+cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
 
 # cd $GPTUNEROOT
 # python setup.py build 

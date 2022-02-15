@@ -23,7 +23,7 @@ from problem import Problem
 from computer import Computer
 from data import Data
 
-import mpi4py
+
 
 import concurrent
 from concurrent import futures
@@ -177,14 +177,14 @@ class Model_GPy_LCM(Model):
         return C
 
 class Model_LCM(Model):
-
+    
     def train(self, data : Data, **kwargs):
 
         return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
     def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
-
         if (kwargs['RCI_mode'] is False):
+            import mpi4py
             from lcm import LCM
 
         if (kwargs['model_latent'] is None):
@@ -390,7 +390,8 @@ if __name__ == '__main__':
         return point
     def cst5(point):
         print('this is a dummy definition')
-        return point                        
+        return point          
+    import mpi4py                  
     from mpi4py import MPI
     mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()

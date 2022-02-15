@@ -33,7 +33,6 @@ from search import *
 import math
 import os
 
-import mpi4py
 import numpy as np
 
 import json

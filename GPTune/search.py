@@ -27,8 +27,6 @@ import functools
 from joblib import *
 
 
-import mpi4py
-
 from problem import Problem
 from computer import Computer
 from options import Options
@@ -57,6 +55,7 @@ class Search(abc.ABC):
             tids = list(range(data.NI))
 
         if ((kwargs['distributed_memory_parallelism'] or _platform == "darwin") and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned 
+            import mpi4py
             nproc = min(kwargs['search_multitask_processes'],data.NI)
             npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
             mpi_comm = self.computer.spawn(__file__, nproc=nproc, nthreads=kwargs['search_multitask_threads'], npernode=npernode, kwargs=kwargs) # XXX add args and kwargs
@@ -499,6 +498,7 @@ if __name__ == '__main__':
     def cst6(point):
         print('this is a dummy definition')
         return point
+    import mpi4py    
     from mpi4py import MPI
     mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
