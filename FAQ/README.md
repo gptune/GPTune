@@ -33,39 +33,39 @@ Note for distributed-memory applications: If the application is OpenMPI compiled
 ## Installation
 ### Which build script should I use to install GPTune?
 There are a few example build scripts config_*.sh available under the root directory of GPTune. Depending on what machines you are running the application on, you may need to modify one of the following scripts:  
-
+```
 config_cori.sh  # NERSC Cori Haswell/KNL/GPU nodes  
 config_wsl.sh   # Linux sub-systems on Windows  
 config_summit.sh # Summit machine at ORNL  
 config_macbook.zsh or config_macbook_catalina.zsh # Macbook or IMac   
 config_cleanlinux.sh # Local Ubuntu or Debian systems  
-
+```
 ### It's not easy to install all dependencies of GPTune correctly, is there a simpler way?
 Instead of installing the software dependencies using the provided sample scripts config_*.sh, one can also consider using Spack (https://spack.io/). GPTune is now available in the develop branch of the spack github repo. To install and test GPTune using Spack. One simply needs e.g., one of the following:  
-
+```
 spack install gptune@master~mpispawn  # only install the RCI interface  
 spack install gptune@master  # install both the RCI and spawning interfaces  
 spack install gptune@master+hypre  # install the hypre example application together with gptune  
 spack install gptune@master+superlu  # install the superlu-dist example application together with gptune  
-
+```
 Once installed, one can test the installation with:  
-
+```
 spack load gptune  
 spack test run gptune  
-
+```
 Note for DOE leadership machines: the spack installation is partially tested on Cori, which requires modified spack package files instead of using those from the spack github repo. If you are interested, please contact GPTune developers. 
 ### I cannot install GPTune correctly with build scripts or Spack, is there an alternative?
 For local machines and small clusters, one can also consider using our pre-built Docker image.  
-
+```
 docker pull liuyangzhuan/gptune:2.6 # Image# 2.6 is getting out-dated, try look for higher versions.   
 docker run -it liuyangzhuan/gptune:2.6
-
+```
 Once the docker image is launched, one can test the image with:
-
+```
 cd /app/GPTune/  
 edit run_examples.sh to select which applications to test  
 bash run_examples.sh
-
+```
 ## Usage-Spawning Mode
 The spawning mode of GPTune relies on the mpi spawning mechanism (only available in OpenMPI) to launch a parallel application from Python codes. As a mandatory requirement, both GPTune and the application need to be compiled with OpenMPI.  
 ### Do I need to modify my application code if it's not MPI-based?
