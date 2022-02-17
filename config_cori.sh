@@ -28,7 +28,7 @@ mpi=openmpi  # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -564,6 +564,6 @@ cd autotune/
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
-cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
+cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.8/site-packages/opentuner/search/.
 cd $GPTUNEROOT
 

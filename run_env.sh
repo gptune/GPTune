@@ -22,19 +22,19 @@
 
 
 # ############### Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=1  # number of nodes to be used
+export machine=cori
+export proc=haswell   # knl,haswell
+export mpi=openmpi  # openmpi,craympich
+export compiler=gnu   # gnu, intel	
+export nodes=1  # number of nodes to be used
 
 
 ################ Yang's tr4 machine
-export machine=tr4-workstation
-export proc=AMD1950X   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
+#export machine=tr4-workstation
+#export proc=AMD1950X   
+#export mpi=openmpi  
+#export compiler=gnu   
+#export nodes=1  # number of nodes to be used
 
 
 # ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
@@ -124,11 +124,11 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 
 ############### Cori Haswell CrayMPICH+GNU
 elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
-    module load python/3.7-anaconda-2019.10
+    module load python/3.8-anaconda-2020.11
     module swap PrgEnv-intel PrgEnv-gnu
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"gcc\":{\"version_split\": [8,3,0]}}")
@@ -138,12 +138,12 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
 
 ############### Cori Haswell CrayMPICH+Intel
 elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
-    module load python/3.7-anaconda-2019.10
+    module load python/3.8-anaconda-2020.11
     module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"intel\":{\"version_split\": [19,0,3]}}")
@@ -165,18 +165,18 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module unload craype-hugepages2M
     module unload cray-libsci
     module unload atp    
-    module load python/3.7-anaconda-2019.10
+    module load python/3.8-anaconda-2020.11
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
 
 
     # module unload python
     # USER="$(basename $HOME)"
     # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
-    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # source /usr/common/software/python/3.8-anaconda-2020.11/etc/profile.d/conda.sh
     # conda activate $PREFIX_PATH
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"
@@ -215,14 +215,14 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
 
 
     # module unload python
     # USER="$(basename $HOME)"
     # PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0-gpu
-    # source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+    # source /usr/common/software/python/3.8-anaconda-2020.11/etc/profile.d/conda.sh
     # conda activate $PREFIX_PATH
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"
@@ -241,7 +241,7 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 
 ############### Cori Haswell Openmpi+Intel
 elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
-    module load python/3.7-anaconda-2019.10
+    module load python/3.8-anaconda-2020.11
     module unload cray-mpich
     module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
@@ -249,8 +249,8 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
@@ -272,8 +272,8 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=64
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
@@ -297,8 +297,8 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages
+    export PYTHONPATH=~/.local/cori/3.8-anaconda-2020.11/lib/python3.8/site-packages/gptune/:$PYTHONPATH
     cores=64
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
