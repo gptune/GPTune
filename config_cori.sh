@@ -199,6 +199,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 
 
 elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
+	module load python/$PY_VERSION-anaconda-$PY_TIME
 	module unload darshan
 	module unload openmpi	
 	module swap craype-haswell craype-mic-knl
