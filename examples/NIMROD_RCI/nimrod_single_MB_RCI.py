@@ -27,8 +27,8 @@ from gptune import * # import all
 
 import sys
 import os
-import mpi4py
-from mpi4py import MPI
+# import mpi4py
+# from mpi4py import MPI
 import numpy as np
 import time
 import argparse
