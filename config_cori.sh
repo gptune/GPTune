@@ -7,11 +7,20 @@ if [[ $NERSC_HOST != "cori" ]]; then
 fi
 
 
+# PY_VERSION=3.7
+# PY_TIME=2019.07
+# MKL_TIME=2019.3.199
+
+PY_VERSION=3.8
+PY_TIME=2020.11
+MKL_TIME=2020.2.254
+
+
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/cori/
-rm -rf ~/.local/lib/python3.7
-module load python/3.7-anaconda-2019.10
-PREFIX_PATH=~/.local/cori/3.7-anaconda-2019.10/
+rm -rf ~/.local/lib/python$PY_VERSION
+module load python/$PY_VERSION-anaconda-$PY_TIME
+PREFIX_PATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/
 
 
 echo $(which python) 
@@ -24,7 +33,7 @@ module load cmake/3.20.2
 ##################################################
 machine=cori
 proc=haswell   # knl,haswell,gpu
-mpi=openmpi  # openmpi,craympich
+mpi=craympich  # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
@@ -77,9 +86,9 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 	GPTUNEROOT=$PWD
 	
-	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 
@@ -89,7 +98,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 	# module unload python
 	# USER="$(basename $HOME)"
 	# PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0
-	# source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+	# source /usr/common/software/python/$PY_VERSION-anaconda-$PY_TIME/etc/profile.d/conda.sh
 	# conda activate $PREFIX_PATH
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"	
@@ -131,9 +140,9 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 	GPTUNEROOT=$PWD
 
 	
-	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 
@@ -143,7 +152,7 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 	# module unload python
 	# USER="$(basename $HOME)"
 	# PREFIX_PATH=/global/cscratch1/sd/$USER/conda/pytorch/1.8.0-gpu
-	# source /usr/common/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
+	# source /usr/common/software/python/$PY_VERSION-anaconda-$PY_TIME/etc/profile.d/conda.sh
 	# conda activate $PREFIX_PATH
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"	
@@ -176,9 +185,9 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 	module swap intel intel/19.0.3.199 
 	module load openmpi/4.0.1
 	GPTUNEROOT=$PWD
-	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_intel_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-liomp5"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_intel_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-liomp5"
 	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
@@ -190,6 +199,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 
 
 elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
+	module load python/$PY_VERSION-anaconda-$PY_TIME
 	module unload darshan
 	module unload openmpi	
 	module swap craype-haswell craype-mic-knl
@@ -199,15 +209,30 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	module swap PrgEnv-intel PrgEnv-gnu
 	module load openmpi/4.0.1
 	GPTUNEROOT=$PWD
-	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_gf_lp64.so;${MKLROOT}/lib/intel64/libmkl_gnu_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-lgomp"
 	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
 	MPICC=mpicc
 	MPICXX=mpicxx
 	MPIF90=mpif90
+	OPENMPFLAG=fopenmp
+
+elif [ $ModuleEnv = 'cori-knl-craympich-gnu' ]; then
+	module unload darshan
+	module swap craype-haswell craype-mic-knl
+	module load craype-hugepages2M
+	module swap PrgEnv-intel PrgEnv-gnu
+	export CRAYPE_LINK_TYPE=dynamic
+	GPTUNEROOT=$PWD
+	BLAS_LIB="/opt/cray/pe/libsci/19.06.1/GNU/8.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
+	LAPACK_LIB="/opt/cray/pe/libsci/19.06.1/GNU/8.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
+	SCALAPACK_LIB="/opt/cray/pe/libsci/19.06.1/GNU/8.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
+	MPICC=cc
+	MPICXX=CC
+	MPIF90=ftn
 	OPENMPFLAG=fopenmp
 # fi 
 
@@ -222,9 +247,9 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	# module swap intel intel/19.0.3.199 
 	module load openmpi/4.0.1
 	GPTUNEROOT=$PWD
-	export MKLROOT=/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_2019.3.199/linux/mkl/lib/intel64
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
 	BLAS_LIB="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_intel_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-liomp5"
 	LAPACK_LIB="${MKLROOT}/lib/intel64/libmkl_intel_lp64.so;${MKLROOT}/lib/intel64/libmkl_intel_thread.so;${MKLROOT}/lib/intel64/libmkl_core.so;-liomp5"
 	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
@@ -237,7 +262,7 @@ else
     exit
 fi 
 
-export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
@@ -314,9 +339,10 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
-make
-cp lib_gptuneclcm.so ../.
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DGPTUNE_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages"
+make install
+# cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
@@ -332,11 +358,16 @@ if [[ $BuildExample == 1 ]]; then
 	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
 	mkdir -p install
 	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1	
+	cp $PWD/build/Linux-x86_64/libmetis/libmetis.so $PWD/install/lib/.
+	cp $PWD/metis/include/metis.h $PWD/install/include/.
+	mkdir -p install_static
+	make config cc=$MPICC cxx=$MPICXX prefix=$PWD/install_static
 	make install > make_parmetis_install.log 2>&1
+	cp $PWD/build/Linux-x86_64/libmetis/libmetis.a $PWD/install/lib/.
+	cp $PWD/build/Linux-x86_64/libparmetis/libparmetis.a $PWD/install/lib/.
 
 	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 	mkdir -p build
 	cd build
 	rm -rf CMakeCache.txt
@@ -402,7 +433,7 @@ if [[ $BuildExample == 1 ]]; then
 	mkdir build
 	cd build
 	cmake .. \
-		-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
+		-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC"\
 		-DCMAKE_CXX_FLAGS="" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
@@ -549,15 +580,20 @@ python setup.py install --prefix=$PREFIX_PATH
 # env CC=mpicc pip install --user -e .								  
 
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install --prefix=$PREFIX_PATH
+
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
-cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
+cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 cd $GPTUNEROOT
 

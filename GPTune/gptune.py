@@ -33,7 +33,6 @@ from search import *
 import math
 import os
 
-import mpi4py
 import numpy as np
 
 import json
@@ -1710,8 +1709,8 @@ class GPTune_MB(object):
                         subtasks[0] = budget
                     newdata = Data(problem=self.tp, I=temp_I, P=temp_P)
                     gt = GPTune(self.tp, computer=self.computer, data=newdata, options=self.options)
-                    
-                    
+
+
                     gt.history_db.load_history_func_eval(newdata, gt.problem, temp_I)
 
 

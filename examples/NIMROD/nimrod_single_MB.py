@@ -235,6 +235,7 @@ def main():
     print(IS, PS, OS, constraints, models)
 
     BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_openmpi/bin")
+    # BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_knl_gnu_openmpi/bin")
     RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input")
     os.system("cp %s/nimrod.in ./nimrod_template.in"%(RUNDIR))
     os.system("cp %s/fluxgrid.in ."%(RUNDIR))

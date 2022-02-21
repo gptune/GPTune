@@ -66,7 +66,8 @@ def objectives(point):                  # should always use this name for user-d
 	#########################################
 
 	matrix = point['matrix']
-	COLPERM = point['COLPERM']
+	# COLPERM = point['COLPERM']
+	COLPERM = '4'
 	LOOKAHEAD = point['LOOKAHEAD']
 	nprows = point['nprows']
 
@@ -145,7 +146,7 @@ def main():
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 	# Input parameters
-	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
+	# COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
 	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
@@ -156,7 +157,8 @@ def main():
 	if(target=='memory'):	
 		result   = Real        (float("-Inf") , float("Inf"),name="memory")
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
+	# PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
+	PS = Space([LOOKAHEAD, npernode, nprows, NSUP, NREL])
 	OS = Space([result])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
@@ -246,7 +248,22 @@ def main():
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-
+	if(TUNER_NAME=='cgp'):
+		from callcgp import cGP
+		NI = len(giventask)
+		NS = nrun
+		options['EXAMPLE_NAME_CGP']='SuperLU_DIST'
+		options['N_PILOT_CGP']=int(NS/2)
+		options['N_SEQUENTIAL_CGP']=NS-options['N_PILOT_CGP']
+		(data,stats)=cGP(T=giventask, tp=problem, computer=computer, options=options, run_id="cGP")
+		print("stats: ", stats)
+		""" Print all input and parameter samples """
+		for tid in range(NI):
+			print("tid: %d"%(tid))
+			print("    matrix:%s"%(data.I[tid][0]))
+			print("    Ps ", data.P[tid])
+			print("    Os ", data.O[tid].tolist())
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 

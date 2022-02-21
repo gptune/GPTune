@@ -125,7 +125,8 @@ cmake .. \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j16
-cp lib_gptuneclcm.so ../.
+make install
+# cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
@@ -384,12 +385,17 @@ python setup.py install --prefix=$PREFIX_PATH
 # env CC=mpicc pip install --user -e .								  
 
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install --prefix=$PREFIX_PATH
+
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 

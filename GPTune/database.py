@@ -29,6 +29,12 @@ import requests
 import os
 import subprocess
 
+def version_number_conversion(version_split):
+    strings = [str(digit) for digit in version_split]
+    a_string = "".join(strings)
+    version_value = int(a_string)
+    return version_value
+
 def GetMachineConfiguration(meta_path=None, meta_dict=None):
     import ast
 
@@ -324,6 +330,16 @@ class HistoryDB(dict):
                 os.system("mkdir -p ./gptune.db")
                 self.history_db_path = "./gptune.db"
 
+            if "load_func_eval" in metadata:
+                if metadata["load_func_eval"] == "yes" or metadata["load_func_eval"] == "y":
+                    self.load_func_eval = True
+                elif metadata["load_func_eval"] == "no" or metadata["load_func_eval"] == "n":
+                    self.load_func_eval = False
+                else:
+                    self.load_func_eval = True
+            else:
+                self.load_func_eval = True
+
             if "no_load_check" in metadata:
                 if metadata["no_load_check"] == "yes":
                     self.load_check = False
@@ -421,6 +437,40 @@ class HistoryDB(dict):
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
+
+            ####
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            if os.path.exists(json_data_path):
+                print ("[HistoryDB] Found a history database file")
+            else:
+                print ("[HistoryDB] Create a JSON file at " + json_data_path)
+
+                if self.file_synchronization_method == 'filelock':
+                    with FileLock(json_data_path+".lock"):
+                        with open(json_data_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
+                                "surrogate_model":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+                elif self.file_synchronization_method == 'rsync':
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    with open(temp_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
+                else:
+                    with open(json_data_path, "w") as f_out:
+                        json_data = {"tuning_problem_name":self.tuning_problem_name,
+                            "tuning_problem_category":self.tuning_problem_category,
+                            "surrogate_model":[],
+                            "func_eval":[]}
+                        json.dump(json_data, f_out, indent=2)
+
     def check_load_deps(self, func_eval):
 
         ''' check machine configuration dependencies '''
@@ -468,12 +518,12 @@ class HistoryDB(dict):
             #software_name = loadable_software_configurations[software_name][option]['name']
             if software_name in software_configuration.keys():
                 version_split = software_configuration[software_name]['version_split']
-                version_value = version_split[0]*100+version_split[1]*10+version_split[2]
+                version_value = version_number_conversion(version_split)
                 #print ("software_name: " + software_name + " version_value: " + str(version_value))
 
                 if 'version_split' in loadable_software_configurations[software_name].keys():
                     version_dep_split = loadable_software_configurations[software_name]['version_split']
-                    version_dep_value = version_dep_split[0]*100+version_dep_split[1]*10+version_dep_split[2]
+                    version_dep_value = version_number_conversion(version_dep_split)
 
                     if version_dep_value == version_value:
                         deps_passed = True
@@ -481,7 +531,7 @@ class HistoryDB(dict):
                 if 'version_from' in loadable_software_configurations[software_name].keys() and \
                    'version_to' not in loadable_software_configurations[software_name].keys():
                     version_dep_from_split = loadable_software_configurations[software_name]['version_from']
-                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    version_dep_from_value = version_number_conversion(version_dep_from_split)
 
                     if version_dep_from_value <= version_value:
                         deps_passed = True
@@ -489,7 +539,7 @@ class HistoryDB(dict):
                 if 'version_from' not in loadable_software_configurations[software_name].keys() and \
                    'version_to' in loadable_software_configurations[software_name].keys():
                     version_dep_to_split = loadable_software_configurations[software_name]['version_to']
-                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
+                    version_dep_to_value = version_number_conversion(version_dep_to_split)
 
                     if version_dep_to_value >= version_value:
                         deps_passed = True
@@ -497,11 +547,10 @@ class HistoryDB(dict):
                 if 'version_from' in loadable_software_configurations[software_name].keys() and \
                    'version_to' in loadable_software_configurations[software_name].keys():
                     version_dep_from_split = loadable_software_configurations[software_name]['version_from']
-                    version_dep_from_value = version_dep_from_split[0]*100+version_dep_from_split[1]*10+version_dep_from_split[2]
+                    version_dep_from_value = version_number_conversion(version_dep_from_split)
 
                     version_dep_to_split = loadable_software_configurations[software_name]['version_to']
-                    version_dep_to_value = version_dep_to_split[0]*100+version_dep_to_split[1]*10+version_dep_to_split[2]
-
+                    version_dep_to_value = version_number_conversion(version_dep_to_split)
                     if version_dep_from_value <= version_value and \
                        version_dep_to_value >= version_value:
                         deps_passed = True
@@ -773,7 +822,7 @@ class HistoryDB(dict):
             tuning_parameter : np.ndarray,\
             evaluation_result : np.ndarray,\
             evaluation_detail : np.ndarray,\
-            additional_output : dict,\
+            additional_output : dict = None,\
             source : str = "measure"):
 
         print ("store_func_eval")
@@ -1364,7 +1413,7 @@ class HistoryDB(dict):
                         parameter_space_given,
                         output_space_given) and
                         surrogate_model["modeler"] == modeler and
-                        surrogate_model["objective_id"] == objective):
+                        surrogate_model["objective"]["objective_id"] == objective):
 
                         tuning_configuration_match = True
                         for func_eval_uid in surrogate_model["function_evaluations"]:

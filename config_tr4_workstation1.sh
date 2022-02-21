@@ -93,8 +93,8 @@ cmake .. \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
-make install
-
+cp lib_gptuneclcm.so ../.
+# cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
 
@@ -163,7 +163,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DCMAKE_Fortran_FLAGS="" \
 		-DBLAS_LIBRARIES="${BLAS_LIB}" \
@@ -230,7 +230,7 @@ if [[ $BuildExample == 1 ]]; then
 
 
 	cmake ../ \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_INSTALL_PREFIX=../install \
 		-DCMAKE_INSTALL_LIBDIR=../install/lib \
 		-DBUILD_SHARED_LIBS=ON \
@@ -302,27 +302,19 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build 
 python setup.py install --user
 # env CC=mpicc pip install --user -e .								  
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install --user
 
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --user -e .
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
+cp ./patches/opentuner/manipulator.py  ~/.local/lib/python3.7/site-packages/opentuner/search/.
 
-# cd $GPTUNEROOT
-# python setup.py build 
-# python setup.py install --user

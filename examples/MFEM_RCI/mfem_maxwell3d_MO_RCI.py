@@ -33,7 +33,7 @@ import numpy as np
 import argparse
 import pickle
 
-import mpi4py
+# import mpi4py
 # from mpi4py import MPI
 from array import array
 import math

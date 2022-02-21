@@ -34,7 +34,7 @@ where:
 ################################################################################
 import sys
 import os
-import mpi4py
+# import mpi4py
 import logging
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
@@ -47,7 +47,7 @@ from gptune import * # import all
 
 
 import argparse
-from mpi4py import MPI
+# from mpi4py import MPI
 import numpy as np
 import time
 
@@ -179,10 +179,10 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
 
-    options['objective_evaluation_parallelism'] = False
-    options['objective_multisample_threads'] = 1
-    options['objective_multisample_processes'] = 1
-    options['objective_nprocmax'] = 1
+    # options['objective_evaluation_parallelism'] = True
+    # options['objective_multisample_threads'] = 1
+    # options['objective_multisample_processes'] = 4
+    # options['objective_nprocmax'] = 1
 
     options['model_processes'] = 1
     # options['model_threads'] = 1
@@ -241,6 +241,21 @@ def main():
 
     if(TUNER_NAME=='hpbandster'):
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
+        print("stats: ", stats)
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%f " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+    if(TUNER_NAME=='cgp'):
+        from callcgp import cGP
+        options['EXAMPLE_NAME_CGP']='GPTune-Demo'
+        options['N_PILOT_CGP']=int(NS/2)
+        options['N_SEQUENTIAL_CGP']=NS-options['N_PILOT_CGP']
+        (data,stats)=cGP(T=giventask, tp=problem, computer=computer, options=options, run_id="cGP")
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):

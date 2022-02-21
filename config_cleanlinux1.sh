@@ -1,35 +1,63 @@
 #!/bin/bash
 
-rm -rf ~/.local/lib
-
 ##################################################
 ##################################################
 
-export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
+export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
 BuildExample=0 # whether to build all examples
+MPIFromSource=1 # whether to build openmpi from source
 
-##################################################
-##################################################
-
-if [[ $(hostname -s) != "tr4-workstation" ]]; then
-	echo "This script can only be used for tr4-workstation"
+if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
+	echo "This script can only be used for Ubuntu or Debian systems"
 	exit
 fi
 
+##################################################
+##################################################
+
+
+export GPTUNEROOT=$PWD
+
 ############### Yang's tr4 machine
-if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
-    module load gcc/9.1.0
-    module load openmpi/gcc-9.1.0/4.0.1
-    module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module load python/gcc-9.1.0/3.7.4
-	module load cmake/3.19.2
-	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
-	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
-	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
-	MPICC=mpicc
-	MPICXX=mpicxx
-	MPIF90=mpif90
+if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
+	
+	CC=gcc-8
+	FTN=gfortran-8
+	CPP=g++-8
+
+	if [[ $MPIFromSource = 1 ]]; then
+		export PATH=$PATH:$GPTUNEROOT/openmpi-4.1.0/bin
+		export MPICC="$GPTUNEROOT/openmpi-4.1.0/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.1.0/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.1.0/bin/mpif90"
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.0/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.0/lib:$LIBRARY_PATH  		
+	else
+
+		#######################################
+		#  define the following as needed
+		export MPICC=
+		export MPICXX=
+		export MPIF90=
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$LIBRARY_PATH 
+		export PATH=$PATH 
+		########################################
+
+		if [[ -z "$MPICC" ]]; then
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			exit
+		fi
+	fi
+	export PATH=$GPTUNEROOT/env/bin/:$PATH
+	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
+	export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
+
+
 fi
 ###############
 
@@ -37,20 +65,19 @@ fi
 
 
 
-GPTUNEROOT=$PWD
+#set up environment variables, these are also needed when running GPTune 
+################################### 
 
 
-#shopt -s expand_aliases
-#alias python='python3.7'
-#alias pip='pip3.7'
 
-
-export PATH=$PATH:/home/administrator/.local/bin/
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
+
+
+
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
 export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
@@ -65,14 +92,124 @@ export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
 
 
 
-python --version
-pip --version
 
-pip install --upgrade --user -r requirements.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+
+
+# install dependencies using apt-get and virtualenv
+###################################
+
+apt-get update -y 
+apt-get upgrade -y 
+apt-get dist-upgrade -y  
+apt-get install dialog apt-utils -y 
+apt-get install build-essential software-properties-common -y 
+add-apt-repository ppa:ubuntu-toolchain-r/test -y 
+apt-get update -y 
+apt-get install gcc-8 g++-8 gfortran-8 -y  
+# apt-get install gcc-9 g++-9 gfortran-9 -y  
+# apt-get install gcc-10 g++-10 gfortran-10 -y  
+
+
+apt-get install libffi-dev -y
+apt-get install libssl-dev -y
+
+# apt-get install libblas-dev  -y
+# apt-get install liblapack-dev -y
+apt-get install cmake -y
+apt-get install git -y
+apt-get install vim -y
+apt-get install autoconf automake libtool -y
+apt-get install zlib1g-dev -y
+apt-get install wget -y
+apt-get install libsm6 -y
+apt-get install libbz2-dev -y
+apt-get install libsqlite3-dev -y
+apt-get install jq -y
+
 
 cd $GPTUNEROOT
+apt purge --auto-remove cmake -y
+version=3.19
+build=1
+wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
+tar -xzvf cmake-$version.$build.tar.gz
+cd cmake-$version.$build/
+./bootstrap
+make -j32
+make install
+export PATH=$GPTUNEROOT/cmake-$version.$build/bin/:$PATH
+
+
+cd $GPTUNEROOT
+rm -rf Python-3.7.9
+wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
+tar -xvf Python-3.7.9.tgz
+cd Python-3.7.9
+./configure --prefix=$PWD CC=$CC
+make -j32
+make altinstall
+PY=$PWD/bin/python3.7  # this makes sure virtualenv uses the correct python version
+PIP=$PWD/bin/pip3.7
+
+
+cd $GPTUNEROOT
+$PIP install virtualenv 
+rm -rf env
+$PY -m venv env
+source env/bin/activate
+# unalias pip  # this makes sure virtualenv install packages at its own site-packages directory
+# unalias python
+
+
+pip install --upgrade  -r requirements.txt
+
+# manually install dependencies from cmake and make
+###################################
+cd $GPTUNEROOT
+git clone https://github.com/xianyi/OpenBLAS
+cd OpenBLAS
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN -j32
+make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
+
+
+if [[ $MPIFromSource = 1 ]]; then
+	cd $GPTUNEROOT
+	wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.0.tar.bz2
+	bzip2 -d openmpi-4.1.0.tar.bz2
+	tar -xvf openmpi-4.1.0.tar 
+	cd openmpi-4.1.0/ 
+	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+	make -j32
+	make install
+fi
+
+# if openmpi, scalapack needs to be built from source
+if [[ $ModuleEnv == *"openmpi"* ]]; then
+cd $GPTUNEROOT
+rm -rf scalapack-2.1.0.tgz*
+wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+tar -xf scalapack-2.1.0.tgz
+cd scalapack-2.1.0
 rm -rf build
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=./install \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}"
+make -j32
+make install
+fi
+
+
+cd $GPTUNEROOT
 mkdir -p build
 cd build
 rm -rf CMakeCache.txt
@@ -93,8 +230,8 @@ cmake .. \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
-make install
-
+cp lib_gptuneclcm.so ../.
+# cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
 
@@ -288,13 +425,14 @@ fi
 
 
 
+
 cd $GPTUNEROOT
 rm -rf mpi4py
 git clone https://github.com/mpi4py/mpi4py.git
 cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --user
-# env CC=mpicc pip install --user -e .								  
+python setup.py install 
+# env CC=mpicc pip install  -e .								  
 
 
 
@@ -302,27 +440,22 @@ cd $GPTUNEROOT
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build 
-python setup.py install --user
-# env CC=mpicc pip install --user -e .								  
+python setup.py install 
+# env CC=mpicc pip install  -e .								  
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install --user
 
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-env CC=$MPICC pip install --user -e .
+cp ../patches/autotune/problem.py autotune/.
+env CC=$MPICC pip install  -e .
+
+
+
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
+cp ./patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
 
-# cd $GPTUNEROOT
-# python setup.py build 
-# python setup.py install --user

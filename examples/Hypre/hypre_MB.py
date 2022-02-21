@@ -237,7 +237,7 @@ def main():
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
 
     options = Options()
-    options['model_processes'] = 4 # parallel cholesky for each LCM kernel
+    # options['model_processes'] = 4 # parallel cholesky for each LCM kernel
     # options['model_threads'] = 1
     
     # options['model_restarts'] = args.Nrestarts

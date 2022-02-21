@@ -117,10 +117,15 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_openmpi/bin"
     RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input"
-elif [[ $ModuleEnv == *"craympich"* ]]; then
-############ craympich
+elif [[ $ModuleEnv == *"mpich"* ]]; then
+############ mpich
+if [[ $ModuleEnv == *"haswell"* ]]; then
     BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_craympich/bin"
     RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input_craympich"
+elif [[ $ModuleEnv == *"knl"* ]]; then
+    BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_knl_gnu_craympich/bin"
+    RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input_craympich"
+fi
 fi
 
 cp $RUNDIR/nimrod.in ./nimrod_template.in

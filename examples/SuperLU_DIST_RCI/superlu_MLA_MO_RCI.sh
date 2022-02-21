@@ -100,8 +100,8 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
-elif [[ $ModuleEnv == *"craympich"* ]]; then
-############ craympich
+elif [[ $ModuleEnv == *"mpich"* ]]; then
+############ mpich
     echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
     srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
 elif [[ $ModuleEnv == *"spectrummpi"* ]]; then

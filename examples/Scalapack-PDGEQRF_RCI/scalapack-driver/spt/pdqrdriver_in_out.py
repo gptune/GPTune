@@ -4,7 +4,6 @@
 
 import numpy as np
 import os
-import mpi4py
 import sys
 import time
 import argparse

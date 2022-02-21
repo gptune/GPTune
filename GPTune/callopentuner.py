@@ -16,7 +16,10 @@
 #
 import numpy as np
 from autotune.problem import TuningProblem
+from problem import Problem
+from options import Options
 from computer import Computer
+from database import HistoryDB
 from typing import Collection
 
 import skopt.space
@@ -78,7 +81,21 @@ class OpenTunerInterface(opentuner.MeasurementInterface):
         check_constraints = functools.partial(self.args.computer.evaluate_constraints, self.args.tp, inputs_only = False, kwargs = kwargs)
         cond = check_constraints(kwargs2)
         if (cond):
-            y = float(self.args.tp.objective(kwargs2)[0])
+            #y = float(self.args.tp.objective(kwargs2)[0])
+
+            transform_T = self.args.tp.input_space.transform([np.array(t)])[0]
+            transform_X = self.args.tp.parameter_space.transform(np.array([x]))
+            result = self.args.computer.evaluate_objective_onetask(
+                    problem = self.args.problem,
+                    i_am_manager = True,
+                    T2 = transform_T,
+                    P2 = transform_X,
+                    D2 = {},
+                    history_db = self.args.historydb,
+                    options = self.args.options
+                    )
+            y = float(result[0][0])
+
             self.X.append(x)
             self.Y.append(y)
             state = 'OK'
@@ -104,7 +121,7 @@ class OpenTunerInterface(opentuner.MeasurementInterface):
 
 ####################################################################################################
 
-def OpenTuner(T, NS, tp : TuningProblem, computer : Computer, run_id="OpenTuner", niter=1, technique=None):
+def OpenTuner(T, NS, tp : TuningProblem, computer : Computer, historydb : HistoryDB = None, options : Options = None, run_id="OpenTuner", niter=1, technique=None):
 
     # Initialize
 
@@ -133,6 +150,13 @@ def OpenTuner(T, NS, tp : TuningProblem, computer : Computer, run_id="OpenTuner"
 
     args.niter   = niter
     args.tp  = tp
+    args.problem = Problem(tp, driverabspath=None, models_update=None)
+    if (historydb is None):
+        historydb = HistoryDB()
+    args.historydb = historydb
+    if (options is None):
+        options = Options()
+    args.options = options
     args.computer  = computer
 
     X = []

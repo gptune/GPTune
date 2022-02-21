@@ -131,7 +131,6 @@ autotune contains a common autotuning interface used by GPTune and ytopt. It can
 cd $GPTUNEROOT
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
 pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```

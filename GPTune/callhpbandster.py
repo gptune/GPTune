@@ -22,8 +22,10 @@ import hpbandster.optimizers
 
 import numpy as np
 from autotune.problem import TuningProblem
+from problem import Problem
 from options import Options
 from computer import Computer
+from database import HistoryDB
 from typing import Collection
 
 import skopt.space
@@ -38,17 +40,24 @@ import sys
 
 class HpBandSterWorker(hpbandster.core.worker.Worker):
 
-    def __init__(self, t, NS, tp, computer, niter=1, *args, **kwargs):
+    def __init__(self, t, NS, tp, computer, historydb : HistoryDB = None, options : Options = None, niter=1, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         self.myworker_id = kwargs['id']
         self.tp          = tp
         self.computer    = computer
+        self.problem     = Problem(tp, driverabspath=None, models_update=None)
         self.t           = t
         self.NS          = NS
         self.niter       = niter
         self.count_runs  = 0
         self.timefun     = 0
+        if (options is None):
+            options = Options()
+        self.options = options
+        if (historydb is None):
+            historydb = HistoryDB()
+        self.historydb = historydb
 
     def get_configspace(self):
 
@@ -125,11 +134,25 @@ class HpBandSterWorker(hpbandster.core.worker.Worker):
             cond = check_constraints(kwargs2)
 
             if (cond):
-                y = float(self.tp.objective(kwargs2)[0])
+                #y = float(self.tp.objective(kwargs2)[0])
+
+                transform_T = self.tp.input_space.transform([np.array(t)])[0]
+                transform_X = self.tp.parameter_space.transform(np.array([x]))
+                result = self.computer.evaluate_objective_onetask(
+                        problem = self.problem,
+                        i_am_manager = True,
+                        T2 = transform_T,
+                        P2 = transform_X,
+                        D2 = {},
+                        history_db = self.historydb,
+                        options = self.options
+                        )
+                y = float(result[0][0])
                 state = 'OK'
             else:
                 y = float("Inf")
                 state = 'ERROR'
+            print("T X Y state")
             print(t, x, y, state)
             t2 = time.time_ns()
             self.timefun=self.timefun+(t2-t1)/1e9

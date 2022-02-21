@@ -225,12 +225,14 @@ cmake .. \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
+	-DGPTUNE_INSTALL_PATH=$PWD \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
-cp lib_gptuneclcm.so ../.
+make install
+# cp lib_gptuneclcm.so ../.
 # cp pdqrdriver ../
 
 if [[ $BuildExample == 1 ]]; then
@@ -446,12 +448,16 @@ python setup.py install
 # env CC=mpicc pip install  -e .
 
 
+cd $GPTUNEROOT
+rm -rf cGP
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install 
 
 cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install  -e .
 
 

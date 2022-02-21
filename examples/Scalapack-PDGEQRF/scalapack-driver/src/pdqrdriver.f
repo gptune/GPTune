@@ -93,7 +93,7 @@
      $                   IPOSTPAD, IPPIV, IPREPAD, IPTAU, IPW, J, K,
      $                   KFAIL, KPASS, KSKIP, KTESTS, L, LIPIV, LTAU,
      $                   LWORK, M, MAXMN, MB, MINMN, MNP, MNQ, MP,
-     $                   MYCOL, MYROW, N, NB, NFACT, NGRIDS, NMAT, NNB,
+     $                   MYCOL, MYROW, N, NB, NFACT, CONFIG, NGRIDS, NMAT, NNB,
      $                   NIN, NOUT, NPCOL, NPROCS, NPROW, NQ, WORKFCT,
      $                   WORKSIZ, NBCONF
       DOUBLE PRECISION               THRESH

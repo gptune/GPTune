@@ -22,8 +22,6 @@ from problem import Problem
 from data import Data
 from database import HistoryDB
 from typing import Collection, Callable
-import mpi4py
-# from mpi4py import MPI
 import os
 import sys
 import concurrent
@@ -188,6 +186,7 @@ class Computer(object):
             pids = list(range(len(P2)))
 
         if (options['distributed_memory_parallelism'] and options['objective_evaluation_parallelism'] and i_am_manager):
+            import mpi4py
             from mpi4py import MPI
             if(problem.driverabspath is None):
                 raise Exception('objective_evaluation_parallelism and distributed_memory_parallelism require passing driverabspath to GPTune')
@@ -254,8 +253,8 @@ class Computer(object):
 
                 if type(o) == type({}): # predicted by model
                     source = o["source"]
-                    o_eval = [o[problem.OS[k].name] for k in range(len(problem.OS))]
-                    o_detail = [o[problem.OS[k].name] for k in range(len(problem.OS))]
+                    o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                    o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
                 else: # type(o) == type([]): # list
                     source = "measure"
                     for i in range(len(o)):
@@ -351,6 +350,7 @@ class Computer(object):
 
 
     def spawn(self, executable, nproc, nthreads, npernode=None, args=None, kwargs=None):
+        import mpi4py
         from mpi4py import MPI
         print('exec', executable, 'args', args, 'nproc', nproc)
 
@@ -374,6 +374,7 @@ class Computer(object):
 
 
 if __name__ == '__main__':
+    import mpi4py
     from mpi4py import MPI
 
     def objectives(point):

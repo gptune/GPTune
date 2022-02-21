@@ -11,8 +11,8 @@ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 # Project version numbers
 project(gptuneclcm C CXX Fortran)
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "0")
+set(VERSION_MAJOR "2")
+set(VERSION_MINOR "1")
 set(VERSION_BugFix "0")
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BugFix})
 
@@ -206,7 +206,49 @@ if(MPI_CXX_FOUND )
 endif()
 
 
-# Set source directory
+# added a few compiler flags for Fortran
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-ffree-line-length-none" COMPILER_GNU)
+if (COMPILER_GNU)
+set(CMAKE_Fortran_FLAGS "-fno-range-check -ffree-line-length-none -ffixed-line-length-none -fimplicit-none -lpthread ${CMAKE_Fortran_FLAGS}")
+check_fortran_compiler_flag("-fallow-argument-mismatch" GNU10)
+if (GNU10)
+set(CMAKE_Fortran_FLAGS "-fallow-argument-mismatch ${CMAKE_Fortran_FLAGS}")
+endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(CMAKE_Fortran_FLAGS "-fno-range-check -fbacktrace -fbounds-check -Wconversion ${CMAKE_Fortran_FLAGS}")
+endif()
+endif()
+
+
+# python.
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+message(STATUS "Python3 interpreter: ${Python3_EXECUTABLE}")
+message(STATUS "Python3 installation directory: ${Python3_SITEARCH}")
+set(GPTUNE_INSTALL_PATH "" CACHE STRING "GPTune module installation path")
+mark_as_advanced(GPTUNE_INSTALL_PATH)
+
+
+# Set python files
+set(GPTUNE_PYTHON_FILES
+    GPTune/__init__.py
+    GPTune/__version__.py
+    GPTune/callhpbandster.py
+    GPTune/callopentuner.py
+    GPTune/computer.py
+    GPTune/database.py
+    GPTune/data.py
+    GPTune/gptune.py
+    GPTune/lcm.py
+    GPTune/model.py
+    GPTune/options.py
+    GPTune/problem.py
+    GPTune/sample.py
+    GPTune/search.py
+)
+
+
+# Set C source directory
 set(SOURCE_DIR "gptuneclcm")
 # Tell CMake that headers are also in SOURCE_DIR
 include_directories(${SOURCE_DIR})
@@ -220,7 +262,7 @@ set_target_properties(_gptuneclcm PROPERTIES
 )
 
 
-
+# Set Fortran source directory
 set(SOURCE_DIR_SCALAPACK_EX "${CMAKE_SOURCE_DIR}/examples/Scalapack-PDGEQRF/scalapack-driver/src/")
 include_directories(${SOURCE_DIR_SCALAPACK_EX})
 #set(sources_scalapack_example "${SOURCE_DIR_SCALAPACK_EX}/pdqrdriver.f ${SOURCE_DIR_SCALAPACK_EX}/pdqrinfo.f")
@@ -247,23 +289,37 @@ target_link_libraries(pdqrdriver ${MPI_Fortran_LIBRARIES} ${BLAS_LIB} ${LAPACK_L
 # python_extension_module(_gptuneclcm)
 
 
+
+
+# Installation setup.
+if(GPTUNE_INSTALL_PATH STREQUAL "")
+    message(STATUS "GPTune will be installed in the default location: ${Python3_SITEARCH}")
+    set(_GPTUNE_INSTALL_DIR "${Python3_SITEARCH}/gptune")
+else()
+    message(STATUS "GPTune will be installed in the custom location: ${GPTUNE_INSTALL_PATH}")
+    set(_GPTUNE_INSTALL_DIR "${GPTUNE_INSTALL_PATH}/gptune")
+endif()
+
+
+
 # Define GNU standard installation directories
 include(GNUInstallDirs)
 
-install(TARGETS _gptuneclcm LIBRARY DESTINATION gptuneclcm
+install(TARGETS _gptuneclcm LIBRARY DESTINATION ${_GPTUNE_INSTALL_DIR}
   # DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(TARGETS pdqrdriver RUNTIME DESTINATION gptuneclcm
+install(TARGETS pdqrdriver RUNTIME DESTINATION ${_GPTUNE_INSTALL_DIR}
   # DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(FILES ${headers}
-  DESTINATION gptuneclcm
+  DESTINATION ${_GPTUNE_INSTALL_DIR}
   # DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# # Add pkg-config support
-# configure_file(_gptuneclcm.pc.in gptune.pc @ONLY)
-# install(FILES _gptuneclcm.pc
-# 	DESTINATION gptuneclcm/pkgconfig)
 
+# Install the Python files.
+install(FILES ${GPTUNE_PYTHON_FILES} 
+  DESTINATION ${_GPTUNE_INSTALL_DIR})
+
+unset(_GPTUNE_INSTALL_DIR)
