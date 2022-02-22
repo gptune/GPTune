@@ -33,7 +33,7 @@ module load cmake/3.20.2
 ##################################################
 machine=cori
 proc=haswell   # knl,haswell,gpu
-mpi=craympich  # openmpi,craympich
+mpi=openmpi    # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
@@ -591,6 +591,7 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
