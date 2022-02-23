@@ -95,7 +95,17 @@ class Model_GPy_LCM(Model):
             for qq in range(model_latent):
                 self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
         else:
-            K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            print ("Model kern: ", kwargs['model_kern'])
+            if kwargs['model_kern'] == 'RBF':
+                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif kwargs['model_kern'] == 'Exponential' or kwargs['model_kern'] == 'Matern12':
+                K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif kwargs['model_kern'] == 'Matern32':
+                K = GPy.kern.Matern32(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif kwargs['model_kern'] == 'Matern52':
+                K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            else:
+                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
             else:
