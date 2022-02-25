@@ -36,6 +36,7 @@ class Options(dict):
         objective_multisample_processes = None  # Number of MPIs each handling one application call
         objective_multisample_threads = None  # Number of threads each handling one application call
         objective_nprocmax = None # Maximum number of cores for each application call, default to computer.cores*computer.nodes-1
+        objective_nospawn = False # Whether the application code is launched via MPI spawn. If True, self['objective_nprocmax'] cores are used per function evaluation, otherwise self['objective_nprocmax']+1 cores are used. 
 
         """ Options for the sampling phase """
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
@@ -165,17 +166,21 @@ class Options(dict):
 
 
         if (self['objective_evaluation_parallelism']==True and self['distributed_memory_parallelism']==True):
-            self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
-            nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))  # here we always assume the user invoke application code with MPI_Spawn, if not, "+1" can be removed
+            if(self['objective_nospawn']==True):
+                self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-1))
+                nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax'])))
+            else:
+                self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
+                nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))                
             if(self['objective_multisample_processes'] is None):
                 self['objective_multisample_processes'] = nproc
             self['objective_multisample_processes'] = min(self['objective_multisample_processes'],nproc)
             self['objective_multisample_threads'] = 1
-        elif (self['objective_evaluation_parallelism']==True and self['shared_memory_parallelism']==True):
-            nproc = max(1,math.floor((computer.cores*computer.nodes)/(self['objective_nprocmax']+1)))
+        elif (self['objective_evaluation_parallelism']==True):
+            # nproc = max(1,math.floor((computer.cores*computer.nodes)/(self['objective_nprocmax']+1)))
             if(self['objective_multisample_threads'] is None):
                 self['objective_multisample_threads'] = computer.cores
-            self['objective_multisample_threads'] = min(self['objective_multisample_threads'],computer.cores,nproc)
+            # self['objective_multisample_threads'] = min(self['objective_multisample_threads'],computer.cores,nproc)
             self['objective_multisample_processes'] = 1
         else:
             self['objective_multisample_threads'] = 1
@@ -218,12 +223,21 @@ class Options(dict):
             print("   ---> search_multitask_threads:", self['search_multitask_threads'])
 
         if(self['distributed_memory_parallelism']):
-            if(self['objective_evaluation_parallelism']==True):
-                ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1
-            else:
-                ncore_obj = (self['objective_nprocmax']+1)
+            if(self['objective_nospawn']==True):
+                if(self['objective_evaluation_parallelism']==True):
+                    ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax'])+1
+                else:
+                    ncore_obj = (self['objective_nprocmax'])
+            else:    
+                if(self['objective_evaluation_parallelism']==True):
+                    ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1
+                else:
+                    ncore_obj = (self['objective_nprocmax']+1)
         else:
-            ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)
+            if(self['objective_nospawn']==True):
+                ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax'])
+            else:
+                ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)
         if(self['verbose']==True):        
             print("  ")
             print("  total core counts for objective function evaluation:", ncore_obj)
