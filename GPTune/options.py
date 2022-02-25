@@ -47,6 +47,7 @@ class Options(dict):
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
+        model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52'
         model_output_constraint = False # True: if Model_LCM is used, check output range constraint and disregard out-of-range output (put a large value)
         model_threads = None  # Number of threads used for building one GP model in Model_LCM
         model_processes = None # Number of MPIs used for building one GP model in Model_LCM
@@ -77,6 +78,8 @@ class Options(dict):
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
 
+        """ Options for transfer learning """
+        TLA_method = 'Regression' #"LCM" #'Sum' #'regression_weights_no_scale'
 
         """ Options for the multi-arm bandit algorithm """
         budget_min = 0.1 # minimum budget

@@ -34,7 +34,7 @@ import argparse
 import pickle
 import copy
 
-import mpi4py
+# import mpi4py
 from array import array
 import math
 

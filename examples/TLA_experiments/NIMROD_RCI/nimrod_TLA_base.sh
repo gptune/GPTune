@@ -1,23 +1,20 @@
 #!/bin/bash
 start=`date +%s`
 
-
-# Get nstepmax, nstepmin, Nloop, optimization, expid, seed from command line
-while getopts "a:b:c:d:e:f:" opt
+# Get nstep, expid, seed from command line
+while getopts "a:b:c:d:e:" opt
 do
    case $opt in
-      a ) nstepmax=$OPTARG ;;
-      b ) nstepmin=$OPTARG ;;
-      c ) Nloop=$OPTARG ;;
-      d ) optimization=$OPTARG ;;
-      e ) expid=$OPTARG ;;
-      f ) seed=$OPTARG ;;
+      a ) nstep=$OPTARG ;;
+      b ) expid=$OPTARG ;;
+      c ) seed=$OPTARG ;;
+      d ) nrun=$OPTARG ;;
+      e ) npilot=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
 
-
-cd ../../
+cd ../../../
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
@@ -27,23 +24,13 @@ export PYTHONWARNINGS=ignore
 
 cd -
 
-# name of your machine, processor model, number of compute nodes, number of cores per compute node, which are defined in .gptune/meta.json
-declare -a machine_info=($(python -c "from gptune import *;
-(machine, processor, nodes, cores)=list(GetMachineConfiguration());
-print(machine, processor, nodes, cores)"))
-machine=${machine_info[0]}
-processor=${machine_info[1]}
-nodes=${machine_info[2]}
-cores=${machine_info[3]}
-
+# number of compute nodes and number of cores per compute node
+nodes=16
+cores=32
 
 obj=time    # name of the objective defined in the python file
-bmin=1
-bmax=8
-eta=2
 
-database="gptune.db/NIMROD.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
-rm -rf $database
+database="gptune.db/NIMROD_TLA_base.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 
 # start the main loop
 more=1
@@ -51,7 +38,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./nimrod_single_MB_RCI.py -nstepmax $nstepmax -nstepmin $nstepmin -Nloop $Nloop -bmin $bmin -bmax $bmax -eta $eta -optimization $optimization -expid $expid -seed $seed
+python ./nimrod_TLA_base.py -nstep $nstep -expid $expid -seed $seed -nrun ${nrun} -npilot ${npilot}
 
 
 # check whether GPTune needs more data
@@ -72,32 +59,15 @@ jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluat
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
 declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_parameter' $database | jq -r '.[]'))
 
-
-
 #############################################################################
 #############################################################################
 # Modify the following according to your application !!! 
 
 # get the task input parameters, the parameters should follow the sequence of definition in the python file
-if [ $optimization = 'GPTune' ];then
-    mx=${input_para[0]}
-    my=${input_para[1]}
-    lphi=${input_para[2]}
-    nstep=$nstepmax
-elif [ $optimization = 'GPTuneBand' ];then
-    budget=${input_para[0]}
-    mx=${input_para[1]}
-    my=${input_para[2]}
-    lphi=${input_para[3]}  
-
-    nstep=$(python -c "b=$budget;bmin=$bmin;bmax=$bmax;nmin=$nstepmin;nmax=$nstepmax
-k1 = (nmax-nmin)/(bmax-bmin)
-b1 = nmin - k1
-assert k1 * bmax + b1 == nmax
-result = int(k1 * b + b1)
-print(result)")
-
-fi
+mx=${input_para[0]}
+my=${input_para[1]}
+lphi=${input_para[2]}
+nstep=$nstep
 
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
 NSUP=${tuning_para[0]}
@@ -120,13 +90,16 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 elif [[ $ModuleEnv == *"mpich"* ]]; then
 ############ mpich
 if [[ $ModuleEnv == *"haswell"* ]]; then
-    BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_haswell_gnu_craympich/bin"
-    RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input_craympich"
+    BINDIR="/project/projectdirs/mp156/younghyun/nimrod/nimdevel_spawn/build_haswell_gnu_craympich/bin"
+    RUNDIR="/project/projectdirs/mp156/younghyun/nimrod/nimrod_input_craympich"
 elif [[ $ModuleEnv == *"knl"* ]]; then
     BINDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimdevel_spawn/build_knl_gnu_craympich/bin"
     RUNDIR="/project/projectdirs/m2957/liuyangz/my_research/nimrod/nimrod_input_craympich"
 fi
 fi
+
+mkdir nimrod_dir
+cd nimrod_dir
 
 cp $RUNDIR/nimrod.in ./nimrod_template.in
 cp $RUNDIR/fluxgrid.in .
@@ -181,42 +154,74 @@ if(nproc>int(2**$mx/2**$nbx)*int(2**$my/2**$nby)*int(np.floor(2**$lphi/3.0)+1)):
     nproc = int(2**$mx/2**$nbx)*int(2**$my/2**$nby)*int(np.floor(2**$lphi/3.0)+1) 
 print(nproc) ")
 
+result_arr=(0 0 0)
+for repeat in {1,2,3}
+do
+    logfile=NIMROD_mx${mx}_my${my}_lphi${lphi}_nstep${nstep}_NSUP${NSUP}_NREL${NREL}_nbx${nbx}_nby${nby}_nproc${nproc}_omp${OMP_NUM_THREADS}_run${repeat}.log
 
-logfile=NIMROD_mx${mx}_my${my}_lphi${lphi}_nstep${nstep}_NSUP${NSUP}_NREL${NREL}_nbx${nbx}_nby${nby}_nproc${nproc}_omp${OMP_NUM_THREADS}.log
+    if [[ $ModuleEnv == *"openmpi"* ]]; then
+    ############ openmpi
+        echo "mpirun --mca btl self,tcp,vader --allow-run-as-root -n $nproc ./nimrod"
+        ./nimset
+        mpirun --mca btl self,tcp,vader -N $cores --bind-to core --allow-run-as-root -n $nproc ./nimrod | tee $logfile
+    elif [[ $ModuleEnv == *"craympich"* ]]; then
+    ############ craympich
+        echo "srun -n $nproc ./nimrod"
+        ./nimset
+        THREADS_PER_RANK=`expr $NTH \* 2`
+        srun -n $nproc -N $nodes -c $THREADS_PER_RANK --cpu_bind=cores ./nimrod | tee $logfile
+    fi
 
+    # get the result (for this example: search the runlog) egrep is needed for scientific notation
+    declare -a arr=($(grep 'Loop  time' $logfile | egrep -o "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?."))
+    result_arr[${repeat}-1]=$(python -c "print (float(${arr[0]}))")
+    #result_arr[${repeat}-1]=${arr[0]}
+done
 
+echo result1: ${result_arr[0]}
+echo result2: ${result_arr[1]}
+echo result3: ${result_arr[2]}
 
-if [[ $ModuleEnv == *"openmpi"* ]]; then
-############ openmpi
-    echo "mpirun --mca btl self,tcp,vader --allow-run-as-root -n $nproc ./nimrod"
-    ./nimset
-    mpirun --mca btl self,tcp,vader -N $cores --bind-to core --allow-run-as-root -n $nproc ./nimrod | tee $logfile
-elif [[ $ModuleEnv == *"craympich"* ]]; then
-############ craympich
-    echo "srun -n $nproc ./nimrod"
-    ./nimset
-    THREADS_PER_RANK=`expr $NTH \* 2`
-    srun -n $nproc -N $nodes -c $THREADS_PER_RANK --cpu_bind=cores ./nimrod | tee $logfile
-fi
-
-
-# get the result (for this example: search the runlog) egrep is needed for scientific notation
-declare -a arr=($(grep 'Loop  time' $logfile | egrep -o "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?."))
-result=${arr[0]}
-# result=1
+result=$(echo ${result_arr[0]}+${result_arr[1]}+${result_arr[2]} | bc -l)
+result=$(echo ${result}/3 | bc -l)
+echo average result: ${result}
 
 # result=1
 echo "nimrod time: mx: $mx, my: $my, lphi: $lphi, nstep: $nstep, NSUP: $NSUP, NREL: $NREL, nbx: $nbx, nby: $nby, result: $result"
 
+cd ..
 
 # write the data back to the database file
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 [${result_arr[0]},${result_arr[1]},${result_arr[2]}] '.func_eval[$v1].evaluation_detail[$v0].evaluations=$v2' $database > tmp.json && mv tmp.json $database
 jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+
+# update timestamp
+timestamp=$(python -c "import time
+now = time.localtime()
+print (str(now.tm_year)+'-'+str(now.tm_mon)+'-'+str(now.tm_mday)+'-'+str(now.tm_hour)+'-'+str(now.tm_min)+'-'+str(now.tm_sec)+'-'+str(now.tm_wday)+'-'+str(now.tm_yday)+'-'+str(now.tm_isdst))")
+tm_year=$(echo ${timestamp} | cut -d "-" -f 1)
+tm_mon=$(echo ${timestamp} | cut -d "-" -f 2)
+tm_mday=$(echo ${timestamp} | cut -d "-" -f 3)
+tm_hour=$(echo ${timestamp} | cut -d "-" -f 4)
+tm_min=$(echo ${timestamp} | cut -d "-" -f 5)
+tm_sec=$(echo ${timestamp} | cut -d "-" -f 6)
+tm_wday=$(echo ${timestamp} | cut -d "-" -f 7)
+tm_yday=$(echo ${timestamp} | cut -d "-" -f 8)
+tm_isdst=$(echo ${timestamp} | cut -d "-" -f 9)
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_year} '.func_eval[$v1].time.tm_year=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_mon} '.func_eval[$v1].time.tm_mon=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_mday} '.func_eval[$v1].time.tm_mday=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_hour} '.func_eval[$v1].time.tm_hour=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_min} '.func_eval[$v1].time.tm_min=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_sec} '.func_eval[$v1].time.tm_sec=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_wday} '.func_eval[$v1].time.tm_wday=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_yday} '.func_eval[$v1].time.tm_yday=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 "time" --argjson v1 $idx --argjson v2 ${tm_isdst} '.func_eval[$v1].time.tm_isdst=$v2' $database > tmp.json && mv tmp.json $database
+
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 
 #############################################################################
 #############################################################################
-
-
 
 done
 done
@@ -226,8 +231,3 @@ end=`date +%s`
 runtime=$((end-start))
 echo "Total tuning time: $runtime"
 
-if [ $optimization = 'GPTuneBand' ];then
-ntask=1
-expname=nimrod_ntask${ntask}_bandit${bmin}-${bmax}-${eta}_Nloop${Nloop}
-python parse_GPTuneBand_db.py -ntask ${ntask} -save_path ${expname}_expid${expid} -database "./gptune.db/NIMROD.json" -r "time"
-fi
