@@ -155,7 +155,7 @@ def main():
 	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
 	sp_compression   = Categoricalnorm (['hss','hodbf','blr'], transform="onehot", name="sp_compression")
 	# npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
-	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
+	# sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
 	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
 	# sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
 	sp_compression_leaf_size     = Integer     (5, 9, transform="normalize", name="sp_compression_leaf_size")
