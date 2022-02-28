@@ -67,9 +67,11 @@ def objectives(point):                  # should always use this name for user-d
 	sp_reordering_method = point['sp_reordering_method']
 	sp_compression = point['sp_compression']
 	sp_compression1 = sp_compression
-	sp_nd_param = point['sp_nd_param']
+	# sp_nd_param = point['sp_nd_param']
+	sp_nd_param=8
 	sp_compression_min_sep_size = point['sp_compression_min_sep_size']*1000
-	sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
+	# sp_compression_min_front_size = point['sp_compression_min_front_size']*1000
+	sp_compression_min_front_size = 1000000
 	sp_compression_leaf_size = 2**point['sp_compression_leaf_size']
 	sp_compression_rel_tol = 10.0**point['sp_compression_rel_tol']
 	
@@ -88,7 +90,9 @@ def objectives(point):                  # should always use this name for user-d
 	if(sp_reordering_method == 'metis'):
 		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
 
-	npernode = 2**point['npernode']
+	# npernode = 2**point['npernode']
+	npernode=cores
+	
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	
@@ -149,18 +153,19 @@ def main():
 	# sp_reordering_method   = Categoricalnorm (['metis','geometric'], transform="onehot", name="sp_reordering_method")
 	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
 	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
-	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	sp_compression   = Categoricalnorm (['hss','hodbf','blr'], transform="onehot", name="sp_compression")
+	# npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
 	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
 	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
-	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
+	# sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
 	sp_compression_leaf_size     = Integer     (5, 9, transform="normalize", name="sp_compression_leaf_size")
 	sp_compression_rel_tol     = Integer(-6, -1, transform="normalize", name="sp_compression_rel_tol")
 
 
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([gridsize])
-	PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,npernode])
+	# PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,npernode])
+	PS = Space([sp_reordering_method,sp_compression,sp_compression_min_sep_size,sp_compression_leaf_size,sp_compression_rel_tol])
 	OS = Space([result])
 	constraints = {}
 	models = {}
@@ -189,7 +194,7 @@ def main():
 	
 	
 	# """ Building MLA with the given list of tasks """
-	giventask = [[30]]		
+	giventask = [[100]]		
 	data = Data(problem)
 
 
