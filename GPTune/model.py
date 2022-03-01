@@ -103,7 +103,6 @@ class Model_GPy_LCM(Model):
             for qq in range(model_latent):
                 self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
         else:
-            print ("Model kern: ", kwargs['model_kern'])
             if kwargs['model_kern'] == 'RBF':
                 K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             elif kwargs['model_kern'] == 'Exponential' or kwargs['model_kern'] == 'Matern12':

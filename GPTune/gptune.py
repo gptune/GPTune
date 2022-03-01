@@ -68,7 +68,6 @@ class GPTune(object):
     def GenSurrogateModel(self, task_parameters, function_evaluations, **kwargs):
 
         kwargs.update(self.options)
-        print ("KWARGS: ", kwargs)
 
         Igiven = task_parameters
 
