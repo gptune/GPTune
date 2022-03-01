@@ -360,9 +360,10 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/pghysels/STRUMPACK.git
 	cd STRUMPACK
 	#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
-	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
-	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
-	chmod +x examples/KernelRegressionMPI.py
+	git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
+	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
+	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
+	chmod +x examples/dense/KernelRegressionMPI.py
 	mkdir build
 	cd build
 
