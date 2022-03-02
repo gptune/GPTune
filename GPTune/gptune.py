@@ -68,7 +68,6 @@ class GPTune(object):
     def GenSurrogateModel(self, task_parameters, function_evaluations, **kwargs):
 
         kwargs.update(self.options)
-        print ("KWARGS: ", kwargs)
 
         Igiven = task_parameters
 
@@ -94,10 +93,11 @@ class GPTune(object):
                 else:
                     parameter_arr.append(func_eval["tuning_parameter"][self.problem.PS[k].name])
             task_id = self.historydb.search_func_eval_task_id(func_eval, self.problem, Igiven)
-            PS_history[task_id].append(parameter_arr)
-            OS_history[task_id].append(\
-                [func_eval["evaluation_result"][self.problem.OS[k].name] \
-                for k in range(len(self.problem.OS))])
+            if task_id >= 0:
+                PS_history[task_id].append(parameter_arr)
+                OS_history[task_id].append(\
+                    [func_eval["evaluation_result"][self.problem.OS[k].name] \
+                    for k in range(len(self.problem.OS))])
         self.data.I = Igiven
         self.data.P = PS_history
         self.data.O=[]
@@ -166,6 +166,7 @@ class GPTune(object):
             #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
             #print ("Igiven: ", Igiven)
+            #print ("point: ", point)
 
             input_task = Igiven[tid]
 
@@ -1952,27 +1953,14 @@ def LoadSurrogateModelFunction(meta_path="./.gptune/model.json", meta_dict=None,
 
     return (model_function)
 
-def BuildSurrogateModel(metadata_path="./.gptune/model.json", metadata =None, function_evaluations:dict = None):
-    meta_data = {}
-    if metadata_path != None and os.path.exists(metadata_path):
-        try:
-            with open(metadata_path) as f_in:
-                meta_data.update(json.load(f_in))
-        except:
-            print ("[Error] not able to get model load configuration from path")
+def BuildSurrogateModel(problem_space:dict=None, modeler:str="Model_GPy_LCM", input_task:list=[], function_evaluations:list=None):
 
-    if metadata != None:
-        try:
-            meta_data.update(metadata)
-        except:
-            print ("[Error] not able to get model load configuration from dict")
-
-    input_space_info = meta_data["input_space"]
-    parameter_space_info = meta_data["parameter_space"]
-    output_space_info = meta_data["output_space"]
+    input_space_info = problem_space["input_space"]
+    parameter_space_info = problem_space["parameter_space"]
+    output_space_info = problem_space["output_space"]
 
     input_space_arr = []
-    for input_space_info in meta_data["input_space"]:
+    for input_space_info in problem_space["input_space"]:
         name_ = input_space_info["name"]
         type_ = input_space_info["type"]
         transformer_ = input_space_info["transformer"]
@@ -1994,7 +1982,7 @@ def BuildSurrogateModel(metadata_path="./.gptune/model.json", metadata =None, fu
     IS = Space(input_space_arr)
 
     parameter_space_arr = []
-    for parameter_space_info in meta_data["parameter_space"]:
+    for parameter_space_info in problem_space["parameter_space"]:
         name_ = parameter_space_info["name"]
         type_ = parameter_space_info["type"]
         transformer_ = parameter_space_info["transformer"]
@@ -2016,7 +2004,7 @@ def BuildSurrogateModel(metadata_path="./.gptune/model.json", metadata =None, fu
     PS = Space(parameter_space_arr)
 
     output_space_arr = []
-    for output_space_info in meta_data["output_space"]:
+    for output_space_info in problem_space["output_space"]:
         name_ = output_space_info["name"]
         type_ = output_space_info["type"]
         transformer_ = output_space_info["transformer"]
@@ -2042,96 +2030,108 @@ def BuildSurrogateModel(metadata_path="./.gptune/model.json", metadata =None, fu
     data = Data(problem)
     options = Options()
     options['model_restarts'] = 1
-
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
-
     options['objective_evaluation_parallelism'] = False
     options['objective_multisample_threads'] = 1
     options['objective_multisample_processes'] = 1
     options['objective_nprocmax'] = 1
-
     options['model_processes'] = 1
-    options['model_class'] = 'Model_GPy_LCM' #'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = modeler
     options['verbose'] = False
     options.validate(computer=computer)
-
-    if "modeler" in meta_data:
-        options['model_class'] = meta_data['modeler']
-    else:
-        options['model_class'] = 'Model_LCM'
-    historydb = HistoryDB(meta_dict=meta_data)
+    historydb = HistoryDB(meta_dict=problem_space)
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb)
-    #gt = GPTune(problem, computer=computer, data=data, options=options)
-    (models, model_function) = gt.GenSurrogateModel(meta_data["task_parameter"], function_evaluations)
+    (models, model_function) = gt.GenSurrogateModel(input_task, function_evaluations)
 
     return (model_function)
 
-def SensitivityAnalysis(model_data:dict=None, task_parameters=None, num_samples:int=1000):
+def SensitivityAnalysis(problem_space:dict=None,
+        modeler:str="Model_GPy_LCM",
+        method="Sobol",
+        input_task:list=[],
+        surrogate_model=None,
+        function_evaluations=None,
+        num_samples:int=1000):
 
-    gt = CreateGPTuneFromModelData(model_data)
-    (models, model_function) = gt.LoadSurrogateModel(model_data = model_data)
+    if surrogate_model == None:
+        surrogate_model = BuildSurrogateModel(problem_space = problem_space,
+                modeler = modeler,
+                input_task = [input_task],
+                function_evaluations = function_evaluations)
 
-    from SALib.sample import saltelli
-    from SALib.analyze import sobol
+    if method == "Sobol":
+        from SALib.sample import saltelli
+        from SALib.analyze import sobol
 
-    num_vars = len(model_data["parameter_space"])
-    parameter_names = []
-    parameter_bounds = []
-    parameter_types = []
-    categorical_parameter_values = {}
-    for parameter_info in model_data["parameter_space"]:
-        parameter_name = parameter_info["name"]
-        parameter_type = parameter_info["type"]
+        num_vars = len(problem_space["parameter_space"])
+        parameter_names = []
+        parameter_bounds = []
+        parameter_types = []
+        categorical_parameter_values = {}
+        for parameter_info in problem_space["parameter_space"]:
+            parameter_name = parameter_info["name"]
+            parameter_type = parameter_info["type"]
 
-        parameter_names.append(parameter_name)
-        parameter_types.append(parameter_type)
+            parameter_names.append(parameter_name)
+            parameter_types.append(parameter_type)
 
-        if parameter_type == "int" or parameter_type == "real":
-            lower_bound = parameter_info["lower_bound"]
-            upper_bound = parameter_info["upper_bound"]
-            parameter_bounds.append([lower_bound, upper_bound])
-        elif parameter_type == "categorical":
-            lower_bound = 0
-            upper_bound = len(parameter_info["categories"])
-            parameter_bounds.append([lower_bound, upper_bound])
-            categorical_parameter_values[parameter_name] = parameter_info["categories"]
-    print ("Categorical_parameter_values: ", categorical_parameter_values)
+            if parameter_type == "int" or parameter_type == "integer" or parameter_type == "real":
+                lower_bound = parameter_info["lower_bound"]
+                upper_bound = parameter_info["upper_bound"]
+                parameter_bounds.append([lower_bound, upper_bound])
+            elif parameter_type == "categorical":
+                lower_bound = 0
+                upper_bound = len(parameter_info["categories"])
+                parameter_bounds.append([lower_bound, upper_bound])
+                categorical_parameter_values[parameter_name] = parameter_info["categories"]
 
-    parameter_categories = []
-    problem = {
-            'num_vars': num_vars,
-            'names': parameter_names,
-            'bounds': parameter_bounds,
-            }
+        problem = {
+                'num_vars': num_vars,
+                'names': parameter_names,
+                'bounds': parameter_bounds,
+                }
 
-    # Generate new samples for sensitivity analysis from the fitted surrogate model.
-    parameter_values = saltelli.sample(problem, num_samples)
+        # Generate new samples for sensitivity analysis from the fitted surrogate model.
+        parameter_values = saltelli.sample(problem, num_samples)
 
-    Y = []
-    for i in range(len(parameter_values)):
-        model_input = {}
-        for j in range(num_vars):
-            if parameter_types[j] == "int" or parameter_types[j] == "real":
-                model_input[parameter_names[j]] = int(parameter_values[i][j])
-            elif parameter_types[j] == "categorical":
-                model_input[parameter_names[j]] = categorical_parameter_values[parameter_names[j]][int(parameter_values[i][j])]
+        Y = []
+        for i in range(len(parameter_values)):
+            model_input = {}
+            for j in range(num_vars):
+                if parameter_types[j] == "int" or parameter_types[j] == "integer" or parameter_types[j] == "real":
+                    model_input[parameter_names[j]] = int(parameter_values[i][j])
+                elif parameter_types[j] == "categorical":
+                    model_input[parameter_names[j]] = categorical_parameter_values[parameter_names[j]][int(parameter_values[i][j])]
 
-        num_task_parameters = len(model_data["input_space"])
-        for j in range(num_task_parameters):
-            model_input[model_data["input_space"][j]["name"]] = task_parameters[j]
-        #print (model_input)
+            num_task_parameters = len(problem_space["input_space"])
+            for j in range(num_task_parameters):
+                model_input[problem_space["input_space"][j]["name"]] = input_task[j]
+            #print (model_input)
 
-        output_name = model_data["output_space"][0]["name"]
+            output_name = problem_space["output_space"][0]["name"]
 
-        Y.append(model_function(model_input)[output_name][0][0])
+            Y.append(surrogate_model(model_input)[output_name][0][0])
 
-    print (Y)
+        # Sensitivity analysis based on the samples drawn from the fitted surrogate model.
+        Si = sobol.analyze(problem, np.array(Y), print_to_console=False)
 
-    # Sensitivity analysis based on the samples drawn from the fitted surrogate model.
-    Si = sobol.analyze(problem, np.array(Y), print_to_console=True)
-    #print (Si)
-    return Si
+        ret = {}
+
+        S1 = {}
+        for i in range(len(parameter_names)):
+            S1[parameter_names[i]] = Si["S1"][i]
+        ret["S1"] = S1
+
+        ST = {}
+        for i in range(len(parameter_names)):
+            ST[parameter_names[i]] = Si["ST"][i]
+        ret["ST"] = ST
+
+        return ret
+
+    else:
+        return
 
 def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=None):
 
