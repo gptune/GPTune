@@ -195,7 +195,7 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_GPy_LCM' #'Model_GPy_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
@@ -217,7 +217,7 @@ def main():
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2))
+        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), T_sampleflag=[True]*NI)
         # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
         """ Print all input and parameter samples """

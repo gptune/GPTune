@@ -825,9 +825,10 @@ class HistoryDB(dict):
             additional_output : dict = None,\
             source : str = "measure"):
 
-        print ("store_func_eval")
-        print ("problem.constants")
-        print (problem.constants)
+    
+        # print ("store_func_eval")
+        # print ("problem.constants")
+        # print (problem.constants)
 
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"

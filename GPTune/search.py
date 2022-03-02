@@ -102,14 +102,16 @@ class SurrogateProblem(object):
 
         self.D     = self.data.D[tid]
         self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
-        print ("self.IOrig: ", self.IOrig)
+        if (self.options['verbose']):
+            print ("self.IOrig: ", self.IOrig)
 
         # self.POrig = self.data.P[tid]
         if self.data.P is not None:
             self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
         else:
             self.POrig = [[]]
-        print ("self.POrig: ", self.POrig)
+        if (self.options['verbose']):
+            print ("self.POrig: ", self.POrig)
 
         self.models_transfer = models_transfer
         if (self.models != None and self.models_transfer != None and self.options['TLA_method'] == 'Regression'):
@@ -405,11 +407,12 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        print ("SEARCH!")
+        # print ("SEARCH!")
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
-        print ("prob: ", prob)
+        if (kwargs['verbose']):
+            print ("prob: ", prob)
 
         try:
             udi = eval(f'pg.{kwargs["search_udi"]}()')
@@ -478,7 +481,7 @@ class SearchPyGMO(Search):
                 cpt += 1
         if (kwargs['verbose']):
             print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
-        print("bestX",bestX)
+            print("bestX",bestX)
         return (tid, bestX)
 
 ##### Simple constrained MOO

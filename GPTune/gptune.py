@@ -37,7 +37,7 @@ import numpy as np
 
 import json
 from filelock import Timeout, FileLock
-
+from operator import mul
 class GPTune(object):
 
     def __init__(self, tuningproblem : TuningProblem, computer : Computer = None, data : Data = None, historydb : HistoryDB = None, options : Options = None, driverabspath=None, models_update=None, **kwargs):
@@ -559,7 +559,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
+    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -581,12 +581,23 @@ class GPTune(object):
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
 
+        if (NI is None and self.data.I is not None):
+           NI = len(self.data.I)
+        if (T_sampleflag is None):
+           T_sampleflag = [ True for i in range (NI)]     
+        T_bit_mask = list(map(int, T_sampleflag)) 
+        tids=[]
+        for i in range(NI):
+            if(T_sampleflag[i] is True):
+                tids.append(i)
+
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         NSmax=0
         if (self.data.P is not None):
-            NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
-            NSmax = max(map(len, self.data.P)) 
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active) # the number of samples per task in existing tuning data can be different
+            NSmax = max(NS_active) 
 
         # """ Set (additional) number of samples for autotuning """
         # NS = NSmin + NS
@@ -626,9 +637,15 @@ class GPTune(object):
             self.data.P=tmp
         if self.data.I is not None: # from a list of lists to a 2D numpy array
             self.data.I = self.problem.IS.transform(self.data.I)
+        
+        Ptmp = copy.deepcopy(self.data.P)
+        if self.data.P is not None:
+            for i in range(len(Ptmp)):
+                if(T_sampleflag[i] is False):
+                    Ptmp[i] = np.empty(shape=(0,self.problem.DP))
 
-        if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
-            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.historydb, options = kwargs)
+        if (self.data.O is None and Ptmp is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, Ptmp, self.data.D, self.historydb, options = kwargs)
 
         sampler = eval(f'{kwargs["sample_class"]}()')
         if (self.data.I is None):
@@ -662,11 +679,16 @@ class GPTune(object):
         if (NSmin<NS1):
             check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
             tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
-            print ("tmpP: ", tmpP)
+            for i in range(NI):
+                if(T_sampleflag[i] is False):
+                    tmpP[i] = np.empty(shape=(0,self.problem.DP))
+            # print ("tmpP: ", tmpP)
+
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    NSi = self.data.P[i].shape[0]
-                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+                    if(T_sampleflag[i] is True):
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
         if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
             raise Exception("len(self.data.O) !=len(self.data.I)")
@@ -676,6 +698,7 @@ class GPTune(object):
 
         t1 = time.time_ns()
         if (NSmin<NS1):
+            # print(tmpP,'dada',tmpP[0])
             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
@@ -693,7 +716,8 @@ class GPTune(object):
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
-            NSmin = min(map(len, self.data.P))
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active)
         else:
             NSmin = 0
         print ("NSmin: ", NSmin)
@@ -717,7 +741,7 @@ class GPTune(object):
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
-                tmpdata = copy.deepcopy(self.data)
+                tmpdata = copy.deepcopy(self.data)                        
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
@@ -737,12 +761,17 @@ class GPTune(object):
                             modeldata.append(self.problem.models(points))
                         modeldata=np.array(modeldata)
                         tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
-                for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
-                    tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
-                    tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
+
+                for i in range(len(tmpdata.P)):
+                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                        raise Exception("T_sampleflag[%d] is False but self.data.P[%d] has no data"%(i,i))
+
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
                 if (kwargs["model_class"] == "Model_LCM"):
+                    for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
+                        tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
+                        tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]                    
                     if (kwargs["model_output_constraint"] == True):
                         for i in range(len(tmpdata.O[0])):
                             out_of_range = False
@@ -785,12 +814,17 @@ class GPTune(object):
             time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
-            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
-
-            newdata.P = [x[1][0] for x in res]
-            for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
-                NSi = self.data.P[i].shape[0]
-                newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            res = searcher.search_multitask(data = self.data, models = modelers, tids=tids, **kwargs)
+            newdata.P=[]
+            i1=0
+            for i in range(NI):
+                if(T_sampleflag[i] is True):
+                    newdata.P.append(res[i1][1][0])
+                    i1=i1+1
+                    NSi = self.data.P[i].shape[0]
+                    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:] # if NSi>=NS, skip the function evaluation                    
+                else:
+                    newdata.P.append(np.empty(shape=(0,self.problem.DP)))
             # print(more_samples,newdata.P)
             t2 = time.time_ns()
             stats["search_time"].append((t2-t1)/1e9)
@@ -806,7 +840,11 @@ class GPTune(object):
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
             self.data.merge(newdata)
-            NSmin = min(map(len, self.data.P))
+            # print(self.data.P)
+            # print(list(map(mul,T_bit_mask,list(map(len, self.data.P)))))
+            # print(tids)
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active)
 
         # denormalize the data as the user always work in the original space
         if self.data.I is not None:    # from 2D numpy array to a list of lists
@@ -823,12 +861,12 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, **kwargs):
+    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, **kwargs):
         if self.historydb.history_db is True:
             if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven)
+                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag)
 
     def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
         print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
@@ -1607,51 +1645,45 @@ class GPTune_MB(object):
 
         for Nloop in range(NS):
             data1 = Data(self.tp)  # for each loop, data1 will have all data for all arms sampled by MLA (excluding SH samples)
-            data1.I = []
-            data1.P = []
-            data1.O = []
-            data1.D = []
+
+            newtasks = []
+            if(self.data.D is not None):
+                data1.D = []
+            for s1 in range(0, len(self.budgets)):
+                for t in range(len(Igiven)):
+                    budget1 = self.budgets[s1]
+                    tmp = [budget1]+Igiven[t]
+                    newtasks.append(tmp)
+                    if(self.data.D is not None):
+                        if(len(self.data.D)>0):
+                            data1.D.append(self.data.D[t])
+            if Nloop == 0:
+                all_subtasks = copy.deepcopy(newtasks)
+            data1.I = newtasks
+
+
             for s in range(len(self.budgets)):  # loop over the budget levels
                 budget = self.budgets[s]
                 ns = self.NSs[s] 
                 ntotal = NSs1[s] + int(ns)
                 NSs1[s] = NSs1[s] + ns
                 print(f"Bracket s = {s}, budget = {budget}, ns = {ns}")
-                newtasks = []
-                if(self.data.D is not None):
-                    data.D = []
-                for s1 in range(s, len(self.budgets)):
-                    for t in range(len(Igiven)):
-                        budget1 = self.budgets[s1]
-                        tmp = [budget1]+Igiven[t]
-                        newtasks.append(tmp)
-                        if(self.data.D is not None):
-                            if(len(self.data.D)>0):
-                                data.D.append(self.data.D[t])
-                if s == 0 and Nloop == 0:
-                    all_subtasks = copy.deepcopy(newtasks)
-
-                data.I = newtasks
                 if(Pdefault is not None):
-                    data.P = [[Pdefault]] * len(newtasks) # as gt.MLA will load available database, Pdefault is effective only if database is empty   
+                    data1.P = [[Pdefault]] * len(newtasks) # as gt.MLA will load available database, Pdefault is effective only if database is empty   
                 
                 # print("Calling MLA: \ndata.I", data.I, "\ndata.P", data.P, "\ndata.O", data.O)
                 # print(f"NS={ntotal}, Igiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
                 gt = GPTune(self.tp, computer=self.computer,
-                            data=data, options=self.options)
-                (data, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs))
-                data.P = [x[NSs1[s]-ns:NSs1[s]] for x in data.P]   # data has all data (including those from database), only takes ns ones newly generated by MLA 
-                data.O = [x[NSs1[s]-ns:NSs1[s]] for x in data.O]
-                data1.I += data.I[0:len(Igiven)]     # data1 has data generated by MLA, but only in the current arm
-                data1.P += data.P[0:len(Igiven)]
-                data1.O += data.O[0:len(Igiven)]
-                if(data.D is not None):
-                    data1.D += data.D[0:len(Igiven)]
-                data.I=[]
-                data.P=[]
-                data.O=[]
-                if(data.D is not None):
-                    data.D=None
+                            data=data1, options=self.options)
+                T_sampleflag = [False] * (len(newtasks))
+                idx = s*len(Igiven) 
+                T_sampleflag[idx:] = [True]*(len(newtasks)-idx)
+                # print(newtasks)
+                # print(T_sampleflag)
+
+                (data1, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
+                
+
                 # merge new results to history
                 
                 stats['time_total'] += stats0['time_total']
@@ -1675,10 +1707,6 @@ class GPTune_MB(object):
                 self.data.O = [np.concatenate((self.data.O[i], data1.O[i])) for i in range(len(self.data.O))]
             
             print("Finish multi-arm initial evaluation")
-            # print('data.I: ', data.I)
-            # print('data.P: ', data.P)
-            # print('data.O: ', data.O)
-            # print("data.D = ", data.D)
             print('self.data.P = ', self.data.P)
             print('self.data.O = ', self.data.O)
             
@@ -1710,8 +1738,7 @@ class GPTune_MB(object):
                     newdata = Data(problem=self.tp, I=temp_I, P=temp_P)
                     gt = GPTune(self.tp, computer=self.computer, data=newdata, options=self.options)
 
-
-                    gt.history_db.load_history_func_eval(newdata, gt.problem, temp_I)
+                    gt.historydb.load_history_func_eval(newdata, gt.problem, temp_I)
 
 
                     t1 = time.time_ns()
@@ -1733,7 +1760,7 @@ class GPTune_MB(object):
                         gt.data.P=tmp
                         # print('gaga',gt.data.P[0])
                         gt.data.I = gt.problem.IS.transform(gt.data.I)
-                        newdata.O = gt.computer.evaluate_objective(gt.problem, gt.data.I, gt.data.P, gt.data.D, gt.history_db, options = kwargs)
+                        newdata.O = gt.computer.evaluate_objective(gt.problem, gt.data.I, gt.data.P, gt.data.D, gt.historydb, options = kwargs)
                         newdata.P = [gt.problem.PS.inverse_transform(x) for x in newdata.P]
 
                     else:
