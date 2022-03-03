@@ -36,7 +36,7 @@ def QueryFunctionEvaluations(crowd_tune_api_key:str=None,
     r = requests.get(url = crowd_repo_download_url,
             headers={"x-api-key":crowd_tune_api_key},
             params={"tuning_problem_name":tuning_problem_name,
-                "problem_space":problem_space},
+                "problem_space":json.dumps(problem_space)},
             verify=False)
 
     if r.status_code == 200:
@@ -72,11 +72,29 @@ def QuerySurrogateModels(crowd_tune_api_key:str=None,
     # GPTune history database
     crowd_repo_download_url = "http://gptune.lbl.gov/repo/direct-download/"
     crowd_repo_upload_url = "http://gptune.lbl.gov/repo/direct-upload/"
-    # debug
-    crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/"
-    crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/"
+    ## debug
+    #crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/"
+    #crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/"
 
     return
+
+def BuildSurrogateModelFromCrowds(crowd_tune_api_key:str=None,
+        tuning_problem_name:str=None,
+        problem_space:dict=None,
+        modeler:str="Model_GPy_LCM",
+        input_task:list=[]):
+
+    function_evaluations = QueryFunctionEvaluations(
+            crowd_tune_api_key = crowd_tune_api_key,
+            tuning_problem_name = tuning_problem_name,
+            problem_space = problem_space)
+
+    import gptune
+    return gptune.BuildSurrogateModel(
+            problem_space = problem_space,
+            modeler = modeler,
+            input_task = [input_task],
+            function_evaluations = function_evaluations)
 
 def SensitivityAnalysisFromCrowds(crowd_tune_api_key:str=None,
         tuning_problem_name:str=None,

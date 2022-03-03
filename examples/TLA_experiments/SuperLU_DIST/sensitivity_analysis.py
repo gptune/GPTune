@@ -24,7 +24,10 @@ import crowdtune
 
 problem_space = {
     "input_space": [
-        {"name":"matrix", "type":"categorical", "transformer":"onehot", "categories":["Si5H12.mtx"]}
+        {"name":"matrix", "type":"categorical", "transformer":"onehot", "categories":["Si5H12.mtx","Si10H16.mtx","SiO.mtx"]}
+    ],
+    "constants": [
+        {"cores":32, "nodes":4, "npernode": 32}
     ],
     "parameter_space": [
         {"name":"COLPERM", "type":"categorical", "transformer":"onehot", "categories":['1','2','3','4','5']},
@@ -38,10 +41,12 @@ problem_space = {
     ]
 }
 
-ret = crowdtune.SensitivityAnalysisFromCrowds(
-    crowd_tune_api_key = crowd_tune_api_key,
-    tuning_problem_name = "SuperLU_DIST-pddrive_spawn",
-    problem_space = problem_space,
-    input_task = ["Si5H12.mtx"])
-print (ret)
+for task in ["Si5H12.mtx", "Si10H16.mtx", "SiO.mtx"]:
+    ret = crowdtune.SensitivityAnalysisFromCrowds(
+        crowd_tune_api_key = crowd_tune_api_key,
+        tuning_problem_name = "SuperLU_DIST-pddrive_spawn",
+        problem_space = problem_space,
+        input_task = [task])
+    print ("Task: ", task)
+    print (ret)
 

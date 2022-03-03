@@ -268,10 +268,10 @@ class HistoryDB(dict):
                 self.load_surrogate_model = True
             try:
                 with FileLock("test.lock", timeout=0):
-                    print ("[HistoryDB] use filelock for synchronization")
+                    #print ("[HistoryDB] use filelock for synchronization")
                     self.file_synchronization_method = 'filelock'
             except:
-                print ("[HistoryDB] use rsync for synchronization")
+                #print ("[HistoryDB] use rsync for synchronization")
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
@@ -425,10 +425,10 @@ class HistoryDB(dict):
 
             try:
                 with FileLock("test.lock", timeout=0):
-                    print ("[HistoryDB] use filelock for synchronization")
+                    #print ("[HistoryDB] use filelock for synchronization")
                     self.file_synchronization_method = 'filelock'
             except:
-                print ("[HistoryDB] use rsync for synchronization")
+                #print ("[HistoryDB] use rsync for synchronization")
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
