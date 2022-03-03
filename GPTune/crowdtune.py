@@ -46,39 +46,48 @@ def QueryFunctionEvaluations(crowd_tune_api_key:str=None,
 
     return function_evaluations_downloaded
 
-def QueryBestParameter(crowd_tune_api_key:str=None,
+def UploadFunctionEvaluation(crwod_tune_api_key:str=None,
+        function_evaluation:dict={}):
+    r = requests.post(url = self.crowd_repo_upload_url,
+            headers={"x-api-key":self.historydb_api_key},
+            data={"tuning_problem_name":self.tuning_problem_name,
+                "function_evaluation_document":json.dumps(function_evaluation)},
+            verify=False)
+    if r.status_code == 200:
+        print ("direct upload success")
+    else:
+        print ("request status_code: ", r.status_code)
+
+
+def QueryBestFunctionEvaluation(crowd_tune_api_key:str=None,
         tuning_problem_name:str=None,
-        problem_space:dict={}):
+        problem_space:dict={},
+        objective_name:str=""):
 
-    import requests
-    import json
+    function_evaluations = QueryFunctionEvaluations(
+            crowd_tune_api_key = crowd_tune_api_key,
+            tuning_problem_name = tuning_problem_name,
+            problem_space = problem_space)
 
-    # GPTune history database
-    crowd_repo_download_url = "http://gptune.lbl.gov/repo/direct-download/"
-    crowd_repo_upload_url = "http://gptune.lbl.gov/repo/direct-upload/"
-    ## debug
-    #crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/"
-    #crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/"
+    if objective_name == "":
+        if "output_space" in problem_space:
+            objective_name = problem_space["output_space"][0]["name"]
+        else:
+            return {}
 
-    return {}
+    best_func_eval = {}
+    best_result = None
 
-def QuerySurrogateModels(crowd_tune_api_key:str=None,
-        tuning_problem_name:str=None,
-        problem_space:dict={}):
+    for func_eval in function_evaluations:
+        if objective_name in func_eval["evaluation_results"]:
+            result = func_eval["evaluation_results"][objective_name]
+            if best_result == None or result < best_result:
+                best_result = result
+                best_func_eval = func_eval
 
-    import requests
-    import json
+    return func_eval
 
-    # GPTune history database
-    crowd_repo_download_url = "http://gptune.lbl.gov/repo/direct-download/"
-    crowd_repo_upload_url = "http://gptune.lbl.gov/repo/direct-upload/"
-    ## debug
-    #crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/"
-    #crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/"
-
-    return
-
-def BuildSurrogateModelFromCrowds(crowd_tune_api_key:str=None,
+def QuerySurrogateModel(crowd_tune_api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
@@ -96,7 +105,7 @@ def BuildSurrogateModelFromCrowds(crowd_tune_api_key:str=None,
             input_task = [input_task],
             function_evaluations = function_evaluations)
 
-def SensitivityAnalysisFromCrowds(crowd_tune_api_key:str=None,
+def QuerySensitivityAnalysis(crowd_tune_api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
