@@ -6,6 +6,7 @@
 export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
 BuildExample=1 # whether to build all examples
 MPIFromSource=1 # whether to build openmpi from source
+PYTHONFromSource=1 # whether to build python from source
 
 if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
 	echo "This script can only be used for Ubuntu or Debian systems"
@@ -139,18 +140,27 @@ make -j32
 make install
 export PATH=$GPTUNEROOT/cmake-$version.$build/bin/:$PATH
 
-
-cd $GPTUNEROOT
-rm -rf Python-3.7.9
-wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
-tar -xvf Python-3.7.9.tgz
-cd Python-3.7.9
-./configure --prefix=$PWD CC=$CC
-make -j32
-make altinstall
-PY=$PWD/bin/python3.7  # this makes sure virtualenv uses the correct python version
-PIP=$PWD/bin/pip3.7
-
+if [[ $PYTHONFromSource = 1 ]]; then
+	PyMAJOR=3
+	PyMINOR=7
+	PyPATCH=9
+	cd $GPTUNEROOT
+	rm -rf Python-$PyMAJOR.$PyMINOR.$PyPATCH
+	wget https://www.python.org/ftp/python/$PyMAJOR.$PyMINOR.$PyPATCH/Python-$PyMAJOR.$PyMINOR.$PyPATCH.tgz
+	tar -xvf Python-$PyMAJOR.$PyMINOR.$PyPATCH.tgz
+	cd Python-$PyMAJOR.$PyMINOR.$PyPATCH
+	./configure --prefix=$PWD CC=$CC
+	make -j32
+	make altinstall
+	PY=$PWD/bin/python$PyMAJOR.$PyMINOR  # this makes sure virtualenv uses the correct python version
+	PIP=$PWD/bin/pip$PyMAJOR.$PyMINOR
+else
+	PyMAJOR=3 # set the correct python versions and path according to your system
+	PyMINOR=8
+	PyPATCH=5
+	PY=PATH-TO-PYTHON  # this makes sure virtualenv uses the correct python version
+	PIP=PATH-TO-PIP
+fi
 
 cd $GPTUNEROOT
 $PIP install virtualenv 
@@ -360,9 +370,10 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/pghysels/STRUMPACK.git
 	cd STRUMPACK
 	#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
-	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/. 
-	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/. 
-	chmod +x examples/KernelRegressionMPI.py
+	git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
+	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
+	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
+	chmod +x examples/dense/KernelRegressionMPI.py
 	mkdir build
 	cd build
 
@@ -458,11 +469,12 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
+cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install  -e .
 
 
 
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  ./env/lib/python3.7/site-packages/opentuner/search/.
+cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.
 

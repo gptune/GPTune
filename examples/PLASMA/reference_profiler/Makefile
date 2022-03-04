@@ -1,11 +1,14 @@
 CC = gcc
 CCFLAGS = -O0 -DRUNTIME -shared -fPIC
 LINK = -ldl -fopenmp -lpthread -lnuma -lstdc++
-#LINK = 
 
-all: reference_profiler
+all: pmc_sampler pmc_profiler
 
-reference_profiler:
-	$(CC) $(CCFLAGS) -o librefprof.so reference_profiler.c reference_profiler.h $(LINK)
+pmc_sampler:
+	$(CC) $(CCFLAGS) -o libpmcsampler.so pmc_sampler.c pmc_sampler.h $(LINK)
+
+pmc_profiler:
+	$(CC) $(CCFLAGS) -o libpmcprofiler.so pmc_profiler.c pmc_profiler.h $(LINK)
+
 clean:
-	rm librefprof.so *.o *.gch
+	rm *.so *.o *.gch

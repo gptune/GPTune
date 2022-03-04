@@ -14,7 +14,7 @@
 /// derivative works, and perform publicly and display publicly, and to permit
 /// other to do so.
 
-#include "reference_profiler.h"
+#include "pmc_sampler.h"
 
 static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags)
 {
@@ -185,4 +185,5 @@ int plasma_dgeqrf(int M,
     sampling_running = 0;
     pthread_join(thread_id, NULL);
 }
+
 

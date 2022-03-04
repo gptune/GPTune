@@ -268,10 +268,10 @@ class HistoryDB(dict):
                 self.load_surrogate_model = True
             try:
                 with FileLock("test.lock", timeout=0):
-                    print ("[HistoryDB] use filelock for synchronization")
+                    #print ("[HistoryDB] use filelock for synchronization")
                     self.file_synchronization_method = 'filelock'
             except:
-                print ("[HistoryDB] use rsync for synchronization")
+                #print ("[HistoryDB] use rsync for synchronization")
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
@@ -303,13 +303,9 @@ class HistoryDB(dict):
 
             if "tuning_problem_name" in metadata:
                 self.tuning_problem_name = metadata["tuning_problem_name"]
-            else:
-                self.tuning_problem_name = "Unknown"
 
             if "tuning_problem_category" in metadata:
                 self.tuning_problem_category = metadata["tuning_problem_category"]
-            else:
-                self.tuning_problem_category = "Unknown"
 
             if "use_crowd_repo" in metadata:
                 if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
@@ -321,14 +317,13 @@ class HistoryDB(dict):
 
             if "historydb_api_key" in metadata:
                 self.historydb_api_key = metadata["historydb_api_key"]
-            else:
-                self.historydb_api_key = ""
 
             if "history_db_path" in metadata:
                 self.history_db_path = metadata["history_db_path"]
             else:
-                os.system("mkdir -p ./gptune.db")
-                self.history_db_path = "./gptune.db"
+                if self.tuning_problem_name is not None:
+                    os.system("mkdir -p ./gptune.db")
+                    self.history_db_path = "./gptune.db"
 
             if "load_func_eval" in metadata:
                 if metadata["load_func_eval"] == "yes" or metadata["load_func_eval"] == "y":
@@ -430,46 +425,45 @@ class HistoryDB(dict):
 
             try:
                 with FileLock("test.lock", timeout=0):
-                    print ("[HistoryDB] use filelock for synchronization")
+                    #print ("[HistoryDB] use filelock for synchronization")
                     self.file_synchronization_method = 'filelock'
             except:
-                print ("[HistoryDB] use rsync for synchronization")
+                #print ("[HistoryDB] use rsync for synchronization")
                 self.file_synchronization_method = 'rsync'
             os.system("rm -rf test.lock")
 
+            if self.tuning_problem_name is not None:
+                json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+                if os.path.exists(json_data_path):
+                    print ("[HistoryDB] Found a history database file")
+                else:
+                    print ("[HistoryDB] Create a JSON file at " + json_data_path)
 
-            ####
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
-            if os.path.exists(json_data_path):
-                print ("[HistoryDB] Found a history database file")
-            else:
-                print ("[HistoryDB] Create a JSON file at " + json_data_path)
-
-                if self.file_synchronization_method == 'filelock':
-                    with FileLock(json_data_path+".lock"):
+                    if self.file_synchronization_method == 'filelock':
+                        with FileLock(json_data_path+".lock"):
+                            with open(json_data_path, "w") as f_out:
+                                json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                    "tuning_problem_category":self.tuning_problem_category,
+                                    "surrogate_model":[],
+                                    "func_eval":[]}
+                                json.dump(json_data, f_out, indent=2)
+                    elif self.file_synchronization_method == 'rsync':
+                        temp_path = json_data_path + "." + self.process_uid + ".temp"
+                        with open(temp_path, "w") as f_out:
+                            json_data = {"tuning_problem_name":self.tuning_problem_name,
+                                "tuning_problem_category":self.tuning_problem_category,
+                                "surrogate_model":[],
+                                "func_eval":[]}
+                            json.dump(json_data, f_out, indent=2)
+                        os.system("rsync -u " + temp_path + " " + json_data_path)
+                        os.system("rm " + temp_path)
+                    else:
                         with open(json_data_path, "w") as f_out:
                             json_data = {"tuning_problem_name":self.tuning_problem_name,
                                 "tuning_problem_category":self.tuning_problem_category,
                                 "surrogate_model":[],
                                 "func_eval":[]}
                             json.dump(json_data, f_out, indent=2)
-                elif self.file_synchronization_method == 'rsync':
-                    temp_path = json_data_path + "." + self.process_uid + ".temp"
-                    with open(temp_path, "w") as f_out:
-                        json_data = {"tuning_problem_name":self.tuning_problem_name,
-                            "tuning_problem_category":self.tuning_problem_category,
-                            "surrogate_model":[],
-                            "func_eval":[]}
-                        json.dump(json_data, f_out, indent=2)
-                    os.system("rsync -u " + temp_path + " " + json_data_path)
-                    os.system("rm " + temp_path)
-                else:
-                    with open(json_data_path, "w") as f_out:
-                        json_data = {"tuning_problem_name":self.tuning_problem_name,
-                            "tuning_problem_category":self.tuning_problem_category,
-                            "surrogate_model":[],
-                            "func_eval":[]}
-                        json.dump(json_data, f_out, indent=2)
 
     def check_load_deps(self, func_eval):
 
@@ -825,9 +819,10 @@ class HistoryDB(dict):
             additional_output : dict = None,\
             source : str = "measure"):
 
-        print ("store_func_eval")
-        print ("problem.constants")
-        print (problem.constants)
+    
+        # print ("store_func_eval")
+        # print ("problem.constants")
+        # print (problem.constants)
 
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -880,6 +875,7 @@ class HistoryDB(dict):
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
+                task_parameter_store.pop("tla_id", None)
                 constants_store = problem.constants
                 if constants_store == None:
                     constants_store = {}

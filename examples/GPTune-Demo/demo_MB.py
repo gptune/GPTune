@@ -19,14 +19,19 @@
 
 
 ################################################################################
+import sys
+import os
+# import mpi4py
+import logging
 
+sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+logging.getLogger('matplotlib.font_manager').disabled = True
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import * # import all
 
-import sys
-import os
+
 import mpi4py
 from mpi4py import MPI
 import numpy as np
@@ -35,11 +40,8 @@ import time
 import argparse
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter, HpBandSter_bandit
-import logging
 import scipy
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
-logging.getLogger('matplotlib.font_manager').disabled = True
 
 # from GPTune import *
 
@@ -161,7 +163,7 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'

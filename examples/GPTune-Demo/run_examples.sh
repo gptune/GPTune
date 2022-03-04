@@ -12,7 +12,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 
     tuner=GPTune
     rm -rf gptune.db/*.json # do not load any database 
-    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py -optimization ${tuner}
+    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
 
 
     # Nloop=2
@@ -25,8 +25,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     # do
     # rm -rf gptune.db/*.json # do not load any database 
     # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python demo_MB.py  -ntask ${ntask} -Nloop ${Nloop} -optimization ${tuner} -restart ${restart}  -plot ${plot} -expid ${expid} 2>&1 | tee a.out_demo_ntask${ntask}_nruns${nruns}_expid${expid}_${tuner}
-
-# done
+    # done
 
 
 fi
