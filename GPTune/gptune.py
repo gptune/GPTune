@@ -2046,6 +2046,24 @@ def BuildSurrogateModel(problem_space:dict=None, modeler:str="Model_GPy_LCM", in
 
     return (model_function)
 
+def PredictOutput(problem_space:dict=None,
+        modeler:str="Model_GPy_LCM",
+        input_task:list=[],
+        input_parameter:dict={},
+        surrogate_model=None,
+        function_evaluations=None,
+        num_samples:int=1000):
+
+    if surrogate_model == None:
+        surrogate_model = BuildSurrogateModel(problem_space = problem_space,
+                modeler = modeler,
+                input_task = [input_task],
+                function_evaluations = function_evaluations)
+
+    ret = surrogate_model(point = input_parameter)
+
+    return ret
+
 def SensitivityAnalysis(problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
         method="Sobol",
