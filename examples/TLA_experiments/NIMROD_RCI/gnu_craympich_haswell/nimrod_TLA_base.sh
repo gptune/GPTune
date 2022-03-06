@@ -30,7 +30,7 @@ cores=32
 
 obj=time    # name of the objective defined in the python file
 
-database="gptune.db/NIMROD_TLA_base.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
+database="gptune.db/NIMROD_slu3d_TLA_base.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 
 # start the main loop
 more=1
@@ -91,10 +91,10 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 elif [[ $ModuleEnv == *"mpich"* ]]; then
 ############ mpich
 if [[ $ModuleEnv == *"haswell"* ]]; then
-    BINDIR="/project/projectdirs/mp156/younghyun/nimrod/nimdevel_spawn/build_haswell_gnu_craympich/bin"
+    BINDIR="/project/projectdirs/mp156/younghyun/nimrod/nimdevel_superlu_v7/build_haswell_gnu_craympich/bin"
     RUNDIR="/project/projectdirs/mp156/younghyun/nimrod/nimrod_input_craympich"
 elif [[ $ModuleEnv == *"knl"* ]]; then
-    BINDIR="/project/projectdirs/mp156/younghyun/nimrod/nimdevel_spawn/build_knl_gnu_craympich/bin"
+    BINDIR="/project/projectdirs/mp156/younghyun/nimrod/nimdevel_superlu_v7/build_knl_gnu_craympich/bin"
     RUNDIR="/project/projectdirs/mp156/younghyun/nimrod/nimrod_input_craympich"
 fi
 fi

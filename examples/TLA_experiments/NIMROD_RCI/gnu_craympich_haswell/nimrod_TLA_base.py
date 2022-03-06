@@ -48,7 +48,7 @@ def main():
     nstep = args.nstep
 
     tuning_metadata = {
-        "tuning_problem_name": "NIMROD_slu3d",
+        "tuning_problem_name": "NIMROD_slu3d_TLA_base",
         "tuning_problem_category": "NIMROD",
         "use_crowd_repo": "no",
         "no_load_check": "yes",
