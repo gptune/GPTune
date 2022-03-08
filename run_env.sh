@@ -31,7 +31,7 @@
 
 ############### Perlmutter
 export machine=perlmutter
-export proc=gpu   # milan,gpu
+export proc=milan   # milan,gpu
 export mpi=craympich  # craympich
 export compiler=gnu   # gnu, intel	
 export nodes=1  # number of nodes to be used
@@ -356,7 +356,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     module load python/$PY_VERSION-anaconda-$PY_TIME
 	module swap PrgEnv-nvidia PrgEnv-gnu
 	module load cudatoolkit
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GPTUNEROOT/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
@@ -375,7 +375,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     PY_TIME=2021.11
     module load python/$PY_VERSION-anaconda-$PY_TIME
 	module swap PrgEnv-nvidia PrgEnv-gnu
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GPTUNEROOT/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages

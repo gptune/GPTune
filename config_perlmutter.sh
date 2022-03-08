@@ -27,7 +27,7 @@ module load cmake/3.22.0
 ##################################################
 ##################################################
 machine=perlmutter
-proc=gpu   # milan,gpu
+proc=milan   # milan,gpu
 mpi=craympich    # craympich
 compiler=gnu   # gnu, intel	
 
