@@ -25,12 +25,12 @@ export PYTHONWARNINGS=ignore
 cd -
 
 # number of compute nodes and number of cores per compute node
-nodes=32
+nodes=64
 cores=32
 
 obj=time    # name of the objective defined in the python file
 
-database="gptune.db/NIMROD_slu3d_TLA_base.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
+database="gptune.db/NIMROD_slu3d_SLA_baseline.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 
 # start the main loop
 more=1
@@ -38,7 +38,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./nimrod_TLA_base.py -nstep $nstep -expid $expid -seed $seed -nrun ${nrun} -npilot ${npilot}
+python ./nimrod_SLA_baseline.py -nstep $nstep -expid $expid -seed $seed -nrun ${nrun} -npilot ${npilot}
 
 
 # check whether GPTune needs more data
