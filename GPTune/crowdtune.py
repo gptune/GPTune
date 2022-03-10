@@ -17,7 +17,7 @@
 
 # Crowd-tune API
 
-def QueryFunctionEvaluations(crowd_tune_api_key:str=None,
+def QueryFunctionEvaluations(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict={}):
 
@@ -34,7 +34,7 @@ def QueryFunctionEvaluations(crowd_tune_api_key:str=None,
     function_evaluations_downloaded = {}
 
     r = requests.get(url = crowd_repo_download_url,
-            headers={"x-api-key":crowd_tune_api_key},
+            headers={"x-api-key":api_key},
             params={"tuning_problem_name":tuning_problem_name,
                 "problem_space":json.dumps(problem_space)},
             verify=False)
@@ -46,7 +46,7 @@ def QueryFunctionEvaluations(crowd_tune_api_key:str=None,
 
     return function_evaluations_downloaded
 
-def UploadFunctionEvaluation(crwod_tune_api_key:str=None,
+def UploadFunctionEvaluation(api_key:str=None,
         function_evaluation:dict={}):
     r = requests.post(url = self.crowd_repo_upload_url,
             headers={"x-api-key":self.historydb_api_key},
@@ -58,14 +58,13 @@ def UploadFunctionEvaluation(crwod_tune_api_key:str=None,
     else:
         print ("request status_code: ", r.status_code)
 
-
-def QueryBestFunctionEvaluation(crowd_tune_api_key:str=None,
+def QueryBestFunctionEvaluation(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict={},
         objective_name:str=""):
 
     function_evaluations = QueryFunctionEvaluations(
-            crowd_tune_api_key = crowd_tune_api_key,
+            api_key = api_key,
             tuning_problem_name = tuning_problem_name,
             problem_space = problem_space)
 
@@ -87,14 +86,52 @@ def QueryBestFunctionEvaluation(crowd_tune_api_key:str=None,
 
     return func_eval
 
-def QuerySurrogateModel(crowd_tune_api_key:str=None,
+def QueryPredictOutput(api_key:str=None,
+        tuning_problem_name:str=None,
+        problem_space:dict=None,
+        modeler:str="Model_GPy_LCM",
+        input_task:list=[],
+        input_parameter={},
+        objective_name:str=""):
+
+    function_evaluations = QueryFunctionEvaluations(
+            api_key = api_key,
+            tuning_problem_name = tuning_problem_name,
+            problem_space = problem_space)
+
+    if type(input_parameter) == dict:
+        import gptune
+        return gptune.PredictOutput(
+                problem_space = problem_space,
+                modeler = modeler,
+                input_task = input_task,
+                input_parameter = input_parameter,
+                function_evaluations = function_evaluations)
+
+    elif type(input_parameter) == list:
+        input_parameter_dict = {}
+        idx = 0
+        for i in range(len(problem_space["parameter_space"])):
+            tuning_parameter = problem_space["parameter_space"][i]
+            input_parameter_dict[tuning_parameter["name"]] = input_parameter[i]
+
+        import gptune
+        return gptune.PredictOutput(
+                problem_space = problem_space,
+                modeler = modeler,
+                input_task = input_task,
+                input_parameter = input_parameter_dict,
+                function_evaluations = function_evaluations)
+
+
+def QuerySurrogateModel(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
         input_task:list=[]):
 
     function_evaluations = QueryFunctionEvaluations(
-            crowd_tune_api_key = crowd_tune_api_key,
+            api_key = api_key,
             tuning_problem_name = tuning_problem_name,
             problem_space = problem_space)
 
@@ -105,7 +142,7 @@ def QuerySurrogateModel(crowd_tune_api_key:str=None,
             input_task = [input_task],
             function_evaluations = function_evaluations)
 
-def QuerySensitivityAnalysis(crowd_tune_api_key:str=None,
+def QuerySensitivityAnalysis(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
@@ -114,7 +151,7 @@ def QuerySensitivityAnalysis(crowd_tune_api_key:str=None,
         num_samples:int=1000):
 
     function_evaluations = QueryFunctionEvaluations(
-            crowd_tune_api_key = crowd_tune_api_key,
+            api_key = api_key,
             tuning_problem_name = tuning_problem_name,
             problem_space = problem_space)
 

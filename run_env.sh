@@ -21,12 +21,21 @@
 # export nodes=1  # number of nodes to be used
 
 
-############### Cori
-export machine=cori
-export proc=haswell   # knl,haswell
-export mpi=openmpi  # openmpi,craympich
-#export compiler=gnu   # gnu, intel	
-export nodes=16  # number of nodes to be used
+# ############### Cori
+# export machine=cori
+# export proc=haswell   # knl,haswell
+# export mpi=openmpi  # openmpi,craympich
+# export compiler=gnu   # gnu, intel	
+# export nodes=16  # number of nodes to be used
+
+
+############### Perlmutter
+export machine=perlmutter
+export proc=milan   # milan,gpu
+export mpi=craympich  # craympich
+export compiler=gnu   # gnu, intel	
+export nodes=1  # number of nodes to be used
+
 
 # ################ Yang's tr4 machine
 # export machine=tr4-workstation
@@ -66,6 +75,8 @@ if [[ $(hostname -s) = "tr4-workstation" ]]; then
     export machine=tr4-workstation
 elif [[ $NERSC_HOST = "cori" ]]; then
     export machine=cori
+elif [[ $NERSC_HOST = "perlmutter" ]]; then
+    export machine=perlmutter    
 elif [[ $(uname -s) = "Darwin" ]]; then
     export machine=mac
 elif [[ $(dnsdomainname) = "summit.olcf.ornl.gov" ]]; then
@@ -86,6 +97,7 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=16
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
 # fi
@@ -125,6 +137,7 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     export LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
     export DYLD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
     cores=8
+    gpus=0
     
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [10,2,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [10,2,0]}}")
@@ -140,6 +153,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi
@@ -155,6 +169,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"intel\":{\"version_split\": [19,0,3]}}")    
 # fi
@@ -196,6 +211,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
     MPIRUN=mpirun
     cores=32
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi    
@@ -242,6 +258,7 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 
     MPIRUN=mpirun
     cores=40 # two 20-core Intel Xeson Gold 6148
+    gpus=8 # 8 V100 per node
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi    
@@ -262,6 +279,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=32
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")    
 # fi    
@@ -285,6 +303,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=64
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")    
 # fi    
@@ -301,6 +320,7 @@ elif [ $ModuleEnv = 'cori-knl-craympich-gnu' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
     cores=64
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"gcc\":{\"version_split\": [8,3,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [7,7,10]},\"libsci\":{\"version_split\": [19,6,1]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi
@@ -325,8 +345,50 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     cores=64
+    gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
+
+############### Perlmutter Milan with GPU CrayMPICH+GNU
+elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
+    PY_VERSION=3.9
+    PY_TIME=2021.11
+    module load python/$PY_VERSION-anaconda-$PY_TIME
+	module swap PrgEnv-nvidia PrgEnv-gnu
+	module load cudatoolkit
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
+    MPIRUN=mpirun
+    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    gpus=4 # 4 A100 per GPU node
+    software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]},\"cuda\":{\"version_split\": [11,4]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]},\"cuda\":{\"version_split\": [11,4]}}")
+# fi
+###############
+
+############### Perlmutter Milan with no GPU CrayMPICH+GNU
+elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
+    PY_VERSION=3.9
+    PY_TIME=2021.11
+    module load python/$PY_VERSION-anaconda-$PY_TIME
+	module swap PrgEnv-nvidia PrgEnv-gnu
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
+    MPIRUN=mpirun
+    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    gpus=0
+    software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
+# fi
+###############
+
+
 elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
     export OMPI_MCA_btl="^vader"  # disable vader, this causes runtime error when run in docker
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
@@ -352,6 +414,7 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
 
     cores=4
+    gpus=0
     
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
@@ -377,6 +440,7 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
      
     MPIRUN=jsrun
     cores=44
+    gpus=6 # 6 V100 per node
     software_json=$(echo ",\"software_configuration\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
 
