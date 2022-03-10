@@ -197,6 +197,8 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
     mpirun --mca btl self,tcp,vader -N $npernode --bind-to core --allow-run-as-root -n $nproc ./nimrod | tee $logfile
 elif [[ $ModuleEnv == *"craympich"* ]]; then
 ############ craympich
+    export OMP_PLACES=threads
+    export OMP_PROC_BIND=spread
     echo "srun -n $nproc ./nimrod"
     ./nimset
     THREADS_PER_RANK=`expr $NTH \* 2`
