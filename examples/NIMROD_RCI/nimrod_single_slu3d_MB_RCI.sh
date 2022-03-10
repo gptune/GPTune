@@ -107,12 +107,13 @@ nby=${tuning_para[3]}
 npz=${tuning_para[4]}
 
 # call the application
-NTH=1
+NTH=4
 export OMP_NUM_THREADS=$NTH # flat MPI
 export NREL=$NREL
 export NSUP=$NSUP
+npernode=$(($cores/$NTH))
 
-nproc=$(($nodes*$cores))
+nproc=$(($nodes*$npernode))
 
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
@@ -175,7 +176,7 @@ fout.close()")
 
     nproc=$(python -c "import numpy as np    
 nlayers=int(np.floor(2**$lphi/3.0)+1)
-nprocmax=$nodes*$cores
+nprocmax=$nodes*$npernode
 nproc = int(nprocmax/nlayers)*nlayers
 if(nprocmax<nlayers):
     print(0)
@@ -193,7 +194,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --mca btl self,tcp,vader --allow-run-as-root -n $nproc ./nimrod"
     ./nimset
-    mpirun --mca btl self,tcp,vader -N $cores --bind-to core --allow-run-as-root -n $nproc ./nimrod | tee $logfile
+    mpirun --mca btl self,tcp,vader -N $npernode --bind-to core --allow-run-as-root -n $nproc ./nimrod | tee $logfile
 elif [[ $ModuleEnv == *"craympich"* ]]; then
 ############ craympich
     echo "srun -n $nproc ./nimrod"
