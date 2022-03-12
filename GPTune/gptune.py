@@ -2146,6 +2146,21 @@ def SensitivityAnalysis(problem_space:dict=None,
             S1_conf[parameter_names[i]] = Si["S1_conf"][i]
         ret["S1_conf"] = S1_conf
 
+        S2 = {}
+        for i in range(len(parameter_names)):
+            S2[parameter_names[i]] = {}
+            for j in range(len(parameter_names)):
+                S2[parameter_names[i]][parameter_names[j]] =Si["S2"][i][j]
+            #Si["S2"][i]
+        ret["S2"] = S2
+
+        S2_conf = {}
+        for i in range(len(parameter_names)):
+            S2_conf[parameter_names[i]] = {}
+            for j in range(len(parameter_names)):
+                S2_conf[parameter_names[i]][parameter_names[j]] =Si["S2_conf"][i][j]
+        ret["S2_conf"] = S2_conf
+
         ST = {}
         for i in range(len(parameter_names)):
             ST[parameter_names[i]] = Si["ST"][i]
