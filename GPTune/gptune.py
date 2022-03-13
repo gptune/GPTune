@@ -560,7 +560,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, **kwargs):
+    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -580,7 +580,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -862,12 +862,12 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, **kwargs):
+    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, **kwargs):
         if self.historydb.history_db is True:
             if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag)
+                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations)
 
     def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
         print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))

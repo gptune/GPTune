@@ -589,7 +589,7 @@ class HistoryDB(dict):
 
         return False
 
-    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray):
+    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -622,21 +622,30 @@ class HistoryDB(dict):
                 except:
                     print ("direct download failed")
 
-            if os.path.exists(json_data_path):
-                print ("[HistoryDB] Found a history database file")
-                if self.file_synchronization_method == 'filelock':
-                    with FileLock(json_data_path+".lock"):
+            if os.path.exists(json_data_path) or function_evaluations != None:
+                historical_function_evaluations = []
+
+                if os.path.exists(json_data_path):
+                    print ("[HistoryDB] Found a history database file")
+                    if self.file_synchronization_method == 'filelock':
+                        with FileLock(json_data_path+".lock"):
+                            with open(json_data_path, "r") as f_in:
+                                history_data = json.load(f_in)
+                    elif self.file_synchronization_method == 'rsync':
+                        temp_path = json_data_path + "." + self.process_uid + ".temp"
+                        os.system("rsync -a " + json_data_path + " " + temp_path)
+                        with open(temp_path, "r") as f_in:
+                            history_data = json.load(f_in)
+                        os.system("rm " + temp_path)
+                    else:
                         with open(json_data_path, "r") as f_in:
                             history_data = json.load(f_in)
-                elif self.file_synchronization_method == 'rsync':
-                    temp_path = json_data_path + "." + self.process_uid + ".temp"
-                    os.system("rsync -a " + json_data_path + " " + temp_path)
-                    with open(temp_path, "r") as f_in:
-                        history_data = json.load(f_in)
-                    os.system("rm " + temp_path)
-                else:
-                    with open(json_data_path, "r") as f_in:
-                        history_data = json.load(f_in)
+                    historical_function_evaluations.extend(history_data["func_eval"])
+
+                if function_evaluations != None:
+                    historical_function_evaluations.extend(function_evaluations)
+
+                print ("historical_function_evaluations: ", historical_function_evaluations)
 
                 num_tasks = len(Igiven)
 
@@ -645,7 +654,7 @@ class HistoryDB(dict):
                 PS_history = [[] for i in range(num_tasks)]
                 OS_history = [[] for i in range(num_tasks)]
 
-                for func_eval in history_data["func_eval"]:
+                for func_eval in historical_function_evaluations:
                     if self.load_check == False or self.check_load_deps(func_eval):
                         task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
                         if (task_id != -1):
