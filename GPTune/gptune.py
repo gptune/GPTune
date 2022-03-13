@@ -560,7 +560,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, **kwargs):
+    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -666,30 +666,42 @@ class GPTune(object):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
         print ("NS1: ", NS1)
-        if NS1 == 0:
+        if NS1 == 0 and models_transfer != None:
             NS1 = 1
-        #if NS1 == 0:
-        #    NS1 = 1
-        #    tmpP = [(self.problem.PS.transform([[128,24]])), (self.problem.PS.transform([[128,24]]))]
-        #    print (tmpP)
-        #    if(self.data.P is not None):
-        #        for i in range(len(self.data.P)):
-        #            NSi = self.data.P[i].shape[0]
-        #            tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
-        #else:
-        if (NSmin<NS1):
-            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-            tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+            option_tla = copy.deepcopy(self.options)
+            option_tla["TLA_method"] = "Regression"
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = option_tla, models_transfer = models_transfer)')
+            print ("SEARCHER_TLA GENERATED")
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
+            tmpP = [x[1][0] for x in res]
+            print ("tmpP: ", tmpP)
+
             for i in range(NI):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
-            # print ("tmpP: ", tmpP)
+            print ("tmpP: ", tmpP)
 
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
                     if(T_sampleflag[i] is True):
                         NSi = self.data.P[i].shape[0]
                         tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        else:
+            if NS1 == 0:
+                NS1 = 1
+            if (NSmin<NS1):
+                check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                for i in range(NI):
+                    if(T_sampleflag[i] is False):
+                        tmpP[i] = np.empty(shape=(0,self.problem.DP))
+                # print ("tmpP: ", tmpP)
+
+                if(self.data.P is not None):
+                    for i in range(len(self.data.P)):
+                        if(T_sampleflag[i] is True):
+                            NSi = self.data.P[i].shape[0]
+                            tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
         if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
             raise Exception("len(self.data.O) !=len(self.data.I)")
@@ -862,12 +874,12 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, **kwargs):
+    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
         if self.historydb.history_db is True:
             if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations)
+                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, models_transfer)
 
     def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
         print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
