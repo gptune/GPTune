@@ -80,6 +80,7 @@ class Options(dict):
 
         """ Options for transfer learning """
         TLA_method = 'Regression' #"LCM" #'Sum' #'regression_weights_no_scale'
+        regression_log_name = 'models_weights.log'
 
         """ Options for the multi-arm bandit algorithm """
         budget_min = 0.1 # minimum budget
