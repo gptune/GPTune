@@ -19,7 +19,8 @@
 
 def QueryFunctionEvaluations(api_key:str=None,
         tuning_problem_name:str=None,
-        problem_space:dict={}):
+        problem_space:dict={},
+        configuration_space:dict={}):
 
     import requests
     import json
@@ -36,7 +37,8 @@ def QueryFunctionEvaluations(api_key:str=None,
     r = requests.get(url = crowd_repo_download_url,
             headers={"x-api-key":api_key},
             params={"tuning_problem_name":tuning_problem_name,
-                "problem_space":json.dumps(problem_space)},
+                "problem_space":json.dumps(problem_space),
+                "configuration_space":json.dumps(configuration_space)},
             verify=False)
 
     if r.status_code == 200:
@@ -61,12 +63,14 @@ def UploadFunctionEvaluation(api_key:str=None,
 def QueryBestFunctionEvaluation(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict={},
+        configuration_space:dict={},
         objective_name:str=""):
 
     function_evaluations = QueryFunctionEvaluations(
             api_key = api_key,
             tuning_problem_name = tuning_problem_name,
-            problem_space = problem_space)
+            problem_space = problem_space,
+            configuration_space=configuration_space)
 
     if objective_name == "":
         if "output_space" in problem_space:
@@ -89,6 +93,7 @@ def QueryBestFunctionEvaluation(api_key:str=None,
 def QueryPredictOutput(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
+        configuration_space:dict={},
         modeler:str="Model_GPy_LCM",
         input_task:list=[],
         input_parameter={},
@@ -97,7 +102,8 @@ def QueryPredictOutput(api_key:str=None,
     function_evaluations = QueryFunctionEvaluations(
             api_key = api_key,
             tuning_problem_name = tuning_problem_name,
-            problem_space = problem_space)
+            problem_space = problem_space,
+            configuration_space=configuration_space)
 
     if type(input_parameter) == dict:
         import gptune
@@ -127,13 +133,15 @@ def QueryPredictOutput(api_key:str=None,
 def QuerySurrogateModel(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
+        configuration_space:dict={},
         modeler:str="Model_GPy_LCM",
         input_task:list=[]):
 
     function_evaluations = QueryFunctionEvaluations(
             api_key = api_key,
             tuning_problem_name = tuning_problem_name,
-            problem_space = problem_space)
+            problem_space = problem_space,
+            configuration_space=configuration_space)
 
     import gptune
     return gptune.BuildSurrogateModel(
@@ -145,6 +153,7 @@ def QuerySurrogateModel(api_key:str=None,
 def QuerySensitivityAnalysis(api_key:str=None,
         tuning_problem_name:str=None,
         problem_space:dict=None,
+        configuration_space:dict={},
         modeler:str="Model_GPy_LCM",
         method:str="Sobol",
         input_task:list=[],
@@ -153,7 +162,8 @@ def QuerySensitivityAnalysis(api_key:str=None,
     function_evaluations = QueryFunctionEvaluations(
             api_key = api_key,
             tuning_problem_name = tuning_problem_name,
-            problem_space = problem_space)
+            problem_space = problem_space,
+            configuration_space=configuration_space)
 
     import gptune
     return gptune.SensitivityAnalysis(
