@@ -21,20 +21,20 @@
 # export nodes=1  # number of nodes to be used
 
 
-# ############### Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=16  # number of nodes to be used
-
-
-############### Perlmutter
-export machine=perlmutter
-export proc=milan   # milan,gpu
-export mpi=craympich  # craympich
+############### Cori
+export machine=cori
+export proc=haswell   # knl,haswell
+export mpi=openmpi  # openmpi,craympich
 export compiler=gnu   # gnu, intel	
-export nodes=1  # number of nodes to be used
+export nodes=4  # number of nodes to be used
+
+
+################ Perlmutter
+#export machine=perlmutter
+#export proc=milan   # milan,gpu
+#export mpi=craympich  # craympich
+#export compiler=gnu   # gnu, intel	
+#export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -185,7 +185,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module unload openmpi
     module unload PrgEnv-intel
     module load PrgEnv-gnu
-    module load openmpi/4.0.1
+    module load openmpi/4.1.2
     module unload craype-hugepages2M
     module unload cray-libsci
     module unload atp    
@@ -212,8 +212,8 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     MPIRUN=mpirun
     cores=32
     gpus=0
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
 # fi    
 ###############
 
@@ -271,7 +271,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     module unload cray-mpich
     module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
-    module load openmpi/4.0.1
+    module load openmpi/4.1.2
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
@@ -280,8 +280,8 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     MPIRUN=mpirun
     cores=32
     gpus=0
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")    
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")    
 # fi    
 ###############
 
@@ -294,7 +294,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	module unload cray-libsci
 	module unload cray-mpich
 	module swap PrgEnv-intel PrgEnv-gnu
-	module load openmpi/4.0.1
+	module load openmpi/4.1.2
     export OMPI_MCA_btl_ugni_virtual_device_count=1
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
@@ -304,8 +304,8 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
     MPIRUN=mpirun
     cores=64
     gpus=0
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")    
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,3,0]}}")    
 # fi    
 ###############
 
@@ -336,7 +336,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	module unload cray-mpich
 	module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
-	module load openmpi/4.0.1
+	module load openmpi/4.1.2
     MPIRUN=mpirun
     export OMPI_MCA_btl_ugni_virtual_device_count=1
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
@@ -346,8 +346,8 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     cores=64
     gpus=0
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"intel\":{\"version_split\": [19,0,3]}}")       
 
 ############### Perlmutter Milan with GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then

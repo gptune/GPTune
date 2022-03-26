@@ -26,7 +26,7 @@ PREFIX_PATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/
 echo $(which python) 
 
 module unload cmake
-module load cmake/3.20.2
+module load cmake/3.22.1
 
 
 ##################################################
@@ -79,7 +79,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module unload openmpi
     module unload PrgEnv-intel
     module load PrgEnv-gnu
-    module load openmpi/4.0.1
+    module load openmpi/4.1.2
     module unload craype-hugepages2M
     module unload cray-libsci
     module unload atp
@@ -183,7 +183,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
 	module unload openmpi
 	module swap PrgEnv-gnu PrgEnv-intel 
 	module swap intel intel/19.0.3.199 
-	module load openmpi/4.0.1
+	module load openmpi/4.1.2
 	GPTUNEROOT=$PWD
 	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
@@ -207,7 +207,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
 	module unload cray-libsci
 	module unload cray-mpich
 	module swap PrgEnv-intel PrgEnv-gnu
-	module load openmpi/4.0.1
+	module load openmpi/4.1.2
 	GPTUNEROOT=$PWD
 	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
@@ -245,7 +245,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 	module unload cray-mpich
 	module swap PrgEnv-gnu PrgEnv-intel 
 	# module swap intel intel/19.0.3.199 
-	module load openmpi/4.0.1
+	module load openmpi/4.1.2
 	GPTUNEROOT=$PWD
 	export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
 	BLAS_INC="-I${MKLROOT}/include"
@@ -260,7 +260,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 else
     echo "Untested ModuleEnv: $ModuleEnv, please add the corresponding definitions in this file"
     exit
-fi 
+fi
 
 export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
