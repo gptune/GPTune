@@ -27,7 +27,7 @@ module load cmake/3.22.0
 ##################################################
 ##################################################
 machine=perlmutter
-proc=milan   # milan,gpu
+proc=gpu   # milan,gpu
 mpi=craympich    # craympich
 compiler=gnu   # gnu, intel	
 
@@ -96,7 +96,8 @@ export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
 export TBB_ROOT=$GPTUNEROOT/oneTBB/build
 export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
-export BOOST_ROOT=/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build
+# export BOOST_ROOT=/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build
+export BOOST_ROOT=/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/
 export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
 
