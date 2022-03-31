@@ -59,8 +59,8 @@ import scipy
 
 # bandit structure
 bmin = 1
-bmax = 27
-eta = 3
+bmax = 4
+eta = 4
 
 def objectives(point):
     """
