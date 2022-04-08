@@ -178,6 +178,7 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf hypre
 	git clone https://github.com/hypre-space/hypre.git
 	cd hypre/src/
+	git checkout v2.19.0
 	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
 	make -j16
 	cp ../../hypre-driver/src/ij.c ./test/.
