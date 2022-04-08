@@ -22,11 +22,11 @@
 
 
 ############### Cori
-export machine=cori
-export proc=haswell   # knl,haswell
-export mpi=openmpi  # openmpi,craympich
-export compiler=gnu   # gnu, intel	
-export nodes=4  # number of nodes to be used
+# export machine=cori
+# export proc=haswell   # knl,haswell
+# export mpi=openmpi  # openmpi,craympich
+# export compiler=gnu   # gnu, intel	
+# export nodes=4  # number of nodes to be used
 
 
 ################ Perlmutter
@@ -45,12 +45,12 @@ export nodes=4  # number of nodes to be used
 # export nodes=1  # number of nodes to be used
 # #
 
-# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-# export machine=cleanlinux
-# export proc=unknown   
-# export mpi=openmpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
+ ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+ export machine=cleanlinux
+ export proc=unknown   
+ export mpi=openmpi  
+ export compiler=gnu   
+ export nodes=1  # number of nodes to be used
 
 
 ##################################################
