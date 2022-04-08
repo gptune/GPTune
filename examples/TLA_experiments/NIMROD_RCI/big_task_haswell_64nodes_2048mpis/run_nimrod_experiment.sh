@@ -39,15 +39,39 @@ export PYTHONPATH=$PWD/examples/STRUMPACK/STRUMPACK/install/include/python/:$PYT
 export GPTUNEROOT=$PWD
 cd -
 
-seed=881
-for expid in 0
-do  
-    seed=$( expr ${seed} + ${expid} )
-    nstep=30
-    nrun=200
-    npilot=200
+expid=0 # for expid in 0 1 2 .. set the expid for each tuning batch
+seed=881 # seed=$( expr ${seed} + ${expid} ) .. set a different seed number for each tuning batch
 
-    #rm -rf gptune.db/*.json # do not load any database 
-    bash nimrod_TLA_base.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot | tee log.nimrod_TLA_base_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}  #a: nstepmax b: nstepmin c: Nloop d: optimization e: expid f: seed
-    #cp gptune.db/NIMROD.json  gptune.db/NIMROD.json_$(timestamp)
+for tuning_method in SLA
+do
+    for npilot in 0
+    do
+        nstep=30
+        nrun=20
+
+        bash nimrod_tuning.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot -f ${tuning_method} | tee log.nimrod_${tuning_method}_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}
+    done
 done
+
+for tuning_method in default_parameter
+do
+    for npilot in 1
+    do
+        nstep=30
+        nrun=1
+
+        bash nimrod_tuning.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot -f ${tuning_method} | tee log.nimrod_${tuning_method}_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}
+    done
+done
+
+for tuning_method in TLA_LCM TLA_Regression
+do
+    for npilot in 0
+    do
+        nstep=30
+        nrun=20
+
+        bash nimrod_tuning.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot -f ${tuning_method} | tee log.nimrod_${tuning_method}_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}
+    done
+done
+
