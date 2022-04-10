@@ -2,38 +2,39 @@
 
 cd ../../../
 
-export machine=cori
-export proc=haswell   # knl,haswell
-export mpi=openmpi    # openmpi,craympich
-export compiler=gnu   # gnu, intel
+export machine=cleanlinux
+export proc=unknown
+export mpi=openmpi
+export compiler=gnu
+export nodes=1  # number of nodes to be used
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
-if [[ $NERSC_HOST = "cori" ]]; then
-    # PY_VERSION=3.7
-    # PY_TIME=2019.07
-    # MKL_TIME=2019.3.199
+export OMPI_MCA_btl="^vader"  # disable vader, this causes runtime error when run in docker
+MPIFromSource=1 # whether openmpi was built from source when installing GPTune
 
-    PY_VERSION=3.8
-    PY_TIME=2020.11
-    MKL_TIME=2020.2.254
+if [[ $MPIFromSource = 1 ]]; then
+    export PATH=$PWD/openmpi-4.0.1/bin:$PATH
+    export MPIRUN=$PWD/openmpi-4.0.1/bin/mpirun
+    export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+else
+    export PATH=$PATH
+    export MPIRUN=
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+    if [[ -z "$MPIRUN" ]]; then
+        echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi has not been built from source when installing GPTune, please set MPIRUN, PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above."
+        exit
+    fi
 fi
 
-
-module load gcc/8.3.0
-module unload cray-mpich
-module unload openmpi
-module unload PrgEnv-intel
-module load PrgEnv-gnu
-module load openmpi/4.0.1
-module unload craype-hugepages2M
-module unload cray-libsci
-module unload atp    
-module load python/$PY_VERSION-anaconda-$PY_TIME
-export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
+export PYTHONPATH=$PWD/build/gptune/:$PYTHONPATH
+    export PATH=$PWD/env/bin/:$PATH
+    export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
-#export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
+
+cores=2
+gpus=0
+
 export PYTHONPATH=$PWD/GPTune/:$PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
@@ -67,4 +68,3 @@ do
         echo "\n"
     done
 done
-
