@@ -32,19 +32,15 @@ export PYTHONPATH=$PYTHONPATH:../../../pygmo2/
 export PYTHONWARNINGS=ignore
 export GPTUNEROOT=$PWD
 
-#for nbatch in {0..9}
-#for matname in Si2.mtx SiH4.mtx SiNa.mtx benzene.mtx Na5.mtx Si5H12.mtx Si10H16.mtx SiO.mtx H2O.mtx GaAsH6.mtx Ga3As3H12.mtx
-#for matname in Si5H12.mtx Si10H16.mtx SiO.mtx H2O.mtx GaAsH6.mtx Ga3As3H12.mtx
-for matname in SiO.mtx H2O.mtx Si5H12.mtx Si10H16.mtx GaAsH6.mtx Ga3As3H12.mtx
+matname=H2O.mtx # for matname in SiO.mtx H2O.mtx Si5H12.mtx Si10H16.mtx GaAsH6.mtx Ga3As3H12.mtx
+for nbatch in 0 1 2
 do
-    for nbatch in 0 1 2
+    for experiment in "tuning_all" "tuning_reduced_default" "tuning_reduced_random"
     do
-        for experiment in "tuning_all" "tuning_reduced_default" "tuning_reduced_random"
-        do
-            echo "Run experiment=${experiment} matname=${matname} nbatch=${nbatch}"
-            mpirun --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_tuning.py -experiment ${experiment} -matname ${matname} -nbatch ${nbatch} -nrun 20 -npilot 0
-        done
+        echo "Run experiment=${experiment} matname=${matname} nbatch=${nbatch}"
+        mpirun --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./superlu_tuning.py -experiment ${experiment} -matname ${matname} -nbatch ${nbatch} -nrun 20 -npilot 0
     done
 done
+
 echo "\n"
 

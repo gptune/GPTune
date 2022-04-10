@@ -41,12 +41,12 @@ problem_space = {
     ]
 }
 
-for task in ["Si5H12.mtx", "Si10H16.mtx", "SiO.mtx"]:
-    ret = crowdtune.QuerySensitivityAnalysis(
-        api_key = api_key,
-        tuning_problem_name = "SuperLU_DIST-pddrive_spawn",
-        problem_space = problem_space,
-        input_task = [task])
-    print ("Task: ", task)
-    print (ret)
+task="Si5H12.mtx" # "Si10H16.mtx" "SiO.mtx"
+ret = crowdtune.QuerySensitivityAnalysis(
+    api_key = api_key,
+    tuning_problem_name = "SuperLU_DIST-pddrive_spawn",
+    problem_space = problem_space,
+    input_task = [task])
+print ("Task: ", task)
+print (ret)
 
