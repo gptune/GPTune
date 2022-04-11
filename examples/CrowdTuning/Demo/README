@@ -12,7 +12,7 @@ Users can run the prepared experiment as follows.
 
 Step 1. Export your crowd-tuning API key to be used by the tuning script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 2. Run a prepared script that evaluates crowd-based tuning and
 tuning without using our crowd-database.

@@ -18,7 +18,7 @@ This experiment run four examples of the crowd-tuning API.
 
 Step 1. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 2. Export crowd-tuning API and GPTune package links
 
@@ -33,7 +33,7 @@ $ python ./crowdtuning_api.py
 
 Step 1. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 2. Export crowd-tuning API and GPTune package links
 
@@ -58,7 +58,7 @@ $ cd medium_task_haswell_64nodes_2048mpis
 
 Step 2. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 3. Run tuners for different scenarios
 

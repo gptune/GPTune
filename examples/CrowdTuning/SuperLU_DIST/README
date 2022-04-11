@@ -17,7 +17,7 @@ repository.
 
 Step 1. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 2. Export crowd-tuning API and GPTune package links
 
@@ -35,7 +35,7 @@ Step 1. Allocate compute nodes to run the experiment.
 
 Step 2. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNE_API_KEY="your_api_key"
+$ source CROWDTUNING_API_KEY="your_api_key"
 
 Step 3. Run the prepared script.
 
