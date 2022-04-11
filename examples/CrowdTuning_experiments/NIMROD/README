@@ -1,0 +1,68 @@
+# Crowd-tuning for NIMROD.
+
+The prepared experiments for crowd-tuning of NIMROD are as follows.
+- Crowd-tuning API functional test
+- Sensitivity analysis
+- Crowd-tuning of NIMROD for TLA for multiple scenarios
+
+Note that, our crowd-tuning API requires users to provide an API key. Users can
+obtain an API key here (sign-up and log-in required)
+https://gptune.lbl.gov/account/access-tokens
+
+For TLA experiments, we assume NERSC's Cori machine and the NIMROD source code
+is NOT open-sourced. Hence, you can run the experiments only if you have access
+to NERSC's Cori system and the NIMROD program.
+
+# Experiment 1: Crowd-tuning API functional test
+This experiment run four examples of the crowd-tuning API.
+
+Step 1. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNE_API_KEY="your_api_key"
+
+Step 2. Export crowd-tuning API and GPTune package links
+
+$ source env.sh
+
+Step 3. Run the prepared script.
+
+$ python ./crowdtuning_api.py
+
+# Experiment 2: Sensitivity analysis for two tasks {mx:5,my:7,lphi:1} and
+{mx:6,my:8,lphi:1}
+
+Step 1. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNE_API_KEY="your_api_key"
+
+Step 2. Export crowd-tuning API and GPTune package links
+
+$ source env.sh
+
+Step 3. Run the prepared script.
+
+$ python ./sensitivity_analysis.py
+
+# Experiment 3: Crowd-tuning (TLA) of NIMROD for different scenarios
+
+There are four scenarios available:
+- medium_task_haswell_64nodes_2048mpis (64 Cori Haswell nodes required)
+- medium_task_knl_64nodes_2048mpis (64 Cori KNL nodes required)
+- medium_task_knl_64nodes_4352mpis (64 Cori KNL nodes required)
+- big_task_haswell_64nodes_2048mpis (64 Cori Haswell nodes required)
+
+Step 1. Allocate nodes depending on the scenario and go to the scenario directory
+
+For example,
+$ cd medium_task_haswell_64nodes_2048mpis
+
+Step 2. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNE_API_KEY="your_api_key"
+
+Step 3. Run tuners for different scenarios
+
+$ ./run_nimrod_experiment.sh
+
+For more details or questions, please contact 
+Younghyun Cho <younghyun@berkeley.edu>
