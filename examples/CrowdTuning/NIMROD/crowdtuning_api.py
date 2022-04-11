@@ -47,23 +47,14 @@ problem_space = {
 
 configuration_space = {}
 
-surrogate_model = crowdtune.QuerySurrogateModel(
-    api_key = api_key,
-    tuning_problem_name = "NIMROD_slu3d",
-    problem_space = problem_space,
-    configuration_space = configuration_space,
-    input_task = [5,7,1])
-
-return [surrogate_model]
-
 # Usage 1: Query function evaluations
 ret = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
         problem_space = problem_space,
-        configuration_space = configuration_space,
+        configuration_space = configuration_space)
 print ("Print function evaluations")
 print (ret) # list of dict
-print ("number of queried function evaluations: ", len(ret))
+print ("number of queried (and filtered) function evaluations: ", len(ret))
 
 # Usage 2: Run a sensitivity analysis (SA)
 ret = crowdtune.QuerySensitivityAnalysis(

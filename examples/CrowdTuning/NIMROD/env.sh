@@ -1,3 +1,4 @@
+export PATH=$PATH:../../../env/bin/
 export PYTHONPATH=$PYTHONPATH:../../../autotune/
 export PYTHONPATH=$PYTHONPATH:../../../scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:../../../mpi4py/
