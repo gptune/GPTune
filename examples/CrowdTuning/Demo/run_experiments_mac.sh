@@ -59,7 +59,7 @@ do
     do
         for nbatch in 0 1 2 3 4
         do
-            for tuning_method in SLA TLA_Sum TLA_Regression TLA_LCM_GPY
+            for tuning_method in SLA TLA_Sum TLA_Regression TLA_LCM_BF TLA_LCM_GPY
             do
                 echo "Run demo base tuning_method=${tuning_method} tvalue=${tvalue} nbatch=${nbatch}"
                 ./demo_tuning.py -tuning_method ${tuning_method} -tvalue ${tvalue} -nbatch ${nbatch} -npilot ${npilot} -nrun ${nrun}
