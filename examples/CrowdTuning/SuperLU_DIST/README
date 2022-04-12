@@ -56,6 +56,7 @@ $ ./run_maual_cori.sh
 
 Step 3. Generate plots to analyze the performance
 
+$ source env.sh
 $ python analyze_manual_result_Si5H12.py
 
 For more details or questions, please contact 

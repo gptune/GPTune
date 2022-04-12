@@ -64,5 +64,22 @@ Step 3. Run tuners for different scenarios
 
 $ ./run_nimrod_experiment.sh
 
+If you finished the experiments, you can use a prepared script to generate plots
+to compare different tuning options.
+
+$ source env.sh
+$ python analyze_time_solution.py
+
+NOTE: these are expensive experiments that might take a couple of days to finish
+all the considered scenarios (using 64 KNL and and 64 Haswell nodes in Cori).
+You may not be able to complete one scenario if your allocated job hours are not
+enough. In case the tuner is halted due to some reasons (job hours done or
+machine maintenance), you may need to alter the evaluation result field of the
+"last" entry of the database file to "null", so that the tuner can re-evaluate
+the last parameter configuration. Note that, this is different with a runtime
+failure that a certian parameter configuration can encounter. In the case of
+parameter-dependent runtime failures, the tuners can confinue tuning for the
+next parameter configuration.
+
 For more details or questions, please contact 
 Younghyun Cho <younghyun@berkeley.edu>

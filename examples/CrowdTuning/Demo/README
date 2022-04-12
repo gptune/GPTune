@@ -25,6 +25,7 @@ $ ./run_experiments_linux.sh
 
 Step 3. Generate plots to compare different tuning options.
 
+$ source env.sh
 $ python analyze_time_solution.py
 
 Users can refer to these scripts run_experiments_mac/linux.sh and demo_tuning.py
