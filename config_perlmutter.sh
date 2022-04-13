@@ -198,6 +198,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
+	make pddrive3d
 	make install
 
 

@@ -92,6 +92,9 @@ export NUM_GPU_STREAMS=1
 export NREL=$NREL
 export NSUP=$NSUP
 export NSUP=$NSUP
+export MAX_BUFFER_SIZE=$MAX_BUFFER_SIZE
+export N_GEMM=$N_GEMM
+
 nproc=$(($nodes*$npernode))
 npcols=$(($nproc / $nprows))
 
