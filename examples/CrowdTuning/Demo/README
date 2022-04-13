@@ -1,0 +1,35 @@
+Crowd-tuning synthetic demo functions.
+
+This crowd-tuning example tunes synthetic task functions using performance data
+(collected for a different task value) from our crowd-tuning repository at
+https://gptune.lbl.gov/repo/dashboard.
+
+Note that, our crowd-tuning requires users to provide an API key. Users can
+obtain an API key here (sign-up and log-in required)
+https://gptune.lbl.gov/account/access-tokens
+
+Users can run the prepared experiment as follows.
+
+Step 1. Export your crowd-tuning API key to be used by the tuning script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 2. Run a prepared script that evaluates crowd-based tuning and
+tuning without using our crowd-database.
+
+(a) Mac
+$ ./run_experiments_mac.sh
+
+(b) Linux (our docker image)
+$ ./run_experiments_linux.sh
+
+Step 3. Generate plots to compare different tuning options.
+
+$ source env.sh
+$ python analyze_time_solution.py
+
+Users can refer to these scripts run_experiments_mac/linux.sh and demo_tuning.py
+to apply the crowd-tuning approach to users' tuning problems.
+
+For more details or questions, please contact 
+Younghyun Cho <younghyun@berkeley.edu>

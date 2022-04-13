@@ -1,0 +1,63 @@
+# Crowd-tuning for SuperLU_DIST.
+
+There are prepared experiment scripts for crowd-tuning of SuperLU_DIST.
+
+The experiemnts assume NERSC's Cori machine using 4 Haswell nodes. If the user
+has no access to NERSC's Cori machine, or if the user needs to use a different
+number or a different type of compute nodes, the user should modify the related
+scripts. The user might need to update SuperLU_DIST files for a different
+software configuration setting.
+
+Note that, our crowd-tuning API requires users to provide an API key. Users can
+obtain an API key here (sign-up and log-in required)
+https://gptune.lbl.gov/account/access-tokens
+
+# Experiment 1. Run a Sobol sensitivity analysis using performance data in our
+repository.
+
+Step 1. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 2. Export crowd-tuning API and GPTune package links
+
+$ source env.sh
+
+Step 3. Run the prepared script.
+
+$ python ./sensitivity_analysis.py
+
+# Experiment 2. Crowd-tuning of SuperLU_DIST, tuning SuperLU_DIST using
+performance data (collected for a different matrix) from our crowd-tuning
+repository at https://gptune.lbl.gov/repo/dashboard.
+
+Step 1. Allocate compute nodes to run the experiment.
+
+Step 2. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 3. Run the prepared script.
+
+$ ./run_tuning_cori.sh
+
+Step 4. Generate plots to compare different tuning options.
+
+$ python analyze_tuning_result_H20.py
+
+# Experiment 3. Run a manual performance analysis, measuring and analyzing
+performance on varying one parameter value.
+
+Step 1. Allocate compute nodes to run the experiment.
+
+Step 2. Run the prepared script.
+
+$ ./run_maual_cori.sh
+
+Step 3. Generate plots to analyze the performance
+
+$ source env.sh
+$ python analyze_manual_result_Si5H12.py
+
+For more details or questions, please contact 
+Younghyun Cho <younghyun@berkeley.edu>

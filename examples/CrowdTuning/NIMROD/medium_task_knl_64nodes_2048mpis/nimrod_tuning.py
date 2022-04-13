@@ -31,10 +31,82 @@ import time
 import argparse
 import logging
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../../GPTune/"))
+sys.path.insert(0, os.path.abspath(__file__ + "/../../../../../GPTune/"))
 logging.getLogger('matplotlib.font_manager').disabled = True
 
 ################################################################################
+
+def LoadFunctionEvaluations():
+    api_key = os.getenv("CROWDTUNING_API_KEY")
+
+    import crowdtune
+    problem_space = {
+        "input_space": [
+            {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
+            {"name":"my", "type":"integer", "transformer":"normalize", "lower_bound":7, "upper_bound":8},
+            {"name":"lphi", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3}
+        ],
+        "constants": [
+            {"ROWPERM":'1',"COLPERM":'4',"nodes":32,"cores":32,"nstep":30}
+        ],
+        "parameter_space": [
+            {"name":"NSUP", "type":"integer", "transformer":"normalize", "lower_bound":30, "upper_bound":300},
+            {"name":"NREL", "type":"integer", "transformer":"normalize", "lower_bound":10, "upper_bound":40},
+            {"name":"nbx", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
+            {"name":"nby", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
+            {"name":"npz", "type":"integer", "transformer":"normalize", "lower_bound":0, "upper_bound":5}
+        ],
+        "output_space": [
+            {"name":"time", "type":"real", "transformer":"identity", "lower_bound":0, "upper_bound":499.9}
+        ]
+    }
+
+    configuration_space = {}
+
+    function_evaluations = crowdtune.QueryFunctionEvaluations(api_key = api_key,
+        tuning_problem_name = "NIMROD_slu3d",
+        problem_space = problem_space,
+        configuration_space = configuration_space)
+    for func_eval in function_evaluations:
+        func_eval["task_parameter"]["tla_id_"] = 0
+
+    return function_evaluations
+
+def LoadModels():
+    api_key = os.getenv("CROWDTUNING_API_KEY")
+
+    import crowdtune
+    problem_space = {
+        "input_space": [
+            {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
+            {"name":"my", "type":"integer", "transformer":"normalize", "lower_bound":7, "upper_bound":8},
+            {"name":"lphi", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3}
+        ],
+        "constants": [
+            {"ROWPERM":'1',"COLPERM":'4',"nodes":32,"cores":32,"nstep":30}
+        ],
+        "parameter_space": [
+            {"name":"NSUP", "type":"integer", "transformer":"normalize", "lower_bound":30, "upper_bound":300},
+            {"name":"NREL", "type":"integer", "transformer":"normalize", "lower_bound":10, "upper_bound":40},
+            {"name":"nbx", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
+            {"name":"nby", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
+            {"name":"npz", "type":"integer", "transformer":"normalize", "lower_bound":0, "upper_bound":5}
+        ],
+        "output_space": [
+            {"name":"time", "type":"real", "transformer":"identity", "lower_bound":0, "upper_bound":499.9}
+        ]
+    }
+
+    configuration_space = {}
+
+    surrogate_model = crowdtune.QuerySurrogateModel(
+        api_key = api_key,
+        tuning_problem_name = "NIMROD_slu3d",
+        problem_space = problem_space,
+        configuration_space = configuration_space,
+        input_task = [5,7,1])
+
+    return [surrogate_model]
 
 # Define Problem
 def objectives(point):
@@ -43,12 +115,22 @@ def objectives(point):
 def main():
 
     args = parse_args()
-    ntask = args.ntask
     expid = args.expid
     nstep = args.nstep
+    tuning_method = args.tuning_method
+    tla_method = None
+    if tuning_method == "SLA":
+        tla_method = None
+    elif tuning_method == "TLA_LCM":
+        tla_method = "LCM"
+    elif tuning_method == "TLA_Regression":
+        tla_method = "Regression"
+    elif tuning_method == "TLA_Sum":
+        tla_method = "Sum"
 
     tuning_metadata = {
-        "tuning_problem_name": "NIMROD_GNU_CrayMPICH_KNL_SLA",
+        "tuning_problem_name": "NIMROD_slu3d_"+tuning_method+"_"+str(expid)+"_npilot"+str(args.npilot),
+        "tuning_problem_category": "NIMROD",
         "use_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
@@ -89,23 +171,28 @@ def main():
     NREL      = Integer     (10, 40, transform="normalize", name="NREL")
     nbx      = Integer     (1, 3, transform="normalize", name="nbx")	
     nby      = Integer     (1, 3, transform="normalize", name="nby")	
+    npz      = Integer     (0, 5, transform="normalize", name="npz")
 
     time   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="time")
 
     # nstep      = Integer     (3, 15, transform="normalize", name="nstep")
-    lphi      = Integer     (2, 3, transform="normalize", name="lphi")
+    lphi      = Integer     (1, 3, transform="normalize", name="lphi")
     mx      = Integer     (5, 6, transform="normalize", name="mx")
     my      = Integer     (7, 8, transform="normalize", name="my")
+    tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
 
-    IS = Space([mx,my,lphi])
+    if tla_method == "LCM":
+        IS = Space([mx,my,lphi,tla_id_])
+    else:
+        IS = Space([mx,my,lphi])
     # PS = Space([ROWPERM, COLPERM, nprows, nproc, NSUP, NREL])
     # PS = Space([ROWPERM, COLPERM, NSUP, NREL, nbx, nby])
-    PS = Space([NSUP, NREL, nbx, nby])
+    PS = Space([NSUP, NREL, nbx, nby, npz])
     OS = Space([time])
     cst1 = "NSUP >= NREL"
     constraints = {"cst1" : cst1}
     models = {}
-    constants={"ROWPERM":'2',"COLPERM":'4',"nodes":nodes,"cores":cores,"nstep":nstep}
+    constants={"ROWPERM":'1',"COLPERM":'4',"nodes":nodes,"cores":cores,"nstep":nstep}
 
     problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
     historydb = HistoryDB(meta_dict=tuning_metadata)
@@ -132,31 +219,46 @@ def main():
     options['model_class'] = 'Model_GPy_LCM' # 'Model_LCM'
     options['verbose'] = False
     options['sample_class'] = 'SampleOpenTURNS'
+    if tla_method != None:
+        options['TLA_method'] = tla_method
+    if tla_method == "Regression":
+        options['regression_log_name'] = "NIMROD_slu3d_"+tuning_method+"_"+str(expid)+"_npilot"+str(args.npilot)+"-models-weights.log"
     # options['sample_class'] = 'SampleLHSMDU'
     # options['sample_algo'] = 'LHS-MDU'
     options.validate(computer=computer)
 
     data = Data(problem)
-    giventask = [[6,8,2]]
-    Pdefault = [128,20,2,2]
+    if tla_method == "LCM":
+        giventask = [[5,7,1,0],[5,7,1,1]]
+    else:
+        giventask = [[5,7,1]]
     NI=len(giventask)
-    assert NI == ntask # make sure number of tasks match
     
     np.set_printoptions(suppress=False, precision=4)
 
     NS = args.nrun
     NS1 = args.npilot
-    
-    data.I = giventask
-    data.P = [[Pdefault]] * NI
+
+    if tuning_method == "default_parameter":
+        Pdefault = [128,20,2,2,0]
+        data.I = giventask
+        data.P = [[Pdefault]] * NI
 
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
     """ Building MLA with the given list of tasks """
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+    #(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+    if tuning_method == "TLA_LCM":
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())
+    elif tuning_method == "TLA_Regression" or tuning_method == "TLA_Sum":
+        (data, model, stats) = gt.TLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, models_transfer = LoadModels())
+    elif tuning_method == "SLA":
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+    elif tuning_method == "default_parameter":
+        (data, model, stats) = gt.MLA(NS=1, NI=NI, Igiven=giventask, NS1=1)
     # print("stats: ", stats)
     print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
     print("Model class: ", options['model_class'])
-    results_file = open(f"nimrod_ntask{args.ntask}_expid{args.expid}.txt", "a")
+    results_file = open(f"{args.tuning_method}_nimrod_expid{args.expid}_npilot{args.npilot}.txt", "a")
     #results_file.write(f"Tuner: {TUNER_NAME}\n")
     results_file.write(f"stats: {stats}\n")        
     if options['model_class'] == 'Model_LCM' and NI > 1:
@@ -194,6 +296,7 @@ def parse_args():
     parser.add_argument('-ntask', type=int, default=1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=1, help='total application runs')
     parser.add_argument('-npilot', type=int, default=1, help='number of pilot samples')
+    parser.add_argument('-tuning_method', type=str, default='SLA', help='TLA method')
     # parser.add_argument('-sample_class', type=str,default='SampleOpenTURNS',help='Supported sample classes: SampleLHSMDU, SampleOpenTURNS')
    
     parser.add_argument('-seed', type=int, default=1, help='random seed')
