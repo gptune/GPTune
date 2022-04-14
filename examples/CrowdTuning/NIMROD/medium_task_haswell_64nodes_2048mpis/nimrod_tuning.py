@@ -37,7 +37,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 ################################################################################
 
 def LoadFunctionEvaluations():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {
@@ -61,16 +61,19 @@ def LoadFunctionEvaluations():
         ]
     }
 
+    configuration_space = {}
+
     function_evaluations = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
-        problem_space = problem_space)
+        problem_space = problem_space,
+        configuration_space = configuration_space)
     for func_eval in function_evaluations:
         func_eval["task_parameter"]["tla_id_"] = 0
 
     return function_evaluations
 
 def LoadModels():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {
@@ -94,10 +97,13 @@ def LoadModels():
         ]
     }
 
+    configuration_space = {}
+
     surrogate_model = crowdtune.QuerySurrogateModel(
         api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
         problem_space = problem_space,
+        configuration_space = configuration_space,
         input_task = [5,7,1])
 
     return [surrogate_model]

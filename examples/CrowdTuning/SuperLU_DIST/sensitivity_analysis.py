@@ -18,7 +18,7 @@
 #
 
 import os
-api_key = os.getenv("CROWDTUNE_APIKEY")
+api_key = os.getenv("CROWDTUNING_API_KEY")
 
 import crowdtune
 

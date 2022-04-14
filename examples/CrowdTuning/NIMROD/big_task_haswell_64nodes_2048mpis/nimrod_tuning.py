@@ -37,7 +37,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 ################################################################################
 
 def LoadFunctionEvaluations():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {
@@ -73,7 +73,7 @@ def LoadFunctionEvaluations():
     return function_evaluations
 
 def LoadModels():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {
@@ -229,9 +229,9 @@ def main():
 
     data = Data(problem)
     if tla_method == "LCM":
-        giventask = [[5,7,1,0],[5,7,1,1]]
+        giventask = [[5,7,1,0],[6,8,1,1]]
     else:
-        giventask = [[5,7,1]]
+        giventask = [[6,8,1]]
     NI=len(giventask)
     
     np.set_printoptions(suppress=False, precision=4)

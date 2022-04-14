@@ -19,12 +19,11 @@
 
 # Can get an access token at https://gptune.lbl.gov/account/access-tokens/
 # Keep your access tokens credential
+
 import os
-api_key = os.getenv("CROWDTUNE_API_KEY")
+api_key = os.getenv("CROWDTUNING_API_KEY")
 
-# Crowd-tune API
 import crowdtune
-
 problem_space = {
     "input_space": [
         {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
@@ -42,26 +41,30 @@ problem_space = {
         {"name":"npz", "type":"integer", "transformer":"normalize", "lower_bound":0, "upper_bound":5}
     ],
     "output_space": [
-        {"name":"time", "type":"real", "transformer":"identity", "lower_bound":float("-Inf"), "upper_bound":float("inf")}
+        {"name":"time", "type":"real", "transformer":"identity", "lower_bound":0, "upper_bound":499.9}
     ]
 }
+
+configuration_space = {}
 
 # Usage 1: Query function evaluations
 ret = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
-        problem_space = problem_space)
+        problem_space = problem_space,
+        configuration_space = configuration_space)
 print ("Print function evaluations")
 print (ret) # list of dict
-print ("number of queried function evaluations: ", len(ret))
+print ("number of queried (and filtered) function evaluations: ", len(ret))
 
 # Usage 2: Run a sensitivity analysis (SA)
 ret = crowdtune.QuerySensitivityAnalysis(
     api_key = api_key,
     tuning_problem_name = "NIMROD_slu3d",
     problem_space = problem_space,
+    configuration_space = configuration_space,
     modeler = "Model_GPy_LCM",
     method = "Sobol",
-    input_task = [6,8,1])
+    input_task = [5,7,1])
 print ("Sobol analysis result")
 print (ret) # print SA result
 
@@ -70,7 +73,8 @@ surrogate_model = crowdtune.QuerySurrogateModel(
     api_key = api_key,
     tuning_problem_name = "NIMROD_slu3d",
     problem_space = problem_space,
-    input_task = [6,8,1])
+    configuration_space = configuration_space,
+    input_task = [5,7,1])
 ret = surrogate_model(
         point = {
             "NSUP": 43,
@@ -87,8 +91,10 @@ ret = crowdtune.QueryPredictOutput(
     api_key = api_key,
     tuning_problem_name = "NIMROD_slu3d",
     problem_space = problem_space,
-    input_task = [6,8,1],
+    configuration_space = configuration_space,
+    input_task = [5,7,1],
     input_parameter=[43,36,2,2,1])
     #input_parameter={"NSUP":43, "NREL":36, "nbx":2, "nby":2, "npz":1})
 print ("Make prediction")
 print (ret)
+

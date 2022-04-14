@@ -1,13 +1,12 @@
 #!/bin/bash
 start=`date +%s`
 
-# Get nrun, npernode, objecitve(memory or time) from command line
-while getopts "a:b:c:" opt
+# Get nrun and npernode from command line
+while getopts "a:b:" opt
 do
    case $opt in
       a ) nrun=$OPTARG ;;
       b ) npernode=$OPTARG ;;
-      c ) obj=$OPTARG ;;
       ? ) echo "unrecognized bash option $opt" ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -32,10 +31,11 @@ nodes=${machine_info[2]}
 cores=${machine_info[3]}
 
 
-# obj=memory    # name of the objective defined in the python file
+obj1=time    # name of the objective defined in the python file
+obj2=memory    # name of the objective defined in the python file
 
 
-database="gptune.db/SuperLU_DIST_GPU2D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
+database="gptune.db/SuperLU_DIST_MO_GPU3D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 rm -rf $database
 
 # start the main loop
@@ -44,11 +44,11 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./superlu_MLA_ngpu_RCI.py -nrun $nrun -obj $obj -npernode $npernode
+python ./superlu_MLA_3D_ngpu_MO_RCI.py -nrun $nrun -npernode $npernode
 
 
 # check whether GPTune needs more data
-idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 if [ $idx = null ]
 then
 more=0
@@ -60,7 +60,8 @@ do
 echo " $idx"    # idx indexes the record that has null objective function values
 # write a large value to the database. This becomes useful in case the application crashes. 
 bigval=1e30
-jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
 declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_parameter' $database | jq -r '.[]'))
@@ -79,9 +80,9 @@ matrix=${input_para[0]}
 COLPERM=${tuning_para[0]}
 NSUP=${tuning_para[1]}
 NREL=${tuning_para[2]}
-N_GEMM=$((2**${tuning_para[3]}))
-MAX_BUFFER_SIZE=$((2**${tuning_para[4]}))
-nprows=$((2**${tuning_para[5]}))
+MAX_BUFFER_SIZE=$((2**${tuning_para[3]}))
+nprows=$((2**${tuning_para[4]}))
+nzdep=$((2**${tuning_para[5]}))
 
 
 
@@ -90,12 +91,12 @@ export OMP_NUM_THREADS=$(($cores / $npernode))
 export NUM_GPU_STREAMS=1
 export NREL=$NREL
 export NSUP=$NSUP
-export NSUP=$NSUP
 export MAX_BUFFER_SIZE=$MAX_BUFFER_SIZE
-export N_GEMM=$N_GEMM
+export SUPERLU_ACC_OFFLOAD=1
+export MPI_PROCESS_PER_GPU=1
 
 nproc=$(($nodes*$npernode))
-npcols=$(($nproc / $nprows))
+npcols=$(($nproc / $nprows / $nzdep))
 
 RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
@@ -103,12 +104,12 @@ INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
-    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix"
-    mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -p $COLPERM $INPUTDIR/$matrix"
+    mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -p $COLPERM $INPUTDIR/$matrix | tee a.out
 elif [[ $ModuleEnv == *"mpich"* ]]; then
 ############ mpich
-    echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix | tee a.out"
-    srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "srun -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -p $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out"
+    srun -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -p $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out
 elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
 ############ spectrummpi
     RS_PER_HOST=6
@@ -124,24 +125,20 @@ elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
     RS_VAL=$(($nodes * $RS_PER_HOST)) 
     TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
     
-    echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix | tee a.out"
-    jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -p $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -p $COLPERM $INPUTDIR/$matrix | tee a.out"
+    jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -p $COLPERM $INPUTDIR/$matrix | tee a.out
 fi
 
 
 # get the result (for this example: search the runlog)
-time=$(grep 'Factor time' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-mem=$(grep 'Total MEM' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-if [ $obj = time ]
-then
-result=$time
-else
-result=$mem
-fi
+result1=$(grep 'FACTOR time' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+arry=($(grep 'Total highmark (MB):  All' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?'))  # consider summed peak memory instead of factor memory
+result2=${arry[0]}
 
 # write the data back to the database file
-jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
-idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
+jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $result1 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+jq --arg v0 $obj2 --argjson v1 $idx --argjson v2 $result2 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
+idx=$( jq -r --arg v0 $obj1 '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
 
 #############################################################################
 #############################################################################

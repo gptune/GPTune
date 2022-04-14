@@ -57,7 +57,7 @@ def parse_args():
     return args
 
 def LoadFunctionEvaluations():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {
@@ -81,7 +81,7 @@ def LoadFunctionEvaluations():
     return function_evaluations
 
 def LoadModels():
-    api_key = os.getenv("CROWDTUNE_API_KEY")
+    api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
     problem_space = {

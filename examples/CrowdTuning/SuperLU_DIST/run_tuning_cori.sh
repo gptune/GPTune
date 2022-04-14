@@ -30,7 +30,6 @@ export PYTHONPATH=$PYTHONPATH:../../../GPTune/
 export PYTHONPATH=$PYTHONPATH:../../../GPy/
 export PYTHONPATH=$PYTHONPATH:../../../pygmo2/
 export PYTHONWARNINGS=ignore
-export GPTUNEROOT=$PWD
 
 matname=H2O.mtx # for matname in SiO.mtx H2O.mtx Si5H12.mtx Si10H16.mtx GaAsH6.mtx Ga3As3H12.mtx
 for nbatch in 0 1 2

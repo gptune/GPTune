@@ -645,7 +645,7 @@ class HistoryDB(dict):
                 if function_evaluations != None:
                     historical_function_evaluations.extend(function_evaluations)
 
-                print ("historical_function_evaluations: ", historical_function_evaluations)
+                # print ("historical_function_evaluations: ", historical_function_evaluations)
 
                 num_tasks = len(Igiven)
 
