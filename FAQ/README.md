@@ -6,7 +6,7 @@ Table of Contents
 =================
 
 * [Frequently Asked Questions](#frequently-asked-questions)
-   * [Table of Contents](#table-of-contents)
+* [Table of Contents](#table-of-contents)
    * [General Questions](#general-questions)
       * [What applications can be tuned?](#what-applications-can-be-tuned)
    * [Installation](#installation)
@@ -20,6 +20,9 @@ Table of Contents
    * [Known issues](#known-issues)
       * [Cori: runtime error: "Error in `python': break adjusted to free malloc space: 0x0000010000000000 ***"](#cori-runtime-error-error-in-python-break-adjusted-to-free-malloc-space-0x0000010000000000-)
       * [Cori: runtime error: "_pmi_alps_init:alps_get_placement_info returned with error -1"](#cori-runtime-error-_pmi_alps_initalps_get_placement_info-returned-with-error--1)
+      * [Hanging at "MLA iteration:  0"](#hanging-at-mla-iteration--0)
+      * [Runtime error: "ImportError: cannot import name '_centered' from 'scipy.signal.signaltools'"](#runtime-error-importerror-cannot-import-name-_centered-from-scipysignalsignaltools)
+      * [Installation error: "Could not find a version that satisfies the requirement pygmo (from versions: none)"](#installation-error-could-not-find-a-version-that-satisfies-the-requirement-pygmo-from-versions-none)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -89,7 +92,45 @@ Intead of "python xx.py", one needs "srun/mpirun -n 1 xx.py" to get the correct 
 This typically means that a wrong version of openmpi is used at runtime. Make sure to use the same openmpi version as the one for gptune installation.
 ### Runtime error: "ImportError: cannot import name '_centered' from 'scipy.signal.signaltools'"
 This is due to the use of scipy-1.8.0 (or newer) and statsmodels-0.12.2 (or older). You can upgrade statsmodels to 0.13.2. 
+### Installation error: "Could not find a version that satisfies the requirement pygmo (from versions: none)"
+For python3.9+ pip install pygmo doesn't work. You need to install pygmo from source. Assume that your system has BOOST installed at 'BOOST_ROOT' and pybind11 installed at 'SITE_PACKAGE'/pybind11. The C and C++ compilers are 'MPICC' and 'MPICXX'. The following lines install TBB, pagmo and pygmo from source:
+```
+export TBB_ROOT=$GPTUNEROOT/oneTBB/build  
+export pybind11_DIR=$SITE_PACKAGE/pybind11/share/cmake/pybind11  
+export BOOST_ROOT=XXX  
+export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo  
 
+cd $GPTUNEROOT  
+rm -rf oneTBB  
+git clone https://github.com/oneapi-src/oneTBB.git  
+cd oneTBB  
+mkdir build  
+cd build  
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON  
+make -j16  
+make install  
+git clone https://github.com/wjakob/tbb.git  
+cp tbb/include/tbb/tbb_stddef.h include/tbb/.  
 
+cd $GPTUNEROOT  
+rm -rf pagmo2  
+git clone https://github.com/esa/pagmo2.git  
+cd pagmo2  
+mkdir build  
+cd build  
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib  
+make -j16  
+make install  
+cp lib/cmake/pagmo/*.cmake .  
 
+cd $GPTUNEROOT  
+rm -rf pygmo2  
+git clone https://github.com/esa/pygmo2.git  
+cd pygmo2  
+mkdir build  
+cd build
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="$SITE_PACKAGE" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX  
+make -j16  
+make install  
+```
 
