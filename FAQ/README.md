@@ -93,11 +93,22 @@ This typically means that a wrong version of openmpi is used at runtime. Make su
 ### Runtime error: "ImportError: cannot import name '_centered' from 'scipy.signal.signaltools'"
 This is due to the use of scipy-1.8.0 (or newer) and statsmodels-0.12.2 (or older). You can upgrade statsmodels to 0.13.2. 
 ### Installation error: "Could not find a version that satisfies the requirement pygmo (from versions: none)"
-For python3.9+ pip install pygmo doesn't work. You need to install pygmo from source. Assume that your system has BOOST installed at 'BOOST_ROOT' and pybind11 installed at 'SITE_PACKAGE'/pybind11. The C and C++ compilers are 'MPICC' and 'MPICXX'. The following lines install TBB, pagmo and pygmo from source:
+For python3.9+ pip install pygmo doesn't work. You need to install pygmo from source. Assume that your system has BOOST(>=1.68) installed at 'BOOST_ROOT' and pybind11 installed at 'SITE_PACKAGE'/pybind11. The C and C++ compilers are 'MPICC' and 'MPICXX'. If you don't have BOOST>=1.68, you can install it from source:
+```
+cd $GPTUNEROOT  
+wget -c 'http://sourceforge.net/projects/boost/files/boost/1.68.0/boost_1_68_0.tar.bz2/download'  
+tar -xvf download  
+cd boost_1_68_0/  
+./bootstrap.sh --prefix=$PWD/build  
+./b2 install  
+export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/stage 
+
+```
+The following lines install TBB, pagmo and pygmo from source:
 ```
 export TBB_ROOT=$GPTUNEROOT/oneTBB/build  
 export pybind11_DIR=$SITE_PACKAGE/pybind11/share/cmake/pybind11  
-export BOOST_ROOT=XXX  
+export BOOST_ROOT=XXX  # if insalled from source, remove this line
 export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo  
 
 cd $GPTUNEROOT  
