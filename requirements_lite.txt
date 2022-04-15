@@ -1,0 +1,13 @@
+numpy
+joblib
+scikit-learn 
+scipy
+pyaml
+matplotlib
+GPy
+lhsmdu
+ipyparallel
+opentuner
+hpbandster
+filelock 
+requests

@@ -68,32 +68,36 @@ export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
 python --version
 pip --version
 
-pip install --upgrade --user -r requirements.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	pip install --upgrade --user -r requirements.txt
+	cd $GPTUNEROOT
+	rm -rf build
+	mkdir -p build
+	cd build
+	rm -rf CMakeCache.txt
+	rm -rf DartConfiguration.tcl
+	rm -rf CTestTestfile.cmake
+	rm -rf cmake_install.cmake
+	rm -rf CMakeFiles
+	cmake .. \
+		-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
+		-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	make -j32
+	make install
+else
+	pip install --upgrade --user -r requirements_lite.txt
+fi
 
-cd $GPTUNEROOT
-rm -rf build
-mkdir -p build
-cd build
-rm -rf CMakeCache.txt
-rm -rf DartConfiguration.tcl
-rm -rf CTestTestfile.cmake
-rm -rf cmake_install.cmake
-rm -rf CMakeFiles
-cmake .. \
-	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
-	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
-	-DBUILD_SHARED_LIBS=ON \
-	-DCMAKE_CXX_COMPILER=$MPICXX \
-	-DCMAKE_C_COMPILER=$MPICC \
-	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
-make -j32
-make install
+
 
 
 if [[ $BuildExample == 1 ]]; then
@@ -289,15 +293,15 @@ if [[ $BuildExample == 1 ]]; then
 fi
 
 
-
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --user
-# env CC=mpicc pip install --user -e .								  
-
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install --user
+	# env CC=mpicc pip install --user -e .								  
+fi
 
 
 cd $GPTUNEROOT

@@ -174,6 +174,7 @@ def main():
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
+    
     options['model_restarts'] = 1
 
     options['distributed_memory_parallelism'] = False
@@ -191,7 +192,6 @@ def main():
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
-
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
