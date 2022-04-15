@@ -102,7 +102,7 @@ def objectives(point):                  # should always use this name for user-d
 	# tmpdata1[0]=tmpdata[1]
 	# tmpdata1[1]=tmpdata[0]	
 	# return tmpdata1 
-	return tmpdata 
+	return [tmpdata[0], tmpdata[1]]
 
 	
 def cst1(NSUP,NREL):
