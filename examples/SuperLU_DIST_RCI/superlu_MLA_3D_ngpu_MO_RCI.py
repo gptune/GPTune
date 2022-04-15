@@ -91,7 +91,7 @@ def main():
 	COLPERM   = Categoricalnorm (['2', '3', '4'], transform="onehot", name="COLPERM")
 	# LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="nprows")
-	nzdep     = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="nzdep")
+	nzdep     = Integer     (0, min(np.log2(nodes*npernode),5), transform="normalize", name="nzdep")
 	# nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 200, transform="normalize", name="NREL")
