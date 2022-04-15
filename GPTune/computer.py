@@ -227,20 +227,24 @@ class Computer(object):
                     # print(kwargs)
                     o_ = module.objectives(kwargs)
 
-                    if type(o_) == type({}) or len(o_) == 1:
+                    # return statement format 1: "return [...]" (return from an objective function)
+                    # return statement format 2: "return {...}" (return from a surrogate model black-box function)
+                    if type(o_) == dict or type(o_) == list:
                         o = o_
                         additional_output = None
-                    elif len(o_) == 2:
+                    # output format 3: "return [...], {...}"
+                    # (return from an objective function if the user wants to pass some additional information using a dictionary)
+                    elif type(o_) == tuple:
                         o = o_[0]
                         additional_output = o_[1]
 
                     o_eval = []
 
-                    if type(o) == type({}): # predicted by model
+                    if type(o) == type({}): # predicted by surrogate model black-box function
                         source = o["source"]
                         o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
                         o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
-                    else: # type(o) == type([]): # list
+                    elif type(o) == list: # measured from the objective function
                         source = "measure"
                         for i in range(len(o)):
                             if type(o[i]) == type([]):
@@ -274,21 +278,25 @@ class Computer(object):
                 if D2 is not None:
                     kwargs.update(D2)
                 o_ = module.objectives(kwargs)
-                if type(o_) == type({}) or len(o_) == 1:
+
+                # return statement format 1: "return [...]" (return from an objective function)
+                # return statement format 2: "return {...}" (return from a surrogate model black-box function)
+                if type(o_) == dict or type(o_) == list:
                     o = o_
                     additional_output = None
-                elif len(o_) == 2:
+                # output format 3: "return [...], {...}"
+                # (return from an objective function if the user wants to pass some additional information using a dictionary)
+                elif type(o_) == tuple:
                     o = o_[0]
                     additional_output = o_[1]
-                # print('kwargs',kwargs,'o',o)
 
                 o_eval = []
 
-                if type(o) == type({}): # predicted by model
+                if type(o) == dict: # predicted by model
                     source = o["source"]
                     o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
                     o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
-                else: # type(o) == type([]): # list
+                elif type(o) == list: # measured from the objective function
                     source = "measure"
                     for i in range(len(o)):
                         if type(o[i]) == type([]):
