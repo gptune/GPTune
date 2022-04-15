@@ -35,7 +35,7 @@ obj1=time    # name of the objective defined in the python file
 obj2=memory    # name of the objective defined in the python file
 
 
-database="gptune.db/SuperLU_DIST_MO_GPU3D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
+database="gptune.db/SuperLU_DIST_MO_3D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 rm -rf $database
 
 # start the main loop
@@ -44,7 +44,7 @@ while [ $more -eq 1 ]
 do
 
 # call GPTune and ask for the next sample point
-python ./superlu_MLA_3D_ngpu_MO_RCI.py -nrun $nrun -npernode $npernode
+python ./superlu_MLA_3D_MO_RCI.py -nrun $nrun -npernode $npernode
 
 
 # check whether GPTune needs more data
@@ -80,7 +80,7 @@ matrix=${input_para[0]}
 COLPERM=${tuning_para[0]}
 NSUP=${tuning_para[1]}
 NREL=${tuning_para[2]}
-MAX_BUFFER_SIZE=$((2**${tuning_para[3]}))
+LOOKAHEAD=${tuning_para[3]}
 nprows=$((2**${tuning_para[4]}))
 nzdep=$((2**${tuning_para[5]}))
 
@@ -88,12 +88,8 @@ nzdep=$((2**${tuning_para[5]}))
 
 # call the application
 export OMP_NUM_THREADS=$(($cores / $npernode))
-export NUM_GPU_STREAMS=1
 export NREL=$NREL
 export NSUP=$NSUP
-export MAX_BUFFER_SIZE=$MAX_BUFFER_SIZE
-export SUPERLU_ACC_OFFLOAD=1
-export MPI_PROCESS_PER_GPU=1
 
 nproc=$(($nodes*$npernode))
 npcols=$(($nproc / $nprows / $nzdep))
@@ -104,12 +100,12 @@ INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
-    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix"
-    mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix"
+    mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out
 elif [[ $ModuleEnv == *"mpich"* ]]; then
 ############ mpich
-    echo "srun -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out"
-    srun -n $nproc $RUNDIR/pddrive3d -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out
+    echo "srun -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out"
+    srun -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out
 elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
 ############ spectrummpi
     RS_PER_HOST=6
@@ -125,8 +121,8 @@ elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
     RS_VAL=$(($nodes * $RS_PER_HOST)) 
     TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
     
-    echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out"
-    jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out
+    echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out"
+    jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out
 fi
 
 
