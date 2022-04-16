@@ -33,7 +33,7 @@ module load cmake/3.22.1
 ##################################################
 machine=cori
 proc=haswell   # knl,haswell,gpu
-mpi=openmpi    # openmpi,craympich
+mpi=craympich    # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
@@ -392,6 +392,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
+	make pddrive3d
 	make install
 
 

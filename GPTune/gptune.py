@@ -1645,6 +1645,7 @@ class GPTune_MB(object):
 
         # self.NSs = [int(self.options['budget_max']/x*NS) for x in self.budgets] # so that the highest fidelity has NS samples
         self.NSs = [int((self.smax+1)/(s+1))*self.options['budget_base']**s for s in range(self.smax+1)] # consistent with hyperband
+        print(int((self.smax+1)/(0+1))*self.options['budget_base']**0,self.smax,'jifdjfd')
         NSs1 = [0] * len(self.NSs)
         info = [[x, y] for x, y in zip(self.budgets, self.NSs)]
         print('total samples:', info)

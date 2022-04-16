@@ -16,12 +16,14 @@
 #
 
 import math
+import os
 
 class Options(dict):
 
     def __init__(self, **kwargs):
 
         """ Options for GPTune """
+        lite_mode = False        # whether to disable all C/C++ dependencies 
         RCI_mode = False         # whether the reverse communication mode will be used
         mpi_comm = None          # The mpi communicator that invokes gptune if mpi4py is installed
         distributed_memory_parallelism = False   # Using distributed_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
@@ -65,12 +67,15 @@ class Options(dict):
 
 
         """ Options for the search phase """
-        search_class = 'SearchPyGMO' #'SearchCMO' #'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO'
+        search_class = 'SearchPyGMO' # Supported searcher classes: 'SearchPyGMO', 'SearchCMO', 'SearchSciPy' 
         search_threads = None  # Number of threads in each thread group handling one task
         search_processes = 1  # Reserved option
         search_multitask_threads = None # Number of threads groups each handling one task
         search_multitask_processes = None # Number of MPIs each handling one task
-        search_algo = 'pso' # Supported search algorithm in pygmo: single-objective: 'pso' -- particle swarm, 'cmaes' -- covariance matrix adaptation evolution. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'nspso' -- Non-dominated Sorting PSO, 'maco' -- Multi-objective Hypervolume-based ACO, 'moead' -- Multi-objective EA vith Decomposition
+        search_algo = 'pso' # Supported search algorithms:
+            # 'SearchPyGMO' or 'SearchCMO': single-objective: 'pso' -- particle swarm, 'cmaes' -- covariance matrix adaptation evolution. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'nspso' -- Non-dominated Sorting PSO, 'maco' -- Multi-objective Hypervolume-based ACO, 'moead' -- Multi-objective EA vith Decomposition
+
+            # 'SearchSciPy': single-objective: 'l-bfgs-b', 'dual_annealing', 'trust-constr', 'shgo'
         search_udi = 'thread_island' # Supported UDI options for pgymo: 'thread_island' --Thread island, 'ipyparallel_island' --Ipyparallel island
         search_pop_size = 1000 # Population size in pgymo
         search_gen = 1000  # Number of evolution generations in pgymo
@@ -118,145 +123,170 @@ class Options(dict):
     def validate(self, computer, **kwargs):
 
         """  modify the options as needed """
-        if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):
+
+        if (os.environ.get('GPTUNE_LITE_MODE') is not None):
+            self['lite_mode']=True
+
+        if(self['lite_mode']==True):
             self['model_class']='Model_GPy_LCM'
-
-        if (self['distributed_memory_parallelism'] and self['shared_memory_parallelism']):
+            self['distributed_memory_parallelism']=False
             self['shared_memory_parallelism']=False
+            self['objective_evaluation_parallelism']=False
+            self['objective_nospawn']=True
+            self['sample_class']='SampleLHSMDU'
+            self['sample_algo']='LHS-MDU'
+            self['model_threads']=1
+            self['model_processes']=1
+            self['model_restart_processes']=1
+            self['model_restart_threads']=1
+            self['search_multitask_threads']=1
+            self['search_multitask_processes']=1
+            self['search_threads']=1
+            self['search_more_samples']=1
+            self['search_class']='SearchSciPy'
+            if(not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
+                self["search_algo"]='trust-constr'
 
-        if (self['distributed_memory_parallelism']):
-            if(self['search_multitask_processes'] is None):
-                self['search_multitask_processes'] = max(1,computer.cores*computer.nodes-1) # computer.nodes
-            self['search_multitask_threads'] = 1
-            if(self['model_restart_processes'] is None):
-                self['model_restart_processes'] = self['model_restarts']
-            self['model_restart_processes'] = min(self['model_restart_processes'],max(1,computer.cores*computer.nodes-2))
-            self['model_restart_threads'] = 1
-        elif(self['shared_memory_parallelism']):
-            self['search_multitask_processes'] = 1
-            if(self['search_multitask_threads'] is None):
-                self['search_multitask_threads'] = computer.cores
-            self['model_restart_processes'] = 1
-            if(self['model_restart_threads'] is None):
-                self['model_restart_threads'] = self['model_restarts']
-            self['model_restart_threads'] = min(self['model_restart_threads'],computer.cores)
         else:
-            self['search_multitask_processes'] = 1
-            self['search_multitask_threads'] = 1
-            self['model_restart_processes'] = 1
-            self['model_restart_threads'] = 1
+            if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):
+                self['model_class']='Model_GPy_LCM'
 
-        if (self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained'):
-            if(self['model_processes'] is None):
-                if (self['distributed_memory_parallelism']):
-                    self['model_processes'] = max(1,math.floor(((computer.cores*computer.nodes-1)/(self['model_restart_processes'])-1)/self['model_restart_threads']))
-                else:
-                    self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/self['model_restart_processes']/self['model_restart_threads']))
-            self['model_threads'] =1
-        else:
-            self['model_processes'] = 1
-            self['model_threads'] = 1  # YL: this requires more thoughts, maybe math.floor((computer.cores)/self['model_restart_threads'])
+            if (self['distributed_memory_parallelism'] and self['shared_memory_parallelism']):
+                self['shared_memory_parallelism']=False
 
-        if(self['search_threads'] is None):
-            # if (self['distributed_memory_parallelism']):
-            #   self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes-1)/self['search_multitask_processes'])))
-            # else:
-            #   self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
-            self['search_threads'] =1
-
-        if(self['objective_nprocmax'] is None):
-            self['objective_nprocmax'] = computer.cores*computer.nodes-1
-        self['objective_nprocmax'] = min(self['objective_nprocmax'],computer.cores*computer.nodes-1)
-
-
-        if (self['objective_evaluation_parallelism']==True and self['distributed_memory_parallelism']==True):
-            if(self['objective_nospawn']==True):
-                self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-1))
-                nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax'])))
+            if (self['distributed_memory_parallelism']):
+                if(self['search_multitask_processes'] is None):
+                    self['search_multitask_processes'] = max(1,computer.cores*computer.nodes-1) # computer.nodes
+                self['search_multitask_threads'] = 1
+                if(self['model_restart_processes'] is None):
+                    self['model_restart_processes'] = self['model_restarts']
+                self['model_restart_processes'] = min(self['model_restart_processes'],max(1,computer.cores*computer.nodes-2))
+                self['model_restart_threads'] = 1
+            elif(self['shared_memory_parallelism']):
+                self['search_multitask_processes'] = 1
+                if(self['search_multitask_threads'] is None):
+                    self['search_multitask_threads'] = computer.cores
+                self['model_restart_processes'] = 1
+                if(self['model_restart_threads'] is None):
+                    self['model_restart_threads'] = self['model_restarts']
+                self['model_restart_threads'] = min(self['model_restart_threads'],computer.cores)
             else:
-                self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
-                nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))                
-            if(self['objective_multisample_processes'] is None):
-                self['objective_multisample_processes'] = nproc
-            self['objective_multisample_processes'] = min(self['objective_multisample_processes'],nproc)
-            self['objective_multisample_threads'] = 1
-        elif (self['objective_evaluation_parallelism']==True):
-            # nproc = max(1,math.floor((computer.cores*computer.nodes)/(self['objective_nprocmax']+1)))
-            if(self['objective_multisample_threads'] is None):
-                self['objective_multisample_threads'] = computer.cores
-            # self['objective_multisample_threads'] = min(self['objective_multisample_threads'],computer.cores,nproc)
-            self['objective_multisample_processes'] = 1
-        else:
-            self['objective_multisample_threads'] = 1
-            self['objective_multisample_processes'] = 1
+                self['search_multitask_processes'] = 1
+                self['search_multitask_threads'] = 1
+                self['model_restart_processes'] = 1
+                self['model_restart_threads'] = 1
 
-        if(self['verbose']==True):
-            print('\n\n------Validating the options')
-            print("  ")
-            print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
-            print("   ---> distributed_memory_parallelism:", self['distributed_memory_parallelism'])
-            print("   ---> shared_memory_parallelism:", self['shared_memory_parallelism'])
-            print("   ---> objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])
-
-
-        if(self['distributed_memory_parallelism']):
-            ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_processes']+1
-        else:
-            ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_threads']
-
-        if(self['verbose']==True):    
-            print("  ")
-            print("  total core counts for modeling:", ncore_model)
-            print("   ---> model_processes:", self['model_processes'])
-            print("   ---> model_threads:", self['model_threads'])
-            print("   ---> model_restart_processes:", self['model_restart_processes'])
-            print("   ---> model_restart_threads:", self['model_restart_threads'])
-
-
-        if(self['distributed_memory_parallelism']):
-            ncore_search = self['search_threads']*self['search_multitask_processes']+1
-        else:
-            ncore_search = self['search_threads']*(self['search_multitask_threads'])
-
-        if(self['verbose']==True):        
-            print("  ")
-            print("  total core counts for search:", ncore_search)
-            print("   ---> search_processes:", self['search_processes'])
-            print("   ---> search_threads:", self['search_threads'])
-            print("   ---> search_multitask_processes:", self['search_multitask_processes'])
-            print("   ---> search_multitask_threads:", self['search_multitask_threads'])
-
-        if(self['distributed_memory_parallelism']):
-            if(self['objective_nospawn']==True):
-                if(self['objective_evaluation_parallelism']==True):
-                    ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax'])+1
-                else:
-                    ncore_obj = (self['objective_nprocmax'])
-            else:    
-                if(self['objective_evaluation_parallelism']==True):
-                    ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1
-                else:
-                    ncore_obj = (self['objective_nprocmax']+1)
-        else:
-            if(self['objective_nospawn']==True):
-                ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax'])
+            if (self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained'):
+                if(self['model_processes'] is None):
+                    if (self['distributed_memory_parallelism']):
+                        self['model_processes'] = max(1,math.floor(((computer.cores*computer.nodes-1)/(self['model_restart_processes'])-1)/self['model_restart_threads']))
+                    else:
+                        self['model_processes'] = max(1,math.floor((computer.cores*computer.nodes-1)/self['model_restart_processes']/self['model_restart_threads']))
+                self['model_threads'] =1
             else:
-                ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)
-        if(self['verbose']==True):        
-            print("  ")
-            print("  total core counts for objective function evaluation:", ncore_obj)
-            print("   ---> core counts in a single application run:", self['objective_nprocmax'])
-            print("   ---> objective_multisample_processes:", self['objective_multisample_processes'])
-            print("   ---> objective_multisample_threads:", self['objective_multisample_threads'])
+                self['model_processes'] = 1
+                self['model_threads'] = 1  # YL: this requires more thoughts, maybe math.floor((computer.cores)/self['model_restart_threads'])
 
-        if(self['oversubscribe']==False):
-            if (computer.cores*computer.nodes<=1):
-                raise Exception("the computer should has at least 2 total cores")
+            if(self['search_threads'] is None):
+                # if (self['distributed_memory_parallelism']):
+                #   self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes-1)/self['search_multitask_processes'])))
+                # else:
+                #   self['search_threads'] = min(computer.cores,max(1,math.floor((computer.cores*computer.nodes)/self['search_multitask_threads'])))
+                self['search_threads'] =1
 
-            if ((computer.cores*computer.nodes)<ncore_model):
-                raise Exception("Reduce one of the options: model_restart_processes,model_restart_threads,model_processes,model_threads")
-            if ((computer.cores*computer.nodes)<ncore_search):
-                raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")
-            if ((computer.cores*computer.nodes)<ncore_obj):
-                raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
+            if(self['objective_nprocmax'] is None):
+                self['objective_nprocmax'] = computer.cores*computer.nodes-1
+            self['objective_nprocmax'] = min(self['objective_nprocmax'],computer.cores*computer.nodes-1)
+
+
+            if (self['objective_evaluation_parallelism']==True and self['distributed_memory_parallelism']==True):
+                if(self['objective_nospawn']==True):
+                    self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-1))
+                    nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax'])))
+                else:
+                    self['objective_nprocmax'] = max(1,min(self['objective_nprocmax'],computer.cores*computer.nodes-2))
+                    nproc = max(1,math.floor((computer.cores*computer.nodes-1)/(self['objective_nprocmax']+1)))                
+                if(self['objective_multisample_processes'] is None):
+                    self['objective_multisample_processes'] = nproc
+                self['objective_multisample_processes'] = min(self['objective_multisample_processes'],nproc)
+                self['objective_multisample_threads'] = 1
+            elif (self['objective_evaluation_parallelism']==True):
+                # nproc = max(1,math.floor((computer.cores*computer.nodes)/(self['objective_nprocmax']+1)))
+                if(self['objective_multisample_threads'] is None):
+                    self['objective_multisample_threads'] = computer.cores
+                # self['objective_multisample_threads'] = min(self['objective_multisample_threads'],computer.cores,nproc)
+                self['objective_multisample_processes'] = 1
+            else:
+                self['objective_multisample_threads'] = 1
+                self['objective_multisample_processes'] = 1
+
+            if(self['verbose']==True):
+                print('\n\n------Validating the options')
+                print("  ")
+                print("  total core counts provided to GPTune:", computer.cores*computer.nodes)
+                print("   ---> distributed_memory_parallelism:", self['distributed_memory_parallelism'])
+                print("   ---> shared_memory_parallelism:", self['shared_memory_parallelism'])
+                print("   ---> objective_evaluation_parallelism:", self['objective_evaluation_parallelism'])
+
+
+            if(self['distributed_memory_parallelism']):
+                ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_processes']+1
+            else:
+                ncore_model = (self['model_processes']+1)*self['model_threads']*self['model_restart_threads']
+
+            if(self['verbose']==True):    
+                print("  ")
+                print("  total core counts for modeling:", ncore_model)
+                print("   ---> model_processes:", self['model_processes'])
+                print("   ---> model_threads:", self['model_threads'])
+                print("   ---> model_restart_processes:", self['model_restart_processes'])
+                print("   ---> model_restart_threads:", self['model_restart_threads'])
+
+
+            if(self['distributed_memory_parallelism']):
+                ncore_search = self['search_threads']*self['search_multitask_processes']+1
+            else:
+                ncore_search = self['search_threads']*(self['search_multitask_threads'])
+
+            if(self['verbose']==True):        
+                print("  ")
+                print("  total core counts for search:", ncore_search)
+                print("   ---> search_processes:", self['search_processes'])
+                print("   ---> search_threads:", self['search_threads'])
+                print("   ---> search_multitask_processes:", self['search_multitask_processes'])
+                print("   ---> search_multitask_threads:", self['search_multitask_threads'])
+
+            if(self['distributed_memory_parallelism']):
+                if(self['objective_nospawn']==True):
+                    if(self['objective_evaluation_parallelism']==True):
+                        ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax'])+1
+                    else:
+                        ncore_obj = (self['objective_nprocmax'])
+                else:    
+                    if(self['objective_evaluation_parallelism']==True):
+                        ncore_obj = self['objective_multisample_processes']*(self['objective_nprocmax']+1)+1
+                    else:
+                        ncore_obj = (self['objective_nprocmax']+1)
+            else:
+                if(self['objective_nospawn']==True):
+                    ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax'])
+                else:
+                    ncore_obj = self['objective_multisample_threads']*(self['objective_nprocmax']+1)
+            if(self['verbose']==True):        
+                print("  ")
+                print("  total core counts for objective function evaluation:", ncore_obj)
+                print("   ---> core counts in a single application run:", self['objective_nprocmax'])
+                print("   ---> objective_multisample_processes:", self['objective_multisample_processes'])
+                print("   ---> objective_multisample_threads:", self['objective_multisample_threads'])
+
+            if(self['oversubscribe']==False):
+                if (computer.cores*computer.nodes<=1):
+                    raise Exception("the computer should has at least 2 total cores")
+
+                if ((computer.cores*computer.nodes)<ncore_model):
+                    raise Exception("Reduce one of the options: model_restart_processes,model_restart_threads,model_processes,model_threads")
+                if ((computer.cores*computer.nodes)<ncore_search):
+                    raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")
+                if ((computer.cores*computer.nodes)<ncore_obj):
+                    raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
 
