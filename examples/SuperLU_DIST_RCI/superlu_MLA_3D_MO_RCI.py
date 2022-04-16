@@ -89,19 +89,18 @@ def main():
 
 	# Input parameters
 	COLPERM   = Categoricalnorm (['2', '3', '4'], transform="onehot", name="COLPERM")
-	# LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
+	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="nprows")
 	nzdep     = Integer     (0, min(np.log2(nodes*npernode),5), transform="normalize", name="nzdep")
 	# nproc     = Integer     (nprocmin, nprocmax, transform="normalize", name="nproc")
 	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 200, transform="normalize", name="NREL")
-	MAX_BUFFER_SIZE     = Integer     (16, 24, transform="normalize", name="MAX_BUFFER_SIZE")	
+	# MAX_BUFFER_SIZE     = Integer     (16, 24, transform="normalize", name="MAX_BUFFER_SIZE")	
 	time   = Real        (float("-Inf") , float("Inf"), name="time")
 	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 
 	IS = Space([matrix])
-	# PS = Space([COLPERM, LOOKAHEAD, nproc, nprows, NSUP, NREL])
-	PS = Space([COLPERM, NSUP, NREL, MAX_BUFFER_SIZE, nprows, nzdep])
+	PS = Space([COLPERM, NSUP, NREL, LOOKAHEAD, nprows, nzdep])
 	OS = Space([time, memory])
 
 	constraints = {"cst1" : cst1,"cst2" : cst2}
@@ -137,14 +136,14 @@ def main():
 	# """ Building MLA with the given list of tasks """
 	# giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
 	# giventask = [["s1_mat_0_507744.bin"]]		
-	giventask = [["big.rua"]]		
-	# giventask = [["Si2.bin"]]	
+	# giventask = [["big.rua"]]		
+	giventask = [["Si2.bin"]]	
 	data = Data(problem)
 
 
 	# # the following makes sure the first sample is using default parameters 
 	data.I = giventask
-	data.P = [[['4',128,20,22, 2, 0]]]
+	data.P = [[['4',128,20,10, 2, 0]]]
 
 
 	if(TUNER_NAME=='GPTune'):
