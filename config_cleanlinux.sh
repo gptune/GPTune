@@ -171,8 +171,11 @@ source env/bin/activate
 # unalias python
 
 
-pip install --upgrade  -r requirements.txt
-
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	pip install --upgrade -r requirements.txt
+else
+	pip install --upgrade -r requirements_lite.txt
+fi
 # manually install dependencies from cmake and make
 ###################################
 cd $GPTUNEROOT
@@ -438,16 +441,16 @@ if [[ $BuildExample == 1 ]]; then
 fi
 
 
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 
-
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install 
-# env CC=mpicc pip install  -e .
-
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install 
+	# env CC=mpicc pip install  -e .
+fi
 
 
 cd $GPTUNEROOT
