@@ -154,8 +154,12 @@ brew install jq
 cd $GPTUNEROOT
 python --version
 pip --version
-pip install --force-reinstall --upgrade -r requirements_mac.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	pip install --force-reinstall --upgrade -r requirements_mac.txt
+else
+	pip install --force-reinstall --upgrade  -r requirements_lite.txt
+fi
 
 
 
@@ -433,13 +437,15 @@ cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C
 make -j8
 
 
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install
-# env CC=mpicc pip install  -e .								  
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install
+	# env CC=mpicc pip install  -e .
+fi
 
 cd $GPTUNEROOT
 rm -rf scikit-optimize

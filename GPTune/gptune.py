@@ -2232,4 +2232,3 @@ def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=
             modeler)
 
     return model_configurations
-

@@ -13,6 +13,7 @@ Table of Contents
       * [Which build script should I use to install GPTune?](#which-build-script-should-i-use-to-install-gptune)
       * [It's not easy to install all dependencies of GPTune correctly, is there a simpler way?](#its-not-easy-to-install-all-dependencies-of-gptune-correctly-is-there-a-simpler-way)
       * [I cannot install GPTune correctly with build scripts or Spack, is there an alternative?](#i-cannot-install-gptune-correctly-with-build-scripts-or-spack-is-there-an-alternative)
+      * [I also don't want to use Docker for my production run, is there an alternative?](#i-also-dont-want-to-use-docker-for-my-production-run-is-there-an-alternative)
    * [Usage-Spawning Mode](#usage-spawning-mode)
       * [Do I need to modify my application code if it's not MPI-based?](#do-i-need-to-modify-my-application-code-if-its-not-mpi-based)
    * [Usage-Reverse Communication Interface(RCI) Mode](#usage-reverse-communication-interfacerci-mode)
@@ -74,6 +75,12 @@ cd /app/GPTune/
 edit run_examples.sh to select which applications to test  
 bash run_examples.sh
 ```
+### I also don't want to use Docker for my production run, is there an alternative?
+Yes, there is now a light-weight version of GPTune, which doesn't rely on mpi4py, openturns, pygmo and openmpi 4.0+. But you do need a working MPI (e.g. mpich or openmpi<4.0). You need set the following environment variable during the installation and use stages of GPTune:
+```
+export GPTUNE_LITE_MODE=1
+```
+See config_cleanlinux.sh or config_macbook.zsh as an example. Note that when the GPTune_lite mode is used, certain GPTune features cannot be used. 
 ## Usage-Spawning Mode
 The spawning mode of GPTune relies on the mpi spawning mechanism (only available in OpenMPI) to launch a parallel application from Python codes. As a mandatory requirement, both GPTune and the application need to be compiled with OpenMPI.  
 ### Do I need to modify my application code if it's not MPI-based?

@@ -54,8 +54,14 @@ MPIRUN=$MPIRUN
 python --version
 pip --version
 
-pip install --upgrade --user -r requirements_mac.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	pip install --upgrade --user -r requirements_mac.txt
+else
+	pip install --upgrade --user -r requirements_lite.txt
+fi
+
+
+
 
 
 wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
@@ -310,13 +316,15 @@ conda install -y pygmo
 
 
 
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install
-# env CC=mpicc pip install --user -e .
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install
+	# env CC=mpicc pip install --user -e .
+fi
 
 
 

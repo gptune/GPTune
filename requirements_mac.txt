@@ -11,3 +11,4 @@ hpbandster
 requests
 scikit-optimize
 requests
+pymoo

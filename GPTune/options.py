@@ -73,13 +73,16 @@ class Options(dict):
         search_multitask_threads = None # Number of threads groups each handling one task
         search_multitask_processes = None # Number of MPIs each handling one task
         search_algo = 'pso' # Supported search algorithms:
-            # 'SearchPyGMO' or 'SearchCMO': single-objective: 'pso' -- particle swarm, 'cmaes' -- covariance matrix adaptation evolution. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'nspso' -- Non-dominated Sorting PSO, 'maco' -- Multi-objective Hypervolume-based ACO, 'moead' -- Multi-objective EA vith Decomposition
+            # 'SearchPyGMO' or 'SearchCMO': single-objective: 'pso' -- particle swarm, 'cmaes' -- covariance matrix adaptation evolution. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'nspso' -- Non-dominated Sorting PSO, 'maco' -- Multi-objective Hypervolume-based ACO, 'moead' -- Multi-objective EA vith Decomposition. 
 
             # 'SearchSciPy': single-objective: 'l-bfgs-b', 'dual_annealing', 'trust-constr', 'shgo'
+
+            # 'SearchPyMoo': single-objective: 'pso' -- particle swarm, 'ga' -- genetic algorithm. multi-objective 'nsga2' -- Non-dominated Sorting GA, 'moead' -- Multi-objective EA vith Decomposition. 
+
         search_udi = 'thread_island' # Supported UDI options for pgymo: 'thread_island' --Thread island, 'ipyparallel_island' --Ipyparallel island
-        search_pop_size = 1000 # Population size in pgymo
-        search_gen = 1000  # Number of evolution generations in pgymo
-        search_evolve = 10  # Number of times migration in pgymo
+        search_pop_size = 1000 # Population size in pgymo or pymoo
+        search_gen = 100  # Number of evolution generations in pgymo or pymoo
+        search_evolve = 10  # Number of times migration in pgymo 
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
 
@@ -143,9 +146,21 @@ class Options(dict):
             self['search_multitask_processes']=1
             self['search_threads']=1
             self['search_more_samples']=1
-            self['search_class']='SearchSciPy'
-            if(not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
+            
+            # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
+            # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
+                self['search_class']='SearchSciPy'
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
+                self['search_class']='SearchPyMoo'               
+
+            # set the default search algorithm in 'SearchSciPy' 
+            if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
                 self["search_algo"]='trust-constr'
+
+            # set the default search algorithm in 'SearchPyMoo' 
+            if(self['search_class']=='SearchPyMoo' and not (self["search_algo"] == 'nsga2' or self["search_algo"] == 'moead')):
+                self["search_algo"]='nsga2'
 
         else:
             if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):

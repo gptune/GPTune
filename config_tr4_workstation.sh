@@ -70,33 +70,33 @@ pip --version
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	pip install --upgrade --user -r requirements.txt
-	cd $GPTUNEROOT
-	rm -rf build
-	mkdir -p build
-	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
-		-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
-	make -j32
-	make install
 else
 	pip install --upgrade --user -r requirements_lite.txt
 fi
 
+cd $GPTUNEROOT
+rm -rf build
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+make -j32
+make install
 
 
 
@@ -140,6 +140,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
+	make pddrive3d
 
 
 	cd $GPTUNEROOT/examples/Hypre
