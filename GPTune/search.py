@@ -468,41 +468,6 @@ class SearchPyMoo(Search):
         return (tid, bestX)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-        lw = [0]*self.problem.DP
-        up = [1]*self.problem.DP
-        bounds_constraint = sp.optimize.Bounds(lw, up)
-        print(kwargs["search_algo"])
-        if(kwargs["search_algo"] == 'trust-constr'):
-            ret = sp.optimize.minimize(prob.fitness, x0, method='trust-constr',  jac="2-point", hess=sp.optimize.SR1(),constraints=[], options={'verbose': 1}, bounds=bounds_constraint)
-        elif(kwargs["search_algo"] == 'l-bfgs-b'):        
-            ret = sp.optimize.minimize(fun=prob.fitness, x0=x0, bounds=bounds_constraint, method='L-BFGS-B')
-        elif(kwargs["search_algo"] == 'dual_annealing'): 
-            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)))
-        else:
-            raise Exception("GPTune only supports 'l-bfgs-b', 'dual_annealing', 'trust-constr' when 'SearchSciPy' is used")
-
-
-        bestX.append(np.array(ret.x).reshape(1, self.problem.DP))
-        return (tid, bestX)
-
-
-
-
-
-
-
 class SearchPyGMO(Search):
 
     """
