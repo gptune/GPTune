@@ -68,8 +68,11 @@ export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
 python --version
 pip --version
 
-pip install --upgrade --user -r requirements.txt
-#env CC=$MPICC pip install --upgrade --user -r requirements.txt
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	pip install --upgrade --user -r requirements.txt
+else
+	pip install --upgrade --user -r requirements_lite.txt
+fi
 
 cd $GPTUNEROOT
 rm -rf build
@@ -94,6 +97,7 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
 make install
+
 
 
 if [[ $BuildExample == 1 ]]; then
@@ -136,6 +140,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
+	make pddrive3d
 
 
 	cd $GPTUNEROOT/examples/Hypre
@@ -289,15 +294,15 @@ if [[ $BuildExample == 1 ]]; then
 fi
 
 
-
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --user
-# env CC=mpicc pip install --user -e .								  
-
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install --user
+	# env CC=mpicc pip install --user -e .								  
+fi
 
 
 cd $GPTUNEROOT

@@ -32,10 +32,12 @@ from computer import Computer
 from options import Options
 from data import Data
 from model import Model
+from sample import *
 
 from pathlib import Path
 import importlib
 from sys import platform as _platform
+
 
 class Search(abc.ABC):
 
@@ -387,12 +389,84 @@ class SurrogateProblem(object):
             return self.ei(xNorm)
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
-            if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'): # single objective optimizer
+            if(self.problem.DO==1): # single objective optimizer
                 return [float("Inf")]
             else: 
                 return [float("Inf")]* self.problem.DO
+    
+    def obj_scipy(self, x):
+        return self.fitness(x)[0]
 
-import pygmo as pg
+
+
+from pymoo.core.problem import ElementwiseProblem
+class MyProblemPyMoo(ElementwiseProblem):
+
+    def __init__(self,n_var,n_obj,prob):
+        super().__init__(n_var=n_var,n_obj=n_obj,n_constr=0,xl=np.array([0]*n_var),xu=np.array([1]*n_var))
+        self.prob=prob
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        fs = self.prob.fitness(x)
+        out["F"] = fs
+
+
+class SearchPyMoo(Search):
+
+    def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+
+        kwargs = kwargs['kwargs']
+
+        # print ("SEARCH!")
+
+        prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
+        prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
+
+        if (kwargs['verbose']):
+            print ("prob: ", prob)
+        bestX = []
+
+
+        if(self.problem.DO==1): # single objective optimizer
+            if('ga'==kwargs['search_algo']):
+                from pymoo.algorithms.soo.nonconvex.ga import GA
+                from pymoo.optimize import minimize
+                algo = GA(pop_size = kwargs["search_pop_size"])
+            elif('pso'==kwargs['search_algo']):   
+                from pymoo.algorithms.soo.nonconvex.pso import PSO
+                from pymoo.optimize import minimize
+                algo = PSO(pop_size = kwargs["search_pop_size"])                
+            else:
+                raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
+
+            bestX = []
+            res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
+            bestX.append(np.array(res.X).reshape(1, self.problem.DP))
+
+        else:                   # multi objective
+            if('nsga2'==kwargs['search_algo']):
+                from pymoo.algorithms.moo.nsga2 import NSGA2
+                from pymoo.optimize import minimize
+                algo = NSGA2(pop_size = kwargs["search_pop_size"])
+            elif('moead'==kwargs['search_algo']): 
+                from pymoo.algorithms.moo.moead import MOEAD
+                from pymoo.optimize import minimize
+                from pymoo.factory import get_reference_directions
+                ref_dirs = get_reference_directions("das-dennis", self.problem.DO, n_partitions=12)
+                algo = MOEAD(ref_dirs, n_neighbors=15,prob_neighbor_mating=0.7)
+            else:
+                raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
+            bestX = []
+            res = minimize(prob_pymoo,algo,("n_gen", kwargs["search_gen"]),verbose=kwargs['verbose'],seed=1)
+            firstn = min(int(kwargs['search_more_samples']),np.shape(res.X)[0])
+            xss = res.X[0:firstn]
+            bestX.append(xss)
+
+        if (kwargs['verbose']):
+            print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
+            print("bestX",bestX)
+        return (tid, bestX)
+
 
 class SearchPyGMO(Search):
 
@@ -400,9 +474,9 @@ class SearchPyGMO(Search):
     XXX: This class, together with the underlying PyGMO only works on Intel and AMD CPUs.
     The reason is that PyGMO requires the Intel 'Thread Building Block' library to compile and execute.
     """
-    # YL: TBB works also on AMD processors
 
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+        import pygmo as pg
 
         kwargs = kwargs['kwargs']
 
@@ -418,7 +492,7 @@ class SearchPyGMO(Search):
         except:
             raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-        if(kwargs["search_algo"]=='pso' or kwargs["search_algo"]=='cmaes'): # single objective optimizer
+        if(self.problem.DO==1): # single objective optimizer
             try:
                 algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
             except:
@@ -597,12 +671,11 @@ class SurrogateProblemCMO(object):
             return self.ei(xNorm)
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
-            if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'): # single objective optimizer
+            if(self.problem.DO==1): # single objective optimizer
                 return [float("Inf")]
             else:
                 return [float("Inf")]* self.problem.DO
 
-import pygmo as pg
 
 class SearchCMO(Search):
 
@@ -612,6 +685,7 @@ class SearchCMO(Search):
     """
 
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+        import pygmo as pg
 
         print ("SearchByCMO")
 
@@ -624,7 +698,7 @@ class SearchCMO(Search):
         except:
             raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-        if(kwargs["search_algo"]=='pso' or kwargs["search_algo"]=='cmaes'): # single objective optimizer
+        if(self.problem.DO==1): # single objective optimizer
             try:
                 algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
             except:
@@ -672,6 +746,52 @@ class SearchCMO(Search):
         if (kwargs['verbose']):
             print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
         # print("bestX",bestX)
+        return (tid, bestX)
+
+
+
+
+class SearchSciPy(Search):
+
+    def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
+
+        if(self.problem.DO>1):
+            raise Exception("'SearchSciPy' cannot be used for multi-objective search")
+
+        kwargs = kwargs['kwargs']
+
+        # print ("SEARCH!")
+
+        prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
+
+        if (kwargs['verbose']):
+            print ("prob: ", prob)
+        bestX = []
+
+        sampler = eval(f'{kwargs["sample_class"]}()')
+        check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+        tmpP = sampler.sample_parameters(n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+        x0 = tmpP[0][0]
+
+        lw = [0]*self.problem.DP
+        up = [1]*self.problem.DP
+        bounds_constraint = sp.optimize.Bounds(lw, up)
+        print(kwargs["search_algo"])
+        if(kwargs["search_algo"] == 'trust-constr'):
+            ret = sp.optimize.minimize(prob.fitness, x0, method='trust-constr',  jac="2-point", hess=sp.optimize.SR1(),constraints=[], options={'verbose': 1}, bounds=bounds_constraint)
+        elif(kwargs["search_algo"] == 'l-bfgs-b'):        
+            ret = sp.optimize.minimize(fun=prob.fitness, x0=x0, bounds=bounds_constraint, method='L-BFGS-B')
+        elif(kwargs["search_algo"] == 'dual_annealing'): 
+            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)))
+        else:
+            raise Exception("GPTune only supports 'l-bfgs-b', 'dual_annealing', 'trust-constr' when 'SearchSciPy' is used")
+
+        # print(ret,'erere')
+        print('>>>>Maximal acquisition function = ',ret.fun,' attained at ',ret.x)
+
+        
+
+        bestX.append(np.array(ret.x).reshape(1, self.problem.DP))
         return (tid, bestX)
 
 

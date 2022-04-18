@@ -13,3 +13,4 @@ hpbandster
 filelock 
 requests
 pybind11
+pymoo

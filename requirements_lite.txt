@@ -2,13 +2,13 @@ numpy
 joblib
 scikit-learn 
 scipy
+pyaml
 matplotlib
-openturns
+GPy
 lhsmdu
 ipyparallel
 opentuner
 hpbandster
-requests
-scikit-optimize
+filelock 
 requests
 pymoo

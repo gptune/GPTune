@@ -147,8 +147,6 @@ class SampleLHSMDU(Sample):
         return lhs
 
 
-import openturns as ot
-
 class SampleOpenTURNS(Sample):
 
     """
@@ -164,6 +162,7 @@ class SampleOpenTURNS(Sample):
         self.cached_distribution = None
 
     def sample(self, n_samples : int, space : Space, **kwargs):
+        import openturns as ot
 
         if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution

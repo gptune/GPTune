@@ -121,7 +121,7 @@ def objectives(point):
     # x = point['x']
     # f = 20*x**2+t
     # time.sleep(1.0)
-    print('t',t,'x',x,'f',f)
+    # print('t',t,'x',x,'f',f)
     return [f]
 
 

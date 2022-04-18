@@ -18,7 +18,7 @@ This experiment run four examples of the crowd-tuning API.
 
 Step 1. Export your crowd-tuning API key to be used by the script
 
-$ source CROWDTUNING_API_KEY="your_api_key"
+$ export CROWDTUNING_API_KEY="your_api_key"
 
 Step 2. Export crowd-tuning API and GPTune package links
 
