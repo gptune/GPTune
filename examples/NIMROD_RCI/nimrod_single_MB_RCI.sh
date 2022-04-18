@@ -43,7 +43,7 @@ bmax=8
 eta=2
 
 database="gptune.db/NIMROD.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
-rm -rf $database
+# rm -rf $database
 
 # start the main loop
 more=1
@@ -137,7 +137,7 @@ cp $BINDIR/nimrod .
 
 
 COLPERM='4'
-ROWPERM='2'
+ROWPERM='1'
 
 
 tmp=$(python -c "import numpy as np

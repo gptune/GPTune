@@ -36,7 +36,7 @@ obj2=memory    # name of the objective defined in the python file
 
 
 database="gptune.db/SuperLU_DIST_MO_GPU2D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
-rm -rf $database
+# rm -rf $database
 
 # start the main loop
 more=1
