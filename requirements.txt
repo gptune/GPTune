@@ -13,3 +13,5 @@ hpbandster
 pygmo
 filelock 
 requests
+pymoo
+fn
