@@ -152,6 +152,9 @@ make -j16
 make install  
 ```
 ### Runtime error: "ModuleNotFoundError: No module named 'fn'"
-This is due to the use of Python3.9+ and earlier versions of opentuner. See https://github.com/jansel/opentuner/pull/155 for more details. You can either use the latest opentuner (build from source), which removes its fn dependency, or use Python <=3.8. 
+This is due to the dependency on fn from opentuner. Note fn has been removed from opentuner (https://github.com/jansel/opentuner/pull/155). Make sure you use the patch file provided by GPTune, as
+```
+cp $GPTUNEROOT/patches/opentuner/manipulator.py your-python-site-packages/opentuner/search/.
+```
 
 

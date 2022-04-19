@@ -12,3 +12,4 @@ pygmo
 filelock 
 requests
 pymoo
+cloudpickle

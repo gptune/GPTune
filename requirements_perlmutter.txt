@@ -14,3 +14,4 @@ filelock
 requests
 pybind11
 pymoo
+cloudpickle

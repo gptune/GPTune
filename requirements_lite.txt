@@ -12,3 +12,4 @@ hpbandster
 filelock 
 requests
 pymoo
+cloudpickle

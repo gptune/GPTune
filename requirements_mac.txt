@@ -12,3 +12,4 @@ requests
 scikit-optimize
 requests
 pymoo
+cloudpickle
