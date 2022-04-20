@@ -281,7 +281,7 @@ class Computer(object):
 
                 # return statement format 1: "return [...]" (return from an objective function)
                 # return statement format 2: "return {...}" (return from a surrogate model black-box function)
-                if type(o_) == dict or type(o_) == list:
+                if type(o_) == dict or type(o_) == list or type(o_) == np.ndarray:
                     o = o_
                     additional_output = None
                 # output format 3: "return [...], {...}"
@@ -296,7 +296,7 @@ class Computer(object):
                     source = o["source"]
                     o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
                     o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
-                elif type(o) == list: # measured from the objective function
+                elif type(o) == list or type(o) == np.ndarray: # measured from the objective function
                     source = "measure"
                     for i in range(len(o)):
                         if type(o[i]) == type([]):
