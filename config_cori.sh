@@ -356,6 +356,8 @@ if [[ $BuildExample == 1 ]]; then
 	tar -xf parmetis-4.0.3.tar.gz
 	cd parmetis-4.0.3/
 	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# use 64-bit integer in parmetis and superlu_dist
+	cp $GPTUNEROOT/patches/parmetis/metis_64bit.h $PWD/metis/include/metis.h
 	mkdir -p install
 	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 	make install > make_parmetis_install.log 2>&1	
@@ -377,7 +379,7 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf CMakeFiles
 	cmake .. \
 		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
+		-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_C_COMPILER=$MPICC \

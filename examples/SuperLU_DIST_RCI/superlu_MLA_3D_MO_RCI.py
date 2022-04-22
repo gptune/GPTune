@@ -83,7 +83,7 @@ def main():
 	# matrices = ["s1_mat_0_507744.bin", "matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
-	matrices = ["big.rua","g20.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
+	matrices = ["ecology1.mtx","SiO2.rb","G3_circuit.mtx","nlpkkt80.bin","big.rua","g20.rua","Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 	# Task parameters
 	matrix    = Categoricalnorm (matrices, transform="onehot", name="matrix")
 
@@ -137,13 +137,17 @@ def main():
 	# giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
 	# giventask = [["s1_mat_0_507744.bin"]]		
 	# giventask = [["big.rua"]]		
-	giventask = [["Si2.bin"]]	
+	# giventask = [["nlpkkt80.bin"]]	
+	# giventask = [["Si2.bin"]]	
+	giventask = [["SiO2.rb"]]	
+	# giventask = [["G3_circuit.mtx"]]	
+	# giventask = [["ecology1.mtx"]]	
 	data = Data(problem)
 
 
 	# # the following makes sure the first sample is using default parameters 
 	data.I = giventask
-	data.P = [[['4',128,20,10, 2, 0]]]
+	data.P = [[['4',128,20,10, 4, 0]]]
 
 
 	if(TUNER_NAME=='GPTune'):
