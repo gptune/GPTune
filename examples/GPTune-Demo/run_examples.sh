@@ -13,24 +13,25 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 
     ##########################################################################################
     ################## Illustrate basic functionalities ######################################
-    tuner=GPTune
-    rm -rf gptune.db/*.json # do not load any database 
-    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
+#    tuner=GPTune
+#    rm -rf gptune.db/*.json # do not load any database 
+#    $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1  python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
     ###########################################################################################
 
 
 
     # ###########################################################################################
     # ################### Illustrate parallel modeling and search performance ###################
-    # # this example performs one MLA iteration using $\epsilon=80$ and $\delta=20$ samples of the analytical function (see Table 2 of the PPoPP paper). Suppose your machine has 1 node with 16 cores, run the following two configurations and compare 'time_search':xxx and 'time_model':xxx from the runlogs.    
-    # cd $GPTUNEROOT/examples/GPTune-Demo
-    # rm -rf gptune.db/*.json
-    # tp=GPTune-Demo
-    # app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-    # echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json  
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./demo_parallelperformance.py -ntask 20 -nrun 80  | tee a.out_seqential # this is the sequential benchmark
-    # rm -rf gptune.db/*.json
-    # $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./demo_parallelperformance.py -ntask 20 -nrun 80 -distparallel 1 | tee a.out_parallel # this is parallel modeling and search
+     # this example performs one MLA iteration using $\epsilon=80$ and $\delta=20$ samples of the analytical function (see Table 2 of the PPoPP paper). Suppose your machine has 1 node with 16 cores, run the following two configurations and compare 'time_search':xxx and 'time_model':xxx from the runlogs.    
+     cd $GPTUNEROOT/examples/GPTune-Demo
+     rm -rf gptune.db/*.json
+     tp=GPTune-Demo
+     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+     echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json  
+     $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./demo_parallelperformance.py -ntask 20 -nrun 40  | tee a.out_seqential # this is the sequential benchmark
+     rm -rf gptune.db/*.json
+     $MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1 python ./demo_parallelperformance.py -ntask 20 -nrun 40 -distparallel 1 | tee a.out_parallel # this is parallel modeling and search
+
     # ###########################################################################################
 
 

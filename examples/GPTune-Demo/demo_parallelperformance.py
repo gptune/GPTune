@@ -168,8 +168,10 @@ def main():
     options['model_restarts'] = 1
     if(distparallel==True):
         options['distributed_memory_parallelism'] = True
+        options['model_processes'] = nodes*cores-2
     else:
         options['distributed_memory_parallelism'] = False
+        options['model_processes'] = 1
 
     options['shared_memory_parallelism'] = False
 
@@ -180,7 +182,7 @@ def main():
 
     # options['model_processes'] = nodes*cores-2
     options['model_threads'] = 1
-    # options['model_restart_processes'] = 1
+    options['model_restart_processes'] = 1
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
@@ -190,7 +192,7 @@ def main():
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
     options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['verbose'] = True
+    # options['verbose'] = True
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
 
