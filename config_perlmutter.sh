@@ -180,7 +180,7 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf CMakeFiles
 	cmake .. \
 		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_C_COMPILER=$MPICC \

@@ -36,7 +36,7 @@ obj2=memory    # name of the objective defined in the python file
 
 
 database="gptune.db/SuperLU_DIST_MO_3D.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
-rm -rf $database
+# rm -rf $database
 
 # start the main loop
 more=1
@@ -127,9 +127,9 @@ fi
 
 
 # get the result (for this example: search the runlog)
-result1=$(grep 'FACTOR time' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-arry=($(grep 'Total highmark (MB):  All' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?'))  # consider summed peak memory instead of factor memory
-result2=${arry[0]}
+result1=$(grep 'FACTOR time' a.out | grep -Eo '[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?.')
+arry=($(grep 'LU-LU(repli)' a.out | grep -Eo '[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?.'))  # consider summed peak memory instead of factor memory
+result2=$(echo ${arry[0]} ${arry[1]} $nproc | awk '{printf "%10.4f\n",($1+$2)*$3/1e6}')
 
 # write the data back to the database file
 jq --arg v0 $obj1 --argjson v1 $idx --argjson v2 $result1 '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database

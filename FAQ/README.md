@@ -151,4 +151,10 @@ cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="$SITE_PACKAG
 make -j16  
 make install  
 ```
+### Runtime error: "ModuleNotFoundError: No module named 'fn'"
+This is due to the dependency on fn from opentuner. Note fn has been removed from opentuner (https://github.com/jansel/opentuner/pull/155). Make sure you use the patch file provided by GPTune, as
+```
+cp $GPTUNEROOT/patches/opentuner/manipulator.py your-python-site-packages/opentuner/search/.
+```
+
 

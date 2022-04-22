@@ -48,7 +48,7 @@ niter=2                 # number of repeating each application run
 bunit=8                 # mb,nb is integer multiple of bunit
 
 database="gptune.db/PDGEQRF.json"  # the phrase PDGEQRF should match the application name defined in .gptune/meta.jason
-rm -rf $database
+# rm -rf $database
 
 # start the main loop
 more=1

@@ -2130,8 +2130,10 @@ def SensitivityAnalysis(problem_space:dict=None,
         for i in range(len(parameter_values)):
             model_input = {}
             for j in range(num_vars):
-                if parameter_types[j] == "int" or parameter_types[j] == "integer" or parameter_types[j] == "real":
+                if parameter_types[j] == "int" or parameter_types[j] == "integer":
                     model_input[parameter_names[j]] = int(parameter_values[i][j])
+                elif parameter_types[j] == "real":
+                    model_input[parameter_names[j]] = parameter_values[i][j]
                 elif parameter_types[j] == "categorical":
                     model_input[parameter_names[j]] = categorical_parameter_values[parameter_names[j]][int(parameter_values[i][j])]
 

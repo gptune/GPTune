@@ -36,7 +36,7 @@ cores=${machine_info[3]}
 
 
 database="gptune.db/SuperLU_DIST.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
-rm -rf $database
+# rm -rf $database
 
 # start the main loop
 more=1
