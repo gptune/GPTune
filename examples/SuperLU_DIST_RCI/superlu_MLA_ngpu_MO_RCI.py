@@ -94,7 +94,7 @@ def main():
 	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 200, transform="normalize", name="NREL")
 	N_GEMM     = Integer     (8, 20, transform="normalize", name="N_GEMM")	
-	MAX_BUFFER_SIZE     = Integer     (16, 24, transform="normalize", name="MAX_BUFFER_SIZE")	
+	MAX_BUFFER_SIZE     = Integer     (25, 30, transform="normalize", name="MAX_BUFFER_SIZE")	
 	time   = Real        (float("-Inf") , float("Inf"), name="time")
 	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 
@@ -136,14 +136,15 @@ def main():
 	# """ Building MLA with the given list of tasks """
 	# giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
 	# giventask = [["s1_mat_0_507744.bin"]]		
-	giventask = [["big.rua"]]		
+	# giventask = [["big.rua"]]		
 	# giventask = [["Si2.bin"]]	
+	giventask = [["H2O.bin"]]
 	data = Data(problem)
 
 
 	# # the following makes sure the first sample is using default parameters 
 	data.I = giventask
-	data.P = [[['4',128,20,13,22, 2]]]
+	data.P = [[['4',256,60,13,28, 2]]]
 
 
 	if(TUNER_NAME=='GPTune'):

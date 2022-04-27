@@ -98,7 +98,7 @@ export MPI_PROCESS_PER_GPU=1
 nproc=$(($nodes*$npernode))
 npcols=$(($nproc / $nprows / $nzdep))
 
-RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
+RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE/"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
 
