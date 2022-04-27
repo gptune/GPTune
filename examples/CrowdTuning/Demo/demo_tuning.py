@@ -177,7 +177,7 @@ def main():
         },
         "software_configuration": {}
     }
-
+    import openturns as ot
     ot.RandomGenerator.SetSeed(nbatch)
     print(args)
 
