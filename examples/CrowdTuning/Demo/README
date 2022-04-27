@@ -1,4 +1,9 @@
-Crowd-tuning synthetic demo functions.
+This directory contains two crowd-tuning examples.
+
+================================================================================
+
+Example 1. Transfer learning-based autotuning of synthetic demo functions using
+pre-collected data.
 
 This crowd-tuning example tunes synthetic task functions using performance data
 (collected for a different task value) from our crowd-tuning repository at
@@ -30,6 +35,32 @@ $ python analyze_time_solution.py
 
 Users can refer to these scripts run_experiments_mac/linux.sh and demo_tuning.py
 to apply the crowd-tuning approach to users' tuning problems.
+
+================================================================================
+
+Example 2. Tutorial of automatic uploading of function evaluations.
+
+This example tunes the synthetic demo function and automatically uploads the
+obtained function evaluation results to the history database shared repository.
+
+Step 1. Export your crowd-tuning API key to be used by the tuning script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 2. Run a prepared script. This will upload the obtained function
+evaluations to the history database shared repository.
+
+(a) Mac
+$ ./run_experiments_mac.sh
+
+(b) Linux (our docker image)
+$ ./run_experiments_linux.sh
+
+You can access the history database repository and see uploaded performance data
+using a web browser. Please access https://gptune.lbl.gov/repo/dashboard and
+search data for "Demo-Tutorial".
+
+================================================================================
 
 For more details or questions, please contact 
 Younghyun Cho <younghyun@berkeley.edu>
