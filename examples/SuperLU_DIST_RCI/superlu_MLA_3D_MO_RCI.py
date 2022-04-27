@@ -139,7 +139,7 @@ def main():
 	# giventask = [["big.rua"]]		
 	# giventask = [["nlpkkt80.bin"]]	
 	# giventask = [["Si2.bin"]]	
-	giventask = [["SiO2.rb"]]	
+	giventask = [["H2O.bin"]]	
 	# giventask = [["G3_circuit.mtx"]]	
 	# giventask = [["ecology1.mtx"]]	
 	data = Data(problem)
