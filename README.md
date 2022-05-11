@@ -75,6 +75,7 @@ export MPIRUN=path-to-mpirun
 export BLAS_LIB=path-to-blas-lib
 export LAPACK_LIB=path-to-lapack-lib
 export GPTUNEROOT=path-to-gptune-root-directory
+export SITE_PACKAGES_PATH=path-to-your-site-packages
 ```
 
 The rest can be installed as follows:
@@ -155,7 +156,7 @@ cmake .. \
     -DCMAKE_Fortran_COMPILER=$MPIF90 \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-    -DGPTUNE_INSTALL_PATH=$YOUR_SITE_PACKAGES_PATH \
+    -DGPTUNE_INSTALL_PATH=$SITE_PACKAGES_PATH \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
