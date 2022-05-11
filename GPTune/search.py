@@ -501,7 +501,10 @@ class SearchPyGMO(Search):
             cond = False
             cpt = 0
             while (not cond and cpt < kwargs['search_max_iters']):
-                archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
+                if kwargs['search_random_seed'] == None:
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
+                else:
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed'])
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
                 champions_f = archi.get_champions_f()

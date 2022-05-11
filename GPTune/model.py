@@ -72,6 +72,9 @@ class Model_GPy_LCM(Model):
 #model_layers=2
 
     def train(self, data : Data, **kwargs):
+        if kwargs['model_random_seed'] != None:
+            np.random.seed(kwargs['model_random_seed'])
+
         import copy
         self.M_last = copy.deepcopy(self.M)
 
@@ -256,7 +259,10 @@ class Model_LCM(Model):
         else:
             def fun(restart_iter):
                 # np.random.seed(restart_iter)
-                np.random.seed()
+                if kwargs['model_random_seed'] == None:
+                    np.random.seed()
+                else:
+                    np.random.seed(model_random_seed)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))

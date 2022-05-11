@@ -193,13 +193,19 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    # options['mpi_comm'] = None
-    #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_GPy_LCM' #'Model_GPy_LCM'
-    options['verbose'] = False
     # options['sample_algo'] = 'MCS'
-    # options['sample_class'] = 'SampleLHSMDU'
 
+    # Use the following two lines if you want to specify a certain random seed for the random pilot sampling
+    options['sample_class'] = 'SampleOpenTURNS'
+    options['sample_random_seed'] = 0
+    # Use the following two lines if you want to specify a certain random seed for surrogate modeling
+    options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
+    options['model_random_seed'] = 10
+    # Use the following two lines if you want to specify a certain random seed for the search phase
+    options['search_class'] = 'SearchPyGMO'
+    options['search_random_seed'] = 0
+
+    options['verbose'] = False
     options.validate(computer=computer)
 
     if ntask == 1:

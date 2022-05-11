@@ -162,7 +162,12 @@ class SampleOpenTURNS(Sample):
         self.cached_distribution = None
 
     def sample(self, n_samples : int, space : Space, **kwargs):
+
+        kwargs = kwargs['kwargs']
+
         import openturns as ot
+        if kwargs['sample_random_seed'] != None:
+            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed'])
 
         if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution

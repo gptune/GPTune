@@ -44,7 +44,7 @@ class Options(dict):
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
-
+        sample_random_seed = None # Specify a certain random seed for the pilot sampling phase
 
 
         """ Options for the modeling phase """
@@ -64,6 +64,7 @@ class Options(dict):
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 
+        model_random_seed = None # Specify a certain random seed for the surrogate modeling phase
 
 
         """ Options for the search phase """
@@ -85,6 +86,7 @@ class Options(dict):
         search_evolve = 10  # Number of times migration in pgymo 
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
+        search_random_seed = None # Specify a certain random seed for the search phase (it works for only SearchPyGMO option for now)
 
         """ Options for transfer learning """
         TLA_method = 'Regression' #"LCM" #'Sum' #'regression_weights_no_scale'
