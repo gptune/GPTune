@@ -240,13 +240,13 @@ For examples, this can be runtime, memory or energy consumption in HPC applicati
 #### Parameters
 
 Every dimension of the above mentioned spaces is defined by a **Parameter** object.
-Every parameter i defined by its name, type and range or set of values.
+Every parameter is defined by its name, type and range or set of values.
 Three types of parameters can be defined:
 1. Real: defines floating point parameters.
 The range of values that the parameter spans should be defined in the *range* argument.
 2. Integer: defines integer parameters.
 The range of values that the parameter spans should be defined in the *range* argument.
-3. Categorical: defines parameters that take their values in a set or list of values.
+3. Categorical: defines parameters that take their values in a set or list of (string) values.
 The list of valid values defining the parameter should be defined in the *values* argument.
 (*Note*: If the problems the application targets cannot be defined in a Cartesian space, the user can simply give a list of problems (as a Categorical parameter) in the definition of the task space.)
 
