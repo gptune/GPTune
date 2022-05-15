@@ -434,9 +434,39 @@ class HistoryDB(dict):
 
             if self.tuning_problem_name is not None:
                 json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+                create_db_file = False
                 if os.path.exists(json_data_path):
                     print ("[HistoryDB] Found a history database file")
+
+                    if self.file_synchronization_method == 'filelock':
+                        with FileLock(json_data_path+".lock"):
+                            with open(json_data_path, "r") as f_in:
+                                try:
+                                    history_data = json.load(f_in)
+                                except:
+                                    create_db_file = True
+                    elif self.file_synchronization_method == 'rsync':
+                        temp_path = json_data_path + "." + self.process_uid + ".temp"
+                        os.system("rsync -a " + json_data_path + " " + temp_path)
+                        with open(temp_path, "r") as f_in:
+                            try:
+                                history_data = json.load(f_in)
+                            except:
+                                create_db_file = True
+                        os.system("rm " + temp_path)
+                    else:
+                        with open(json_data_path, "r") as f_in:
+                            try:
+                                history_data = json.load(f_in)
+                            except:
+                                create_db_file = True
+                    if create_db_file == True:
+                        print ("[HistoryDB Warning] the database file is invvalid. Re-initializing the file")
                 else:
+                    create_db_file = True
+
+                if create_db_file == True:
                     print ("[HistoryDB] Create a JSON file at " + json_data_path)
 
                     if self.file_synchronization_method == 'filelock':
