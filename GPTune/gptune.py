@@ -912,7 +912,7 @@ class GPTune(object):
             return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
         elif self.options['TLA_method'] == 'Sum':
             return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
-        elif self.options['TLA_method'] == 'LCM':
+        elif self.options['TLA_method'] == 'LCM_BF':
             return self.TLA_LCM(NS, NS1, NI, Igiven, models_transfer)
 
     def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):

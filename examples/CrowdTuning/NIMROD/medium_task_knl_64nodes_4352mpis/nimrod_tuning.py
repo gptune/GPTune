@@ -61,9 +61,12 @@ def LoadFunctionEvaluations():
         ]
     }
 
+    configuration_space = {}
+
     function_evaluations = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
-        problem_space = problem_space)
+        problem_space = problem_space,
+        configuration_space = configuration_space)
     for func_eval in function_evaluations:
         func_eval["task_parameter"]["tla_id_"] = 0
 
@@ -94,10 +97,13 @@ def LoadModels():
         ]
     }
 
+    configuration_space = {}
+
     surrogate_model = crowdtune.QuerySurrogateModel(
         api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
         problem_space = problem_space,
+        configuration_space = configuration_space,
         input_task = [5,7,1])
 
     return [surrogate_model]
@@ -117,6 +123,8 @@ def main():
         tla_method = None
     elif tuning_method == "TLA_LCM":
         tla_method = "LCM"
+    elif tuning_method == "TLA_LCM_BF":
+        tla_method = "LCM_BF"
     elif tuning_method == "TLA_Regression":
         tla_method = "Regression"
     elif tuning_method == "TLA_Sum":
@@ -175,7 +183,7 @@ def main():
     my      = Integer     (7, 8, transform="normalize", name="my")
     tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
 
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         IS = Space([mx,my,lphi,tla_id_])
     else:
         IS = Space([mx,my,lphi])
@@ -222,7 +230,7 @@ def main():
     options.validate(computer=computer)
 
     data = Data(problem)
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         giventask = [[5,7,1,0],[5,7,1,1]]
     else:
         giventask = [[5,7,1]]

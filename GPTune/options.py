@@ -89,7 +89,7 @@ class Options(dict):
         search_random_seed = None # Specify a certain random seed for the search phase (it works for only SearchPyGMO option for now)
 
         """ Options for transfer learning """
-        TLA_method = 'Regression' #"LCM" #'Sum' #'regression_weights_no_scale'
+        TLA_method = 'Regression' #"LCM_BF" #'Sum' #'regression_weights_no_scale'
         regression_log_name = 'models_weights.log'
 
         """ Options for the multi-arm bandit algorithm """

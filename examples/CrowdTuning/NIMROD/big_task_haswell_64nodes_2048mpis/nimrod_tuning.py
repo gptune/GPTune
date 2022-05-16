@@ -123,6 +123,8 @@ def main():
         tla_method = None
     elif tuning_method == "TLA_LCM":
         tla_method = "LCM"
+    elif tuning_method == "TLA_LCM_BF":
+        tla_method = "LCM_BF"
     elif tuning_method == "TLA_Regression":
         tla_method = "Regression"
     elif tuning_method == "TLA_Sum":
@@ -181,7 +183,7 @@ def main():
     my      = Integer     (7, 8, transform="normalize", name="my")
     tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
 
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         IS = Space([mx,my,lphi,tla_id_])
     else:
         IS = Space([mx,my,lphi])
@@ -228,7 +230,7 @@ def main():
     options.validate(computer=computer)
 
     data = Data(problem)
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         giventask = [[5,7,1,0],[6,8,1,1]]
     else:
         giventask = [[6,8,1]]
