@@ -142,7 +142,7 @@ class Computer(object):
                 D2 = None
             if(options['RCI_mode']==False):
                 if i >= num_target_tasks:
-                    O2 = self.model_predict_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, model_transfer=models_transfer[i-num_target_tasks])
+                    O2 = self.model_predict_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, model_transfer=models_transfer[i-num_target_tasks], source = "model")
                 else:
                     O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options)
 
@@ -150,16 +150,20 @@ class Computer(object):
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
 
             else:
-                tmp = np.empty( shape=(len(P2), problem.DO))
-                tmp[:] = np.NaN
-                O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
+                if i >= num_target_tasks:
+                    O2 = self.model_predict_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, model_transfer=models_transfer[i-num_target_tasks], source = "RCI_model")
+                else:
+                    tmp = np.empty( shape=(len(P2), problem.DO))
+                    tmp[:] = np.NaN
+                    O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
 
-                if history_db is not None:
-                    history_db.store_func_eval(problem = problem,\
-                            task_parameter = I[i], \
-                            tuning_parameter = P[i],\
-                            evaluation_result = tmp,\
-                            evaluation_detail = tmp)
+                    if history_db is not None:
+                        history_db.store_func_eval(problem = problem,\
+                                task_parameter = I[i], \
+                                tuning_parameter = P[i],\
+                                evaluation_result = tmp,\
+                                evaluation_detail = tmp,\
+                                source = "RCI_measure")
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
@@ -318,7 +322,7 @@ class Computer(object):
 
         return O2
 
-    def model_predict_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None, model_transfer:list=None):  # T2 and P2 are in the normalized space
+    def model_predict_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None, model_transfer:list=None, source:str="model"):  # T2 and P2 are in the normalized space
 
         I_orig = problem.IS.inverse_transform(np.array(T2, ndmin=2))[0]
 
@@ -361,28 +365,32 @@ class Computer(object):
 
                 o_eval = []
 
-                if type(o) == type({}): # predicted by model
-                    source = o["source"]
-                    o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
-                    o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
-                else: # type(o) == type([]): # list
-                    source = "measure"
-                    for i in range(len(o)):
-                        if type(o[i]) == type([]):
-                            o_eval.append(np.average(o[i]))
-                        else:
-                            o_eval.append(o[i])
-                    o_detail = o
+                o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
 
-                #if history_db is not None:
-                #    history_db.store_func_eval(problem = problem,\
-                #            task_parameter = T2, \
-                #            tuning_parameter = [P2[j]],\
-                #            evaluation_result = [o_eval], \
-                #            evaluation_detail = [o_detail], \
-                #            additional_output = additional_output,
-                #            source = source)
-                #            #np.array(O2_).reshape((len(O2_), problem.DO)), \
+                #if type(o) == type({}): # predicted by model
+                #    source = o["source"]
+                #    o_eval = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                #    o_detail = [o[problem.OS[k].name][0][0] for k in range(len(problem.OS))]
+                #else: # type(o) == type([]): # list
+                #    source = "measure"
+                #    for i in range(len(o)):
+                #        if type(o[i]) == type([]):
+                #            o_eval.append(np.average(o[i]))
+                #        else:
+                #            o_eval.append(o[i])
+                #    o_detail = o
+
+                if source == "RCI_model":
+                    if history_db is not None:
+                        history_db.store_func_eval(problem = problem,\
+                                task_parameter = T2, \
+                                tuning_parameter = [P2[j]],\
+                                evaluation_result = [o_eval], \
+                                evaluation_detail = [o_detail], \
+                                additional_output = additional_output,
+                                source = source)
+                                #np.array(O2_).reshape((len(O2_), problem.DO)), \
 
                 O2.append(o_eval)
 
