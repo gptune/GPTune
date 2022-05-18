@@ -512,7 +512,14 @@ class GPTune(object):
                                 iteration)
                         stats["modeling_iteration"][optiter-1] += iteration
                     else:
-                        modelers[o].train(data = tmpdata, **kwargs)
+                        (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                        self.historydb.store_model_GPy_LCM(
+                                o,
+                                self.problem,
+                                self.data.I,
+                                hyperparameters,
+                                modeling_options,
+                                model_stats)
                         stats["modeling_iteration"][optiter-1] += 0
                     model_reupdate = 0
                 else:
@@ -838,7 +845,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
                 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -1151,7 +1165,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -1505,7 +1526,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()

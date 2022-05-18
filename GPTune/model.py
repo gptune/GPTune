@@ -131,36 +131,79 @@ class Model_GPy_LCM(Model):
         self.M.parameters_changed()
 
         if(multitask): # dump the hyperparameters
-            theta=[]
-            var=[]
-            ws=[]
-            kappa=[]
-            sigma=[]
-            # print(self.M)
+            hyperparameters = {
+                "rbf_lengthscale": [],
+                "variance": [],
+                "B_W": [],
+                "B_kappa": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M._log_marginal_likelihood
+            }
+            modeling_options = {}
+            modeling_options["model_kernel"] = "RBF"
+            if kwargs["model_sparse"] == True:
+                modeling_options["model_method"] = "SparseGPCoregionalizedRegression"
+            else:
+                modeling_options["model_method"] = "GPCoregionalizedRegression"
+
+            #"grad_dict": self.M.grad_dict
             for qq in range(model_latent):
-                q = self.M.kern['.*GPy_LCM%s.rbf.lengthscale'%qq]
-                theta = theta + q.values.tolist()
-                q = self.M.kern['.*GPy_LCM%s.rbf.variance'%qq]
-                var = var + q.values.tolist() 
-                q = self.M.kern['.*GPy_LCM%s.B.W'%qq]
-                ws = ws + q.values.tolist() 
-                q = self.M.kern['.*GPy_LCM%s.B.kappa'%qq]
-                kappa = kappa + q.values.tolist() 
+                q = self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq]
+                hyperparameters["rbf_lengthscale"] = hyperparameters["rbf_lengthscale"] + q.values.tolist()
+
+                q = self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq]
+                hyperparameters["variance"] = hyperparameters["variance"] + q.values.tolist()
+
+                q = self.M.kern['sum.GPy_LCM%s.B.W'%qq]
+                hyperparameters["B_W"] = hyperparameters["B_W"] + q.values.tolist()
+
+                q = self.M.kern['sum.GPy_LCM%s.B.kappa'%qq]
+                hyperparameters["B_kappa"] = hyperparameters["B_kappa"] + q.values.tolist()
+
             for qq in range(data.NI):
-                q = self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq]
-                sigma = sigma + q.values.tolist()
+                q = self.M['mixed_noise.Gaussian_noise_%s.variance'%qq]
+                hyperparameters["noise_variance"] = hyperparameters["noise_variance"] + q.values.tolist()
 
             if(kwargs['verbose']==True):
-                print('theta:',theta)
-                print('var:',var)
-                print('kappa:',kappa)
-                print('WS:',ws)            
-                print('sigma:',sigma)
+                print("rbf_lengthscale: ", hyperparameters["rbf_lengthscale"])
+                print("variance: ", hyperparameters["variance"])
+                print("B_W: ", hyperparameters["B_W"])
+                print("B_kappa: ", hyperparameters["B_kappa"])
+                print("noise_variance: ", hyperparameters["noise_variance"])
 
+        else:
+            hyperparameters = {
+                "lengthscale": [],
+                "variance": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M._log_marginal_likelihood
+            }
+            modeling_options = {}
+            modeling_options["model_kern"] = kwargs["model_kern"]
+            if kwargs["model_sparse"] == True:
+                modeling_options["model_method"] = "SparseGPRegression"
+            else:
+                modeling_options["model_method"] = "GPRegression"
 
+            q = self.M.kern["GPy_GP.lengthscale"]
+            hyperparameters["lengthscale"] = hyperparameters["lengthscale"] + q.values.tolist()
 
-            params = theta+var+kappa+sigma+ws        
-        return
+            q = self.M.kern["GPy_GP.variance"]
+            hyperparameters["variance"] = hyperparameters["variance"] + q.values.tolist()
+
+            q = self.M["Gaussian_noise.variance"]
+            hyperparameters["noise_variance"] = hyperparameters["noise_variance"] + q.values.tolist()
+
+            if(kwargs['verbose']==True):
+                print("lengthscale: ", hyperparameters["lengthscale"])
+                print("variance: ", hyperparameters["variance"])
+                print("noise_variance: ", hyperparameters["noise_variance"])
+
+        return (hyperparameters, modeling_options, model_stats)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
@@ -206,6 +249,10 @@ class Model_GPy_LCM(Model):
             for ip in range(i, delta):
                 C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
         return C
+
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
+
+        return
 
 class Model_LCM(Model):
     
