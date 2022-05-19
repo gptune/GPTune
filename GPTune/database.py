@@ -779,6 +779,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
+                print ("history_data: ", history_data)
 
                 num_tasks = len(Igiven)
 
@@ -790,6 +791,7 @@ class HistoryDB(dict):
                 # Assume that all function evaluations of the surrogate model are in the database file
                 for func_eval_uid in model_data["function_evaluations"]:
                     func_eval = search_item_by_uid(history_data["func_eval"], func_eval_uid)
+                    print ("func_eval: ", func_eval)
                     parameter_arr = []
                     for k in range(len(problem.PS)):
                         if type(problem.PS[k]).__name__ == "Categoricalnorm":

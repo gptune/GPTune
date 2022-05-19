@@ -278,9 +278,15 @@ class GPTune(object):
         modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 
         for i in range(self.problem.DO):
-            modelers[i].gen_model_from_hyperparameters(self.data,
-                    model_data["hyperparameters"],
-                    **kwargs)
+            if kwargs["model_class"] == 'Model_LCM':
+                modelers[i].gen_model_from_hyperparameters(self.data,
+                        model_data["hyperparameters"],
+                        **kwargs)
+            elif kwargs["model_class"] == "Model_GPy_LCM":
+                modelers[i].gen_model_from_hyperparameters(self.data,
+                        model_data["hyperparameters"],
+                        model_data["modeling_options"],
+                        **kwargs)
 
         def model_function(point):
 
