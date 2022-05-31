@@ -307,7 +307,7 @@ class SurrogateProblem(object):
                     phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
                     EI.append(-((ymin - mu) * Phi + var * phi))
                     # EI.append(mu)
-                elif self.options['TLA_method'] == 'LCM':
+                elif self.options['TLA_method'] == 'LCM' or self.options['TLA_method'] == 'LCM_BF':
                     ymin = self.data.O[self.tid][:,o].min()
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu = mu[0][0]

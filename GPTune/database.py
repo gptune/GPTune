@@ -434,9 +434,39 @@ class HistoryDB(dict):
 
             if self.tuning_problem_name is not None:
                 json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+                create_db_file = False
                 if os.path.exists(json_data_path):
                     print ("[HistoryDB] Found a history database file")
+
+                    if self.file_synchronization_method == 'filelock':
+                        with FileLock(json_data_path+".lock"):
+                            with open(json_data_path, "r") as f_in:
+                                try:
+                                    history_data = json.load(f_in)
+                                except:
+                                    create_db_file = True
+                    elif self.file_synchronization_method == 'rsync':
+                        temp_path = json_data_path + "." + self.process_uid + ".temp"
+                        os.system("rsync -a " + json_data_path + " " + temp_path)
+                        with open(temp_path, "r") as f_in:
+                            try:
+                                history_data = json.load(f_in)
+                            except:
+                                create_db_file = True
+                        os.system("rm " + temp_path)
+                    else:
+                        with open(json_data_path, "r") as f_in:
+                            try:
+                                history_data = json.load(f_in)
+                            except:
+                                create_db_file = True
+                    if create_db_file == True:
+                        print ("[HistoryDB Warning] the database file is invvalid. Re-initializing the file")
                 else:
+                    create_db_file = True
+
+                if create_db_file == True:
                     print ("[HistoryDB] Create a JSON file at " + json_data_path)
 
                     if self.file_synchronization_method == 'filelock':
@@ -749,6 +779,7 @@ class HistoryDB(dict):
                 else:
                     with open(json_data_path, "r") as f_in:
                         history_data = json.load(f_in)
+                print ("history_data: ", history_data)
 
                 num_tasks = len(Igiven)
 
@@ -760,6 +791,7 @@ class HistoryDB(dict):
                 # Assume that all function evaluations of the surrogate model are in the database file
                 for func_eval_uid in model_data["function_evaluations"]:
                     func_eval = search_item_by_uid(history_data["func_eval"], func_eval_uid)
+                    print ("func_eval: ", func_eval)
                     parameter_arr = []
                     for k in range(len(problem.PS)):
                         if type(problem.PS[k]).__name__ == "Categoricalnorm":
@@ -884,7 +916,8 @@ class HistoryDB(dict):
 
                 task_parameter_store = { problem.IS[k].name:task_parameter_orig_list[k] for k in range(len(problem.IS)) }
                 tuning_parameter_store = { problem.PS[k].name:tuning_parameter_orig_list[k] for k in range(len(problem.PS)) }
-                task_parameter_store.pop("tla_id", None)
+                if source != "RCI_measure" and source != "RCI_model":
+                    task_parameter_store.pop("tla_id", None)
                 constants_store = problem.constants
                 if constants_store == None:
                     constants_store = {}
@@ -1600,6 +1633,92 @@ class HistoryDB(dict):
                     "parameter_space":self.problem_space_to_dict(problem.PS),
                     "output_space":self.problem_space_to_dict(problem.OS),
                     "modeler":"Model_LCM",
+                    "objective":objective_dict,
+                    "time":{
+                        "tm_year":now.tm_year,
+                        "tm_mon":now.tm_mon,
+                        "tm_mday":now.tm_mday,
+                        "tm_hour":now.tm_hour,
+                        "tm_min":now.tm_min,
+                        "tm_sec":now.tm_sec,
+                        "tm_wday":now.tm_wday,
+                        "tm_yday":now.tm_yday,
+                        "tm_isdst":now.tm_isdst
+                        },
+                    "uid":str(uuid.uuid1())
+                    # objective id is to dinstinguish between different models for multi-objective optimization;
+                    # we might need a nicer way to manage different models
+                })
+
+            if self.file_synchronization_method == 'filelock':
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["surrogate_model"] += new_surrogate_models
+                    with open(json_data_path, "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+            elif self.file_synchronization_method == 'rsync':
+                while True:
+                    temp_path = json_data_path + "." + self.process_uid + ".temp"
+                    os.system("rsync -a " + json_data_path + " " + temp_path)
+                    with open(temp_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        json_data["surrogate_model"] += new_surrogate_models
+                    with open(temp_path, "w") as f_out:
+                        json.dump(json_data, f_out, indent=2)
+                    os.system("rsync -u " + temp_path + " " + json_data_path)
+                    os.system("rm " + temp_path)
+                    with open(json_data_path, "r") as f_in:
+                        json_data = json.load(f_in)
+                        existing_uids = [item["uid"] for item in json_data["surrogate_model"]]
+                        new_uids = [item["uid"] for item in new_surrogate_models]
+                        retry = False
+                        for uid in new_uids:
+                            if uid not in existing_uids:
+                                retry = True
+                                break
+                        if retry == False:
+                            break
+            else:
+                with open(json_data_path, "r") as f_in:
+                    json_data = json.load(f_in)
+                    json_data["surrogate_model"] += new_surrogate_models
+                with open(json_data_path, "w") as f_out:
+                    json.dump(json_data, f_out, indent=2)
+
+        return
+
+    def store_model_GPy_LCM(self,\
+            objective : int,
+            problem : Problem,\
+            input_given : np.ndarray,\
+            hyperparameters : dict,\
+            modeling_options : dict,\
+            model_stats : dict):
+
+        if (self.tuning_problem_name is not None):
+            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+
+            new_surrogate_models = []
+
+            now = time.localtime()
+
+            task_parameter_orig = problem.IS.inverse_transform(np.array(input_given, ndmin=2))
+            task_parameter_orig_list = np.array(task_parameter_orig).tolist()
+
+            objective_dict = self.problem_space_to_dict(problem.OS)[objective]
+            objective_dict["objective_id"] = objective
+
+            new_surrogate_models.append({
+                    "hyperparameters":hyperparameters,
+                    "modeling_options":modeling_options,
+                    "model_stats":model_stats,
+                    "task_parameters":task_parameter_orig_list,
+                    "function_evaluations":self.uids,
+                    "input_space":self.problem_space_to_dict(problem.IS),
+                    "parameter_space":self.problem_space_to_dict(problem.PS),
+                    "output_space":self.problem_space_to_dict(problem.OS),
+                    "modeler":"Model_GPy_LCM",
                     "objective":objective_dict,
                     "time":{
                         "tm_year":now.tm_year,

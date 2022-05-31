@@ -116,6 +116,7 @@ def main():
 
     args = parse_args()
     expid = args.expid
+    seed = args.seed
     nstep = args.nstep
     tuning_method = args.tuning_method
     tla_method = None
@@ -123,6 +124,8 @@ def main():
         tla_method = None
     elif tuning_method == "TLA_LCM":
         tla_method = "LCM"
+    elif tuning_method == "TLA_LCM_BF":
+        tla_method = "LCM_BF"
     elif tuning_method == "TLA_Regression":
         tla_method = "Regression"
     elif tuning_method == "TLA_Sum":
@@ -159,8 +162,8 @@ def main():
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
-    ot.RandomGenerator.SetSeed(args.seed)
-    print(args)
+    #ot.RandomGenerator.SetSeed(args.seed)
+    #print(args)
 
     # Input parameters
     # ROWPERM   = Categoricalnorm (['1', '2'], transform="onehot", name="ROWPERM")
@@ -173,7 +176,7 @@ def main():
     nby      = Integer     (1, 3, transform="normalize", name="nby")	
     npz      = Integer     (0, 5, transform="normalize", name="npz")
 
-    time   = Real        (float("-Inf") , float("Inf"), transform="normalize", name="time")
+    time   = Real        (float(0) , float(999.9), transform="normalize", name="time")
 
     # nstep      = Integer     (3, 15, transform="normalize", name="nstep")
     lphi      = Integer     (1, 3, transform="normalize", name="lphi")
@@ -181,7 +184,7 @@ def main():
     my      = Integer     (7, 8, transform="normalize", name="my")
     tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
 
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         IS = Space([mx,my,lphi,tla_id_])
     else:
         IS = Space([mx,my,lphi])
@@ -216,9 +219,15 @@ def main():
     # options['search_threads'] = 16
     # options['mpi_comm'] = None
     # options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_GPy_LCM' # 'Model_LCM'
     options['verbose'] = False
+    options['model_class'] = 'Model_GPy_LCM' # 'Model_LCM'
+    options['model_random_seed'] = seed
     options['sample_class'] = 'SampleOpenTURNS'
+    options['sample_random_seed'] = seed
+    options['search_class'] = 'SearchPyGMO'
+    options['search_random_seed'] = seed
+    options['model_output_constraint'] = 'Ignore'
+
     if tla_method != None:
         options['TLA_method'] = tla_method
     if tla_method == "Regression":
@@ -228,7 +237,7 @@ def main():
     options.validate(computer=computer)
 
     data = Data(problem)
-    if tla_method == "LCM":
+    if tuning_method == "TLA_LCM":
         giventask = [[5,7,1,0],[6,8,1,1]]
     else:
         giventask = [[6,8,1]]
@@ -249,7 +258,7 @@ def main():
     #(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
     if tuning_method == "TLA_LCM":
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())
-    elif tuning_method == "TLA_Regression" or tuning_method == "TLA_Sum":
+    elif tuning_method == "TLA_Regression" or tuning_method == "TLA_Sum" or tuning_method == "TLA_LCM_BF":
         (data, model, stats) = gt.TLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, models_transfer = LoadModels())
     elif tuning_method == "SLA":
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)

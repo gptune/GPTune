@@ -278,9 +278,15 @@ class GPTune(object):
         modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
 
         for i in range(self.problem.DO):
-            modelers[i].gen_model_from_hyperparameters(self.data,
-                    model_data["hyperparameters"],
-                    **kwargs)
+            if kwargs["model_class"] == 'Model_LCM':
+                modelers[i].gen_model_from_hyperparameters(self.data,
+                        model_data["hyperparameters"],
+                        **kwargs)
+            elif kwargs["model_class"] == "Model_GPy_LCM":
+                modelers[i].gen_model_from_hyperparameters(self.data,
+                        model_data["hyperparameters"],
+                        model_data["modeling_options"],
+                        **kwargs)
 
         def model_function(point):
 
@@ -512,7 +518,14 @@ class GPTune(object):
                                 iteration)
                         stats["modeling_iteration"][optiter-1] += iteration
                     else:
-                        modelers[o].train(data = tmpdata, **kwargs)
+                        (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                        self.historydb.store_model_GPy_LCM(
+                                o,
+                                self.problem,
+                                self.data.I,
+                                hyperparameters,
+                                modeling_options,
+                                model_stats)
                         stats["modeling_iteration"][optiter-1] += 0
                     model_reupdate = 0
                 else:
@@ -756,6 +769,44 @@ class GPTune(object):
 
                 tmpdata = copy.deepcopy(self.data)                        
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                if (kwargs["model_output_constraint"] != None):
+                    tmp_tmpdata = Data(self.problem)
+                    tmp_tmpdata.I = copy.deepcopy(self.data.I)
+                    tmp_tmpdata.P = [[] for i in range(len(self.data.P))]
+                    tmp_tmpdata.O = [[] for i in range(len(self.data.O))]
+                    tmp_tmpdata.D = copy.deepcopy(self.data.D)
+
+                    for t in range(len(tmpdata.O)):
+                        for i in range(len(tmpdata.O[t])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][t][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if (kwargs["model_output_constraint"] == 'LargeNum'):
+                                    tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                elif (kwargs["model_output_constraint"] == 'Ignore'):
+                                    pass
+                            else:
+                                tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                tmp_tmpdata.O[t].append(tmpdata.O[t][i])
+
+                    for t in range(len(tmpdata.O)):
+                        tmp_tmpdata.P[t] = np.array(tmp_tmpdata.P[t])
+                        tmp_tmpdata.O[t] = np.array(tmp_tmpdata.O[t])
+
+                    for t in range(len(tmp_tmpdata.O)):
+                        if len(tmp_tmpdata.O[t]) > 0:
+                            tmpdata.P[t] = copy.deepcopy(tmp_tmpdata.P[t])
+                            tmpdata.O[t] = copy.deepcopy(tmp_tmpdata.O[t])
+
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
                         points0 = tmpdata.D[i]
@@ -782,23 +833,10 @@ class GPTune(object):
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
                 if (kwargs["model_class"] == "Model_LCM"):
+                    # YC: [TODO-check] NSmin checking (with updated NSmin) still necessary? In case of options['model_output_constraint']='Ignore', the updated tmpdata.P and tmpdata.O can have unequal number of samples, but seems like it's running anyways. For now, we can say options['model_output_constraint']='Ignore' is not recommended for Model_LCM mode.
                     for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
                         tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
-                        tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]                    
-                    if (kwargs["model_output_constraint"] == True):
-                        for i in range(len(tmpdata.O[0])):
-                            out_of_range = False
-                            for o_ in range(self.problem.DO):
-                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
-                                lower_bound = output_space["lower_bound"]
-                                upper_bound = output_space["upper_bound"]
-                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][0][i]
-                                if output_result < lower_bound or \
-                                   output_result > upper_bound:
-                                    out_of_range = True
-
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
-                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
+                        tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
 
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
@@ -813,7 +851,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
                 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -887,7 +932,7 @@ class GPTune(object):
             return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
         elif self.options['TLA_method'] == 'Sum':
             return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
-        elif self.options['TLA_method'] == 'LCM':
+        elif self.options['TLA_method'] == 'LCM_BF':
             return self.TLA_LCM(NS, NS1, NI, Igiven, models_transfer)
 
     def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
@@ -1049,9 +1094,46 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
-
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                if (kwargs["model_output_constraint"] != None):
+                    tmp_tmpdata = Data(self.problem)
+                    tmp_tmpdata.I = copy.deepcopy(self.data.I)
+                    tmp_tmpdata.P = [[] for i in range(len(self.data.P))]
+                    tmp_tmpdata.O = [[] for i in range(len(self.data.O))]
+                    tmp_tmpdata.D = copy.deepcopy(self.data.D)
+
+                    for t in range(len(tmpdata.O)):
+                        for i in range(len(tmpdata.O[t])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][t][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if (kwargs["model_output_constraint"] == 'LargeNum'):
+                                    tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                elif (kwargs["model_output_constraint"] == 'Ignore'):
+                                    pass
+                            else:
+                                tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                tmp_tmpdata.O[t].append(tmpdata.O[t][i])
+
+                    for t in range(len(tmpdata.O)):
+                        tmp_tmpdata.P[t] = np.array(tmp_tmpdata.P[t])
+                        tmp_tmpdata.O[t] = np.array(tmp_tmpdata.O[t])
+
+                    for t in range(len(tmp_tmpdata.O)):
+                        if len(tmp_tmpdata.O[t]) > 0:
+                            tmpdata.P[t] = copy.deepcopy(tmp_tmpdata.P[t])
+                            tmpdata.O[t] = copy.deepcopy(tmp_tmpdata.O[t])
+
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
                         points0 = tmpdata.D[i]
@@ -1076,21 +1158,6 @@ class GPTune(object):
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
                 if (kwargs["model_class"] == "Model_LCM"):
-                    if (kwargs["model_output_constraint"] == True):
-                        for i in range(len(tmpdata.O[0])):
-                            out_of_range = False
-                            for o_ in range(self.problem.DO):
-                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
-                                lower_bound = output_space["lower_bound"]
-                                upper_bound = output_space["upper_bound"]
-                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][0][i]
-                                if output_result < lower_bound or \
-                                   output_result > upper_bound:
-                                    out_of_range = True
-
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
-                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
-
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
                         modelers[o].train(data = tmpdata, **kwargs)
@@ -1104,7 +1171,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -1368,6 +1442,44 @@ class GPTune(object):
 
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                if (kwargs["model_output_constraint"] != None):
+                    tmp_tmpdata = Data(self.problem)
+                    tmp_tmpdata.I = copy.deepcopy(self.data.I)
+                    tmp_tmpdata.P = [[] for i in range(len(self.data.P))]
+                    tmp_tmpdata.O = [[] for i in range(len(self.data.O))]
+                    tmp_tmpdata.D = copy.deepcopy(self.data.D)
+
+                    for t in range(len(tmpdata.O)):
+                        for i in range(len(tmpdata.O[t])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][t][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if (kwargs["model_output_constraint"] == 'LargeNum'):
+                                    tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                elif (kwargs["model_output_constraint"] == 'Ignore'):
+                                    pass
+                            else:
+                                tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                tmp_tmpdata.O[t].append(tmpdata.O[t][i])
+
+                    for t in range(len(tmpdata.O)):
+                        tmp_tmpdata.P[t] = np.array(tmp_tmpdata.P[t])
+                        tmp_tmpdata.O[t] = np.array(tmp_tmpdata.O[t])
+
+                    for t in range(len(tmp_tmpdata.O)):
+                        if len(tmp_tmpdata.O[t]) > 0:
+                            tmpdata.P[t] = copy.deepcopy(tmp_tmpdata.P[t])
+                            tmpdata.O[t] = copy.deepcopy(tmp_tmpdata.O[t])
+
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
                         points0 = tmpdata.D[i]
@@ -1420,7 +1532,14 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    self.historydb.store_model_GPy_LCM(
+                            o,
+                            self.problem,
+                            self.data.I,
+                            hyperparameters,
+                            modeling_options,
+                            model_stats)
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()

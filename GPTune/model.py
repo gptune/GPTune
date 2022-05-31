@@ -130,37 +130,87 @@ class Model_GPy_LCM(Model):
 #        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
 
-        if(multitask): # dump the hyperparameters
-            theta=[]
-            var=[]
-            ws=[]
-            kappa=[]
-            sigma=[]
-            # print(self.M)
+        # dump the hyperparameters
+        if(multitask):
+            hyperparameters = {
+                "rbf_lengthscale": [],
+                "variance": [],
+                "B_W": [],
+                "B_kappa": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M._log_marginal_likelihood
+            }
+            modeling_options = {}
+            modeling_options["model_kernel"] = "RBF"
+            if kwargs["model_sparse"] == True:
+                modeling_options["model_method"] = "SparseGPCoregionalizedRegression"
+                modeling_options["model_sparse"] = "yes"
+            else:
+                modeling_options["model_method"] = "GPCoregionalizedRegression"
+                modeling_options["model_sparse"] = "no"
+            modeling_options["multitask"] = "yes"
+
             for qq in range(model_latent):
-                q = self.M.kern['.*GPy_LCM%s.rbf.lengthscale'%qq]
-                theta = theta + q.values.tolist()
-                q = self.M.kern['.*GPy_LCM%s.rbf.variance'%qq]
-                var = var + q.values.tolist() 
-                q = self.M.kern['.*GPy_LCM%s.B.W'%qq]
-                ws = ws + q.values.tolist() 
-                q = self.M.kern['.*GPy_LCM%s.B.kappa'%qq]
-                kappa = kappa + q.values.tolist() 
+                q = self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq]
+                hyperparameters["rbf_lengthscale"].append(q.values.tolist())
+
+                q = self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq]
+                hyperparameters["variance"].append(q.values.tolist())
+
+                q = self.M.kern['sum.GPy_LCM%s.B.W'%qq]
+                hyperparameters["B_W"].append(q.values.tolist())
+
+                q = self.M.kern['sum.GPy_LCM%s.B.kappa'%qq]
+                hyperparameters["B_kappa"].append(q.values.tolist())
+
             for qq in range(data.NI):
-                q = self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq]
-                sigma = sigma + q.values.tolist()
+                q = self.M['mixed_noise.Gaussian_noise_%s.variance'%qq]
+                hyperparameters["noise_variance"].append(q.values.tolist())
 
             if(kwargs['verbose']==True):
-                print('theta:',theta)
-                print('var:',var)
-                print('kappa:',kappa)
-                print('WS:',ws)            
-                print('sigma:',sigma)
+                print("rbf_lengthscale: ", hyperparameters["rbf_lengthscale"])
+                print("variance: ", hyperparameters["variance"])
+                print("B_W: ", hyperparameters["B_W"])
+                print("B_kappa: ", hyperparameters["B_kappa"])
+                print("noise_variance: ", hyperparameters["noise_variance"])
 
+        else:
+            hyperparameters = {
+                "lengthscale": [],
+                "variance": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M._log_marginal_likelihood
+            }
+            modeling_options = {}
+            modeling_options["model_kern"] = kwargs["model_kern"]
+            if kwargs["model_sparse"] == True:
+                modeling_options["model_method"] = "SparseGPRegression"
+                modeling_options["model_sparse"] = "yes"
+            else:
+                modeling_options["model_method"] = "GPRegression"
+                modeling_options["model_sparse"] = "no"
+            modeling_options["multitask"] = "no"
 
+            q = self.M.kern["GPy_GP.lengthscale"]
+            hyperparameters["lengthscale"] = hyperparameters["lengthscale"] + q.values.tolist()
 
-            params = theta+var+kappa+sigma+ws        
-        return
+            q = self.M.kern["GPy_GP.variance"]
+            hyperparameters["variance"] = hyperparameters["variance"] + q.values.tolist()
+
+            q = self.M["Gaussian_noise.variance"]
+            hyperparameters["noise_variance"] = hyperparameters["noise_variance"] + q.values.tolist()
+
+            if(kwargs['verbose']==True):
+                print("lengthscale: ", hyperparameters["lengthscale"])
+                print("variance: ", hyperparameters["variance"])
+                print("noise_variance: ", hyperparameters["noise_variance"])
+            print ("M: ", self.M)
+
+        return (hyperparameters, modeling_options, model_stats)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
@@ -206,6 +256,98 @@ class Model_GPy_LCM(Model):
             for ip in range(i, delta):
                 C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
         return C
+
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
+
+        if kwargs['model_random_seed'] != None:
+            np.random.seed(kwargs['model_random_seed'])
+
+        if modeling_options["multitask"] == "yes":
+            multitask = True
+        else:
+            multitask = False
+
+        if modeling_options["model_sparse"] == "yes":
+            model_sparse = True
+        else:
+            model_sparse = False
+
+        if (kwargs['model_latent'] is None):
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if (model_sparse and kwargs['model_inducing'] is None):
+            if (multitask):
+                lenx = sum([len(P) for P in data.P])
+            else:
+                lenx = len(data.P)
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+
+        GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
+
+        if (multitask):
+            kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
+            K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
+            K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
+            # print(K)
+            if modeling_options["model_sparse"] == "SparseGPCoregionalizedRegression":
+                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
+            elif modeling_options["model_method"] == "GPCoregionalizedRegression":
+                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+            else:
+                print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPCoregionalizedRegression")
+                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+
+                for qq in range(model_latent):
+                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][0] = hyperparameters["rbf_lengthscale"][qq][0]
+                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][1] = hyperparameters["rbf_lengthscale"][qq][1]
+                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][2] = hyperparameters["rbf_lengthscale"][qq][2]
+                    self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq] = hyperparameters["variance"][qq]
+                    self.M.kern['sum.GPy_LCM%s.B.W'%qq][0][0] = hyperparameters["B_W"][qq][0]
+                    self.M.kern['sum.GPy_LCM%s.B.W'%qq][1][0] = hyperparameters["B_W"][qq][1]
+                    self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][0] = hyperparameters["B_kappa"][qq][0]
+                    self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][1] = hyperparameters["B_kappa"][qq][1]
+                    self.M.kern['mixed_noise.Gaussian_noise_%s.variance'%qq] = hyperparameters["noise_variance"][qq][0]
+
+                for qq in range(model_latent):
+                    self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
+
+                self.M.parameters_changed()
+
+                print ("reproduced model: ", self.M)
+
+        else:
+            if modeling_options['model_kern'] == 'RBF':
+                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif modeling_options['model_kern'] == 'Exponential' or modeling_options['model_kern'] == 'Matern12':
+                K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif modeling_options['model_kern'] == 'Matern32':
+                K = GPy.kern.Matern32(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            elif modeling_options['model_kern'] == 'Matern52':
+                K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            else:
+                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            if modeling_options['model_method'] == 'SparseGPRegression':
+                self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
+            elif modeling_options['model_method'] == 'GPRegression':
+                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
+            else:
+                print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPRegression")
+                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
+            self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
+
+            self.M.kern['GPy_GP.lengthscale'][0] = hyperparameters["lengthscale"][0]
+            self.M.kern['GPy_GP.lengthscale'][1] = hyperparameters["lengthscale"][1]
+            self.M.kern['GPy_GP.lengthscale'][2] = hyperparameters["lengthscale"][2]
+            self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
+            self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
+
+            self.M.parameters_changed()
+
+            print ("reproduced model: ", self.M)
+
+        return
 
 class Model_LCM(Model):
     
@@ -262,7 +404,7 @@ class Model_LCM(Model):
                 if kwargs['model_random_seed'] == None:
                     np.random.seed()
                 else:
-                    np.random.seed(model_random_seed)
+                    np.random.seed(kwargs['model_random_seed'])
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))

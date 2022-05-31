@@ -75,6 +75,7 @@ export MPIRUN=path-to-mpirun
 export BLAS_LIB=path-to-blas-lib
 export LAPACK_LIB=path-to-lapack-lib
 export GPTUNEROOT=path-to-gptune-root-directory
+export SITE_PACKAGES_PATH=path-to-your-site-packages
 ```
 
 The rest can be installed as follows:
@@ -155,11 +156,11 @@ cmake .. \
     -DCMAKE_Fortran_COMPILER=$MPIF90 \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+    -DGPTUNE_INSTALL_PATH=$SITE_PACKAGES_PATH \
     -DTPL_BLAS_LIBRARIES="$BLAS_LIB" \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
 make 
-cp lib_gptuneclcm.so ../.
 ```
 
 ## Examples
@@ -239,13 +240,13 @@ For examples, this can be runtime, memory or energy consumption in HPC applicati
 #### Parameters
 
 Every dimension of the above mentioned spaces is defined by a **Parameter** object.
-Every parameter i defined by its name, type and range or set of values.
+Every parameter is defined by its name, type and range or set of values.
 Three types of parameters can be defined:
 1. Real: defines floating point parameters.
 The range of values that the parameter spans should be defined in the *range* argument.
 2. Integer: defines integer parameters.
 The range of values that the parameter spans should be defined in the *range* argument.
-3. Categorical: defines parameters that take their values in a set or list of values.
+3. Categorical: defines parameters that take their values in a set or list of (string) values.
 The list of valid values defining the parameter should be defined in the *values* argument.
 (*Note*: If the problems the application targets cannot be defined in a Cartesian space, the user can simply give a list of problems (as a Categorical parameter) in the definition of the task space.)
 
