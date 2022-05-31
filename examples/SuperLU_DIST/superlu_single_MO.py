@@ -85,6 +85,7 @@ def objectives(point):                  # should always use this name for user-d
 	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
 	envstr+= 'NREL=%d\n' %(NREL)   
 	envstr+= 'NSUP=%d\n' %(NSUP)   
+	envstr+= 'SUPERLU_ACC_OFFLOAD=0\n'   
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
 

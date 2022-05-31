@@ -28,7 +28,7 @@ module load cmake/3.22.0
 ##################################################
 machine=perlmutter
 proc=gpu   # milan,gpu
-mpi=craympich    # craympich
+mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
@@ -43,7 +43,7 @@ export ModuleEnv=$machine-$proc-$mpi-$compiler
 echo "The ModuleEnv is $ModuleEnv"
 if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
-	module swap PrgEnv-nvidia PrgEnv-gnu
+	module load PrgEnv-gnu
 	module load cudatoolkit
 	GPTUNEROOT=$PWD
 	BLAS_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
@@ -61,7 +61,7 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
-	module swap PrgEnv-nvidia PrgEnv-gnu
+	module load PrgEnv-gnu
 	GPTUNEROOT=$PWD
 	BLAS_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
@@ -71,6 +71,55 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	MPIF90=ftn
 	OPENMPFLAG=fopenmp
 	SLU_ENABLE_CUDA=FALSE
+# fi 
+
+elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
+	module use /global/common/software/m3169/perlmutter/modulefiles
+	export CRAYPE_LINK_TYPE=dynamic
+    module load PrgEnv-gnu
+	module unload cray-libsci
+	module unload cray-mpich
+	module unload openmpi
+	module load openmpi
+	module unload darshan
+	module load cudatoolkit
+
+	GPTUNEROOT=$PWD
+    BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+    LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
+	MPICC=mpicc
+	MPICXX=mpiCC
+	MPIF90=mpif90
+	OPENMPFLAG=fopenmp
+	SLU_ENABLE_CUDA=TRUE
+	SLU_CUDA_FLAG="-I${OMPI_DIR}/include"
+	STRUMPACK_USE_CUDA=ON
+	STRUMPACK_CUDA_FLAGS="-I${OMPI_DIR}/include"
+	export UCX_NET_DEVICES=mlx5_0:1
+# fi 
+
+elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
+	module use /global/common/software/m3169/perlmutter/modulefiles
+	export CRAYPE_LINK_TYPE=dynamic
+    module load PrgEnv-gnu
+	module unload cray-libsci
+	module unload cray-mpich
+	module unload openmpi
+	module load openmpi
+	module unload darshan
+
+	GPTUNEROOT=$PWD
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OMPI_DIR}/lib/
+    BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+    LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
+	MPICC=mpicc
+	MPICXX=mpiCC
+	MPIF90=mpif90
+	OPENMPFLAG=fopenmp
+	SLU_ENABLE_CUDA=FALSE
+	export UCX_NET_DEVICES=mlx5_0:1
 # fi 
 
 else
@@ -118,8 +167,34 @@ else
 fi
 
 
+# if openmpi, scalapack needs to be built from source
+if [[ $ModuleEnv == *"openmpi"* ]]; then
 
+	cd $GPTUNEROOT
+	git clone https://github.com/xianyi/OpenBLAS
+	cd OpenBLAS
+	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 -j32
+	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 install -j32
 
+	cd $GPTUNEROOT
+	wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
+	tar -xf scalapack-2.1.0.tgz
+	cd scalapack-2.1.0
+	rm -rf build
+	mkdir -p build
+	cd build
+	cmake .. \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}"
+	make -j32
+fi
 
 
 cd $GPTUNEROOT
@@ -134,6 +209,7 @@ rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
 	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
@@ -145,8 +221,7 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
 	-DGPTUNE_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages"
 make install
-# cp lib_gptuneclcm.so ../.
-# cp pdqrdriver ../
+
 
 if [[ $BuildExample == 1 ]]; then
 
@@ -194,7 +269,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+		-DTPL_PARMETIS_INCLUDE_DIRS="${PARMETIS_INCLUDE_DIRS}" \
 		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
 	make pddrive_spawn
 	make pzdrive_spawn
@@ -230,7 +305,7 @@ if [[ $BuildExample == 1 ]]; then
 	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
 	# 	-DCMAKE_BUILD_TYPE=Release \
 	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DCMAKE_Fortran_FLAGS="" \
+	# 	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
 	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
 	# 	-DMPI=ON \
@@ -241,7 +316,7 @@ if [[ $BuildExample == 1 ]]; then
 	# mkdir build
 	# cd build
 	# cmake .. \
-	# 	-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC"\
+	# 	-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC -fallow-argument-mismatch"\
 	# 	-DCMAKE_CXX_FLAGS="" \
 	# 	-DBUILD_SHARED_LIBS=ON \
 	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \

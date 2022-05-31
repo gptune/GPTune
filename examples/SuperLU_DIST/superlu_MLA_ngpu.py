@@ -141,8 +141,8 @@ def main():
 
 	nprocmax = nodes*cores
 	# matrices = ["big.rua", "g4.rua", "g20.rua"]
-	matrices = ["s1_mat_0_507744.bin", "matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
-	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
+	# matrices = ["s1_mat_0_507744.bin", "matrix_ACTIVSg10k_AC_00.mtx", "matrix_ACTIVSg70k_AC_00.mtx", "temp_75k.mtx"]
+	matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin","H2O.bin"]
 	# matrices = ["Si2.bin", "SiH4.bin", "SiNa.bin", "Na5.bin", "benzene.bin", "Si10H16.bin", "Si5H12.bin", "SiO.bin", "Ga3As3H12.bin", "GaAsH6.bin", "H2O.bin"]
 
 	# Task parameters
@@ -193,9 +193,9 @@ def main():
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [["matrix_ACTIVSg70k_AC_00.mtx"]]		
-	giventask = [["s1_mat_0_507744.bin"]]		
+	# giventask = [["s1_mat_0_507744.bin"]]		
 	# giventask = [["big.rua"]]		
-	# giventask = [["Si2.bin"]]		
+	giventask = [["Si2.bin"]]		
 	data = Data(problem)
 
 

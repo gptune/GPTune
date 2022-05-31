@@ -29,12 +29,12 @@
 # export nodes=4  # number of nodes to be used
 
 
-################ Perlmutter
-#export machine=perlmutter
-#export proc=gpu   # milan,gpu
-#export mpi=craympich  # craympich
-#export compiler=gnu   # gnu, intel
-#export nodes=1  # number of nodes to be used
+############### Perlmutter
+export machine=perlmutter
+export proc=gpu   # milan,gpu
+export mpi=openmpi  # craympich, openmpi
+export compiler=gnu   # gnu, intel
+export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -45,12 +45,12 @@
 # export nodes=1  # number of nodes to be used
 # #
 
-################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-export machine=cleanlinux
-export proc=unknown
-export mpi=openmpi
-export compiler=gnu
-export nodes=1  # number of nodes to be used
+# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+# export machine=cleanlinux
+# export proc=unknown
+# export mpi=openmpi
+# export compiler=gnu
+# export nodes=1  # number of nodes to be used
 
 
 ##################################################
@@ -354,12 +354,13 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     PY_VERSION=3.9
     PY_TIME=2021.11
     module load python/$PY_VERSION-anaconda-$PY_TIME
-	module swap PrgEnv-nvidia PrgEnv-gnu
+	module load PrgEnv-gnu
 	module load cudatoolkit
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     MPIRUN=mpirun
@@ -370,13 +371,75 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 # fi
 ###############
 
+
+############### Perlmutter Milan with GPU OpenMPI+GNU
+elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
+    PY_VERSION=3.9
+    PY_TIME=2021.11
+    module load python/$PY_VERSION-anaconda-$PY_TIME
+	module use /global/common/software/m3169/perlmutter/modulefiles
+	export CRAYPE_LINK_TYPE=dynamic
+    module load PrgEnv-gnu
+	module unload cray-libsci
+	module unload cray-mpich
+	module unload openmpi
+	module load openmpi
+	module unload darshan
+    module load cudatoolkit
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
+    export UCX_NET_DEVICES=mlx5_0:1
+    MPIRUN=mpirun
+    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    gpus=4
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
+# fi 
+
+############### Perlmutter Milan with no GPU OpenMPI+GNU
+elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
+    PY_VERSION=3.9
+    PY_TIME=2021.11
+    module load python/$PY_VERSION-anaconda-$PY_TIME
+	module use /global/common/software/m3169/perlmutter/modulefiles
+	export CRAYPE_LINK_TYPE=dynamic
+    module load PrgEnv-gnu
+	module unload cray-libsci
+	module unload cray-mpich
+	module unload openmpi
+	module load openmpi
+	module unload darshan
+    
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OMPI_DIR}/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
+    export UCX_NET_DEVICES=mlx5_0:1
+    MPIRUN=mpirun
+    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    gpus=0
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
+# fi 
+
 ############### Perlmutter Milan with no GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     PY_VERSION=3.9
     PY_TIME=2021.11
     module load python/$PY_VERSION-anaconda-$PY_TIME
-	module swap PrgEnv-nvidia PrgEnv-gnu
+	module load PrgEnv-gnu
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
