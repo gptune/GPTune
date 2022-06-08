@@ -34,10 +34,16 @@ class Model(abc.ABC):
         self.problem = problem
         self.computer = computer
         self.M = None
-        self.M_last = None
+        self.M_last = None # used for TLA with model regression
+        self.M_stacked = [] # used for TLA with model stacking
 
     @abc.abstractmethod
     def train(self, data : Data, **kwargs):
+
+        raise Exception("Abstract method")
+
+    @abc.abstractmethod
+    def train_stacked(self, data : Data, num_source_tasks : int, **kwargs):
 
         raise Exception("Abstract method")
 
@@ -212,6 +218,19 @@ class Model_GPy_LCM(Model):
 
         return (hyperparameters, modeling_options, model_stats)
 
+    def train_stacked(self, data : Data, num_source_tasks, **kwargs):
+
+        self.train(data, **kwargs)
+
+        if len(self.M_stacked) < 1+num_source_tasks:
+            self.M_stacked.append(self.M)
+        elif len(self.M_stacked) == 1+num_source_tasks: # residual for the current target task
+            self.M_stacked[num_source_tasks] = self.M
+        else:
+            print ("Unexpected. Stacking model count does not match")
+
+        return self.M_stacked
+
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
@@ -219,10 +238,22 @@ class Model_GPy_LCM(Model):
 
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        x = np.empty((1, points.shape[0] + 1))
-        x[0,:-1] = points
-        x[0,-1] = tid
-        (mu, var) = self.M.predict_noiseless(x)
+        if len(self.M_stacked) > 0: # stacked model
+            mu = 0
+            var = 1
+
+            for modeler in self.M_stacked:
+                x = np.empty((1, points.shape[0] + 1))
+                x[0,:-1] = points
+                x[0,-1] = tid
+                (mu_, var_) = modeler.predict_noiseless(x)
+                mu += mu_
+                var *= var_
+        else:
+            x = np.empty((1, points.shape[0] + 1))
+            x[0,:-1] = points
+            x[0,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x)
 
         return (mu, var)
 

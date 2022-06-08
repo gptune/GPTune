@@ -244,16 +244,22 @@ class SurrogateProblem(object):
                 EI.append(0)
             else:
                 if self.models_transfer == None:
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu = mu[0][0]
-                    var = max(1e-18, var[0][0])
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
+                    if self.data.O == None:
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        EI.append(1.0/mu)
+                    else:
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
                 elif self.models_transfer is not None and self.models is None:
                     xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
                     xi=xi0[0]
