@@ -22,11 +22,11 @@
 
 
 # ############### Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=4  # number of nodes to be used
+ export machine=cori
+ export proc=haswell   # knl,haswell
+ export mpi=openmpi  # openmpi,craympich
+ export compiler=gnu   # gnu, intel	
+ export nodes=1  # number of nodes to be used
 
 
 ############### Perlmutter

@@ -114,7 +114,7 @@
               XX(i) = x00(i)*(1.0d0+X(i))
             enddo
 
-
+            nlinemax = 1000000
             if(inout==0)then
 
                   open(unit=1,file='ImpactZ0.in',status='old')
@@ -146,7 +146,6 @@
             !-----------------
             ! prepare Impact input using the control parameters
             !
-                  nlinemax = 1000000
                   iline = 0
                   ii = 0
                   do i = 1, nlinemax
