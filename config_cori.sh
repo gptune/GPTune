@@ -33,7 +33,7 @@ module load cmake/3.22.1
 ##################################################
 machine=cori
 proc=haswell   # knl,haswell,gpu
-mpi=craympich    # openmpi,craympich
+mpi=openmpi    # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
@@ -310,7 +310,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG " \
 		-DBLAS_LIBRARIES="${BLAS_LIB}" \
 		-DLAPACK_LIBRARIES="${LAPACK_LIB}"
 	make -j32
@@ -331,6 +331,7 @@ rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
 	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG " \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
@@ -426,7 +427,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_INSTALL_LIBDIR=./lib \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="" \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
 		-DBLAS_LIBRARIES="${BLAS_LIB}" \
 		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DMPI=ON \
@@ -555,10 +556,11 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf IMPACT-Z
 	git clone https://github.com/impact-lbl/IMPACT-Z.git
 	cd IMPACT-Z
+	git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
 	cp ../impact-z-driver/*.f90 ./src/Contrl/.
 	mkdir -p build 
 	cd build
-	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release
+	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release 
 	make
 	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
 

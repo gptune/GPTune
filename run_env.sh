@@ -22,19 +22,19 @@
 
 
 # ############### Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=4  # number of nodes to be used
+ export machine=cori
+ export proc=haswell   # knl,haswell
+ export mpi=openmpi  # openmpi,craympich
+ export compiler=gnu   # gnu, intel	
+ export nodes=1  # number of nodes to be used
 
 
 ############### Perlmutter
-export machine=perlmutter
-export proc=gpu   # milan,gpu
-export mpi=openmpi  # craympich, openmpi
-export compiler=gnu   # gnu, intel
-export nodes=1  # number of nodes to be used
+#export machine=perlmutter
+#export proc=gpu   # milan,gpu
+#export mpi=openmpi  # craympich, openmpi
+#export compiler=gnu   # gnu, intel
+#export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
