@@ -239,16 +239,16 @@ class Model_GPy_LCM(Model):
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
-            mu = 0
-            var = 1
+            x = np.empty((1, points.shape[0] + 1))
+            x[0,:-1] = points
+            x[0,-1] = tid
 
-            for modeler in self.M_stacked:
-                x = np.empty((1, points.shape[0] + 1))
-                x[0,:-1] = points
-                x[0,-1] = tid
-                (mu_, var_) = modeler.predict_noiseless(x)
-                mu += mu_
-                var *= var_
+            (mu, var) = self.M_stacked[0].predict_noiseless(x)
+
+            for i in range(1, len(self.M_stacked), 1):
+                (mu_, var_) = self.M_stacked[i].predict_noiseless(x)
+                mu[0][0] += mu_[0][0]
+                var[0][0] *= var_[0][0]
         else:
             x = np.empty((1, points.shape[0] + 1))
             x[0,:-1] = points

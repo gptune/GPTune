@@ -1790,7 +1790,7 @@ class GPTune(object):
                     observation = func_eval["evaluation_result"][problem.OS[k].name]
                     print ("mu: ", mu)
                     print ("observation: ", observation)
-                    residual = mu[0][0] - observation
+                    residual = observation - mu[0][0] #- observation
                     residual_result.append(residual)
                 OS_history[task_id].append(residual_result)
                 num_loaded_data += 1
