@@ -3,10 +3,10 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.12
-gccversion=11.2.0_3
+pythonversion=3.9.13_1
+gccversion=11.3.0_1
 openblasversion=0.3.20
-lapackversion=3.10.0
+lapackversion=3.10.1
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
@@ -20,14 +20,14 @@ if [[ $(uname -s) != "Darwin" ]]; then
 fi
 
 export GPTUNEROOT=$PWD
-
+export BREWPATH=/usr/local/Cellar # this is where homebrew install packages
 ############### macbook
 if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 
-	export PATH=/usr/local/Cellar/python@3.9/$pythonversion/bin/:$PATH
+	export PATH=$BREWPATH/python@3.9/$pythonversion/bin/:$PATH
 	export PATH=$GPTUNEROOT/env/bin/:$PATH
-	export BLAS_LIB=/usr/local/Cellar/openblas/$openblasversion/lib/libblas.dylib
-	export LAPACK_LIB=/usr/local/Cellar/lapack/$lapackversion/lib/liblapack.dylib
+	export BLAS_LIB=$BREWPATH/openblas/$openblasversion/lib/libblas.dylib
+	export LAPACK_LIB=$BREWPATH/lapack/$lapackversion/lib/liblapack.dylib
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/pygmo/
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
@@ -44,9 +44,9 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
-	CC=/usr/local/Cellar/gcc/$gccversion/bin/gcc-11
-	FTN=/usr/local/Cellar/gcc/$gccversion/bin/gfortran-11
-	CPP=/usr/local/Cellar/gcc/$gccversion/bin/g++-11
+	CC=$BREWPATH/gcc/$gccversion/bin/gcc-11
+	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-11
+	CPP=$BREWPATH/gcc/$gccversion/bin/g++-11
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
@@ -98,14 +98,14 @@ brew install python@3.9
 brew upgrade python@3.9
 
 
-if [ ! -d "/usr/local/Cellar/python@3.9/$pythonversion" ] 
+if [ ! -d "$BREWPATH/python@3.9/$pythonversion" ] 
 then
     echo "pythonversion=$pythonversion not working, change it to the correct one." 
     exit 
 fi
 
-alias python=/usr/local/Cellar/python@3.9/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=/usr/local/Cellar/python@3.9/$pythonversion/bin/pip3
+alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
+alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3
 
 python -m pip install virtualenv 
 rm -rf env
@@ -123,7 +123,7 @@ brew reinstall pybind11
 
 brew install gcc
 brew upgrade gcc   
-if [ ! -d "/usr/local/Cellar/gcc/$gccversion" ] 
+if [ ! -d "$BREWPATH/gcc/$gccversion" ] 
 then
     echo "gccversion=$gccversion not working, change it to the correct one." 
     exit 
@@ -132,7 +132,7 @@ fi
 
 brew install openblas
 brew upgrade openblas  
-if [ ! -d "/usr/local/Cellar/openblas/$openblasversion" ] 
+if [ ! -d "$BREWPATH/openblas/$openblasversion" ] 
 then
     echo "openblasversion=$openblasversion not working, change it to the correct one." 
     exit 
@@ -140,7 +140,7 @@ fi
 
 brew install lapack
 brew upgrade lapack   
-if [ ! -d "/usr/local/Cellar/lapack/$lapackversion" ] 
+if [ ! -d "$BREWPATH/lapack/$lapackversion" ] 
 then
     echo "lapackversion=$lapackversion not working, change it to the correct one." 
     exit 
@@ -229,6 +229,7 @@ make -j8
 make install
 # cp lib_gptuneclcm.dylib ../.
 # cp pdqrdriver ../
+
 
 if [[ $BuildExample == 1 ]]; then
 
@@ -424,6 +425,19 @@ if [[ $BuildExample == 1 ]]; then
 	make install
 	make ex3p_indef
 
+
+	cd $GPTUNEROOT/examples/IMPACT-Z
+	rm -rf IMPACT-Z
+	git clone https://github.com/impact-lbl/IMPACT-Z.git
+	cd IMPACT-Z
+	git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
+	cp ../impact-z-driver/*.f90 ./src/Contrl/.
+	mkdir -p build
+	cd build
+	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release
+	make
+	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
+
 fi
 
 # # pip install pygmo doesn't work, build from source, note that it's built with clang, as brew pagmo uses clang (I haven't figured out how to install boost with gnu on mac os), this may cause segfault at the search phase
@@ -433,8 +447,9 @@ git clone https://github.com/esa/pygmo2.git
 cd pygmo2
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+cmake ../ -DCMAKE_INSTALL_PREFIX=. -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++  # clang/clang++ is needed, otherwise will have errors https://stackoverflow.com/questions/35006614/what-does-symbol-not-found-expected-in-flat-namespace-actually-mean 
 make -j8
+make install
 
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
