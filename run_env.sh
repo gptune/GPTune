@@ -14,27 +14,27 @@
 
 
 # # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
-# export machine=mac
-# export proc=intel   
-# export mpi=openmpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
+ export machine=mac
+ export proc=intel   
+ export mpi=openmpi  
+ export compiler=gnu   
+ export nodes=1  # number of nodes to be used
 
 
 # ############### Cori
-# export machine=cori
-# export proc=haswell   # knl,haswell
-# export mpi=openmpi  # openmpi,craympich
-# export compiler=gnu   # gnu, intel	
-# export nodes=4  # number of nodes to be used
+ export machine=cori
+ export proc=haswell   # knl,haswell
+ export mpi=openmpi  # openmpi,craympich
+ export compiler=gnu   # gnu, intel	
+ export nodes=1  # number of nodes to be used
 
 
 ############### Perlmutter
-export machine=perlmutter
-export proc=gpu   # milan,gpu
-export mpi=openmpi  # craympich, openmpi
-export compiler=gnu   # gnu, intel
-export nodes=1  # number of nodes to be used
+#export machine=perlmutter
+#export proc=gpu   # milan,gpu
+#export mpi=openmpi  # craympich, openmpi
+#export compiler=gnu   # gnu, intel
+#export nodes=1  # number of nodes to be used
 
 
 # ################ Yang's tr4 machine
@@ -148,6 +148,7 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
     module load python/$PY_VERSION-anaconda-$PY_TIME
     module swap PrgEnv-intel PrgEnv-gnu
+    module swap gcc gcc/8.3.0
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
@@ -180,7 +181,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 ############### Cori Haswell Openmpi+GNU
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     
-    module load gcc/8.3.0
+    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel
@@ -220,7 +221,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 ############### Cori GPU Openmpi+GNU
 elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
-    module load gcc/8.3.0
+    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel

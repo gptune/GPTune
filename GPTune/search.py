@@ -207,8 +207,13 @@ class SurrogateProblem(object):
             LHS = np.array(LHS)
             RHS = np.array(RHS)
             #solve the linear system defined by above.
-            LSTSQ_SOL = np.linalg.lstsq(RHS, LHS)
-            models_weights = LSTSQ_SOL[0]
+            try:
+                LSTSQ_SOL = np.linalg.lstsq(RHS, LHS)
+                models_weights = LSTSQ_SOL[0]
+            except:
+                print ("unexpected error from np.linalg.lstsq routine, manually assign the same weight for this sampling point")
+                models_weight = [1.0 for i in range(len(self.models_transfer)+1)]
+
             print ("models_weights: ", models_weights)
             print ("models_weights_sum: ", np.sum(models_weights))
             models_weights_normalized = models_weights / np.sum(models_weights)
