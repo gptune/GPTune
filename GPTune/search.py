@@ -57,7 +57,7 @@ class Search(abc.ABC):
         if (tids is None):
             tids = list(range(data.NI))
 
-        if ((kwargs['distributed_memory_parallelism'] or _platform == "darwin") and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned 
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned
             import mpi4py
             nproc = min(kwargs['search_multitask_processes'],data.NI)
             npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
