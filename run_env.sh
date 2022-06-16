@@ -5,28 +5,28 @@
 ##################################################
 
 
-# ################ summit
-# export machine=summit
-# export proc=power9   
-# export mpi=spectrummpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
+################ summit
+export machine=summit
+export proc=power9   
+export mpi=spectrummpi  
+export compiler=gnu   
+export nodes=1  # number of nodes to be used
 
 
-# # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
- export machine=mac
- export proc=intel   
- export mpi=openmpi  
- export compiler=gnu   
- export nodes=1  # number of nodes to be used
+# # # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
+#  export machine=mac
+#  export proc=intel   
+#  export mpi=openmpi  
+#  export compiler=gnu   
+#  export nodes=1  # number of nodes to be used
 
 
-# ############### Cori
- export machine=cori
- export proc=haswell   # knl,haswell
- export mpi=openmpi  # openmpi,craympich
- export compiler=gnu   # gnu, intel	
- export nodes=1  # number of nodes to be used
+# # ############### Cori
+#  export machine=cori
+#  export proc=haswell   # knl,haswell
+#  export mpi=openmpi  # openmpi,craympich
+#  export compiler=gnu   # gnu, intel	
+#  export nodes=1  # number of nodes to be used
 
 
 ############### Perlmutter
@@ -488,18 +488,21 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 ############### Cori Haswell CrayMPICH+GNU
 elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
 
-    module swap xl gcc/7.4.0
+    module load gcc/9.1.0
     module load essl
     module load netlib-lapack
     module load netlib-scalapack
     module load cmake
-    module load cuda/10.1.243
-    module load python/3.7.0-anaconda3-5.3.0
+    module load cuda
+    module load python
     module load boost
+    PY_VERSION=3.8
+
+    PREFIX_PATH=$PYTHONUSERBASE
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/summit/anaconda3/5.3.0/3.7/lib/python3.7/site-packages
-    export PYTHONPATH=~/.local/summit/anaconda3/5.3.0/3.7/lib/python3.7/site-packages/gptune/:$PYTHONPATH
+    export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/gptune/:$PYTHONPATH
     export PATH=$PATH:$PWD/jq-1.6
     export PYTHONPATH=$PYTHONPATH:$PWD/openturns/build/share/gdb/auto-load/$PWD
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
@@ -507,8 +510,8 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
     MPIRUN=jsrun
     cores=44
     gpus=6 # 6 V100 per node
-    software_json=$(echo ",\"software_configuration\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"spectrum-mpi\":{\"version_split\": [10,3,1]},\"netlib-scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,4,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,8,0]},\"cuda\":{\"version_split\": [10,1,243]}}")
+    software_json=$(echo ",\"software_configuration\":{\"spectrum-mpi\":{\"version_split\": [10,4,0]},\"netlib-scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [9,1,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,9,1]},\"cuda\":{\"version_split\": [11,0,3]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"spectrum-mpi\":{\"version_split\": [10,4,0]},\"netlib-scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [9,1,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,9,1]},\"cuda\":{\"version_split\": [11,0,3]}}")
 
 # fi
 

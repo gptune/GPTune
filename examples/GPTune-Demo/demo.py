@@ -196,7 +196,7 @@ def main():
     # options['sample_algo'] = 'MCS'
 
     # Use the following two lines if you want to specify a certain random seed for the random pilot sampling
-    options['sample_class'] = 'SampleOpenTURNS'
+    options['sample_class'] = 'SampleLHSMDU'
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
@@ -207,6 +207,8 @@ def main():
 
     options['verbose'] = False
     options.validate(computer=computer)
+
+    print(options)
 
     if ntask == 1:
         giventask = [[round(tvalue,1)]]
