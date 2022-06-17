@@ -6,7 +6,7 @@ if [[ $(dnsdomainname) != "summit.olcf.ornl.gov" ]]; then
 	exit
 fi
 
-module load gcc/9.1.0   # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo, gcc/7.5.0 causes oneTBB compile failure 
+module load gcc/9.1.0   
 module load essl
 module load netlib-lapack
 module load netlib-scalapack
@@ -80,20 +80,21 @@ export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/sh
 export BOOST_ROOT=$OLCF_BOOST_ROOT
 export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
-	cd $GPTUNEROOT
-	rm -rf GPy
-	git clone https://github.com/SheffieldML/GPy.git
-	cd GPy
-	cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
-	cp ../patches/GPy/stationary.py ./GPy/kern/src/.
-	cp ../patches/GPy/choleskies.py ./GPy/util/.
-	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
-	python setup.py install --prefix=$PREFIX_PATH
+cd $GPTUNEROOT
+rm -rf GPy
+git clone https://github.com/SheffieldML/GPy.git
+cd GPy
+cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
+cp ../patches/GPy/stationary.py ./GPy/kern/src/.
+cp ../patches/GPy/choleskies.py ./GPy/util/.
+LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
+python setup.py install --prefix=$PREFIX_PATH
 
-	cd $GPTUNEROOT
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+	cd $GPTUNEROOT
 	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_summit.txt
 else
+	cd $GPTUNEROOT
 	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_lite.txt
 fi
 
@@ -354,7 +355,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON 
 	make install -j16
 
-	module swap gcc gcc/7.5.0
+	module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
 	cd $GPTUNEROOT
 	rm -rf pagmo2
 	git clone https://github.com/esa/pagmo2.git
@@ -364,7 +365,6 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
 	make -j16
 	make install
-	#cp lib/cmake/pagmo/*.cmake . 
 
 	cd $GPTUNEROOT
 	rm -rf pygmo2
@@ -377,14 +377,12 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	make install
 	module swap gcc/7.5.0 gcc 
 
-
 	cd $GPTUNEROOT
 	rm -rf mpi4py
 	git clone https://github.com/mpi4py/mpi4py.git
 	cd mpi4py/
 	python setup.py build --mpicc="$MPICC -shared"
-	python setup.py install --prefix=$PREFIX_PATH
-	# env CC=mpicc pip install --user -e .								  
+	python setup.py install --prefix=$PREFIX_PATH							  
 fi
 
 
@@ -394,8 +392,7 @@ git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
 cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+python setup.py install --prefix=$PREFIX_PATH						  
 
 
 cd $GPTUNEROOT
