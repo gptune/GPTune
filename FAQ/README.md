@@ -156,5 +156,6 @@ This is due to the dependency on fn from opentuner. Note fn has been removed fro
 ```
 cp $GPTUNEROOT/patches/opentuner/manipulator.py your-python-site-packages/opentuner/search/.
 ```
-
+### Runtime error: "module openturns has no module RandomSample"
+This is typically due to the fact that openturns installation is incomplete as it requires TBB, which only works on AMD and Intel-based architectures. You can swith openturns off by setting options['sample_class'] = 'SampleLHSMDU'. 
 
