@@ -40,6 +40,8 @@ import mpi4py
 from mpi4py import MPI
 from array import array
 import math
+from csv import writer, reader
+from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
@@ -54,7 +56,6 @@ from autotune.search import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
-
 
 ################################################################################
 def objectives(point, *args):                  
@@ -103,6 +104,11 @@ def objectives(point, *args):
 	   
 	retval = tmpdata[0]
 	print(params, ' impact-z objective: ', retval)
+
+	with open('history.csv', 'a') as f_object:
+		writer_object = writer(f_object)
+		writer_object.writerow([quad1,quad2,quad3,quad4,quad5,retval])
+		f_object.close()
 
 	return retval
 
@@ -170,6 +176,8 @@ def main():
 
 	Pdefault = np.asarray([0,0,0,0,0])
 	if(TUNER_NAME=='SIMPLEX'):
+		os.system("rm -rf history.csv")
+
 		lw = [-1]*Pdefault.shape[0]
 		up = [1]*Pdefault.shape[0]
 		bounds_constraint = sp.optimize.Bounds(lw, up)
@@ -184,6 +192,26 @@ def main():
 		print('nit      : ', sol.nit)
 		print('status   : ', sol.status)
 		print('success  : ', sol.success)
+		with open('history.csv', mode='r') as f_object:
+			csv_reader = reader(f_object, delimiter=',')
+			Ps=[]
+			Os=[]
+			for row in csv_reader:
+				Ps.append([float(a) for a in row[0:5]])
+				Os.append(float(row[5]))
+			Os=np.asarray(Os)	
+			print("    Ps ", Ps)
+			print("    Os ", Os.tolist())	
+			print('    Popt ', sol.x, 'Oopt ', sol.fun, 'nth ', np.argmin(Os))	
+			X=np.array(Ps)				
+			brs = NearestNeighbors(n_neighbors=min(50,len(Ps)), algorithm='auto').fit(X)	
+			indices = brs.kneighbors(X[np.argmin(Os)].reshape(1, -1),return_distance=False)
+			# print(X[indices])
+			print(Os[indices])
+			print("    new Pdefault:", sol.x)
+			print("    new search range xmin:", np.amin(X[indices],1))
+			print("    new search range xmax:", np.amax(X[indices],1))
+
 
 
 def parse_args():
