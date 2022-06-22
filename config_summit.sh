@@ -6,20 +6,20 @@ if [[ $(dnsdomainname) != "summit.olcf.ornl.gov" ]]; then
 	exit
 fi
 
-module swap xl gcc/7.4.0
+module load gcc/9.1.0   
 module load essl
 module load netlib-lapack
 module load netlib-scalapack
 module load cmake
-module load cuda/10.1.243
-module load python/3.7.0-anaconda3-5.3.0
+module load cuda
+module load python
 module load boost
+PY_VERSION=3.8
 
-# rm -rf  ~/.cache/pip
-# rm -rf ~/.local/cori/
-# rm -rf ~/.local/lib/python3.7
 
-PREFIX_PATH=~/.local/summit/anaconda3/5.3.0/3.7
+
+
+PREFIX_PATH=$PYTHONUSERBASE
 
 
 echo $(which python) 
@@ -59,7 +59,7 @@ else
     exit
 fi 
 
-export PYTHONPATH=~/.local/cori/3.7-anaconda-2019.10/lib/python3.7/site-packages
+export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
@@ -76,30 +76,28 @@ export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
 export PARMETIS_LIBRARIES=$ParMETIS_DIR/lib/libparmetis.so
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
 export TBB_ROOT=$GPTUNEROOT/oneTBB/build
-export pybind11_DIR=$PREFIX_PATH/lib/python3.7/site-packages/pybind11/share/cmake/pybind11
+export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
 export BOOST_ROOT=$OLCF_BOOST_ROOT
 export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
-	cd $GPTUNEROOT
-	rm -rf GPy
-	git clone https://github.com/SheffieldML/GPy.git
-	cd GPy
-	cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
-	cp ../patches/GPy/stationary.py ./GPy/kern/src/.
-	cp ../patches/GPy/choleskies.py ./GPy/util/.
-	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
-	python setup.py install --prefix=$PREFIX_PATH
+cd $GPTUNEROOT
+rm -rf GPy
+git clone https://github.com/SheffieldML/GPy.git
+cd GPy
+cp ../patches/GPy/coregionalize.py ./GPy/kern/src/.
+cp ../patches/GPy/stationary.py ./GPy/kern/src/.
+cp ../patches/GPy/choleskies.py ./GPy/util/.
+LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
+python setup.py install --prefix=$PREFIX_PATH
 
-	cd $GPTUNEROOT
-	git clone https://github.com/openturns/openturns.git
-	cd openturns
-	mkdir build
-	cd build
-	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .
-	make install -j16
-
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cd $GPTUNEROOT
 	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_summit.txt
+else
+	cd $GPTUNEROOT
+	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_lite.txt
+fi
+
 
 
 
@@ -120,6 +118,7 @@ cmake .. \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
+	-DGPTUNE_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
@@ -324,7 +323,6 @@ if [[ $BuildExample == 1 ]]; then
 
 fi
 
-
 cd $GPTUNEROOT
 wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz
 tar -xvf jq-1.6.tar.gz
@@ -333,48 +331,59 @@ autoreconf -i
 ./configure --disable-maintainer-mode
 make -j16
 
+if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 
-cd $GPTUNEROOT
-rm -rf oneTBB
-git clone https://github.com/oneapi-src/oneTBB.git
-cd oneTBB
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-make -j16
-make install
-git clone https://github.com/wjakob/tbb.git
-cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+	cd $GPTUNEROOT
+	rm -rf oneTBB
+	git clone https://github.com/oneapi-src/oneTBB.git
+	cd oneTBB
+	mkdir build
+	cd build
+	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+	make -j16
+	make install
+	git clone https://github.com/wjakob/tbb.git
+	cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
-cd $GPTUNEROOT
-rm -rf pagmo2
-git clone https://github.com/esa/pagmo2.git
-cd pagmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-make -j16
-make install
-#cp lib/cmake/pagmo/*.cmake . 
 
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYTHON_EXECUTABLE:FILEPATH=python -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-make -j16
-make install
+	cd $GPTUNEROOT
+	git clone https://github.com/openturns/openturns.git
+	cd openturns
+	git checkout v1.17
+	mkdir build
+	cd build
+	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON 
+	make install -j16
 
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+	module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
+	cd $GPTUNEROOT
+	rm -rf pagmo2
+	git clone https://github.com/esa/pagmo2.git
+	cd pagmo2
+	mkdir build
+	cd build
+	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+	make -j16
+	make install
 
+	cd $GPTUNEROOT
+	rm -rf pygmo2
+	git clone https://github.com/esa/pygmo2.git
+	cd pygmo2
+	mkdir build
+	cd build
+	cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
+	make -j16
+	make install
+	module swap gcc/7.5.0 gcc 
+
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install --prefix=$PREFIX_PATH							  
+fi
 
 
 cd $GPTUNEROOT
@@ -383,8 +392,7 @@ git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
 cp ../patches/scikit-optimize/space.py skopt/space/.
 python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+python setup.py install --prefix=$PREFIX_PATH						  
 
 
 cd $GPTUNEROOT
@@ -402,7 +410,7 @@ cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 
-cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python3.7/site-packages/opentuner/search/.
+cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 cd $GPTUNEROOT
 
 

@@ -212,7 +212,7 @@ class SurrogateProblem(object):
                 models_weights = LSTSQ_SOL[0]
             except:
                 print ("unexpected error from np.linalg.lstsq routine, manually assign the same weight for this sampling point")
-                models_weight = [1.0 for i in range(len(self.models_transfer)+1)]
+                models_weights = [1.0 for i in range(len(self.models_transfer)+1)]
 
             print ("models_weights: ", models_weights)
             print ("models_weights_sum: ", np.sum(models_weights))

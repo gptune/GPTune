@@ -146,11 +146,11 @@ def main():
 	# quad4 = Real     (lb[3], ub[3], transform="normalize", name="quad4")
 	# quad5 = Real     (lb[4], ub[4], transform="normalize", name="quad5")			
 	
-	quad1 = Real     (-0.05, 0.05, transform="normalize", name="quad1")
-	quad2 = Real     (-0.05, 0.05, transform="normalize", name="quad2")
-	quad3 = Real     (-0.05, 0.05, transform="normalize", name="quad3")
-	quad4 = Real     (-0.05, 0.05, transform="normalize", name="quad4")
-	quad5 = Real     (-0.05, 0.05, transform="normalize", name="quad5")			
+	quad1 = Real     (-0.06, 0.06, transform="normalize", name="quad1")
+	quad2 = Real     (-0.06, 0.06, transform="normalize", name="quad2")
+	quad3 = Real     (-0.06, 0.06, transform="normalize", name="quad3")
+	quad4 = Real     (-0.06, 0.06, transform="normalize", name="quad4")
+	quad5 = Real     (-0.06, 0.06, transform="normalize", name="quad5")			
 	
 
 
@@ -179,7 +179,7 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 	# options['search_pop_size'] = 10000
 	options['sample_class'] = 'SampleOpenTURNS'
@@ -190,7 +190,7 @@ def main():
 	giventask = [["ImpactZ.in_test1","matchquad.in_test1"]]
 	# giventask = [["big.rua"]]	
 	data = Data(problem)
-	Pdefault = [0,0,0,0,0]
+	Pdefault = [0, 0, 0, 0, 0]
 	data.P = [[Pdefault]] * ntask
 
 	if(TUNER_NAME=='GPTune'):
@@ -208,6 +208,13 @@ def main():
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+			subtracted = [max(1e-5,abs(element1 - element2)/2.0) for (element1, element2) in zip(data.P[tid][np.argmin(data.O[tid])], Pdefault)]
+			newmin = [element1 - element2 for (element1, element2) in zip(data.P[tid][np.argmin(data.O[tid])],subtracted)]
+			newmax = [element1 + element2 for (element1, element2) in zip(data.P[tid][np.argmin(data.O[tid])],subtracted)]
+			print("    new Pdefault:", data.P[tid][np.argmin(data.O[tid])])
+			print("    new search range xmin:", newmin)
+			print("    new search range xmax:", newmax)
+
 
 	if(TUNER_NAME=='opentuner'):
 		NI = len(giventask)
@@ -235,6 +242,8 @@ def main():
 			print("    Ps ", data.P[tid])
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
 
 
 def parse_args():
