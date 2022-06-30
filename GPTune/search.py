@@ -281,11 +281,12 @@ class SurrogateProblem(object):
 
                     mu_transfer = 0
                     var_transfer = 1
-                    for i in range(len(self.models_transfer)):
+                    num_models_transfer = len(self.models_transfer)
+                    for i in range(num_models_transfer):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
                         mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
-                        var_transfer *= 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name+"_var"][0][0]
+                        var_transfer *= math.pow(ret[self.problem.OS[o].name+"_var"][0][0], num_models_transfer)
                     var = max(1e-18, var_transfer)
                     EI.append(1.0/mu_transfer)
                 elif self.options['TLA_method'] == 'Regression':
@@ -310,7 +311,7 @@ class SurrogateProblem(object):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
                         mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
-                        var_transfer *= self.models_weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
+                        var_transfer *= math.pow(ret[self.problem.OS[o].name+"_var"][0][0], self.models_weights[i+1])
                     mu = self.models_weights[0]*mu[0][0] + mu_transfer
                     var = max(1e-18, self.models_weights[0]*var[0][0] * var_transfer)
                     std = np.sqrt(var)
