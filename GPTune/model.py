@@ -23,7 +23,7 @@ from problem import Problem
 from computer import Computer
 from data import Data
 
-
+import math
 
 import concurrent
 from concurrent import futures
@@ -36,6 +36,7 @@ class Model(abc.ABC):
         self.M = None
         self.M_last = None # used for TLA with model regression
         self.M_stacked = [] # used for TLA with model stacking
+        self.num_samples_stacked = [] # number of samples used for models in model stacking
 
     @abc.abstractmethod
     def train(self, data : Data, **kwargs):
@@ -220,12 +221,17 @@ class Model_GPy_LCM(Model):
 
     def train_stacked(self, data : Data, num_source_tasks, **kwargs):
 
+        # note: model stacking works only for single task tuning
+        # each source task model is a single-task model, and target model is also a single-task model
+
         self.train(data, **kwargs)
 
         if len(self.M_stacked) < 1+num_source_tasks:
             self.M_stacked.append(self.M)
+            self.num_samples_stacked.append(len(data.P[0]))
         elif len(self.M_stacked) == 1+num_source_tasks: # residual for the current target task
             self.M_stacked[num_source_tasks] = self.M
+            self.num_samples_stacked[num_source_tasks] = len(data.P[0])
         else:
             print ("Unexpected. Stacking model count does not match")
 
@@ -244,11 +250,18 @@ class Model_GPy_LCM(Model):
             x[0,-1] = tid
 
             (mu, var) = self.M_stacked[0].predict_noiseless(x)
+            var[0][0] = max(1e-18, var[0][0])
+            num_samples_prior = self.num_samples_stacked[0]
 
             for i in range(1, len(self.M_stacked), 1):
                 (mu_, var_) = self.M_stacked[i].predict_noiseless(x)
+                var_[0][0] = max(1e-18, var_[0][0])
+                num_samples_current = self.num_samples_stacked[i]
+                alpha = 1.0 # relative importance of the prior and current ones
+                beta = float((alpha*num_samples_current)/(alpha*num_samples_current+num_samples_prior))
                 mu[0][0] += mu_[0][0]
-                var[0][0] *= var_[0][0]
+                var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
+                num_samples_prior = num_samples_current
         else:
             x = np.empty((1, points.shape[0] + 1))
             x[0,:-1] = points
