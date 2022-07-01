@@ -1764,7 +1764,7 @@ class GPTune_MB(object):
 
         # self.NSs = [int(self.options['budget_max']/x*NS) for x in self.budgets] # so that the highest fidelity has NS samples
         self.NSs = [int((self.smax+1)/(s+1))*self.options['budget_base']**s for s in range(self.smax+1)] # consistent with hyperband
-        print(int((self.smax+1)/(0+1))*self.options['budget_base']**0,self.smax,'jifdjfd')
+        # print(int((self.smax+1)/(0+1))*self.options['budget_base']**0,self.smax,'jifdjfd')
         NSs1 = [0] * len(self.NSs)
         info = [[x, y] for x, y in zip(self.budgets, self.NSs)]
         print('total samples:', info)
@@ -1804,7 +1804,7 @@ class GPTune_MB(object):
                 if(Pdefault is not None):
                     data1.P = [[Pdefault]] * len(newtasks) # as gt.MLA will load available database, Pdefault is effective only if database is empty   
                 
-                # print("Calling MLA: \ndata.I", data.I, "\ndata.P", data.P, "\ndata.O", data.O)
+                # print("Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
                 # print(f"NS={ntotal}, Igiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
                 gt = GPTune(self.tp, computer=self.computer,
                             data=data1, options=self.options)
@@ -1816,7 +1816,7 @@ class GPTune_MB(object):
 
                 (data1, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
                 
-
+                # print("Finish Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
                 # merge new results to history
                 
                 stats['time_total'] += stats0['time_total']
@@ -1824,13 +1824,21 @@ class GPTune_MB(object):
                 stats['time_model'] += stats0['time_model']
                 stats['time_search'] += stats0['time_search']
                 stats['time_sample_init'] += stats0['time_sample_init']
-                # print(f'At the end of bracket {s}')
-                # print('Current data1:')
-                # print('data1.I: ', data1.I)
-                # print('data1.P: ', data1.P)
-                # print('data1.O: ', data1.O)
-                # print("data1.D = ", data1.D)
-                
+
+
+            # bug fix: data1 will load all available data from database, the following make srue that it only contains MLA samples generated at the current loop    
+            for s in range(len(self.budgets)):  # loop over the budget levels
+                idx = s*len(Igiven) 
+                for i in range(len(Igiven)):
+                    data1.P[idx+i] = data1.P[idx+i][NSs1[s] - self.NSs[s]:NSs1[s]]
+                    data1.O[idx+i] = data1.O[idx+i][NSs1[s] - self.NSs[s]:NSs1[s],:]
+
+            # print('MLA samples generated at current loop:')
+            # print('data1.I: ', data1.I)
+            # print('data1.P: ', data1.P)
+            # print('data1.O: ', data1.O)
+            # print("data1.D = ", data1.D)
+
             if Nloop == 0:
                 self.data.P = data1.P[0:len(Igiven)]  # the first 0:len(Igiven) tasks of data1 are highest budget
                 self.data.O = data1.O[0:len(Igiven)] 
@@ -1876,6 +1884,7 @@ class GPTune_MB(object):
 
                     t1 = time.time_ns()
                     done=0
+                    # print("load_history_func_eval in SH", gt.data.P, NSs1[s-ri-1]+ratio)
                     if(gt.data.P is not None):
                         if(len(gt.data.P[0])>=NSs1[s-ri-1]+ratio): # the evaluations have been done before 
                             done=1
@@ -1928,7 +1937,7 @@ class GPTune_MB(object):
                 # print('self.data.P = ', self.data.P)
                 # print('self.data.O = ', self.data.O)
             
-            print('Updated self.data after all SH runs')
+            print('Updated self.data (only highest fidelity) after all SH runs')
             print('self.data.P = ', self.data.P)
             print('self.data.O = ', self.data.O)
             
@@ -1942,6 +1951,7 @@ class GPTune_MB(object):
                 
             Nloop += 1
             print(f"Finish one loop, next Nloop = {Nloop}")
+            print('data1_hist (including MLA samples for all fidelities) ')    
             print('data1_hist.I = ', data1_hist.I)    
             print('data1_hist.P = ', data1_hist.P)
             print('data1_hist.O = ', data1_hist.O)
