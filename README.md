@@ -43,10 +43,20 @@ Table of Contents
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## Features
- - **(High-performance and parallel tuning)** GPTune can tune applications that are specifically designed for the high-performance clusters and exascale computational applications, and is a unique distributed-memory parallel autotuner. 
- - **(Transfer and multi-objective learning)** GPTune adopts transfer learning through classical single-output and multiple-output Gaussian process surrogate models, along with novel surrogate models, and incorporates various performance models. It also supports multiple-objective tuning over certain applications. 
- - **(Unified tuning framework)** GPTune supports a unified framework that allows different tuners across different applications from high-performance mathematical libraries to production-level scientific simulations with an easy-to-use python interface. 
- - **(Historical database)** GPTune incorporates an online historical database (See http://lbl.gptune.gov for details) for tuning results, which further improves the performance.
+- **(High-performance and parallel tuning)** GPTune is designed to tune applications running on large-scale cluster systems and can exploit distributed memory parallelism for accelerating surrogate modeling.
+  - [Example: Autotuning ScaLAPACK's PDGEQRF using distributed parallel surrogate modeling](https://github.com/gptune/GPTune/blob/master/examples/Scalapack-PDGEQRF/scalapack_MLA.py)
+- **(Multitask learning-based autotuning)** GPTune supports multitask learning-based autotuning that allows us to tune multiple tuning problems simultaneously. Multitask learning would predict an optimal tuning parameter configuration using a fewer number of evaluations compared to single task autotuning by modeling the linear dependence of the multiple tasks.
+  - [Example: Multitask learning-based autotuning of ScaLAPACK's PDGEQRF](https://github.com/gptune/GPTune/blob/master/examples/Scalapack-PDGEQRF/scalapack_MLA.py)
+- **(Transfer learning-based autotuning)** GPTune supports transfer learning-based autotuning to tune the given tuning task by leveraging already available performance data collected for different tasks. Different tasks can mean different input problem sizes or the same input problem on different machine and/or software settings.
+  - [Example: Transfer learning from a different input problem for autotuning ScaLAPACK's PDGEQRF](https://github.com/gptune/GPTune/blob/master/examples/Scalapack-PDGEQRF/scalapack_TLA_task.py)
+  - [Example: Transfer learning from a different machine setting for autotuning ScaLAPACK's PDGEQRF](https://github.com/gptune/GPTune/blob/master/examples/Scalapack-PDGEQRF/scalapack_TLA_machine.py)
+- **(GPTuneBand (multi-fidelity autotuning))** Multi-fidelity tuning uses multiple fidelity levels to guide sampling (generating many cheap samples from lower-fidelity levels). GPTuneBand combines multitask learning with a multi-armed bandit strategy to guide sampling of the given tuning problem.
+  - [Example: Multi-fidelity tuning of STRUMPACK's Kernel Ridge Regression (need to set the tuner option to "GPTuneBand")](https://github.com/gptune/GPTune/blob/master/examples/STRUMPACK/strumpack_MLA_KRR_MB.py)
+- **(Multi-objective tuning)** Beyond the classical single-objective tuning, GPTune supports multi-objective tuning that uses NSGA2 algorithm to maximize multiple EI functions for multiple objectives. For an objective, users can also specify whether they want to optimize (minimize) the objective within the given range, or they just want the objective is within the given range.
+  - [Example: Multi-objective tuning of SuperLU_DIST](https://github.com/gptune/GPTune/blob/master/examples/SuperLU_DIST/superlu_MLA_MO.py)
+- **(Unified interface for different autotuners)** GPTune uses a unified Python interface and supports using several different autotuners.
+  - [Example: Comparing GPTune, HpBandSter, and OpenTuner for a synthetic function](https://github.com/gptune/GPTune/blob/master/examples/GPTune-Demo/demo_comparetuners.py)
+- **(History database)** We provide an autotuning database called GPTune history database which allows users to save and re-use performance data to reduce the cost of the expensive black-box objective function. The history database enables several useful autotuning capabilities. The details are outlined in the GPTune and history database project webpage at [https://gptune.lbl.gov/about](https://gptune.lbl.gov/about).
 
 GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Project (ECP).
 Our GPTune website at https://gptune.lbl.gov provides a shared database repository where the user can share their tuning performance data with other users.
