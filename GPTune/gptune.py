@@ -573,6 +573,21 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
+    # T: task parameter (1-d np array)
+    # P: given tuning parameters (manual input) to evaluate (2-d np array)
+    def EvaluateObjective(self, T: np.ndarray = None, P: np.ndarray = None, **kwargs):
+
+        options = copy.deepcopy(self.options)
+        kwargs.update(options)
+
+        Igiven = self.problem.IS.transform([T])[0]
+
+        for i in range(len(P)):
+            xNorm = self.problem.PS.transform([P[i]])
+            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Igiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+
+        return
+
     def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
