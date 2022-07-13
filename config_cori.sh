@@ -74,7 +74,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 # fi 
 
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
-    module load gcc/8.3.0
+    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel
@@ -117,7 +117,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 
 elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
-    module load gcc/8.3.0
+    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel
@@ -290,9 +290,9 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_intel.txt
+	env CC=$MPICC pip install --ignore-installed --prefix=$PREFIX_PATH -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements.txt
+	env CC=$MPICC pip install --ignore-installed --prefix=$PREFIX_PATH -r requirements.txt
 fi
 
 # if openmpi, scalapack needs to be built from source
@@ -348,66 +348,66 @@ make install
 
 if [[ $BuildExample == 1 ]]; then
 
-	cd $GPTUNEROOT/examples/SuperLU_DIST
-	rm -rf superlu_dist
-	git clone https://github.com/xiaoyeli/superlu_dist.git
-	cd superlu_dist
+	# cd $GPTUNEROOT/examples/SuperLU_DIST
+	# rm -rf superlu_dist
+	# git clone https://github.com/xiaoyeli/superlu_dist.git
+	# cd superlu_dist
 
-	wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	tar -xf parmetis-4.0.3.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	# use 64-bit integer in parmetis and
-	cp $GPTUNEROOT/patches/parmetis/metis_64bit.h $PWD/metis/include/metis.h
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1	
-	cp $PWD/build/Linux-x86_64/libmetis/libmetis.so $PWD/install/lib/.
-	cp $PWD/metis/include/metis.h $PWD/install/include/.
-	mkdir -p install_static
-	make config cc=$MPICC cxx=$MPICXX prefix=$PWD/install_static
-	make install > make_parmetis_install.log 2>&1
-	cp $PWD/build/Linux-x86_64/libmetis/libmetis.a $PWD/install/lib/.
-	cp $PWD/build/Linux-x86_64/libparmetis/libparmetis.a $PWD/install/lib/.
+	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	# tar -xf parmetis-4.0.3.tar.gz
+	# cd parmetis-4.0.3/
+	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# # use 64-bit integer in parmetis and
+	# cp $GPTUNEROOT/patches/parmetis/metis_64bit.h $PWD/metis/include/metis.h
+	# mkdir -p install
+	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	# make install > make_parmetis_install.log 2>&1	
+	# cp $PWD/build/Linux-x86_64/libmetis/libmetis.so $PWD/install/lib/.
+	# cp $PWD/metis/include/metis.h $PWD/install/include/.
+	# mkdir -p install_static
+	# make config cc=$MPICC cxx=$MPICXX prefix=$PWD/install_static
+	# make install > make_parmetis_install.log 2>&1
+	# cp $PWD/build/Linux-x86_64/libmetis/libmetis.a $PWD/install/lib/.
+	# cp $PWD/build/Linux-x86_64/libparmetis/libparmetis.a $PWD/install/lib/.
 
-	cd ../
-	mkdir -p build
-	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	 	-DCMAKE_INSTALL_PREFIX=. \
-	 	-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn
-	make pzdrive_spawn
-	make pddrive3d
-	make install
+	# cd ../
+	# mkdir -p build
+	# cd build
+	# rm -rf CMakeCache.txt
+	# rm -rf DartConfiguration.tcl
+	# rm -rf CTestTestfile.cmake
+	# rm -rf cmake_install.cmake
+	# rm -rf CMakeFiles
+	# cmake .. \
+	# 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+	# 	-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	#  	-DCMAKE_INSTALL_PREFIX=. \
+	#  	-DCMAKE_INSTALL_LIBDIR=./lib \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
+	# 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	# 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+	# make pddrive_spawn
+	# make pzdrive_spawn
+	# make pddrive3d
+	# make install
 
 
-	cd $GPTUNEROOT/examples/Hypre
-	rm -rf hypre
-	git clone https://github.com/hypre-space/hypre.git
-	cd hypre/src/
-	git checkout v2.19.0
-	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make
-	cp ../../hypre-driver/src/ij.c ./test/.
-	make test
+	# cd $GPTUNEROOT/examples/Hypre
+	# rm -rf hypre
+	# git clone https://github.com/hypre-space/hypre.git
+	# cd hypre/src/
+	# git checkout v2.19.0
+	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	# make
+	# cp ../../hypre-driver/src/ij.c ./test/.
+	# make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
@@ -457,99 +457,99 @@ if [[ $BuildExample == 1 ]]; then
 
 
 
-	cd $GPTUNEROOT/examples/STRUMPACK
-	rm -rf scotch_6.1.0
-	wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
-	tar -xf scotch_6.1.0.tar.gz
-	cd ./scotch_6.1.0
-	mkdir install
-	cd ./src
-	cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
-	sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
-	sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
-	sed -i "s/CCD/#CCD/" Makefile.inc
-	printf "CCD = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCP/#CCP/" Makefile.inc
-	printf "CCP = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCS/#CCS/" Makefile.inc
-	printf "CCS = $MPICC\n" >> Makefile.inc
-	cat Makefile.inc
-	make ptscotch 
-	make prefix=../install install
+	# cd $GPTUNEROOT/examples/STRUMPACK
+	# rm -rf scotch_6.1.0
+	# wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+	# tar -xf scotch_6.1.0.tar.gz
+	# cd ./scotch_6.1.0
+	# mkdir install
+	# cd ./src
+	# cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+	# sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+	# sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+	# sed -i "s/CCD/#CCD/" Makefile.inc
+	# printf "CCD = $MPICC\n" >> Makefile.inc
+	# sed -i "s/CCP/#CCP/" Makefile.inc
+	# printf "CCP = $MPICC\n" >> Makefile.inc
+	# sed -i "s/CCS/#CCS/" Makefile.inc
+	# printf "CCS = $MPICC\n" >> Makefile.inc
+	# cat Makefile.inc
+	# make ptscotch 
+	# make prefix=../install install
 
 
-	cd ../../
-	rm -rf STRUMPACK
-	git clone https://github.com/pghysels/STRUMPACK.git
-	cd STRUMPACK
-	#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
-	git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
-	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
-	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
-	chmod +x examples/dense/KernelRegressionMPI.py
-	mkdir build
-	cd build
+	# cd ../../
+	# rm -rf STRUMPACK
+	# git clone https://github.com/pghysels/STRUMPACK.git
+	# cd STRUMPACK
+	# #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+	# git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
+	# cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
+	# cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
+	# chmod +x examples/dense/KernelRegressionMPI.py
+	# mkdir build
+	# cd build
 
 
 
-	cmake ../ \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_INSTALL_PREFIX=../install \
-		-DCMAKE_INSTALL_LIBDIR=../install/lib \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DSTRUMPACK_COUNT_FLOPS=ON \
-		-DSTRUMPACK_TASK_TIMERS=ON \
-		-DSTRUMPACK_USE_CUDA=${STRUMPACK_USE_CUDA} \
-		-DTPL_CUBLAS_LIBRARIES="${CUBLAS_LIB}" \
-		-DTPL_CUBLAS_INCLUDE_DIRS="${CUBLAS_INCLUDE}" \
-		-DCMAKE_CUDA_FLAGS="${STRUMPACK_CUDA_FLAGS}" \
-		-DTPL_ENABLE_SCOTCH=ON \
-		-DTPL_ENABLE_ZFP=OFF \
-		-DTPL_ENABLE_PTSCOTCH=ON \
-		-DTPL_ENABLE_PARMETIS=ON \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	# cmake ../ \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_INSTALL_PREFIX=../install \
+	# 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DSTRUMPACK_COUNT_FLOPS=ON \
+	# 	-DSTRUMPACK_TASK_TIMERS=ON \
+	# 	-DSTRUMPACK_USE_CUDA=${STRUMPACK_USE_CUDA} \
+	# 	-DTPL_CUBLAS_LIBRARIES="${CUBLAS_LIB}" \
+	# 	-DTPL_CUBLAS_INCLUDE_DIRS="${CUBLAS_INCLUDE}" \
+	# 	-DCMAKE_CUDA_FLAGS="${STRUMPACK_CUDA_FLAGS}" \
+	# 	-DTPL_ENABLE_SCOTCH=ON \
+	# 	-DTPL_ENABLE_ZFP=OFF \
+	# 	-DTPL_ENABLE_PTSCOTCH=ON \
+	# 	-DTPL_ENABLE_PARMETIS=ON \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 
-	make install -j32
-	make examples -j32
+	# make install -j32
+	# make examples -j32
 
 
-	cd $GPTUNEROOT/examples/MFEM
-	cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
-	git clone https://github.com/mfem/mfem.git
-	cd mfem
-	cp ../mfem-driver/src/CMakeLists.txt ./examples/.
-	cp ../mfem-driver/src/ex3p_indef.cpp ./examples/.
-	rm -rf mfem-build
-	mkdir mfem-build
-	cd mfem-build
-	cmake .. \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_CXX_FLAGS="-std=c++11" \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DBUILD_SHARED_LIBS=ON \
-		-DMFEM_USE_MPI=YES \
-		-DCMAKE_INSTALL_PREFIX=../install \
-		-DCMAKE_INSTALL_LIBDIR=../install/lib \
-		-DMFEM_USE_METIS_5=YES \
-		-DMFEM_USE_OPENMP=YES \
-		-DMFEM_THREAD_SAFE=ON \
-		-DMFEM_USE_STRUMPACK=YES \
-		-DBLAS_LIBRARIES="${BLAS_LIB}" \
-		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DMETIS_DIR=${METIS_INCLUDE_DIRS} \
-		-DMETIS_LIBRARIES="${METIS_LIBRARIES}" \
-		-DSTRUMPACK_INCLUDE_DIRS="${STRUMPACK_DIR}/include;${METIS_INCLUDE_DIRS};${PARMETIS_INCLUDE_DIRS};${SCOTCH_DIR}/include" \
-		-DSTRUMPACK_LIBRARIES="${STRUMPACK_DIR}/lib/libstrumpack.so;${ButterflyPACK_DIR}/../../../lib/libdbutterflypack.so;${ButterflyPACK_DIR}/../../../lib/libzbutterflypack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libparpack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libarpack.so;${PARMETIS_LIBRARIES};${SCALAPACK_LIB}"
-	make -j32 VERBOSE=1
-	make install
-	make ex3p_indef
+	# cd $GPTUNEROOT/examples/MFEM
+	# cp -r $GPTUNEROOT/examples/Hypre/hypre .    # mfem requires hypre location to be here
+	# git clone https://github.com/mfem/mfem.git
+	# cd mfem
+	# cp ../mfem-driver/src/CMakeLists.txt ./examples/.
+	# cp ../mfem-driver/src/ex3p_indef.cpp ./examples/.
+	# rm -rf mfem-build
+	# mkdir mfem-build
+	# cd mfem-build
+	# cmake .. \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_CXX_FLAGS="-std=c++11" \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DMFEM_USE_MPI=YES \
+	# 	-DCMAKE_INSTALL_PREFIX=../install \
+	# 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	# 	-DMFEM_USE_METIS_5=YES \
+	# 	-DMFEM_USE_OPENMP=YES \
+	# 	-DMFEM_THREAD_SAFE=ON \
+	# 	-DMFEM_USE_STRUMPACK=YES \
+	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DMETIS_DIR=${METIS_INCLUDE_DIRS} \
+	# 	-DMETIS_LIBRARIES="${METIS_LIBRARIES}" \
+	# 	-DSTRUMPACK_INCLUDE_DIRS="${STRUMPACK_DIR}/include;${METIS_INCLUDE_DIRS};${PARMETIS_INCLUDE_DIRS};${SCOTCH_DIR}/include" \
+	# 	-DSTRUMPACK_LIBRARIES="${STRUMPACK_DIR}/lib/libstrumpack.so;${ButterflyPACK_DIR}/../../../lib/libdbutterflypack.so;${ButterflyPACK_DIR}/../../../lib/libzbutterflypack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libparpack.so;${ButterflyPACK_DIR}/../../../../arpack-ng/build/lib/libarpack.so;${PARMETIS_LIBRARIES};${SCALAPACK_LIB}"
+	# make -j32 VERBOSE=1
+	# make install
+	# make ex3p_indef
 
 
 	cd $GPTUNEROOT/examples/IMPACT-Z

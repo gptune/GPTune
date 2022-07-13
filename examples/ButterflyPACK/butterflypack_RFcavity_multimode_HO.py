@@ -66,10 +66,10 @@ def objectives(point):                  # should always use this name for user-d
 	#########################################	
 	
 	postprocess=0
-	baca_batch=64
+	baca_batch=128
 	knn=0
 	verbosity=1
-	norm_thresh=500
+	norm_thresh=100
 	model = point['model']
 	freq = point['freq']*1e5
 	# freq = 22281*1e5
@@ -78,8 +78,15 @@ def objectives(point):                  # should always use this name for user-d
 	npernode =  math.ceil(float(cores)/nthreads) 
 
 	params = [model, 'freq', freq]
-	RUNDIR = os.path.abspath(__file__ + "/../ButterflyPACK/build/EXAMPLE")
-	INPUTDIR = os.path.abspath(__file__ + "/../ButterflyPACK/EXAMPLE/EM3D_DATA/preprocessor_3dmesh")
+
+	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
+	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
+	os.system("cp %s/fdmom_eigen ."%(BINDIR))
+	os.system("cp %s/%s.inp ."%(RUNDIR,model))
+	os.system("cp %s/materials.inp ."%(RUNDIR))
+	os.system("cp %s/inputs_fd.inp ."%(RUNDIR))
+	
+
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
 	""" pass some parameters through environment variables """	
@@ -90,7 +97,7 @@ def objectives(point):                  # should always use this name for user-d
     
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/ie3dporteigen"%(RUNDIR), args=['-quant', '--data_dir', '%s/%s'%(INPUTDIR,model), '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--nev', '20', '--postprocess', '%s'%(postprocess), '--cmmode', '0','-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+	comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator """							
 	tmpdata = np.array([0, 0],dtype=np.float64)
@@ -107,11 +114,11 @@ def objectives(point):                  # should always use this name for user-d
 
 
 def readdata(model):
-	file =open(model+'_Nmodes.txt','r')
+	file =open(model+'_order_%s_Nmodes.txt'%(order),'r')
 	Lines = file.readlines()
 	Nmode = int(Lines[0].strip())
 	file.close()
-	file =open(model+'_freq_history.txt','r')
+	file =open(model+'_order_%s_freq_history.txt'%(order),'r')
 	Lines = file.readlines()
 	Nsample = int(Lines[0].strip())
 	file.close()
@@ -124,7 +131,7 @@ def readdata(model):
 	Pall=[]
 	Oall=[]
 	for mm in range(Nmode):
-		filename=model+'_EigVals_'+str(mm+1)+'.out'
+		filename=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
 		dict1=copy.deepcopy(dict)
 		# print(mm,filename)
 		file =open(filename,'r')
@@ -151,10 +158,9 @@ def readdata(model):
 
 	
 def main():
+	global order
 
 
-
-	
 	# Parse command line arguments
 
 	args   = parse_args()
@@ -165,6 +171,8 @@ def main():
 	nthreads = args.nthreads
 	optimization = args.optimization
 	nrun = args.nrun
+	order = args.order
+	
 	
 	TUNER_NAME = args.optimization	
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
@@ -236,13 +244,13 @@ def main():
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
 	# giventask = [["cavity_5cell_30K_feko"]]		
-	giventask = [["cavity_rec_5K_feko"]]		
+	giventask = [["cavity_rec_17K_feko"]]		
 	# giventask = [["cavity_wakefield_4K_feko"]]		
-
 
 	if(TUNER_NAME=='GPTune'):
 		t3 = time.time_ns()
 		data = Data(problem)
+		data.P = [[[15138],[19531],[21741],[22168],[23337]]]
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 		
 		NI = len(giventask)
@@ -251,7 +259,7 @@ def main():
 		os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
 		
 		try:
-			file =open(giventask[0][0]+'_Nmodes.txt','r')
+			file =open(giventask[0][0]+'_order_%s_Nmodes.txt'%(order),'r')
 			Lines = file.readlines()
 			Nmode = int(Lines[0].strip())
 			file.close()
@@ -262,10 +270,9 @@ def main():
 			Nmode = 0
 			print("no mode found in the intial samples")
 		
-		NmodeMAX=8 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
 		for nn in range(NS):
 			mm=0
-			while mm<min(Nmode,NmodeMAX):
+			while mm<Nmode:
 				data = Data(problem)
 				data.P=[Pall[mm]]
 				data.O=[np.array(Oall[mm])]
@@ -277,7 +284,7 @@ def main():
 
 				(Pall,Oall) = readdata(giventask[0][0])
 
-				file =open(giventask[0][0]+'_Nmodes.txt','r')
+				file =open(giventask[0][0]+'_order_%s_Nmodes.txt'%(order),'r')
 				Lines = file.readlines()
 				Nmode = int(Lines[0].strip())
 				file.close()
@@ -312,6 +319,7 @@ def parse_args():
 	parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
+	parser.add_argument('-order', type=int, default=0, help='order of the FDIE code')
 
 	args   = parser.parse_args()
 	return args
