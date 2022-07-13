@@ -73,11 +73,11 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
 # fi 
 
 elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
-    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel
     module load PrgEnv-gnu
+	module swap gcc gcc/8.3.0
     module load openmpi/4.1.2
     module unload craype-hugepages2M
     module unload cray-libsci
@@ -116,11 +116,11 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 
 
 elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
-    module swap gcc gcc/8.3.0
     module unload cray-mpich
     module unload openmpi
     module unload PrgEnv-intel
     module load PrgEnv-gnu
+	module swap gcc gcc/8.3.0
 
 
 	module use /global/common/software/m3169/cori/modulefiles
@@ -400,15 +400,15 @@ if [[ $BuildExample == 1 ]]; then
 	# make install
 
 
-	# cd $GPTUNEROOT/examples/Hypre
-	# rm -rf hypre
-	# git clone https://github.com/hypre-space/hypre.git
-	# cd hypre/src/
-	# git checkout v2.19.0
-	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	# make
-	# cp ../../hypre-driver/src/ij.c ./test/.
-	# make test
+	cd $GPTUNEROOT/examples/Hypre
+	rm -rf hypre
+	git clone https://github.com/hypre-space/hypre.git
+	cd hypre/src/
+	git checkout v2.19.0
+	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	make
+	cp ../../hypre-driver/src/ij.c ./test/.
+	make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
