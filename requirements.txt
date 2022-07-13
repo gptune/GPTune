@@ -1,7 +1,7 @@
 numpy
 joblib
 scikit-learn 
-scipy 
+scipy >= 1.7.0
 pyaml
 matplotlib
 GPy
