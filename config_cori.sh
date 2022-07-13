@@ -22,7 +22,6 @@ rm -rf ~/.local/lib/python$PY_VERSION
 module load python/$PY_VERSION-anaconda-$PY_TIME
 PREFIX_PATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/
 
-
 echo $(which python) 
 
 module unload cmake
@@ -37,7 +36,7 @@ mpi=openmpi    # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -290,10 +289,12 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --ignore-installed --prefix=$PREFIX_PATH -r requirements_intel.txt
+	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --ignore-installed --prefix=$PREFIX_PATH -r requirements.txt
+	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements.txt
 fi
+
+pip install --user scipy==1.7.0 # specifying 1.7.0 in requriement.txt doesn't work, need to work with nersc to fix this. 
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
