@@ -591,8 +591,12 @@ class GPTune(object):
         time_search=0
         time_model=0
 
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
+            # load function evaluations regardless of the modeling scheme of the sample
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations)
 
         if (NI is None and self.data.I is not None):
@@ -625,9 +629,6 @@ class GPTune(object):
         t3 = time.time_ns()
 
         t1 = time.time_ns()
-
-        options1 = copy.deepcopy(self.options)
-        kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
 
@@ -679,6 +680,7 @@ class GPTune(object):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
         print ("NS1: ", NS1)
+        is_pilot = False
         if NS1 == 0 and models_transfer != None:
             NS1 = 1
             option_tla = copy.deepcopy(self.options)
@@ -692,14 +694,22 @@ class GPTune(object):
             for i in range(NI):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
-            print ("tmpP: ", tmpP)
+
+            run_pilot_anyway = False
+            if (kwargs["model_input_separation"] == True):
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is None:
+                    # no samples from this modeling approach
+                    run_pilot_anyway = True
 
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    if(T_sampleflag[i] is True):
+                    if(run_pilot_anyway == False and T_sampleflag[i] is True):
                         NSi = self.data.P[i].shape[0]
                         tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
+            is_pilot = True
             if NS1 == 0:
                 NS1 = 1
             if (NSmin<NS1):
@@ -723,9 +733,12 @@ class GPTune(object):
         time_sample_init = time_sample_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
-        if (NSmin<NS1):
+
+        if (NSmin<NS1 or run_pilot_anyway == True):
+            print ("tmpP: ", tmpP)
             # print(tmpP,'dada',tmpP[0])
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
+            print ("tmpO: ", tmpO)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -767,8 +780,36 @@ class GPTune(object):
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
-                tmpdata = copy.deepcopy(self.data)                        
-                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                #tmpdata = copy.deepcopy(self.data)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+
+                for i in range(len(tmpdata.P)):
+                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                        tmpdata.P[i] = copy.deepcopy(self.data.P[i])
+                        tmpdata.O[i] = copy.deepcopy(self.data.O[i])
+
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                print ("tmpdata.I: ", tmpdata.I)
+                print ("self data P: ", self.data.P)
+                print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.O: ", tmpdata.O)
+                print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -957,6 +998,9 @@ class GPTune(object):
         time_search=0
         time_model=0
 
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
@@ -980,9 +1024,6 @@ class GPTune(object):
         t3 = time.time_ns()
 
         t1 = time.time_ns()
-
-        options1 = copy.deepcopy(self.options)
-        kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
 
@@ -1028,6 +1069,7 @@ class GPTune(object):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
         print ("NS1: ", NS1)
+        is_pilot = False
         if NS1 == 0:
             NS1 = 1
             searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
@@ -1047,6 +1089,7 @@ class GPTune(object):
                     NSi = self.data.P[i].shape[0]
                     tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
+            is_pilot = True
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
@@ -1063,7 +1106,7 @@ class GPTune(object):
 
         t1 = time.time_ns()
         if (NSmin<NS1):
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -1099,8 +1142,28 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
-                tmpdata = copy.deepcopy(self.data)
-                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                #tmpdata = copy.deepcopy(self.data)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                print ("tmpdata.I: ", tmpdata.I)
+                print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -1305,7 +1368,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, newIgiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, options=kwargs)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1614,6 +1677,9 @@ class GPTune(object):
         time_search=0
         time_model=0
 
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
@@ -1637,9 +1703,6 @@ class GPTune(object):
         t3 = time.time_ns()
 
         t1 = time.time_ns()
-
-        options1 = copy.deepcopy(self.options)
-        kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
 
@@ -1832,6 +1895,7 @@ class GPTune(object):
         initial_modelers = copy.deepcopy(modelers)
 
         print ("NS1: ", NS1)
+        is_pilot = False
         if NS1 == 0:
             NS1 = 1
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -1842,12 +1906,22 @@ class GPTune(object):
             #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
             ## print(more_samples,newdata.P)
 
+            run_pilot_anyway = False
+            if (kwargs["model_input_separation"] == True):
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is None:
+                    # no samples from this modeling approach
+                    run_pilot_anyway = True
+
             #tmpP = [(self.problem.PS.transform([[128,24]]))]
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    NSi = self.data.P[i].shape[0]
-                    tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+                    if run_pilot_anyway == False:
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
+            is_pilot = True
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
@@ -1863,8 +1937,8 @@ class GPTune(object):
         time_sample_init = time_sample_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
-        if (NSmin<NS1):
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
+        if (NSmin<NS1 or run_pilot_anyway == True):
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -1897,8 +1971,25 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
-                tmpdata = copy.deepcopy(self.data)
-                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                #tmpdata = copy.deepcopy(self.data)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                print ("tmpdata.I: ", tmpdata.I)
+                print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)

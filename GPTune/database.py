@@ -619,7 +619,8 @@ class HistoryDB(dict):
 
         return False
 
-    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None):
+    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None, options : dict = None):
+
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
@@ -685,6 +686,25 @@ class HistoryDB(dict):
                 OS_history = [[] for i in range(num_tasks)]
 
                 for func_eval in historical_function_evaluations:
+                    if options != None and options["model_input_separation"] == True:
+                        if options["TLA_method"] == None:
+                            modeling_load = "MLA_LCM"
+                        elif options["TLA_method"] == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif options["TLA_method"] == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif options["TLA_method"] == "Stacking":
+                            modeling_load = "TLA_Stacking"
+                        elif options["TLA_method"] == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        else:
+                            modeling_load = "MLA_LCM"
+
+                        if func_eval["modeling"] != "Pilot" and \
+                           (func_eval["modeling"] != modeling_load or
+                            func_eval["model_class"] != options["model_class"]):
+                            continue
+
                     if self.load_check == False or self.check_load_deps(func_eval):
                         task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
                         if (task_id != -1):
@@ -858,9 +878,10 @@ class HistoryDB(dict):
             evaluation_result : np.ndarray,\
             evaluation_detail : np.ndarray,\
             additional_output : dict = None,\
-            source : str = "measure"):
+            source : str = "measure",\
+            modeling : str = "MLA_LCM",
+            model_class : str = "Model_GPy_LCM"):
 
-    
         # print ("store_func_eval")
         # print ("problem.constants")
         # print (problem.constants)
@@ -949,6 +970,8 @@ class HistoryDB(dict):
                         "evaluation_detail":evaluation_detail_store,
                         "additional_output": additional_output_store,
                         "source": source,
+                        "modeling": modeling,
+                        "model_class": model_class,
                         "time":{
                             "tm_year":now.tm_year,
                             "tm_mon":now.tm_mon,
