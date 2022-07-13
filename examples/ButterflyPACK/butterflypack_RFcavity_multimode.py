@@ -97,7 +97,7 @@ def objectives(point):                  # should always use this name for user-d
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
 	# if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-	# 	tmpdata[0]=1e2
+	# 	tmpdata[0]=1e0
 	# print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
 
 	# return [tmpdata[0]] 
@@ -119,7 +119,7 @@ def readdata(model):
 	for nn in range(len(Lines)-1): 
 		freq =int(round(float(Lines[nn+1].strip())/1e5)) 
 		# print(freq)
-		dict[freq]=1e2
+		dict[freq]=1e0
 
 	Pall=[]
 	Oall=[]
@@ -185,7 +185,8 @@ def main():
 
 	# Input parameters  # the frequency resolution is 100Khz
 	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (15000, 23500, transform="normalize", name="freq")
+	# freq      = Integer     (15000, 23500, transform="normalize", name="freq")
+	freq      = Integer     (15000, 30000, transform="normalize", name="freq")
 	# freq      = Integer     (19300, 22300, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 18000, transform="normalize", name="freq")
