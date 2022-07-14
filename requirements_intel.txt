@@ -2,6 +2,7 @@ numpy
 joblib
 scikit-learn 
 scipy >= 1.7.0
+statsmodels >= 0.13.0
 matplotlib
 openturns
 lhsmdu
