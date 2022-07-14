@@ -91,6 +91,7 @@ class Options(dict):
 
         """ Options for transfer learning """
         TLA_method = None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
+        regression_logging = False
         regression_log_name = 'models_weights.log'
 
         """ Options for the multi-arm bandit algorithm """

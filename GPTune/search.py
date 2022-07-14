@@ -118,12 +118,13 @@ class SurrogateProblem(object):
         self.models_transfer = models_transfer
         if (self.models != None and self.models_transfer != None and self.options['TLA_method'] == 'Regression'):
             self.models_weights = self.compute_weights()
-            with open(self.options['regression_log_name'], "a") as f_out:
-                for i in range(len(self.models_weights)):
-                    if i > 0:
-                        f_out.write(",")
-                    f_out.write(str(self.models_weights[i]))
-                f_out.write("\n")
+            if self.options['regression_logging'] == True:
+                with open(self.options['regression_log_name'], "a") as f_out:
+                    for i in range(len(self.models_weights)):
+                        if i > 0:
+                            f_out.write(",")
+                        f_out.write(str(self.models_weights[i]))
+                    f_out.write("\n")
 
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
