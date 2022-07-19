@@ -84,7 +84,7 @@ config_cori.sh
 ```
 
 ### Installation from scratch
-GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
+GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
 export MPICC=path-to-c-compiler-wrapper
 export MPICXX=path-to-cxx-compiler-wrapper
@@ -186,7 +186,7 @@ python setup.py install
 ```
 
 #### Install GPTune
-GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, scikit-learn, scipy, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, and pygmo. These Python libraries can all be installed through the standard Python repository through the pip tool.
+GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, joblib, scikit-learn, scipy, statsmodels, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, pygmo, filelock, requests, pymoo and cloudpickle. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
 cd $GPTUNEROOT
 env CC=$MPICC pip install --user -r requirements.txt
@@ -211,6 +211,7 @@ cmake .. \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
 make 
 
+# install the patch for opentuner, which is required in requirements.txt
 cd $GPTUNEROOT
 cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
 ```
