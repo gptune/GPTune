@@ -79,10 +79,12 @@ config_macbook.zsh
 
 #### NERSC Cori
 The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and "compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface (RCI) mode can be used, please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.
-
+```
+config_cori.sh
+```
 
 ### Installation from scratch
-GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume OpenMPI, Python, BLAS/LAPACK have been installed (with the same compiler version):
+GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
 export MPICC=path-to-c-compiler-wrapper
 export MPICXX=path-to-cxx-compiler-wrapper
@@ -95,7 +97,29 @@ export SITE_PACKAGES_PATH=path-to-your-site-packages
 ```
 
 The rest can be installed as follows:
-
+### Install OpenMPI
+```
+cd $GPTUNEROOT
+wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
+bzip2 -d openmpi-4.0.1.tar.bz2
+tar -xvf openmpi-4.0.1.tar 
+cd openmpi-4.0.1/ 
+./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$MPICC CXX=$MPICXX F77=$MPIF90 FC=$MPIF90 --enable-mpi1-compatibility --disable-dlopen
+make -j4
+make install
+export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
+export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
+export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
+export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
+export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH 
+# It's highly recommended that one install OpenMPI from source as above, but if one wants to use an already installed OpenMPI library, set the following accordingly:
+export PATH=XXX
+export MPICC=XXX
+export MPICXX=XXX
+export MPIF90=XXX
+export LIBRARY_PATH=XXX:$LIBRARY_PATH 
+```
 
 #### Install SCALAPACK
 ```
@@ -138,6 +162,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 cd $GPTUNEROOT
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
+cp ../patches/scikit-optimize/space.py skopt/space/.
 pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
@@ -150,6 +175,14 @@ git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
 pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
+```
+
+#### Install cGP
+```
+cd $GPTUNEROOT
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install 
 ```
 
 #### Install GPTune
@@ -177,6 +210,9 @@ cmake .. \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
 make 
+
+cd $GPTUNEROOT
+cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
 ```
 
 ## Examples
