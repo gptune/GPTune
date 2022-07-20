@@ -219,21 +219,34 @@ cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
 ## Examples
 There are a few examples included in GPTune, each example is located in a seperate directory ./examples/[application_name]. The user needs to edit examples/[application_name]/.gptune/meta.json to define machine information and software dependency, before running the tuning examples. 
 
-Please take a look at the following two scripts to run the complete examples. 
-https://github.com/gptune/GPTune/blob/master/run_examples.sh
+Please take a look at the following two scripts to run the complete examples. Note that these scripts first load ./run_env.sh (the user needs to modify this file to define appropriate runtime variables, machine and software information), generate the examples/[application_name]/.gptune/meta.json file, and then invoke the tuning experiment.  
+https://github.com/gptune/GPTune/blob/master/examples/GPTune-Demo/run_examples.sh
 https://github.com/gptune/GPTune/blob/master/run_ppopp.sh
 
 ### GPTune-Demo
 The file `demo.py` in the `examples/GPTune-Demo` folder shows how to describe the autotuning problem for a sequential objective function and how to invoke GPTune 
 ```
 cd $GPTUNEROOT/examples/GPTune-Demo
+
+edit .gptune/meta.json
 $MPIRUN -n 1 python ./demo.py
+
+or 
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 ### SCALAPCK QR
 The files `scalapack_*.py` in the `examples/Scalapack-PDGEQRF` folder shows how to tune the parallel QR factorization subroutine PDGEQRF with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
+
+edit .gptune/meta.json
 $MPIRUN -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -optimization 'GPTune'
+
+or
+
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 ### SuperLU_DIST
 First, SuperLU_DIST needs to be installed with the same OpenMPI and BLAS/LAPACK as the above.
@@ -270,7 +283,14 @@ make pddrive_spawn
 Note that `pddrive_spawn` is a modified application driver that will be launched by GPTune via MPI spawning (see the Usage section). The files `superlu_*.py` in the `examples/SuperLU_DIST` folder shows how to tune the performance of sparse LU factorization with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/SuperLU_DIST
+
+edit .gptune/meta.json
 $MPIRUN -n 1 python ./superlu_MLA_MO.py -nprocmin_pernode 1 -ntask 1 -nrun 10 -optimization 'GPTune'
+
+or
+
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 
 
