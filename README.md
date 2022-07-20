@@ -83,6 +83,13 @@ The following script installs GPTune with mpi, python, compiler and cmake module
 config_cori.sh
 ```
 
+### Installation using spack
+One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
+```
+spack install gptune@master
+spack load gptune@master
+```
+
 ### Installation from scratch
 GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
@@ -214,6 +221,13 @@ make
 # install the patch for opentuner, which is required in requirements.txt
 cd $GPTUNEROOT
 cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
+```
+
+### Using prebuilt docker images
+One can also try the prebuilt docker image of GPTune to test its functionality 
+```
+docker pull liuyangzhuan/gptune:4.4
+docker run -it -v $HOME:$HOME liuyangzhuan/gptune:4.4
 ```
 
 ## Examples
