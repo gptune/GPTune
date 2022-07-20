@@ -437,6 +437,8 @@ if __name__ == '__main__':
     mpi_size = mpi_comm.Get_size()
     (computer, problem,P2, D2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
-    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
+    T2 = problem.IS.transform([I_orig])[0]
+
+    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, T2, P2, D2, options=kwargs)
     res = mpi_comm.gather(tmpdata, root=0)
     mpi_comm.Disconnect()
