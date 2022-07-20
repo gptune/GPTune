@@ -83,6 +83,19 @@ The following script installs GPTune with mpi, python, compiler and cmake module
 config_cori.sh
 ```
 
+#### NERSC Perlmutter
+The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
+```
+config_perlmutter.sh
+```
+
+#### OLCF Summit
+The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
+```
+config_summit.sh
+```
+
+
 ### Installation using spack
 One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
 ```
