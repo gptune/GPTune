@@ -106,7 +106,7 @@ spack load gptune@master
 ### Installation from scratch
 GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
-export MPICC=path-to-c-compiler-wrapper
+export MPICC=path-to-c-compiler-wrapper  # see next subsection to install OpenMPI from source if one doesn't yet have one installed. 
 export MPICXX=path-to-cxx-compiler-wrapper
 export MPIF90=path-to-f90-compiler-wrapper
 export MPIRUN=path-to-mpirun
@@ -133,12 +133,6 @@ export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
 export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
 export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
 export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH 
-# It's highly recommended that one install OpenMPI from source as above, but if one wants to use an already installed OpenMPI library, set the following accordingly:
-export PATH=XXX
-export MPICC=XXX
-export MPICXX=XXX
-export MPIF90=XXX
-export LIBRARY_PATH=XXX:$LIBRARY_PATH 
 ```
 
 #### Install SCALAPACK
