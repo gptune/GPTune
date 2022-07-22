@@ -200,7 +200,7 @@ class Computer(object):
             kwargs_tmp = options
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
-            _ = mpi_comm.bcast((self, problem,P2, D2, I_orig, pids, kwargs_tmp), root=mpi4py.MPI.ROOT)
+            _ = mpi_comm.bcast((self, problem,P2, D2, I_orig, pids, history_db, kwargs_tmp), root=mpi4py.MPI.ROOT)
 
             tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
             mpi_comm.Disconnect()
@@ -215,8 +215,6 @@ class Computer(object):
                 for p in range(int(nproc)):
                     if(len(O2)<len(P2)):
                         O2.append(Otmp[offset[p]+it])
-
-            # TODO: HistoryDB function evaluation store
 
         elif (options['shared_memory_parallelism'] and options['objective_evaluation_parallelism']):
             with concurrent.futures.ThreadPoolExecutor(max_workers = options['objective_multisample_threads']) as executor:
@@ -435,8 +433,10 @@ if __name__ == '__main__':
     mpi_comm = mpi4py.MPI.Comm.Get_parent()
     mpi_rank = mpi_comm.Get_rank()
     mpi_size = mpi_comm.Get_size()
-    (computer, problem,P2, D2, I_orig, pids, kwargs) = mpi_comm.bcast(None, root=0)
+    (computer, problem,P2, D2, I_orig, pids, history_db, kwargs) = mpi_comm.bcast(None, root=0)
     pids_loc = pids[mpi_rank:len(pids):mpi_size]
-    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, I_orig, P2, D2, kwargs)
+    T2 = problem.IS.transform([I_orig])[0]
+
+    tmpdata = computer.evaluate_objective_onetask(problem, pids_loc, False, T2, P2, D2, history_db, options=kwargs)
     res = mpi_comm.gather(tmpdata, root=0)
     mpi_comm.Disconnect()

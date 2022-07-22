@@ -66,8 +66,8 @@ Note for DOE leadership machines: the spack installation is partially tested on 
 ### I cannot install GPTune correctly with build scripts or Spack, is there an alternative?
 For local machines and small clusters, one can also consider using our pre-built Docker image.  
 ```
-docker pull liuyangzhuan/gptune:2.6 # Image# 2.6 is getting out-dated, try look for higher versions.   
-docker run -it liuyangzhuan/gptune:2.6
+docker pull liuyangzhuan/gptune:4.4 # Image# 4.4 can get out-dated, try look for higher versions.   
+docker run -it liuyangzhuan/gptune:4.4
 ```
 Once the docker image is launched, one can test the image with:
 ```

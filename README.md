@@ -67,18 +67,46 @@ The following example build scripts are available for a collection of tested sys
 
 #### Ubuntu/Debian-like systems supporting apt-get
 The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
+```
+config_cleanlinux.sh
+```
 
 #### Mac OS supporting homebrew
 The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
+```
+config_macbook.zsh
+```
 
 #### NERSC Cori
 The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and "compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface (RCI) mode can be used, please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.
+```
+config_cori.sh
+```
 
+#### NERSC Perlmutter
+The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
+```
+config_perlmutter.sh
+```
+
+#### OLCF Summit
+The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
+```
+config_summit.sh
+```
+
+
+### Installation using spack
+One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
+```
+spack install gptune@master
+spack load gptune@master
+```
 
 ### Installation from scratch
-GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize and autotune, which need to be installed by the user. In what follows, we assume OpenMPI, Python, BLAS/LAPACK have been installed (with the same compiler version):
+GPTune relies on OpenMPI (4.0 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
-export MPICC=path-to-c-compiler-wrapper
+export MPICC=path-to-c-compiler-wrapper  # see next subsection to install OpenMPI from source if one doesn't yet have one installed. 
 export MPICXX=path-to-cxx-compiler-wrapper
 export MPIF90=path-to-f90-compiler-wrapper
 export MPIRUN=path-to-mpirun
@@ -89,7 +117,23 @@ export SITE_PACKAGES_PATH=path-to-your-site-packages
 ```
 
 The rest can be installed as follows:
-
+### Install OpenMPI
+```
+cd $GPTUNEROOT
+wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
+bzip2 -d openmpi-4.0.1.tar.bz2
+tar -xvf openmpi-4.0.1.tar 
+cd openmpi-4.0.1/ 
+./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$MPICC CXX=$MPICXX F77=$MPIF90 FC=$MPIF90 --enable-mpi1-compatibility --disable-dlopen
+make -j4
+make install
+export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
+export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
+export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
+export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
+export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH 
+```
 
 #### Install SCALAPACK
 ```
@@ -132,6 +176,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 cd $GPTUNEROOT
 git clone https://github.com/scikit-optimize/scikit-optimize.git
 cd scikit-optimize/
+cp ../patches/scikit-optimize/space.py skopt/space/.
 pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
@@ -146,8 +191,16 @@ pip install --user -e .
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
+#### Install cGP
+```
+cd $GPTUNEROOT
+git clone https://github.com/gptune/cGP
+cd cGP/
+python setup.py install 
+```
+
 #### Install GPTune
-GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, scikit-learn, scipy, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, and pygmo. These Python libraries can all be installed through the standard Python repository through the pip tool.
+GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, joblib, scikit-learn, scipy, statsmodels, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, pygmo, filelock, requests, pymoo and cloudpickle. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
 cd $GPTUNEROOT
 env CC=$MPICC pip install --user -r requirements.txt
@@ -171,26 +224,50 @@ cmake .. \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
 make 
+
+# install the patch for opentuner, which is required in requirements.txt
+cd $GPTUNEROOT
+cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
+```
+
+### Using prebuilt docker images
+One can also try the prebuilt docker image of GPTune to test its functionality 
+```
+docker pull liuyangzhuan/gptune:4.4
+docker run -it -v $HOME:$HOME liuyangzhuan/gptune:4.4
 ```
 
 ## Examples
 There are a few examples included in GPTune, each example is located in a seperate directory ./examples/[application_name]. The user needs to edit examples/[application_name]/.gptune/meta.json to define machine information and software dependency, before running the tuning examples. 
 
-Please take a look at the following two scripts to run the complete examples. 
-https://github.com/gptune/GPTune/blob/master/run_examples.sh
+Please take a look at the following two scripts to run the complete examples. Note that these scripts first load ./run_env.sh (the user needs to modify this file to define appropriate runtime variables, machine and software information), generate the examples/[application_name]/.gptune/meta.json file, and then invoke the tuning experiment.  
+https://github.com/gptune/GPTune/blob/master/examples/GPTune-Demo/run_examples.sh
 https://github.com/gptune/GPTune/blob/master/run_ppopp.sh
 
 ### GPTune-Demo
 The file `demo.py` in the `examples/GPTune-Demo` folder shows how to describe the autotuning problem for a sequential objective function and how to invoke GPTune 
 ```
 cd $GPTUNEROOT/examples/GPTune-Demo
+
+edit .gptune/meta.json
 $MPIRUN -n 1 python ./demo.py
+
+or 
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 ### SCALAPCK QR
 The files `scalapack_*.py` in the `examples/Scalapack-PDGEQRF` folder shows how to tune the parallel QR factorization subroutine PDGEQRF with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
+
+edit .gptune/meta.json
 $MPIRUN -n 1  python ./scalapack_MLA.py -mmax 1000 -nmax 1000 -nprocmin_pernode 1 -ntask 2 -nrun 20 -optimization 'GPTune'
+
+or
+
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 ### SuperLU_DIST
 First, SuperLU_DIST needs to be installed with the same OpenMPI and BLAS/LAPACK as the above.
@@ -227,7 +304,14 @@ make pddrive_spawn
 Note that `pddrive_spawn` is a modified application driver that will be launched by GPTune via MPI spawning (see the Usage section). The files `superlu_*.py` in the `examples/SuperLU_DIST` folder shows how to tune the performance of sparse LU factorization with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/SuperLU_DIST
+
+edit .gptune/meta.json
 $MPIRUN -n 1 python ./superlu_MLA_MO.py -nprocmin_pernode 1 -ntask 1 -nrun 10 -optimization 'GPTune'
+
+or
+
+edit ../../run_env.sh
+bash run_examples.sh
 ```
 
 
