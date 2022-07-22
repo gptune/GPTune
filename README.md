@@ -10,18 +10,25 @@ Table of Contents
 =================
 
 * [<a href="https://gptune.lbl.gov" rel="nofollow"><strong>GPTune</strong></a>](#gptune)
+* [Table of Contents](#table-of-contents)
    * [Features](#features)
    * [Installation](#installation)
       * [Installation using example scripts](#installation-using-example-scripts)
          * [Ubuntu/Debian-like systems supporting apt-get](#ubuntudebian-like-systems-supporting-apt-get)
          * [Mac OS supporting homebrew](#mac-os-supporting-homebrew)
          * [NERSC Cori](#nersc-cori)
+         * [NERSC Perlmutter](#nersc-perlmutter)
+         * [OLCF Summit](#olcf-summit)
+      * [Installation using spack](#installation-using-spack)
       * [Installation from scratch](#installation-from-scratch)
+      * [Install OpenMPI](#install-openmpi)
          * [Install SCALAPACK](#install-scalapack)
          * [Install mpi4py](#install-mpi4py)
          * [Install scikit-optimize](#install-scikit-optimize)
          * [Install autotune](#install-autotune)
+         * [Install cGP](#install-cgp)
          * [Install GPTune](#install-gptune)
+      * [Using prebuilt docker images](#using-prebuilt-docker-images)
    * [Examples](#examples)
       * [GPTune-Demo](#gptune-demo)
       * [SCALAPCK QR](#scalapck-qr)
@@ -40,7 +47,7 @@ Table of Contents
       * [BibTeX citation](#bibtex-citation)
       * [Copyright](#copyright)
 
-Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 
 ## Features
 - **(High-performance and parallel tuning)** GPTune is designed to tune applications running on large-scale cluster systems and can exploit distributed memory parallelism for accelerating surrogate modeling.
