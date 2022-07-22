@@ -240,8 +240,8 @@ cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
 ### Using prebuilt docker images
 One can also try the prebuilt docker image of GPTune to test its functionality 
 ```
-docker pull liuyangzhuan/gptune:4.4
-docker run -it -v $HOME:$HOME liuyangzhuan/gptune:4.4
+docker pull liuyangzhuan/gptune:4.5
+docker run -it -v $HOME:$HOME liuyangzhuan/gptune:4.5
 ```
 
 ## Examples
