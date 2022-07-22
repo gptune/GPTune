@@ -54,25 +54,91 @@ import pygmo as pg
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
+from csv import writer, reader
+
+
+def read_validdata_onemode(model,nth,freq_check):
+	file =open(model+'_order_%s_Nmodes.txt'%(order),'r')
+	Lines = file.readlines()
+	Nmode = int(Lines[0].strip())
+	file.close()
+	file =open(model+'_order_%s_freq_history.txt'%(order),'r')
+	Lines = file.readlines()
+	Nsample = int(Lines[0].strip())
+	file.close()
+
+	dict1={}
+	mm=nth
+	filename=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
+	# print(mm,filename)
+	file =open(filename,'r')
+	Lines = file.readlines()
+	for nn in range(len(Lines)): 
+		freq =int(round(float(Lines[nn].split()[0])))  # rounding for the ease of looking up data. Note that the precision of the data is much higher than those used in the GPTune experiments
+		eigval =float(Lines[nn].split()[1])
+		# print(freq,eigval)
+		dict1[freq]=eigval
+	# print(dict1)
+	file.close()
+
+	
+	validfreq = freq_check in dict1
+	validO = 1e0 # assign a large value if not existing in file
+	if(validfreq):
+		validO=dict1[freq_check]
+
+	return (validfreq,validO)
+
+
+
+def read_validdata(model):
+	file =open(model+'_order_%s_Nmodes.txt'%(order),'r')
+	Lines = file.readlines()
+	Nmode = int(Lines[0].strip())
+	file.close()
+	file =open(model+'_order_%s_freq_history.txt'%(order),'r')
+	Lines = file.readlines()
+	Nsample = int(Lines[0].strip())
+	file.close()
+	Pall=[]
+	Oall=[]
+	for nth in range(Nmode):
+		P=[]
+		O=[]
+		mm=nth
+		filename=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
+		# print(mm,filename)
+		file =open(filename,'r')
+		Lines = file.readlines()
+		for nn in range(len(Lines)): 
+			freq =int(round(float(Lines[nn].split()[0]))) # rounding for the ease of looking up data. Note that the precision of the data is much higher than those used in the GPTune experiments 
+			eigval =float(Lines[nn].split()[1])
+			# print(freq,eigval)
+
+			P.append([freq/1e5])
+			O.append([eigval])
+
+		file.close()
+
+		Pall.append(P)
+		Oall.append(O)
+	# print(P)
+	# print(O)
+
+	return (Pall,Oall)
 
 ################################################################################
-def objectives(point):                  # should always use this name for user-defined objective function
-	
-	######################################### 
-	##### constants defined in TuningProblem
-	nodes = point['nodes']
-	cores = point['cores']
-	nthreads = point['nthreads']	
-	#########################################	
+def objectives(point, nodes, cores, nthreads, model, nth):                  # should always use this name for user-defined objective function
+
 	
 	postprocess=0
 	baca_batch=64
 	knn=0
 	verbosity=1
 	norm_thresh=500
-	model = point['model']
-	freq = point['freq']*1e5
+	freq = point[0]*1e5
 	# freq = 22281*1e5
+	freq_int =int(round(freq)) # rounding for the ease of looking up data. Note that the precision of the data is much higher than those used in the GPTune experiments
 
 	nproc     = nodes*cores/nthreads
 	npernode =  math.ceil(float(cores)/nthreads) 
@@ -105,14 +171,14 @@ def objectives(point):                  # should always use this name for user-d
 	tmpdata = np.array([0, 0],dtype=np.float64)
 	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
 	comm.Disconnect()	
-	# if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-	# 	tmpdata[0]=1e0
-	# print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
+	# read the file to see if a new valid sample has been generated
+	(validfreq,retval) = read_validdata_onemode(model,nth,freq_int)
 
-	# return [tmpdata[0]] 
-	
-	return [0] # return a dummy value, the true vale will be read from file by readdata
-
+	with open('history.csv', 'a') as f_object:
+		writer_object = writer(f_object)
+		writer_object.writerow([point[0],retval])
+		f_object.close()
+	return retval
 
 
 def readdata(model):
@@ -187,59 +253,6 @@ def main():
 
 	
 
-	# Task parameters
-	geomodels = ["rfq_mirror_50K_feko","cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko"]
-	# geomodels = ["cavity_wakefield_4K_feko"]
-	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
-
-
-	# Input parameters  # the frequency resolution is 100Khz
-	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (15000, 30000, transform="normalize", name="freq")
-	# freq      = Integer     (19300, 22300, transform="normalize", name="freq")
-	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
-	# freq      = Integer     (15000, 18000, transform="normalize", name="freq")
-	# freq      = Integer     (6320, 6430, transform="normalize", name="freq")
-	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
-	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
-	# freq      = Integer     (500, 900, transform="normalize", name="freq")
-	# freq      = Integer     (3000, 4000, transform="normalize", name="freq")
-	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
-
-	IS = Space([model])
-	PS = Space([freq])
-
-	OS = Space([result1])
-
-	constraints = {}
-	models = {}
-	constants={"nodes":nodes,"cores":cores,"nthreads":nthreads}
-
-	""" Print all input and parameter samples """	
-	print(IS, PS, OS, constraints, models)
-
-
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
-	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
-
-	""" Set and validate options """	
-	options = Options()
-	options['model_processes'] = 1
-	# options['model_threads'] = 1
-	options['model_restarts'] = 1
-	# options['search_multitask_processes'] = 1
-	# options['model_restart_processes'] = 1
-	options['distributed_memory_parallelism'] = False
-	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
-	options['verbose'] = False
-
-	# options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
-	# options['search_pop_size'] = 1000 # 1000
-	# options['search_gen'] = 10
-
-	options.validate(computer = computer)
-
 
 	# """ Building MLA with the given list of tasks """	
 	# giventask = [["pillbox_4000"]]		
@@ -249,64 +262,58 @@ def main():
 	giventask = [["cavity_rec_17K_feko"]]		
 	# giventask = [["cavity_wakefield_4K_feko"]]		
 
-	if(TUNER_NAME=='GPTune'):
+	if(TUNER_NAME=='SIMPLEX'):
 		t3 = time.time_ns()
-		data = Data(problem)
-		# data.P = [[[15138],[19531],[21741],[22168],[23337]]]
-		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
-		
-		NI = len(giventask)
-		NS = max(nrun//2, 1)
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS)
-		os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
-		
-		try:
-			file =open(giventask[0][0]+'_order_%s_Nmodes.txt'%(order),'r')
-			Lines = file.readlines()
-			Nmode = int(Lines[0].strip())
-			file.close()
-			(Pall,Oall) = readdata(giventask[0][0])
-			print("Pall: ", Pall)
-			print("Oall: ", Oall)						
-		except IOError:
-			Nmode = 0
-			print("no mode found in the intial samples")
-		
-		NmodeMAX=8 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
-		for nn in range(NS):
-			mm=0
-			while mm<min(Nmode,NmodeMAX):
-				data = Data(problem)
-				data.P=[Pall[mm]]
-				data.O=[np.array(Oall[mm])]
-				gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
-				
-				NI = len(giventask)
-				(data, model, stats) = gt.MLA(NS=len(data.P[0])+1, NI=NI, Igiven=giventask, NS1=len(data.P[0]))
-				os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
+		(Pall,Oall)=read_validdata(giventask[0][0])
+		Nmode = len(Pall)
+		nth=0
+		while nth<Nmode:
+			P = Pall[nth]
+			O = Oall[nth]
+			print(nth, ' mode:')
+			print(P)
+			print(O)
 
-				(Pall,Oall) = readdata(giventask[0][0])
+			os.system("rm -rf history.csv")
 
-				file =open(giventask[0][0]+'_order_%s_Nmodes.txt'%(order),'r')
-				Lines = file.readlines()
-				Nmode = int(Lines[0].strip())
-				file.close()
-				mm +=1
+			X=np.array(P)	
+			Pdefault = np.asarray(X[np.argmin(np.asarray(O))])
+
+			print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
+
+			bounds_constraint = [(np.amin(X)*0.999,np.amax(X)*1.001)]
+			sol = sp.optimize.minimize(objectives, Pdefault, args=(nodes, cores, nthreads, giventask[0][0], nth), method='Nelder-Mead', options={'verbose': 1, 'maxfev': nrun, 'xatol': 0.0000001, 'fatol': 0.0000001}, bounds=bounds_constraint)    
+
+			print('x      : ', sol.x)
+			print('fun      : ', sol.fun)
+			#print('hess_inv : ', sol.hess_inv)
+			#print('jac      : ', jac)
+			print('message  : ', sol.message)
+			print('nfev     : ', sol.nfev)
+			print('nit      : ', sol.nit)
+			print('status   : ', sol.status)
+			print('success  : ', sol.success)
+
+			with open('history.csv', mode='r') as f_object:
+				csv_reader = reader(f_object, delimiter=',')
+				Ps=[]
+				Os=[]
+				for row in csv_reader:
+					Ps.append(float(row[0]))
+					Os.append(float(row[1]))
+				Os=np.asarray(Os)	
+				print("    Simplex refined mode ", nth)
+				print("    bounds ", bounds_constraint)
+				print("    Ps ", Ps)
+				print("    Os ", Os.tolist())	
+				print('    Popt ', sol.x, 'Oopt ', sol.fun, 'nth ', np.argmin(Os))	
 
 
-		""" Print all input and parameter samples """	
-		for mm in range(Nmode):
-			print("mode: %d"%(mm))
-			print("    geometry:%s"%(giventask[0][0]))
-			print("    Ps ", Pall[mm])
-			
-			OL=np.asarray([o[0] for o in Oall[mm]], dtype=np.float64)
-			np.set_printoptions(suppress=False,precision=8)	
-			print("    Os ", OL)
-			print('    Popt ', Pall[mm][np.argmin(Oall[mm])], 'Oopt ', min(Oall[mm])[0], 'nth ', np.argmin(Oall[mm]))
-		t4 = time.time_ns()
-		print("Total time: ", (t4-t3)/1e9)
-	
+			# reload the data and Nmode as they may have been updated by other modes
+			(Pall,Oall)=read_validdata(giventask[0][0])
+			Nmode = len(Pall)
+			nth = nth+1
+
 
 def parse_args():
 

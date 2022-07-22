@@ -232,7 +232,7 @@ def main():
 
 			print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
 
-			bounds_constraint = [(np.amin(X),np.amax(X))]
+			bounds_constraint = [(np.amin(X)*0.999,np.amax(X)*1.001)]
 			sol = sp.optimize.minimize(objectives, Pdefault, args=(nodes, cores, nthreads, giventask[0][0], nth), method='Nelder-Mead', options={'verbose': 1, 'maxfev': nrun, 'xatol': 0.0000001, 'fatol': 0.0000001}, bounds=bounds_constraint)    
 
 			print('x      : ', sol.x)
