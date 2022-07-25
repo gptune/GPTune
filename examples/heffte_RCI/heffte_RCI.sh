@@ -109,21 +109,21 @@ elif [[ $ModuleEnv == *"mpich"* ]]; then
     srun -n $nproc $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out
 elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
 ############ spectrummpi
-    RS_PER_HOST=6
-    GPU_PER_RS=0    # CPU only now
+    # RS_PER_HOST=6
+    # GPU_PER_RS=0    # CPU only now
 
-    if [[ $npernode -lt $RS_PER_HOST ]]; then
-        npernode=$RS_PER_HOST
-    fi
-    export OMP_NUM_THREADS=$(($cores / $npernode))
-    npernode_ext=$(($cores / $OMP_NUM_THREADS)) # break the constraint of power-of-2 npernode 
-    RANK_PER_RS=$(($npernode_ext / $RS_PER_HOST)) 
-    npernode_ext=$(($RANK_PER_RS * $RS_PER_HOST)) 
-    RS_VAL=$(($nodes * $RS_PER_HOST)) 
-    TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
+    # if [[ $npernode -lt $RS_PER_HOST ]]; then
+    #     npernode=$RS_PER_HOST
+    # fi
+    # export OMP_NUM_THREADS=$(($cores / $npernode))
+    # npernode_ext=$(($cores / $OMP_NUM_THREADS)) # break the constraint of power-of-2 npernode 
+    # RANK_PER_RS=$(($npernode_ext / $RS_PER_HOST)) 
+    # npernode_ext=$(($RANK_PER_RS * $RS_PER_HOST)) 
+    # RS_VAL=$(($nodes * $RS_PER_HOST)) 
+    # TH_PER_RS=`expr $OMP_NUM_THREADS \* $RANK_PER_RS`
     
-    echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out"
-    jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out
+    echo "jsrun -n $nproc -a 1 -c 1   $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out"
+    jsrun -n $nproc -a 1 -c 1  $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out
 fi
 
 

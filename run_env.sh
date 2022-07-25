@@ -6,11 +6,11 @@
 
 
 # ################ summit
-# export machine=summit
-# export proc=power9   
-# export mpi=spectrummpi  
-# export compiler=gnu   
-# export nodes=1  # number of nodes to be used
+ export machine=summit
+ export proc=power9   
+ export mpi=spectrummpi  
+ export compiler=gnu   
+ export nodes=1  # number of nodes to be used
 
 
 # # # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
@@ -22,11 +22,11 @@
 
 
 # ############### Cori
- export machine=cori
- export proc=haswell   # knl,haswell
- export mpi=openmpi  # openmpi,craympich
- export compiler=gnu   # gnu, intel	
- export nodes=16  # number of nodes to be used
+# export machine=cori
+# export proc=haswell   # knl,haswell
+# export mpi=openmpi  # openmpi,craympich
+# export compiler=gnu   # gnu, intel	
+# export nodes=16  # number of nodes to be used
 
 
 ############### Perlmutter
@@ -510,7 +510,7 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
      
     MPIRUN=jsrun
-    cores=44
+    cores=42
     gpus=6 # 6 V100 per node
     software_json=$(echo ",\"software_configuration\":{\"spectrum-mpi\":{\"version_split\": [10,4,0]},\"netlib-scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [9,1,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,9,1]},\"cuda\":{\"version_split\": [11,0,3]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"spectrum-mpi\":{\"version_split\": [10,4,0]},\"netlib-scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [9,1,0]},\"essl\":{\"version_split\": [6,1,0]},\"netlib-lapack\":{\"version_split\": [3,9,1]},\"cuda\":{\"version_split\": [11,0,3]}}")

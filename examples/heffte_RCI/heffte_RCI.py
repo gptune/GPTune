@@ -58,12 +58,16 @@ def objectives(point):
 	print('objective is not needed when options["RCI_mode"]=True')
 
 def cst1(px_i,py_i,px_o,py_o,nodes,npernode):
-	pz_i = np.log2(nodes*npernode)-px_i-py_i
-	pz_o = np.log2(nodes*npernode)-px_o-py_o
+	pz_i_linear = int(nodes*npernode/2**(px_i+py_i))
+	pz_o_linear = int(nodes*npernode/2**(px_o+py_o))
+	px_i_linear = 2**(px_i)
+	py_i_linear = 2**(py_i)
+	px_o_linear = 2**(px_o)
+	py_o_linear = 2**(py_o)
 	# the first condition is input grid doesn't oversubscribe the nodes
 	# the second condition is output grid doesn't oversubscribe the nodes
 	# the third condition is input and output grids should have the same total MPI counts
-	return pz_i>=0 and pz_o>=0 and px_i*py_i*pz_i == px_o*py_o*pz_o
+	return pz_i_linear>0 and pz_o_linear>0 and px_i_linear*py_i_linear*pz_i_linear == px_o_linear*py_o_linear*pz_o_linear
 
 def main():
 
