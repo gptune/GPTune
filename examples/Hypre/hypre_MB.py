@@ -352,8 +352,8 @@ def main():
     
     if(TUNER_NAME=='GPTuneBand'):
         data = Data(problem)
-        gt = GPTune_MB(problem, computer=computer, NS=Nloop, options=options)
-        (data, stats, data_hist)=gt.MB_LCM(NS = Nloop, Igiven = giventask)
+        gt = GPTune_MB(problem, computer=computer, options=options)
+        (data, stats, data_hist)=gt.MB_LCM(NLOOP = Nloop, Igiven = giventask)
         print("Tuner: ", TUNER_NAME)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -385,8 +385,8 @@ def main():
             NI = 1
             cur_task = [singletask]
             data = Data(problem)
-            gt = GPTune_MB(problem, computer=computer, NS=Nloop, options=options)
-            (data, stats)=gt.MB_LCM(NS = Nloop, Igiven = cur_task)
+            gt = GPTune_MB(problem, computer=computer, options=options)
+            (data, stats)=gt.MB_LCM(NLOOP = Nloop, Igiven = cur_task)
             data_all.append(data)
             merge_dict(stats_all, stats)
             print("Finish one single task tuning")

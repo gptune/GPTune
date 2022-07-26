@@ -1755,10 +1755,10 @@ class GPTune_MB(object):
         self.data     = Data(tp)
 
 
-    def MB_LCM(self, NS=None, Igiven=None, Pdefault=None, **kwargs):
+    def MB_LCM(self, NLOOP=None, Igiven=None, Pdefault=None, **kwargs):
         """
         Igiven		 : a list of tasks 
-        NS			 : number of samples in the highest budget arm
+        NLOOP	     : number of GPTuneBand loops 
         Pdefault     : assuming there is a default parameter configuration among all tasks
         """
 
@@ -1791,7 +1791,7 @@ class GPTune_MB(object):
         
         data = Data(self.tp)   # data contains all data in the extended task space returned by MLA
 
-        for Nloop in range(NS):
+        for Nloop in range(NLOOP):
             data1 = Data(self.tp)  # for each loop, data1 will have all data for all arms sampled by MLA (excluding SH samples)
 
             newtasks = []

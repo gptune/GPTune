@@ -309,8 +309,8 @@ def main():
     if(TUNER_NAME=='GPTuneBand'):
         NS = Nloop
         data = Data(problem)
-        gt = GPTune_MB(problem, computer=computer, NS=Nloop, options=options)
-        (data, stats, data_hist)=gt.MB_LCM(NS = Nloop, Igiven = giventask, Pdefault=Pdefault)
+        gt = GPTune_MB(problem, computer=computer, options=options)
+        (data, stats, data_hist)=gt.MB_LCM(NLOOP = Nloop, Igiven = giventask, Pdefault=Pdefault)
         print("Tuner: ", TUNER_NAME)
         print("Sampler class: ", options['sample_class'])
         print("Model class: ", options['model_class'])

@@ -300,8 +300,8 @@ def main():
         
     if(TUNER_NAME=='GPTuneBand'):
         data = Data(problem)
-        gt = GPTune_MB(problem, computer=computer, NS=Nloop, options=options)
-        (data, stats, data_hist)=gt.MB_LCM(NS = Nloop, Igiven = giventask)
+        gt = GPTune_MB(problem, computer=computer, options=options)
+        (data, stats, data_hist)=gt.MB_LCM(NLOOP = Nloop, Igiven = giventask)
         print("Tuner: ", TUNER_NAME)
         print("stats: ", stats)
         results_file = open(f"KRR_{args.dataset}_ntask{args.ntask}_bandit{args.bmin}-{args.bmax}-{args.eta}_Nloop{args.Nloop}_expid{args.expid}.txt", "a")
