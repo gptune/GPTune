@@ -2208,8 +2208,7 @@ def PredictOutput(problem_space:dict=None,
         input_task:list=[],
         input_parameter:dict={},
         surrogate_model=None,
-        function_evaluations=None,
-        num_samples:int=1000):
+        function_evaluations=None):
 
     if surrogate_model == None:
         surrogate_model = BuildSurrogateModel(problem_space = problem_space,
