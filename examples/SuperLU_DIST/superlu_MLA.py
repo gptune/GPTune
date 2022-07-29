@@ -54,6 +54,7 @@ from autotune.search import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
 import math
+import subprocess
 
 ################################################################################
 def objectives(point):                  # should always use this name for user-defined objective function
@@ -85,24 +86,55 @@ def objectives(point):                  # should always use this name for user-d
 	TUNER_NAME = os.environ['TUNER_NAME']
 	nproc     = int(nprows * npcols)
 
-	""" pass some parameters through environment variables """	
-	info = MPI.Info.Create()
-	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
-	envstr+= 'NREL=%d\n' %(NREL)   
-	envstr+= 'NSUP=%d\n' %(NSUP)   
-	envstr+= 'SUPERLU_ACC_OFFLOAD=0\n'   
-	info.Set('env',envstr)
-	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+	if (os.environ.get('GPTUNE_LITE_MODE') is None): # default MPI spawn mode 
+
+		""" pass some parameters through environment variables """	
+		info = MPI.Info.Create()
+		envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
+		envstr+= 'NREL=%d\n' %(NREL)   
+		envstr+= 'NSUP=%d\n' %(NSUP)
+		envstr+= 'SUPERLU_ACC_OFFLOAD=0\n'   
+		info.Set('env',envstr)
+		info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
 
 
-	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
-	comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
+		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
+		print('exec', "%s/pddrive_spawn"%(RUNDIR), 'args', ['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], 'nproc', nproc, 'env', 'OMP_NUM_THREADS=%d' %(nthreads), 'NSUP=%d' %(NSUP), 'NREL=%d' %(NREL)  )
+		comm = MPI.COMM_SELF.Spawn("%s/pddrive_spawn"%(RUNDIR), args=['-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)], maxprocs=nproc,info=info)
 
-	""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
-	tmpdata = array('f', [0,0])
-	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	comm.Disconnect()	
+		""" gather the return value using the inter-communicator, also refer to the INPUTDIR/pddrive_spawn.c to see how the return value are communicated """																	
+		tmpdata = array('f', [0,0])
+		comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.FLOAT],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
+		comm.Disconnect()	
+	else:  # the lite mode, use subprocess.run to launch applications
+		my_env = os.environ.copy()
+		my_env["OMP_NUM_THREADS"]=str(nthreads)
+		my_env["NREL"]=str(NREL)
+		my_env["NSUP"]=str(NSUP)
+		my_env["SUPERLU_ACC_OFFLOAD"]=str(0)
+		mpirun_command = os.getenv("MPIRUN")
+		mpi_argument = os.getenv("MPIARG")
+		if(mpi_argument is None):
+			mpi_argument=''
+		
+		# Build up command with command-line options from current set of parameters
+		argslist = [mpirun_command, mpi_argument,'-n', str(nproc), "%s/pddrive_spawn"%(RUNDIR), '-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)]
+		
+		print("Running: " + " ".join(argslist),flush=True)
+		p = subprocess.run(argslist,capture_output=True,env=my_env)
+		# Decode the stdout and stderr as they are in "bytes" format
+		stdout = p.stdout.decode('ascii')
+		stderr = p.stderr.decode('ascii')
+
+		# print(stdout) # these lines can be commented out to make the runlog cleaner
+		# print(stderr)
+
+		resultline = stdout.split("\n")
+		tmpdata = array('f', [0,0])
+		# The following line in the log: '    Factor time :    xxx'
+		tmpdata[0] = float(resultline[-4].split(":")[1])
+		# The following line in the log: '    Total MEM :    xxx'
+		tmpdata[1] = float(resultline[-3].split(":")[1])
 
 	if(target=='time'):	
 		retval = tmpdata[0]
