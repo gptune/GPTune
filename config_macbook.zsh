@@ -78,16 +78,18 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 fi
 ###############
 
-
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
-export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
 export METIS_DIR=$ParMETIS_DIR
 export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
-export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include;$ParMETIS_DIR/include"
-export METIS_INCLUDE_DIRS="$ParMETIS_DIR/../metis/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libparmetis.dylib"
+export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
+export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.dylib;$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libGKlib.a"
 export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.dylib
+
+
+
 
 # install dependencies using homebrew and virtualenv
 ###################################
@@ -238,17 +240,47 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/xiaoyeli/superlu_dist.git
 	cd superlu_dist
 
-	wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	tar -xf parmetis-4.0.3.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1
+	##### the following server is often down, so switch to the github repository 
+	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	# tar -xf parmetis-4.0.3.tar.gz
+	# cd parmetis-4.0.3/
+	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# mkdir -p install
+	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	# make install > make_parmetis_install.log 2>&1
+	# cd ../
+	# cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.dylib $PWD/parmetis-4.0.3/install/lib/.
+	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
+	mkdir -p $ParMETIS_DIR
+	rm -f GKlib
+	git clone https://github.com/KarypisLab/GKlib.git
+	cd GKlib
+	make config prefix=$ParMETIS_DIR
+	make -j8
+	make install
 	cd ../
-	cp $PWD/parmetis-4.0.3/build/Darwin-x86_64/libmetis/libmetis.dylib $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+	rm -rf METIS
+	git clone https://github.com/KarypisLab/METIS.git
+	cd METIS
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	make -j8
+	make install
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	make -j8
+	make install	
+	cd ../
+	rm -rf ParMETIS
+	git clone https://github.com/KarypisLab/ParMETIS.git
+	cd ParMETIS
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	make -j8
+	make install
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	make -j8
+	make install
+	cd ..
+
 	mkdir -p build
 	cd build
 	rm -rf CMakeCache.txt
