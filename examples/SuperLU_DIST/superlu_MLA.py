@@ -36,8 +36,6 @@ import numpy as np
 import argparse
 import pickle
 
-import mpi4py
-from mpi4py import MPI
 from array import array
 import math
 
@@ -87,7 +85,8 @@ def objectives(point):                  # should always use this name for user-d
 	nproc     = int(nprows * npcols)
 
 	if (os.environ.get('GPTUNE_LITE_MODE') is None): # default MPI spawn mode 
-
+		import mpi4py
+		from mpi4py import MPI
 		""" pass some parameters through environment variables """	
 		info = MPI.Info.Create()
 		envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
@@ -119,15 +118,15 @@ def objectives(point):                  # should always use this name for user-d
 		
 		# Build up command with command-line options from current set of parameters
 		argslist = [mpirun_command, mpi_argument,'-n', str(nproc), "%s/pddrive_spawn"%(RUNDIR), '-c', '%s'%(npcols), '-r', '%s'%(nprows), '-l', '%s'%(LOOKAHEAD), '-p', '%s'%(COLPERM), '%s/%s'%(INPUTDIR,matrix)]
-		
+		# argslist =['srun',  '-n', '25', '/global/project/projectdirs/m2957/liuyangz/my_research/GPTune_RCI_gnu_craympich_haswell/examples/SuperLU_DIST/superlu_dist/build/EXAMPLE/pddrive_spawn', '-c', '1', '-r', '25', '-l', '19', '-p', '2', '/global/project/projectdirs/m2957/liuyangz/my_research/GPTune_RCI_gnu_craympich_haswell/examples/SuperLU_DIST/superlu_dist/EXAMPLE/big.rua']
 		print("Running: " + " ".join(argslist),flush=True)
 		p = subprocess.run(argslist,capture_output=True,env=my_env)
 		# Decode the stdout and stderr as they are in "bytes" format
 		stdout = p.stdout.decode('ascii')
 		stderr = p.stderr.decode('ascii')
 
-		# print(stdout) # these lines can be commented out to make the runlog cleaner
-		# print(stderr)
+		print(stdout) # these lines can be commented out to make the runlog cleaner
+		print(stderr)
 
 		resultline = stdout.split("\n")
 		tmpdata = array('f', [0,0])

@@ -35,8 +35,6 @@ import argparse
 import pickle
 import copy
 
-import mpi4py
-from mpi4py import MPI
 from array import array
 import math
 
@@ -88,7 +86,8 @@ def objectives(point):                  # should always use this name for user-d
 
 
 	if (os.environ.get('GPTUNE_LITE_MODE') is None): # default MPI spawn mode 
-
+		import mpi4py
+		from mpi4py import MPI
 		""" pass some parameters through environment variables """	
 		info = MPI.Info.Create()
 		envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   

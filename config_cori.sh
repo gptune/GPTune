@@ -350,100 +350,90 @@ make install
 
 if [[ $BuildExample == 1 ]]; then
 
-	# cd $GPTUNEROOT/examples/SuperLU_DIST
-	# rm -rf superlu_dist
-	# git clone https://github.com/xiaoyeli/superlu_dist.git
-	# cd superlu_dist
+	cd $GPTUNEROOT/examples/SuperLU_DIST
+	rm -rf superlu_dist
+	git clone https://github.com/xiaoyeli/superlu_dist.git
+	cd superlu_dist
 
-	##### the following server is often down, so switch to the github repository 
-	## wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	## tar -xf parmetis-4.0.3.tar.gz
-	## cd parmetis-4.0.3/
-	## cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	## mkdir -p install
-	## make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	## make install > make_parmetis_install.log 2>&1
-
-
-	##### the following server is often down, so switch to the github repository 
-	## wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	## tar -xf parmetis-4.0.3.tar.gz
-	## cd parmetis-4.0.3/
-	## cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	## mkdir -p install
-	## make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	## make install > make_parmetis_install.log 2>&1
-	## cd ../
-	## cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	## cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	# mkdir -p $ParMETIS_DIR
-	# rm -f GKlib
-	# git clone https://github.com/KarypisLab/GKlib.git
-	# cd GKlib
-	# make config prefix=$ParMETIS_DIR
-	# make -j8
-	# make install
+	#### the following server is often down, so switch to the github repository 
+	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	# tar -xf parmetis-4.0.3.tar.gz
+	# cd parmetis-4.0.3/
+	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# mkdir -p install
+	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	# make install > make_parmetis_install.log 2>&1
 	# cd ../
-	# rm -rf METIS
-	# git clone https://github.com/KarypisLab/METIS.git
-	# cd METIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	# make -j8
-	# make install	
-	# cd ../
-	# rm -rf ParMETIS
-	# git clone https://github.com/KarypisLab/ParMETIS.git
-	# cd ParMETIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	# make -j8
-	# make install
-	# cd ..
+	# cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+
+	mkdir -p $ParMETIS_DIR
+	rm -f GKlib
+	git clone https://github.com/KarypisLab/GKlib.git
+	cd GKlib
+	make config prefix=$ParMETIS_DIR
+	make -j8
+	make install
+	cd ../
+	rm -rf METIS
+	git clone https://github.com/KarypisLab/METIS.git
+	cd METIS
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	make -j8
+	make install
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	make -j8
+	make install	
+	cd ../
+	rm -rf ParMETIS
+	git clone https://github.com/KarypisLab/ParMETIS.git
+	cd ParMETIS
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	make -j8
+	make install
+	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	make -j8
+	make install
+	cd ..
 	
-	# mkdir -p build
-	# cd build
-	# rm -rf CMakeCache.txt
-	# rm -rf DartConfiguration.tcl
-	# rm -rf CTestTestfile.cmake
-	# rm -rf cmake_install.cmake
-	# rm -rf CMakeFiles
-	# cmake .. \
-	# 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-	# 	-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	#  	-DCMAKE_INSTALL_PREFIX=. \
-	#  	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
-	# 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-	# 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	# make pddrive_spawn
-	# make pzdrive_spawn
-	# make pddrive3d
-	# make install
+	mkdir -p build
+	cd build
+	rm -rf CMakeCache.txt
+	rm -rf DartConfiguration.tcl
+	rm -rf CTestTestfile.cmake
+	rm -rf cmake_install.cmake
+	rm -rf CMakeFiles
+	cmake .. \
+		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+		-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	 	-DCMAKE_INSTALL_PREFIX=. \
+	 	-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
+		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+	make pddrive_spawn
+	make pzdrive_spawn
+	make pddrive3d
+	make install
 
 
-	cd $GPTUNEROOT/examples/Hypre
-	rm -rf hypre
-	git clone https://github.com/hypre-space/hypre.git
-	cd hypre/src/
-	git checkout v2.19.0
-	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make
-	cp ../../hypre-driver/src/ij.c ./test/.
-	make test
+	# cd $GPTUNEROOT/examples/Hypre
+	# rm -rf hypre
+	# git clone https://github.com/hypre-space/hypre.git
+	# cd hypre/src/
+	# git checkout v2.19.0
+	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	# make
+	# cp ../../hypre-driver/src/ij.c ./test/.
+	# make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
@@ -588,17 +578,17 @@ if [[ $BuildExample == 1 ]]; then
 	# make ex3p_indef
 
 
-	cd $GPTUNEROOT/examples/IMPACT-Z
-	rm -rf IMPACT-Z
-	git clone https://github.com/impact-lbl/IMPACT-Z.git
-	cd IMPACT-Z
-	git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
-	cp ../impact-z-driver/*.f90 ./src/Contrl/.
-	mkdir -p build 
-	cd build
-	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release 
-	make
-	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
+	# cd $GPTUNEROOT/examples/IMPACT-Z
+	# rm -rf IMPACT-Z
+	# git clone https://github.com/impact-lbl/IMPACT-Z.git
+	# cd IMPACT-Z
+	# git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
+	# cp ../impact-z-driver/*.f90 ./src/Contrl/.
+	# mkdir -p build 
+	# cd build
+	# cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release 
+	# make
+	# # mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
 
 fi
 
