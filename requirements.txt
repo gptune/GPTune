@@ -16,3 +16,4 @@ filelock
 requests
 pymoo
 cloudpickle
+SALib
