@@ -148,6 +148,8 @@ class Options(dict):
             self['search_multitask_processes']=1
             self['search_threads']=1
             self['search_more_samples']=1
+            self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
+            self['search_pop_size']=100
             
             # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
             # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
