@@ -377,17 +377,22 @@ class SurrogateProblem(object):
 
         if (cond):
             xNorm = self.problem.PS.transform(xi0)[0]
-            if(self.problem.models is not None):
-                if(self.problem.driverabspath is not None):
-                    modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
-                    sys.path.append(self.problem.driverabspath) # add path to sys
-                    module = importlib.import_module(modulename) # import driver name as a module
+            if(self.problem.models is not None):    
+                if(self.options['distributed_memory_parallelism'] is True):                
+                    if(self.problem.driverabspath is not None):
+                        modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+                        sys.path.append(self.problem.driverabspath) # add path to sys
+                        module = importlib.import_module(modulename) # import driver name as a module
+                    else:
+                        raise Exception('performance models require passing driverabspath to GPTune')
+                    modeldata= module.models(point)
                 else:
-                    raise Exception('performance models require passing driverabspath to GPTune')
-                # modeldata= self.problem.models(point)
-                modeldata= module.models(point)
+                    modeldata= self.problem.models(point)            
                 xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
                 # print(xNorm)
+                
+
+
 
             # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
             #print ("EI: ", self.ei(xNorm))
