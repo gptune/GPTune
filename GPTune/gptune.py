@@ -719,7 +719,7 @@ class GPTune(object):
                 NS1 = 1
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 for i in range(NI):
                     if(T_sampleflag[i] is False):
                         tmpP[i] = np.empty(shape=(0,self.problem.DP))
@@ -1059,7 +1059,7 @@ class GPTune(object):
         else:
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
                         NSi = self.data.P[i].shape[0]
@@ -1404,7 +1404,7 @@ class GPTune(object):
         else:
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
                         NSi = self.data.P[i].shape[0]

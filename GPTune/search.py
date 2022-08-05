@@ -85,7 +85,36 @@ class Search(abc.ABC):
         else:
             fun = functools.partial(self.search, data, models, kwargs = kwargs)
             res = list(map(fun, tids))
+
         # print(res)
+
+        # check if there are duplicated samples
+        for res_ in res:
+            tid = res_[0]
+            x = res_[1][0]
+            duplicate = False
+            for x_ in data.P[tid]:
+                x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                if x_orig == x_orig_:
+                    duplicate = True
+                    print ("duplicated sample: ", x)
+                    break
+
+            while duplicate == True:
+                duplicate = False
+                # generate random sample if the sample already has duplicates
+                x = np.random.rand(len(x[0]))
+                print ("generate random sample: ", x)
+                print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
+                res_[1][0] = x
+                for x_ in data.P[tid]:
+                    x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                    x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                    if x_orig == x_orig_:
+                        duplicate = True
+                        break
+
         res.sort(key = lambda x : x[0])
         return res
 

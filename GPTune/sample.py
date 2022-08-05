@@ -16,6 +16,7 @@
 #
 
 import abc
+from problem import Problem
 from typing import Callable
 import numpy as np
 import math
@@ -87,25 +88,45 @@ class Sample(abc.ABC):
 
         return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
-    def sample_parameters(self, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
-
-
+    def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         P = []
         for t in I:
-            # print('before inverse_transform:',np.array(t, ndmin=2))
             I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
-            # I_orig = t
-            # print('after inverse_transform I_orig:',I_orig)
+
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
-            xs = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs)
+
+            xs__ = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+            print ("xs__: ", xs__)
+            xs = []
+            while (len(xs) < n_samples):
+                gen_samples = n_samples - len(xs)
+                xs_ = self.sample_constrained(gen_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+                for elem_xs_ in xs_: # remove any duplicates
+                    duplicate = False
+                    for elem_xs in xs:
+                        elem_xs_orig_ = problem.PS.inverse_transform(np.array([elem_xs_], ndmin=2))
+                        elem_xs_orig = problem.PS.inverse_transform(np.array([elem_xs], ndmin=2))
+                        if elem_xs_orig_ == elem_xs_orig:
+                            duplicate = True
+                            break
+                    if duplicate == False:
+                        xs.append(list(elem_xs_))
+            xs = np.array(xs)
+            print ("xs: ", xs)
+
+            ##xs_orig = problem.PS.inverse_transform(np.array(xs, ndmin=2))
+            ##print ("xs_orig: ", xs_orig)
+            ##num_duplicates = 0
+            ##for i in range(len(xs_orig)):
+            ##    if xs_orig.count(xs_orig[i]) > 1:
+            ##        num_duplicates += 1
+            ##print ("num_duplicates: ", num_duplicates)
+
             P.append(xs)
 
-
-
         return P
-
 
 import lhsmdu
 
