@@ -278,10 +278,20 @@ def main():
 
 			X=np.array(P)	
 			Pdefault = np.asarray(X[np.argmin(np.asarray(O))])
+			Xsort=np.sort(X)
 
 			print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
 
-			bounds_constraint = [(np.amin(X)*0.999,np.amax(X)*1.001)]
+			if(X[np.argmin(O)]>Xsort[0] and X[np.argmin(O)]<Xsort[-1]): # minimum will appear in between the left neighbour and the right neighour of the GPTune minimum
+				idxmin=np.argmin(abs(Xsort-X[np.argmin(O)]))
+				bounds_constraint = [(Xsort[idxmin-1],Xsort[idxmin+1])]
+			elif(X[np.argmin(O)]==Xsort[0] and Xsort.size>1): # minimum will appear to the left of Xsort[0] or in between the leftmost two data points	
+				bounds_constraint = [(Xsort[0]*0.997,Xsort[1])]
+			elif(X[np.argmin(O)]==Xsort[-1] and Xsort.size>1): # minimum will appear to the right of Xsort[-1] or in between the rightmost two data points						
+				bounds_constraint = [(Xsort[-2],Xsort[-1]*1.003)]
+			else: # only 1 GPtune sample available, enlarge the search range
+				bounds_constraint = [(Xsort[0]*0.997,Xsort[-1]*1.003)]
+
 			sol = sp.optimize.minimize(objectives, Pdefault, args=(nodes, cores, nthreads, giventask[0][0], nth), method='Nelder-Mead', options={'verbose': 1, 'maxfev': nrun, 'xatol': 0.0000001, 'fatol': 0.0000001}, bounds=bounds_constraint)    
 
 			print('x      : ', sol.x)
