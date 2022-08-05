@@ -85,7 +85,36 @@ class Search(abc.ABC):
         else:
             fun = functools.partial(self.search, data, models, kwargs = kwargs)
             res = list(map(fun, tids))
+
         # print(res)
+
+        # check if there are duplicated samples
+        for res_ in res:
+            tid = res_[0]
+            x = res_[1][0]
+            duplicate = False
+            for x_ in data.P[tid]:
+                x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                if x_orig == x_orig_:
+                    duplicate = True
+                    print ("duplicated sample: ", x)
+                    break
+
+            while duplicate == True:
+                duplicate = False
+                # generate random sample if the sample already has duplicates
+                x = np.random.rand(len(x[0]))
+                print ("generate random sample: ", x)
+                print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
+                res_[1][0] = x
+                for x_ in data.P[tid]:
+                    x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                    x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                    if x_orig == x_orig_:
+                        duplicate = True
+                        break
+
         res.sort(key = lambda x : x[0])
         return res
 
@@ -377,17 +406,22 @@ class SurrogateProblem(object):
 
         if (cond):
             xNorm = self.problem.PS.transform(xi0)[0]
-            if(self.problem.models is not None):
-                if(self.problem.driverabspath is not None):
-                    modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
-                    sys.path.append(self.problem.driverabspath) # add path to sys
-                    module = importlib.import_module(modulename) # import driver name as a module
+            if(self.problem.models is not None):    
+                if(self.options['distributed_memory_parallelism'] is True):                
+                    if(self.problem.driverabspath is not None):
+                        modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+                        sys.path.append(self.problem.driverabspath) # add path to sys
+                        module = importlib.import_module(modulename) # import driver name as a module
+                    else:
+                        raise Exception('performance models require passing driverabspath to GPTune')
+                    modeldata= module.models(point)
                 else:
-                    raise Exception('performance models require passing driverabspath to GPTune')
-                # modeldata= self.problem.models(point)
-                modeldata= module.models(point)
+                    modeldata= self.problem.models(point)            
                 xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
                 # print(xNorm)
+                
+
+
 
             # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
             #print ("EI: ", self.ei(xNorm))

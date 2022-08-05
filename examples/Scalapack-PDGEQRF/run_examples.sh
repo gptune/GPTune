@@ -17,3 +17,7 @@ else
     echo "GPTUNE_LITE_MODE cannot run MPI_spawn invoked applications"
 fi
 fi
+
+## use the following command if you want to try sensitivity analysis.
+# python scalapack_sensitivity_analysis.py
+

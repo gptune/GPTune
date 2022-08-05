@@ -719,7 +719,7 @@ class GPTune(object):
                 NS1 = 1
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 for i in range(NI):
                     if(T_sampleflag[i] is False):
                         tmpP[i] = np.empty(shape=(0,self.problem.DP))
@@ -1059,7 +1059,7 @@ class GPTune(object):
         else:
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
                         NSi = self.data.P[i].shape[0]
@@ -1404,7 +1404,7 @@ class GPTune(object):
         else:
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
                         NSi = self.data.P[i].shape[0]
@@ -2220,19 +2220,42 @@ def PredictOutput(problem_space:dict=None,
 
     return ret
 
-def SensitivityAnalysis(problem_space:dict=None,
+def SensitivityAnalysis(
+        problem_space:dict=None,
         modeler:str="Model_GPy_LCM",
         method="Sobol",
         input_task:list=[],
         surrogate_model=None,
         function_evaluations=None,
+        historydb_path:str=None,
+        tuning_problem_name:str=None,
         num_samples:int=1000):
 
+    # Prepare the surrogate model for running sensitivity analysis
     if surrogate_model == None:
-        surrogate_model = BuildSurrogateModel(problem_space = problem_space,
-                modeler = modeler,
-                input_task = [input_task],
-                function_evaluations = function_evaluations)
+        if function_evaluations == None:
+            if historydb_path != None:
+                with open(historydb_path, "r") as f_in:
+                    function_evaluations = json.load(f_in)["func_eval"]
+                surrogate_model = BuildSurrogateModel(problem_space = problem_space,
+                        modeler = modeler,
+                        input_task = [input_task],
+                        function_evaluations = function_evaluations)
+            elif tuning_problem_name != None:
+                with open("gptune.db/"+tuning_problem_name+".json", "r") as f_in:
+                    function_evaluations = json.load(f_in)["func_eval"]
+                surrogate_model = BuildSurrogateModel(problem_space = problem_space,
+                        modeler = modeler,
+                        input_task = [input_task],
+                        function_evaluations = function_evaluations)
+            else:
+                print ("no data is given, and cannot build a surrogate performance model, exit..")
+                exit()
+        else:
+            surrogate_model = BuildSurrogateModel(problem_space = problem_space,
+                    modeler = modeler,
+                    input_task = [input_task],
+                    function_evaluations = function_evaluations)
 
     if method == "Sobol":
         from SALib.sample import saltelli

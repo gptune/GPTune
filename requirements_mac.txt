@@ -14,3 +14,4 @@ scikit-optimize
 requests
 pymoo
 cloudpickle
+SALib
