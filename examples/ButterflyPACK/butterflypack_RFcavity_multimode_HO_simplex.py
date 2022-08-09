@@ -293,7 +293,7 @@ def main():
 
 			X=np.array(P)	
 			Pdefault = np.asarray(X[np.argmin(np.asarray(O))])
-			Xsort=np.sort(X)
+			Xsort=np.sort(X,axis=0)
 
 			print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
 
