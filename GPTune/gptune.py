@@ -588,7 +588,7 @@ class GPTune(object):
 
         return
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
+    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -606,9 +606,18 @@ class GPTune(object):
         time_search=0
         time_model=0
 
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations)
+            # load function evaluations regardless of the modeling scheme of the sample
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+
+            ## in case source function evaluation data is used for transfer learning
+            #if source_function_evaluations != None:
+            #    print ("DATA:P: ", self.data.P)
+            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Igiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -640,9 +649,6 @@ class GPTune(object):
         t3 = time.time_ns()
 
         t1 = time.time_ns()
-
-        options1 = copy.deepcopy(self.options)
-        kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
 
@@ -694,6 +700,8 @@ class GPTune(object):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
         print ("NS1: ", NS1)
+        is_pilot = False
+        run_pilot_anyway = False
         if NS1 == 0 and models_transfer != None:
             NS1 = 1
             option_tla = copy.deepcopy(self.options)
@@ -702,19 +710,27 @@ class GPTune(object):
             print ("SEARCHER_TLA GENERATED")
             res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
-            print ("tmpP: ", tmpP)
+            #print ("tmpP: ", tmpP)
 
             for i in range(NI):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
-            print ("tmpP: ", tmpP)
+
+            run_pilot_anyway = False
+            if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is None:
+                    # no samples from this modeling approach
+                    run_pilot_anyway = True
 
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    if(T_sampleflag[i] is True):
+                    if(run_pilot_anyway == False and T_sampleflag[i] is True):
                         NSi = self.data.P[i].shape[0]
                         tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
+            is_pilot = True
             if NS1 == 0:
                 NS1 = 1
             if (NSmin<NS1):
@@ -738,9 +754,12 @@ class GPTune(object):
         time_sample_init = time_sample_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
-        if (NSmin<NS1):
+
+        if (NSmin<NS1 or run_pilot_anyway == True):
+            print ("tmpP: ", tmpP)
             # print(tmpP,'dada',tmpP[0])
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
+            print ("tmpO: ", tmpO)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -782,8 +801,36 @@ class GPTune(object):
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
-                tmpdata = copy.deepcopy(self.data)                        
-                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                #tmpdata = copy.deepcopy(self.data)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+
+                for i in range(len(tmpdata.P)):
+                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                        tmpdata.P[i] = copy.deepcopy(self.data.P[i])
+                        tmpdata.O[i] = copy.deepcopy(self.data.O[i])
+
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("self data P: ", self.data.P)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -941,14 +988,342 @@ class GPTune(object):
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, models_transfer)
 
-    def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
-        print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-        if self.options['TLA_method'] == 'Regression':
-            return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
+    def TLA(self, NS, Igiven=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
+
+        # Unified TLA interface
+        # This supports only one target task
+
+        NS1=0
+        NI=1
+        num_source_tasks = len(models_transfer)
+        num_target_tasks = 1
+
+        """ Redefine input space """
+        input_space = self.historydb.problem_space_to_dict(self.problem.IS)
+        input_space_arr = []
+        for input_space_info in input_space:
+            name_ = input_space_info["name"]
+            type_ = input_space_info["type"]
+            transformer_ = input_space_info["transformer"]
+
+            if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+                categories = input_space_info["categories"]
+                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
+        IS = Space(input_space_arr)
+
+        self.tuningproblem.update_input_space(IS)
+        self.problem.IS = IS
+
+        """ Redefine the given tasks with source tasks """
+        Igiven_ = []
+        for i in range(num_target_tasks):
+            Igiven_.append(Igiven[i]+[i])
+
+        if self.problem.DO > 1:
+            print ("[TLA Warning] currently, TLA does not fully support multi-objective tuning")
+
+        objective_name = self.problem.OS[0].name
+
+        if self.options['TLA_method'] == None:
+            print('\n\n\n------Starting Single-task learning (no TLA method option is given) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            return self.MLA_HistoryDB(NS, NS1, NI, Igiven_)
+
+        elif self.options['TLA_method'] == 'Regression':
+            print('\n\n\n------Starting TLA (Regression Weighted Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            return self.TLA_Regression(NS, NS1, NI, Igiven_, models_transfer)
+
         elif self.options['TLA_method'] == 'Sum':
-            return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
+            print('\n\n\n------Starting TLA (Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            return self.TLA_Regression(NS, NS1, NI, Igiven_, models_transfer)
+
         elif self.options['TLA_method'] == 'LCM_BF':
-            return self.TLA_LCM(NS, NS1, NI, Igiven, models_transfer)
+            print('\n\n\n------Starting TLA (LCM BF) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            Igiven__ = copy.deepcopy(Igiven_)
+
+            for i in range(num_source_tasks):
+                task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                task_parameter_vec = []
+                for j in range(len(self.problem.IS)):
+                    if self.problem.IS[j].name == "tla_id":
+                        continue
+                    else:
+                        task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                task_parameter_vec.append(i+1)
+                Igiven__.append(task_parameter_vec)
+
+            return self.TLA_LCM_BF(NS, NS1, NI+num_source_tasks, Igiven__, models_transfer)
+
+        elif self.options['TLA_method'] == 'LCM':
+            print('\n\n\n------Starting TLA (LCM GPY) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            Igiven__ = copy.deepcopy(Igiven_)
+            for i in range(num_source_tasks):
+                task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                task_parameter_vec = []
+                for j in range(len(self.problem.IS)):
+                    if self.problem.IS[j].name == "tla_id":
+                        continue
+                    else:
+                        task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                task_parameter_vec.append(i+1)
+                Igiven__.append(task_parameter_vec)
+
+            NI_ = NI+num_source_tasks
+            T_sampleflag = [False]*NI_
+            T_sampleflag[0] = True
+
+            return self.MLA_HistoryDB(NS, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+
+        elif self.options['TLA_method'] == 'Stacking':
+            print('\n\n\n------Starting TLA (Stacking) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+            return self.TLA_Stacking(NS, NS1, NI, Igiven_, source_function_evaluations)
+
+        elif self.options['TLA_method'] == 'Ensemble_Toggling':
+            print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            for n_sample in range(1, NS+1, 1):
+                TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+            return (data, model, stats)
+
+        elif self.options['TLA_method'] == 'Ensemble_Peeking':
+            print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            for n_sample in range(1, NS+1, 1):
+                self.options['model_peeking_level'] = len(TLA_options)
+                TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+            return (data, model, stats)
+
+        elif self.options['TLA_method'] == 'Ensemble_Prob':
+            print('\n\n\n------Starting TLA (Ensemble Probability) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            exploration_rate = self.options["TLA_ensemble_exploration_rate"]
+
+            best_result = {}
+            for TLA_option in TLA_options:
+                best_result[TLA_option] = 1.0
+            num_TLA_options = len(TLA_options)
+
+            def select_via_probability(best_result):
+                option_vec = [k for k in best_result]
+                result_vec = np.array([best_result[k] for k in best_result])
+                best_min = np.min(result_vec)
+                if (best_min <= 0.0):
+                    diff = 1 - best_min
+                    for i in range(len(result_vec)):
+                        result_vec[i] = diff + result_vec[i]
+                for i in range(len(result_vec)):
+                    result_vec[i] = 1.0/result_vec[i]
+                sum_ = np.sum(result_vec)
+                for i in range(len(result_vec)):
+                    result_vec[i] = result_vec[i]/sum_
+                for i in range(1, len(result_vec), 1):
+                    result_vec[i] == result_vec[i-1]
+
+                # test
+                rand_num1 = np.random.rand()
+                if rand_num1 < exploration_rate:
+                    option_idx = np.random.choice(num_TLA_options)
+                else:
+                    rand_num = np.random.rand()
+                    option_idx = 0
+                    for i in range(len(result_vec)):
+                        if rand_num <= result_vec[i]:
+                            option_idx = i
+                            return option_vec[option_idx]
+
+            for n_sample in range(1, NS+1, 1):
+
+                if n_sample <= num_TLA_options:
+                    TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+                else:
+                    TLA_chosen = select_via_probability(best_result)
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+                # currently hard coded..
+                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    result = json.load(f_in)["func_eval"][-1]["evaluation_result"][objective_name]
+                    print ("recent result: ", result)
+                    if n_sample <= num_TLA_options:
+                        best_result[TLA_option] = result
+                    else:
+                        if result < best_result[TLA_option]:
+                            best_result[TLA_option] = result
+
+            return (data, model, stats)
 
     def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
         stats = {
@@ -967,9 +1342,14 @@ class GPTune(object):
         time_search=0
         time_model=0
 
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+
+        print ("self.data.P: ", self.data.P)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -990,9 +1370,6 @@ class GPTune(object):
         t3 = time.time_ns()
 
         t1 = time.time_ns()
-
-        options1 = copy.deepcopy(self.options)
-        kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
 
@@ -1038,6 +1415,7 @@ class GPTune(object):
             raise Exception("len(self.data.P) !=len(self.data.I)")
 
         print ("NS1: ", NS1)
+        is_pilot = False
         if NS1 == 0:
             NS1 = 1
             searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
@@ -1057,6 +1435,7 @@ class GPTune(object):
                     NSi = self.data.P[i].shape[0]
                     tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
+            is_pilot = True
             if (NSmin<NS1):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
@@ -1073,7 +1452,7 @@ class GPTune(object):
 
         t1 = time.time_ns()
         if (NSmin<NS1):
-            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs)
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -1109,8 +1488,28 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
-                tmpdata = copy.deepcopy(self.data)
-                tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                #tmpdata = copy.deepcopy(self.data)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -1245,7 +1644,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_LCM(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1265,57 +1664,9 @@ class GPTune(object):
         print ("Igiven")
         print (Igiven)
 
-        print ("self data I")
-        print (self.data.I)
-        print ("self data P")
-        print (self.data.P)
-
-        """ Redefine input space """
-        input_space = self.historydb.problem_space_to_dict(self.problem.IS)
-        input_space_arr = []
-        for input_space_info in input_space:
-            name_ = input_space_info["name"]
-            type_ = input_space_info["type"]
-            transformer_ = input_space_info["transformer"]
-
-            if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
-                lower_bound_ = input_space_info["lower_bound"]
-                upper_bound_ = input_space_info["upper_bound"]
-                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-            elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
-                lower_bound_ = input_space_info["lower_bound"]
-                upper_bound_ = input_space_info["upper_bound"]
-                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-            elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
-                categories = input_space_info["categories"]
-                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-        num_source_tasks = len(models_transfer)
-        num_target_tasks = len(Igiven)
-        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
-        IS = Space(input_space_arr)
-
-        self.tuningproblem.update_input_space(IS)
-        self.problem.IS = IS
-
-        """ Redefine the given tasks with source tasks """
-        newIgiven = []
-        for i in range(num_target_tasks):
-            newIgiven.append(Igiven[i]+[i])
-
-        for i in range(num_source_tasks):
-            newIgiven.append(Igiven[0]+[i+num_target_tasks])
-
-        NI = NI + num_source_tasks
-
-        print ("Igiven: ", Igiven)
-        print ("newIgiven: ", newIgiven)
-
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, newIgiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven) #, function_evaluations, options=kwargs)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1346,8 +1697,8 @@ class GPTune(object):
         if (NS1 is None):
             NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
 
-        if(newIgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = newIgiven
+        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Igiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1607,7 +1958,463 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA1(self, Tnew):
+    def TLA_Stacking(self, NS, NS1 = None, NI = None, Igiven = None, source_function_evaluations = list, **kwargs):
+        stats = {
+            "time_total": 0,
+            "time_sample_init": 0,
+            "time_fun": 0,
+            "time_search": 0,
+            "time_model": 0,
+            "func_eval_time":[],
+            "search_time":[],
+            "modeling_time":[],
+            "modeling_iteration":[]
+        }
+        time_fun=0
+        time_sample_init=0
+        time_search=0
+        time_model=0
+
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
+        """ Load history function evaluation data """
+        if self.historydb.load_func_eval == True:
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+
+        np.set_printoptions(suppress=False,precision=4)
+        NSmin=0
+        NSmax=0
+        if (self.data.P is not None):
+            NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
+            NSmax = max(map(len, self.data.P))
+
+        # """ Set (additional) number of samples for autotuning """
+        # NS = NSmin + NS
+        if(NSmax>0):
+            if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
+                print('\nexisting data has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
+                return (copy.deepcopy(self.data), None,stats)
+            else:
+                print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
+
+        t3 = time.time_ns()
+
+        t1 = time.time_ns()
+
+        """ Multi-task Learning Autotuning """
+
+        if (NS1 is not None and NS1>NS):
+            raise Exception("NS1>NS")
+        if (NS1 is None):
+            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
+
+        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Igiven
+
+        ########## normalize the data as the user always work in the original space
+        if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+            tmp=[]
+            for x in self.data.P:
+                if(len(x)>0):
+                    xNorm = self.problem.PS.transform(x)
+                    tmp.append(xNorm)
+                else:
+                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
+            self.data.P=tmp
+        if self.data.I is not None: # from a list of lists to a 2D numpy array
+            self.data.I = self.problem.IS.transform(self.data.I)
+
+        if (self.data.O is None and self.data.P is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, self.data.P, self.data.D, self.historydb, options = kwargs)
+
+        sampler = eval(f'{kwargs["sample_class"]}()')
+        if (self.data.I is None):
+
+            if (NI is None):
+                raise Exception("Number of problems to be generated (NI) is not defined")
+
+            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
+            self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
+            # print("riji",type(self.data.I),type(self.data.I[0]))
+            self.data.D = [{}] * NI
+        else:
+            if (self.data.D is None):
+                self.data.D = [{}] * NI
+
+        if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
+            raise Exception("len(self.data.P) !=len(self.data.I)")
+
+        # Build source models
+        def load_source_data(problem: Problem, source_function_evaluations):
+            data = Data(problem = problem)
+            num_tasks = 1 # for now we consider only one task for target task
+
+            PS_history = [[] for i in range(num_tasks)]
+            OS_history = [[] for i in range(num_tasks)]
+
+            num_loaded_data = 0
+
+            for func_eval in source_function_evaluations:
+                task_id = 0
+                parameter_arr = []
+                for k in range(len(problem.PS)):
+                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                        parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Integer":
+                        parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Real":
+                        parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    else:
+                        parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                #print ("parameter_arr: ", parameter_arr)
+                PS_history[task_id].append(parameter_arr)
+                OS_history[task_id].append(\
+                    [func_eval["evaluation_result"][problem.OS[k].name] \
+                    for k in range(len(problem.OS))])
+                num_loaded_data += 1
+
+            print ("Igiven: ", Igiven)
+
+            if (num_loaded_data > 0):
+                data.I = Igiven # fake task info (may change to IS_history)
+                #data.P = PS_history
+                data.P=[]
+                for i in range(len(PS_history)):
+                    if(len(PS_history[i])==0):
+                        data.P.append(np.empty( shape=(0, problem.DO)))
+                    else:
+                        data.P.append(np.array(PS_history[i]))
+                        if(any(ele==[None] for ele in PS_history[i])):
+                            print ("history data contains null function values")
+                            exit()
+                data.O=[] # YL: OS is a list of 2D numpy arrays
+                for i in range(len(OS_history)):
+                    if(len(OS_history[i])==0):
+                        data.O.append(np.empty( shape=(0, problem.DO)))
+                    else:
+                        data.O.append(np.array(OS_history[i]))
+                        if(any(ele==[None] for ele in OS_history[i])):
+                            print ("history data contains null function values")
+                            exit()
+                #print ("db: data.I: " + str(data.I))
+                #print ("db: data.P: " + str(data.P))
+                #print ("db: data.O: " + str(data.O))
+            else:
+                print ("no history data has been loaded")
+            return data
+
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
+
+        num_source_tasks = len(source_function_evaluations)
+
+        modelers = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        # train initial models
+        for o in range(self.problem.DO):
+            modelers[o].train_stacked(data = load_source_data(self.problem, source_function_evaluations[0]), num_source_tasks = num_source_tasks, **kwargs)
+
+        def load_residuals(problem: Problem, modeler, current_function_evaluations):
+            data = Data(problem=problem)
+            num_tasks = 1 # for now we consider only one task for target task
+
+            PS_history = [[] for i in range(num_tasks)]
+            OS_history = [[] for i in range(num_tasks)]
+
+            num_loaded_data = 0
+
+            task_parameter_names = [self.problem.IS[k].name for k in range(len(self.problem.IS))]
+            tuning_parameter_names = [self.problem.PS[k].name for k in range(len(self.problem.PS))]
+            tuning_parameter_types = [type(self.problem.PS[k]).__name__ for k in range(len(self.problem.PS))]
+            output_names = [self.problem.OS[k].name for k in range(len(self.problem.OS))]
+
+            tid = 0
+
+            for func_eval in current_function_evaluations:
+                task_id = 0
+                parameter_arr = []
+                for k in range(len(problem.PS)):
+                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                        parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Integer":
+                        parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Real":
+                        parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    else:
+                        parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                PS_history[task_id].append(parameter_arr)
+
+                input_tuning_parameters_transformed = self.problem.PS.transform([parameter_arr])[0]
+
+                residual_result = []
+                for k in range(len(problem.OS)):
+                    mu, var = modeler.predict(np.array(input_tuning_parameters_transformed),tid)
+                    observation = func_eval["evaluation_result"][problem.OS[k].name]
+                    print ("mu: ", mu)
+                    print ("observation: ", observation)
+                    residual = observation - mu[0][0] #- observation
+                    residual_result.append(residual)
+                OS_history[task_id].append(residual_result)
+                num_loaded_data += 1
+
+            if (num_loaded_data > 0):
+                data.I = Igiven #IS_history
+                #data.P = PS_history
+                data.P=[]
+                for i in range(len(PS_history)):
+                    if(len(PS_history[i])==0):
+                        data.P.append(np.empty( shape=(0, problem.DO)))
+                    else:
+                        data.P.append(np.array(PS_history[i]))
+                        if(any(ele==[None] for ele in PS_history[i])):
+                            print ("history data contains null function values")
+                            exit()
+                data.O=[] # YL: OS is a list of 2D numpy arrays
+                for i in range(len(OS_history)):
+                    if(len(OS_history[i])==0):
+                        data.O.append(np.empty( shape=(0, problem.DO)))
+                    else:
+                        data.O.append(np.array(OS_history[i]))
+                        if(any(ele==[None] for ele in OS_history[i])):
+                            print ("history data contains null function values")
+                            exit()
+                # print ("db: data.I: " + str(data.I))
+                # print ("db: data.P: " + str(data.P))
+                # print ("db: data.O: " + str(OS_history))
+            else:
+                print ("no history data has been loaded")
+            return data
+
+        # train stacking models based on residuals
+        for o in range(self.problem.DO):
+            for i in range(1, num_source_tasks, 1):
+                print ("train_stacked i: ", i)
+                modelers[o].train_stacked(data=load_residuals(self.problem, modelers[o], source_function_evaluations[i]), num_source_tasks=num_source_tasks, **kwargs)
+
+        initial_modelers = copy.deepcopy(modelers)
+
+        print ("NS1: ", NS1)
+        is_pilot = False
+        run_pilot_anyway = False
+        if NS1 == 0:
+            NS1 = 1
+            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+            tmpP = [x[1][0] for x in res]
+            print ("tmpP: ", tmpP)
+            #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+            #    NSi = self.data.P[i].shape[0]
+            #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            ## print(more_samples,newdata.P)
+
+            run_pilot_anyway = False
+            if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is None:
+                    # no samples from this modeling approach
+                    run_pilot_anyway = True
+
+            #tmpP = [(self.problem.PS.transform([[128,24]]))]
+            if(self.data.P is not None):
+                for i in range(len(self.data.P)):
+                    if run_pilot_anyway == False:
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        else:
+            is_pilot = True
+            if (NSmin<NS1):
+                check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+                tmpP = sampler.sample_parameters(n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                if(self.data.P is not None):
+                    for i in range(len(self.data.P)):
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+
+        if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
+            raise Exception("len(self.data.O) !=len(self.data.I)")
+
+        t2 = time.time_ns()
+        time_sample_init = time_sample_init + (t2-t1)/1e9
+
+        t1 = time.time_ns()
+        if (NSmin<NS1 or run_pilot_anyway == True):
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
+            if(self.data.P is None): # no existing tuning data is available
+                self.data.O = tmpO
+                self.data.P = tmpP
+            else:
+                for i in range(len(self.data.P)):
+                    self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
+                    self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
+
+        t2 = time.time_ns()
+        stats["func_eval_time"].append((t2-t1)/1e9)
+        time_fun = time_fun + (t2-t1)/1e9
+
+        optiter = 0
+        NSmin = min(map(len, self.data.P))
+        while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
+
+            if(self.problem.models_update is not None):
+                ########## denormalize the data as the user always work in the original space
+                tmpdata = copy.deepcopy(self.data)
+                if tmpdata.I is not None:    # from 2D numpy array to a list of lists
+                    tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
+                if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                    tmpdata.P = [self.problem.PS.inverse_transform(x) for x in tmpdata.P]
+                self.problem.models_update(tmpdata)
+                self.data.D = tmpdata.D
+
+            newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
+            print("MLA iteration: ", optiter)
+            stats["modeling_iteration"].append(0)
+            optiter = optiter + 1
+            t1 = time.time_ns()
+            for o in range(self.problem.DO):
+                #tmpdata = copy.deepcopy(self.data)
+                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                    tmp=[]
+                    for x in tmpdata.P:
+                        if(len(x)>0):
+                            xNorm = self.problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    tmpdata.P=tmp
+                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                print ("tmpdata.I: ", tmpdata.I)
+                print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.O: ", tmpdata.O)
+
+                if (kwargs["model_output_constraint"] != None):
+                    tmp_tmpdata = Data(self.problem)
+                    tmp_tmpdata.I = copy.deepcopy(self.data.I)
+                    tmp_tmpdata.P = [[] for i in range(len(self.data.P))]
+                    tmp_tmpdata.O = [[] for i in range(len(self.data.O))]
+                    tmp_tmpdata.D = copy.deepcopy(self.data.D)
+
+                    for t in range(len(tmpdata.O)):
+                        for i in range(len(tmpdata.O[t])):
+                            out_of_range = False
+                            for o_ in range(self.problem.DO):
+                                output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                lower_bound = output_space["lower_bound"]
+                                upper_bound = output_space["upper_bound"]
+                                output_result = [copy.deepcopy(self.data.O[i][:,o_].reshape((-1,1))) for i in range(len(self.data.I))][t][i]
+                                if output_result < lower_bound or \
+                                   output_result > upper_bound:
+                                    out_of_range = True
+                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if (kwargs["model_output_constraint"] == 'LargeNum'):
+                                    tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                elif (kwargs["model_output_constraint"] == 'Ignore'):
+                                    pass
+                            else:
+                                tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                tmp_tmpdata.O[t].append(tmpdata.O[t][i])
+
+                    for t in range(len(tmpdata.O)):
+                        tmp_tmpdata.P[t] = np.array(tmp_tmpdata.P[t])
+                        tmp_tmpdata.O[t] = np.array(tmp_tmpdata.O[t])
+
+                    for t in range(len(tmp_tmpdata.O)):
+                        if len(tmp_tmpdata.O[t]) > 0:
+                            tmpdata.P[t] = copy.deepcopy(tmp_tmpdata.P[t])
+                            tmpdata.O[t] = copy.deepcopy(tmp_tmpdata.O[t])
+
+                if(self.problem.models is not None):
+                    for i in range(len(tmpdata.P)):
+                        points0 = tmpdata.D[i]
+                        t = tmpdata.I[i]
+                        I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                        points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
+                        modeldata=[]
+                        for p in range(len(tmpdata.P[i])):
+                            x = tmpdata.P[i][p]
+                            x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                            points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
+                            points.update(points1)
+                            points.update(points0)
+                            if(self.problem.constants is not None):
+                                points.update(self.problem.constants)
+                            modeldata.append(self.problem.models(points))
+                        modeldata=np.array(modeldata)
+                        tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+                for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
+                    tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
+                    tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
+                # print(tmpdata.P[0])
+                #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
+
+                def data_to_dict(problem, data):
+                    task_id = 0
+                    documents = []
+
+                    num_evals = len(data.P[task_id])
+                    print ("num_evals: ", num_evals)
+
+                    for i in range(num_evals):
+                        document = {}
+                        document["task_parameter"] = { problem.IS[k].name:data.I[task_id][k] for k in range(len(problem.IS)) }
+                        document["tuning_parameter"] = { problem.PS[k].name:data.P[task_id][i][k] for k in range(len(problem.PS)) }
+                        document["evaluation_result"] = { problem.OS[k].name:data.O[task_id][i][k] for k in range(len(problem.OS)) }
+
+                        print ("document: ", document)
+
+                        documents.append(document)
+
+                    return documents
+                modelers[o].train_stacked(data = load_residuals(self.problem, initial_modelers[o], data_to_dict(self.problem, self.data)), num_source_tasks=num_source_tasks, **kwargs)
+
+            t2 = time.time_ns()
+            stats["modeling_time"].append((t2-t1)/1e9)
+            time_model = time_model + (t2-t1)/1e9
+
+            t1 = time.time_ns()
+            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+
+            newdata.P = [x[1][0] for x in res]
+            for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
+                NSi = self.data.P[i].shape[0]
+                newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
+            # print(more_samples,newdata.P)
+            t2 = time.time_ns()
+            stats["search_time"].append((t2-t1)/1e9)
+            time_search = time_search + (t2-t1)/1e9
+
+            t1 = time.time_ns()
+            newdata.O = self.computer.evaluate_objective(problem = self.problem,
+                    I = newdata.I,
+                    P = newdata.P,
+                    D = newdata.D,
+                    history_db = self.historydb,
+                    options = kwargs)
+            t2 = time.time_ns()
+            time_fun = time_fun + (t2-t1)/1e9
+            self.data.merge(newdata)
+            NSmin = min(map(len, self.data.P))
+
+        # denormalize the data as the user always work in the original space
+        if self.data.I is not None:    # from 2D numpy array to a list of lists
+            self.data.I = self.problem.IS.inverse_transform(self.data.I)
+        if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+            self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
+
+        t4 = time.time_ns()
+        stats['time_total'] = (t4-t3)/1e9
+        stats['time_fun'] = time_fun
+        stats['time_model'] = time_model
+        stats['time_search'] = time_search
+        stats['time_sample_init'] = time_sample_init
+
+        return (copy.deepcopy(self.data), modelers, stats)
+
+    def TLA1(self, Tnew, NS):
 
         print('\n\n\n------Starting TLA1 for task: ',Tnew)
 
