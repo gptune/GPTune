@@ -573,7 +573,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
+    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
@@ -597,7 +597,12 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations)
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+
+            ## in case source function evaluation data is used for transfer learning
+            #if source_function_evaluations != None:
+            #    print ("DATA:P: ", self.data.P)
+            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Igiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -681,6 +686,7 @@ class GPTune(object):
 
         print ("NS1: ", NS1)
         is_pilot = False
+        run_pilot_anyway = False
         if NS1 == 0 and models_transfer != None:
             NS1 = 1
             option_tla = copy.deepcopy(self.options)
@@ -689,14 +695,14 @@ class GPTune(object):
             print ("SEARCHER_TLA GENERATED")
             res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
-            print ("tmpP: ", tmpP)
+            #print ("tmpP: ", tmpP)
 
             for i in range(NI):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
 
             run_pilot_anyway = False
-            if (kwargs["model_input_separation"] == True):
+            if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
                 self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
                 if tmpdata.P is None:
@@ -805,11 +811,11 @@ class GPTune(object):
 
                 if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                     tmpdata.I = self.problem.IS.transform(tmpdata.I)
-                print ("tmpdata.I: ", tmpdata.I)
-                print ("self data P: ", self.data.P)
-                print ("tmpdata.P: ", tmpdata.P)
-                print ("tmpdata.O: ", tmpdata.O)
-                print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("self data P: ", self.data.P)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
+                #print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -967,19 +973,342 @@ class GPTune(object):
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, models_transfer)
 
-    def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, source_function_evaluations=None, **kwargs):
-        if self.options['TLA_method'] == 'Regression':
+    def TLA(self, NS, Igiven=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
+
+        # Unified TLA interface
+        # This supports only one target task
+
+        NS1=0
+        NI=1
+        num_source_tasks = len(models_transfer)
+        num_target_tasks = 1
+
+        """ Redefine input space """
+        input_space = self.historydb.problem_space_to_dict(self.problem.IS)
+        input_space_arr = []
+        for input_space_info in input_space:
+            name_ = input_space_info["name"]
+            type_ = input_space_info["type"]
+            transformer_ = input_space_info["transformer"]
+
+            if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
+                lower_bound_ = input_space_info["lower_bound"]
+                upper_bound_ = input_space_info["upper_bound"]
+                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+            elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
+                categories = input_space_info["categories"]
+                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
+                input_space_arr.append(input_space)
+        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
+        IS = Space(input_space_arr)
+
+        self.tuningproblem.update_input_space(IS)
+        self.problem.IS = IS
+
+        """ Redefine the given tasks with source tasks """
+        Igiven_ = []
+        for i in range(num_target_tasks):
+            Igiven_.append(Igiven[i]+[i])
+
+        if self.problem.DO > 1:
+            print ("[TLA Warning] currently, TLA does not fully support multi-objective tuning")
+
+        objective_name = self.problem.OS[0].name
+
+        if self.options['TLA_method'] == None:
+            print('\n\n\n------Starting Single-task learning (no TLA method option is given) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            return self.MLA_HistoryDB(NS, NS1, NI, Igiven_)
+
+        elif self.options['TLA_method'] == 'Regression':
             print('\n\n\n------Starting TLA (Regression Weighted Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-            return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
+            return self.TLA_Regression(NS, NS1, NI, Igiven_, models_transfer)
+
         elif self.options['TLA_method'] == 'Sum':
             print('\n\n\n------Starting TLA (Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-            return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
+            return self.TLA_Regression(NS, NS1, NI, Igiven_, models_transfer)
+
         elif self.options['TLA_method'] == 'LCM_BF':
             print('\n\n\n------Starting TLA (LCM BF) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-            return self.TLA_LCM(NS, NS1, NI, Igiven, models_transfer)
+            Igiven__ = copy.deepcopy(Igiven_)
+
+            for i in range(num_source_tasks):
+                task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                task_parameter_vec = []
+                for j in range(len(self.problem.IS)):
+                    if self.problem.IS[j].name == "tla_id":
+                        continue
+                    else:
+                        task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                task_parameter_vec.append(i+1)
+                Igiven__.append(task_parameter_vec)
+
+            return self.TLA_LCM_BF(NS, NS1, NI+num_source_tasks, Igiven__, models_transfer)
+
+        elif self.options['TLA_method'] == 'LCM':
+            print('\n\n\n------Starting TLA (LCM GPY) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+            Igiven__ = copy.deepcopy(Igiven_)
+            for i in range(num_source_tasks):
+                task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                task_parameter_vec = []
+                for j in range(len(self.problem.IS)):
+                    if self.problem.IS[j].name == "tla_id":
+                        continue
+                    else:
+                        task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                task_parameter_vec.append(i+1)
+                Igiven__.append(task_parameter_vec)
+
+            NI_ = NI+num_source_tasks
+            T_sampleflag = [False]*NI_
+            T_sampleflag[0] = True
+
+            return self.MLA_HistoryDB(NS, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+
         elif self.options['TLA_method'] == 'Stacking':
             print('\n\n\n------Starting TLA (Stacking) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
-            return self.TLA_Stacking(NS, NS1, NI, Igiven, source_function_evaluations)
+            return self.TLA_Stacking(NS, NS1, NI, Igiven_, source_function_evaluations)
+
+        elif self.options['TLA_method'] == 'Ensemble_Toggling':
+            print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            for n_sample in range(1, NS+1, 1):
+                TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+            return (data, model, stats)
+
+        elif self.options['TLA_method'] == 'Ensemble_Peeking':
+            print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            for n_sample in range(1, NS+1, 1):
+                self.options['model_peeking_level'] = len(TLA_options)
+                TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+            return (data, model, stats)
+
+        elif self.options['TLA_method'] == 'Ensemble_Prob':
+            print('\n\n\n------Starting TLA (Ensemble Probability) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            exploration_rate = self.options["TLA_ensemble_exploration_rate"]
+
+            best_result = {}
+            for TLA_option in TLA_options:
+                best_result[TLA_option] = 1.0
+            num_TLA_options = len(TLA_options)
+
+            def select_via_probability(best_result):
+                option_vec = [k for k in best_result]
+                result_vec = np.array([best_result[k] for k in best_result])
+                best_min = np.min(result_vec)
+                if (best_min <= 0.0):
+                    diff = 1 - best_min
+                    for i in range(len(result_vec)):
+                        result_vec[i] = diff + result_vec[i]
+                for i in range(len(result_vec)):
+                    result_vec[i] = 1.0/result_vec[i]
+                sum_ = np.sum(result_vec)
+                for i in range(len(result_vec)):
+                    result_vec[i] = result_vec[i]/sum_
+                for i in range(1, len(result_vec), 1):
+                    result_vec[i] == result_vec[i-1]
+
+                # test
+                rand_num1 = np.random.rand()
+                if rand_num1 < exploration_rate:
+                    option_idx = np.random.choice(num_TLA_options)
+                else:
+                    rand_num = np.random.rand()
+                    option_idx = 0
+                    for i in range(len(result_vec)):
+                        if rand_num <= result_vec[i]:
+                            option_idx = i
+                            return option_vec[option_idx]
+
+            for n_sample in range(1, NS+1, 1):
+
+                if n_sample <= num_TLA_options:
+                    TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+                else:
+                    TLA_chosen = select_via_probability(best_result)
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Igiven__ = copy.deepcopy(Igiven_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Igiven__ = copy.deepcopy(Igiven_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Igiven__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+
+                # currently hard coded..
+                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    result = json.load(f_in)["func_eval"][-1]["evaluation_result"][objective_name]
+                    print ("recent result: ", result)
+                    if n_sample <= num_TLA_options:
+                        best_result[TLA_option] = result
+                    else:
+                        if result < best_result[TLA_option]:
+                            best_result[TLA_option] = result
+
+            return (data, model, stats)
 
     def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
         stats = {
@@ -1004,6 +1333,8 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+
+        print ("self.data.P: ", self.data.P)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1161,9 +1492,9 @@ class GPTune(object):
                     tmpdata.P=tmp
                 if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                     tmpdata.I = self.problem.IS.transform(tmpdata.I)
-                print ("tmpdata.I: ", tmpdata.I)
-                print ("tmpdata.P: ", tmpdata.P)
-                print ("tmpdata.O: ", tmpdata.O)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -1298,7 +1629,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_LCM(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1318,57 +1649,9 @@ class GPTune(object):
         print ("Igiven")
         print (Igiven)
 
-        print ("self data I")
-        print (self.data.I)
-        print ("self data P")
-        print (self.data.P)
-
-        """ Redefine input space """
-        input_space = self.historydb.problem_space_to_dict(self.problem.IS)
-        input_space_arr = []
-        for input_space_info in input_space:
-            name_ = input_space_info["name"]
-            type_ = input_space_info["type"]
-            transformer_ = input_space_info["transformer"]
-
-            if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
-                lower_bound_ = input_space_info["lower_bound"]
-                upper_bound_ = input_space_info["upper_bound"]
-                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-            elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
-                lower_bound_ = input_space_info["lower_bound"]
-                upper_bound_ = input_space_info["upper_bound"]
-                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-            elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
-                categories = input_space_info["categories"]
-                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
-        num_source_tasks = len(models_transfer)
-        num_target_tasks = len(Igiven)
-        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
-        IS = Space(input_space_arr)
-
-        self.tuningproblem.update_input_space(IS)
-        self.problem.IS = IS
-
-        """ Redefine the given tasks with source tasks """
-        newIgiven = []
-        for i in range(num_target_tasks):
-            newIgiven.append(Igiven[i]+[i])
-
-        for i in range(num_source_tasks):
-            newIgiven.append(Igiven[0]+[i+num_target_tasks])
-
-        NI = NI + num_source_tasks
-
-        print ("Igiven: ", Igiven)
-        print ("newIgiven: ", newIgiven)
-
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, options=kwargs)
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven) #, function_evaluations, options=kwargs)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1399,8 +1682,8 @@ class GPTune(object):
         if (NS1 is None):
             NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
 
-        if(newIgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = newIgiven
+        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Igiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1896,6 +2179,7 @@ class GPTune(object):
 
         print ("NS1: ", NS1)
         is_pilot = False
+        run_pilot_anyway = False
         if NS1 == 0:
             NS1 = 1
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -1907,7 +2191,7 @@ class GPTune(object):
             ## print(more_samples,newdata.P)
 
             run_pilot_anyway = False
-            if (kwargs["model_input_separation"] == True):
+            if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
                 self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
                 if tmpdata.P is None:

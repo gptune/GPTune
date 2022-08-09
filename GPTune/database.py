@@ -592,6 +592,8 @@ class HistoryDB(dict):
         for i in range(len(Igiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
+                if problem.IS[j].name == "tla_id":
+                    continue
                 if type(Igiven[i][j]) == float:
                     given_value = round(Igiven[i][j], 6)
                 else:
@@ -619,7 +621,7 @@ class HistoryDB(dict):
 
         return False
 
-    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None, options : dict = None):
+    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
 
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
@@ -653,6 +655,8 @@ class HistoryDB(dict):
                 except:
                     print ("direct download failed")
 
+            num_loaded_data = 0
+
             if os.path.exists(json_data_path) or function_evaluations != None:
                 historical_function_evaluations = []
 
@@ -676,84 +680,110 @@ class HistoryDB(dict):
                 if function_evaluations != None:
                     historical_function_evaluations.extend(function_evaluations)
 
-                # print ("historical_function_evaluations: ", historical_function_evaluations)
-
                 num_tasks = len(Igiven)
-
-                num_loaded_data = 0
 
                 PS_history = [[] for i in range(num_tasks)]
                 OS_history = [[] for i in range(num_tasks)]
 
-                for func_eval in historical_function_evaluations:
-                    if options != None and options["model_input_separation"] == True:
-                        if options["TLA_method"] == None:
-                            modeling_load = "MLA_LCM"
-                        elif options["TLA_method"] == "Regression":
-                            modeling_load = "TLA_RegressionSum"
-                        elif options["TLA_method"] == "Sum":
-                            modeling_load = "TLA_Sum"
-                        elif options["TLA_method"] == "Stacking":
-                            modeling_load = "TLA_Stacking"
-                        elif options["TLA_method"] == "LCM_BF":
-                            modeling_load = "TLA_LCM_BF"
-                        else:
-                            modeling_load = "MLA_LCM"
+                if options != None and options["model_peeking_level"] > 1:
+                    if problem.DO > 1:
+                        print ("[Warning] currently, model peeking does not fully support multi-objective tuning")
 
-                        if func_eval["modeling"] != "Pilot" and \
-                           (func_eval["modeling"] != modeling_load or
-                            func_eval["model_class"] != options["model_class"]):
-                            continue
+                    objective_name = problem.OS[0].name
 
-                    if self.load_check == False or self.check_load_deps(func_eval):
-                        task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
-                        if (task_id != -1):
-                            # # current policy: skip loading the func eval result
-                            # # if the same parameter data has been loaded once (duplicated)
-                            # # YL: only need to search in PS_history[task_id], not PS_history
-                            # if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
-                            
-                            # current policy: allow duplicated samples 
-                            # YL: This makes RCI-based multi-armed bandit much easier to implement, maybe we can add an option for changing this behavior 
-                            if False: # self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
-                                continue
-                            else:
-                                parameter_arr = []
-                                for k in range(len(problem.PS)):
-                                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
-                                        parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                    elif type(problem.PS[k]).__name__ == "Integer":
-                                        parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                    elif type(problem.PS[k]).__name__ == "Real":
-                                        parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
-                                    else:
-                                        parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
-                                PS_history[task_id].append(parameter_arr)
-                                OS_history[task_id].append(\
-                                    [func_eval["evaluation_result"][problem.OS[k].name] \
-                                    for k in range(len(problem.OS))])
-                                num_loaded_data += 1
+                    # hard coded, needs to be re-written
+                    peeking_level = options["model_peeking_level"]
+                    num_func_evals = len(historical_function_evaluations)
+                    num_looks = int(num_func_evals / peeking_level)
+                    for i in range(num_looks):
+                        func_eval = None
+                        best_y = None
+                        for j in range(i*peeking_level, (i+1)*(peeking_level), 1):
+                            if func_eval == None or historical_function_evaluations[j]["evaluation_result"][objective_name] < best_y:
+                                func_eval = historical_function_evaluations[j]
+                                best_y = historical_function_evaluations[j]["evaluation_result"][objective_name]
+                        print ("i: ", i)
+                        print ("best_y: ", best_y)
 
-                if (num_loaded_data > 0):
-                    data.I = Igiven #IS_history
-                    data.P = PS_history
-                    data.O=[] # YL: OS is a list of 2D numpy arrays
-                    for i in range(len(OS_history)):
-                        if(len(OS_history[i])==0):
-                            data.O.append(np.empty( shape=(0, problem.DO)))
-                        else:
-                            data.O.append(np.array(OS_history[i]))
-                            if(any(ele==[None] for ele in OS_history[i])):
-                                print ("history data contains null function values")
-                                exit()
-                    # print ("db: data.I: " + str(data.I))
-                    # print ("db: data.P: " + str(data.P))
-                    # print ("db: data.O: " + str(OS_history))
+                        if self.load_check == False or self.check_load_deps(func_eval):
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            if (task_id != -1):
+                                # # current policy: skip loading the func eval result
+                                # # if the same parameter data has been loaded once (duplicated)
+                                # # YL: only need to search in PS_history[task_id], not PS_history
+                                # if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+
+                                # current policy: allow duplicated samples
+                                # YL: This makes RCI-based multi-armed bandit much easier to implement, maybe we can add an option for changing this behavior
+                                if False: # self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+                                    continue
+                                else:
+                                    parameter_arr = []
+                                    for k in range(len(problem.PS)):
+                                        if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                                            parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        elif type(problem.PS[k]).__name__ == "Integer":
+                                            parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        elif type(problem.PS[k]).__name__ == "Real":
+                                            parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        else:
+                                            parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                                    PS_history[task_id].append(parameter_arr)
+                                    OS_history[task_id].append(\
+                                        [func_eval["evaluation_result"][problem.OS[k].name] \
+                                        for k in range(len(problem.OS))])
+                                    num_loaded_data += 1
                 else:
-                    print ("no history data has been loaded")
+                    for func_eval in historical_function_evaluations:
+                        if options != None and options["model_input_separation"] == True:
+                            if options["TLA_method"] == None:
+                                modeling_load = "MLA_LCM"
+                            elif options["TLA_method"] == "Regression":
+                                modeling_load = "TLA_RegressionSum"
+                            elif options["TLA_method"] == "Sum":
+                                modeling_load = "TLA_Sum"
+                            elif options["TLA_method"] == "Stacking":
+                                modeling_load = "TLA_Stacking"
+                            elif options["TLA_method"] == "LCM_BF":
+                                modeling_load = "TLA_LCM_BF"
+                            else:
+                                modeling_load = "MLA_LCM"
+
+                            if func_eval["modeling"] != "Pilot" and \
+                               (func_eval["modeling"] != modeling_load or
+                                func_eval["model_class"] != options["model_class"]):
+                                continue
+
+                        if self.load_check == False or self.check_load_deps(func_eval):
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            if (task_id != -1):
+                                # # current policy: skip loading the func eval result
+                                # # if the same parameter data has been loaded once (duplicated)
+                                # # YL: only need to search in PS_history[task_id], not PS_history
+                                # if self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+
+                                # current policy: allow duplicated samples
+                                # YL: This makes RCI-based multi-armed bandit much easier to implement, maybe we can add an option for changing this behavior
+                                if False: # self.is_parameter_duplication(problem, PS_history[task_id], func_eval["tuning_parameter"]):
+                                    continue
+                                else:
+                                    parameter_arr = []
+                                    for k in range(len(problem.PS)):
+                                        if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                                            parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        elif type(problem.PS[k]).__name__ == "Integer":
+                                            parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        elif type(problem.PS[k]).__name__ == "Real":
+                                            parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                                        else:
+                                            parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+                                    PS_history[task_id].append(parameter_arr)
+                                    OS_history[task_id].append(\
+                                        [func_eval["evaluation_result"][problem.OS[k].name] \
+                                        for k in range(len(problem.OS))])
+                                    num_loaded_data += 1
             else:
                 print ("[HistoryDB] Create a JSON file at " + json_data_path)
-
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
                         with open(json_data_path, "w") as f_out:
@@ -779,6 +809,66 @@ class HistoryDB(dict):
                             "surrogate_model":[],
                             "func_eval":[]}
                         json.dump(json_data, f_out, indent=2)
+
+            if source_function_evaluations != None:
+                for source_task_id in range(len(source_function_evaluations)):
+                    for func_eval in source_function_evaluations[source_task_id]:
+                        #if options != None and options["model_input_separation"] == True:
+                        #    if options["TLA_method"] == None:
+                        #        modeling_load = "MLA_LCM"
+                        #    elif options["TLA_method"] == "Regression":
+                        #        modeling_load = "TLA_RegressionSum"
+                        #    elif options["TLA_method"] == "Sum":
+                        #        modeling_load = "TLA_Sum"
+                        #    elif options["TLA_method"] == "Stacking":
+                        #        modeling_load = "TLA_Stacking"
+                        #    elif options["TLA_method"] == "LCM_BF":
+                        #        modeling_load = "TLA_LCM_BF"
+                        #    else:
+                        #        modeling_load = "MLA_LCM"
+
+                        #    if func_eval["modeling"] != "Pilot" and \
+                        #       (func_eval["modeling"] != modeling_load or
+                        #        func_eval["model_class"] != options["model_class"]):
+                        #        continue
+
+                        #if self.load_check == False or self.check_load_deps(func_eval):
+                        task_id = len(Igiven)-len(source_function_evaluations)+source_task_id
+                        parameter_arr = []
+                        for k in range(len(problem.PS)):
+                            if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                                parameter_arr.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                            elif type(problem.PS[k]).__name__ == "Integer":
+                                parameter_arr.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                            elif type(problem.PS[k]).__name__ == "Real":
+                                parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                            else:
+                                parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
+
+                        #print ("add parameter_arr: ", parameter_arr)
+                        PS_history[task_id].append(parameter_arr)
+                        OS_history[task_id].append(\
+                            [func_eval["evaluation_result"][problem.OS[k].name] \
+                            for k in range(len(problem.OS))])
+                        num_loaded_data += 1
+
+            if (num_loaded_data > 0):
+                data.I = Igiven #IS_history
+                data.P = PS_history
+                data.O=[] # YL: OS is a list of 2D numpy arrays
+                for i in range(len(OS_history)):
+                    if(len(OS_history[i])==0):
+                        data.O.append(np.empty( shape=(0, problem.DO)))
+                    else:
+                        data.O.append(np.array(OS_history[i]))
+                        if(any(ele==[None] for ele in OS_history[i])):
+                            print ("history data contains null function values")
+                            exit()
+                # print ("db: data.I: " + str(data.I))
+                # print ("db: data.P: " + str(data.P))
+                # print ("db: data.O: " + str(OS_history))
+            else:
+                print ("no history data has been loaded")
 
     def load_model_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, model_data : dict):
         """ Init history database JSON file """
