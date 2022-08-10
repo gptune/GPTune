@@ -986,7 +986,7 @@ class GPTune(object):
             if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
                 return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
             else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, models_transfer)
+                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, None, models_transfer)
 
     def TLA(self, NS, Igiven=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
 
