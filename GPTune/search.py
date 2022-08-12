@@ -92,6 +92,7 @@ class Search(abc.ABC):
         for res_ in res:
             tid = res_[0]
             x = res_[1][0]
+            tmp = x
             duplicate = False
             for x_ in data.P[tid]:
                 x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
@@ -104,17 +105,16 @@ class Search(abc.ABC):
             while duplicate == True:
                 duplicate = False
                 # generate random sample if the sample already has duplicates
-                x = np.random.rand(len(x[0]))
+                x = np.random.rand(len(tmp[0]))
                 print ("generate random sample: ", x)
                 print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
-                res_[1][0] = x
+                res_[1][0] = np.array([x.tolist()], ndmin=2)
                 for x_ in data.P[tid]:
                     x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                     x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
                     if x_orig == x_orig_:
                         duplicate = True
                         break
-
         res.sort(key = lambda x : x[0])
         return res
 
@@ -829,7 +829,7 @@ class SearchSciPy(Search):
 
         sampler = eval(f'{kwargs["sample_class"]}()')
         check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-        tmpP = sampler.sample_parameters(n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+        tmpP = sampler.sample_parameters(problem = self.problem, n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
         x0 = tmpP[0][0]
 
         lw = [0]*self.problem.DP
