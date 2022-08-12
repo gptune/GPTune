@@ -75,10 +75,8 @@ def LoadFunctionEvaluations():
     function_evaluations = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "GPTune-Demo",
         problem_space = problem_space)
-    for func_eval in function_evaluations:
-        func_eval["task_parameter"]["tla_id_"] = 0
 
-    return function_evaluations
+    return [function_evaluations]
 
 def LoadModels():
     api_key = os.getenv("CROWDTUNING_API_KEY")
@@ -119,43 +117,6 @@ def objectives(point):
 
     return [f]
 
-def objectives_lcm_bf(point):
-
-    global tvalue
-    global surrogate_bf
-
-    if point['t'] == tvalue:
-        """
-        f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
-        """
-        t = point['t']
-        x = point['x']
-        a = 2 * np.pi
-        b = a * t
-        c = a * x
-        d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
-        e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
-        f = d * e + 1
-
-        # print('test:',test)
-        """
-        f(t,x) = x^2+t
-        """
-        # t = point['t']
-        # x = point['x']
-        # f = 20*x**2+t
-        # time.sleep(1.0)
-
-        return [f]
-    elif point['t'] == 1.0:
-        print ("Task: ", point['t'])
-        ret = surrogate_bf(point)
-        print ("model ret: ", ret)
-        return ret
-    else:
-        print ("unknown task parameter: task: ", point['t'])
-        return None
-
 def main():
 
     global tvalue
@@ -177,33 +138,32 @@ def main():
         },
         "software_configuration": {}
     }
-    import openturns as ot
-    ot.RandomGenerator.SetSeed(nbatch)
-    print(args)
 
-    if tuning_method == "TLA_LCM_GPY":
-        input_space = Space([Real(0., 10., transform="normalize", name="t"), Integer(0, 1, transform="normalize", name="tla_id_")])
-    else:
-        input_space = Space([Real(0., 10., transform="normalize", name="t")])
+    input_space = Space([Real(0., 10., transform="normalize", name="t")])
     parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
     output_space = Space([Real(float('-Inf'), float('Inf'), name="y")])
     constraints = {"cst1": "x >= 0. and x <= 1."}
-    if tuning_method == "TLA_LCM_BF":
-        global surrogate_bf
-        surrogate_bf = LoadModels()[0]
-        problem = TuningProblem(input_space, parameter_space,output_space, objectives_lcm_bf, constraints, None)
-    else:
-        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)
+    problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)
     historydb = HistoryDB(meta_dict=tuning_metadata)
     computer = Computer(nodes=1, cores=32, hosts=None)
     data = Data(problem)
+
     options = Options()
+    options['sample_class'] = 'SampleOpenTURNS'
+    options['sample_random_seed'] = nbatch
     options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
+    options['model_random_seed'] = nbatch
+    options['search_class'] = 'SearchPyGMO'
+    options['search_random_seed'] = nbatch
 
     if tuning_method == "TLA_Sum":
         options['TLA_method'] = "Sum"
     elif tuning_method == "TLA_Regression":
         options['TLA_method'] = "Regression"
+    elif tuning_method == "TLA_LCM_BF":
+        options['TLA_method'] = "LCM_BF"
+    elif tuning_method == "TLA_LCM_GPY":
+        options['TLA_method'] = "LCM"
 
     if tuning_method == "TLA_Regression":
         options['regression_log_name'] = "GPTune-Demo-"+str(tuning_method)+"-"+str(tvalue)+"-"+str(nbatch)+"-npilot"+str(npilot) + "-models-weights.log"
@@ -214,18 +174,12 @@ def main():
 
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
 
-    if tuning_method == "TLA_Sum" or tuning_method == "TLA_Regression":
-        giventask = [[round(tvalue,2)]]
-        (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=giventask, NI=len(giventask), NS1=npilot, models_transfer = LoadModels())
-    elif tuning_method == "TLA_LCM_GPY":
-        giventask = [[1.0,0],[round(tvalue,2),1]]
-        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())
-    elif tuning_method == "TLA_LCM_BF":
-        giventask = [[1.0],[round(tvalue,2)]]
-        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
-    elif tuning_method == "SLA":
+    if tuning_method == "SLA":
         giventask = [[round(tvalue,2)]]
         (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
+    else:
+        giventask = [[round(tvalue,2)]]
+        (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=giventask, models_transfer=LoadModels(), source_function_evaluations=LoadFunctionEvaluations())
 
     """ Print all input and parameter samples """
     print("stats: ", stats)

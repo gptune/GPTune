@@ -174,7 +174,7 @@ def objectives(point, nodes, cores, nthreads, model, nth):                  # sh
 	# read the file to see if a new valid sample has been generated
 	(validfreq,retval) = read_validdata_onemode(model,nth,freq_int)
 
-	with open('history.csv', 'a') as f_object:
+	with open(model+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv", 'a') as f_object:
 		writer_object = writer(f_object)
 		writer_object.writerow([point[0],retval])
 		f_object.close()
@@ -285,11 +285,11 @@ def main():
 		while nth<Nmode:
 			P = Pall[nth]
 			O = Oall[nth]
-			print(nth, ' mode:')
+			print(nth+1, 'th mode:')
 			print(P)
 			print(O)
 
-			os.system("rm -rf history.csv")
+			os.system("rm -rf "+giventask[0][0]+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv")
 
 			X=np.array(P)	
 			Pdefault = np.asarray(X[np.argmin(np.asarray(O))])
@@ -319,7 +319,7 @@ def main():
 			print('status   : ', sol.status)
 			print('success  : ', sol.success)
 
-			with open('history.csv', mode='r') as f_object:
+			with open(giventask[0][0]+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv", mode='r') as f_object:
 				csv_reader = reader(f_object, delimiter=',')
 				Ps=[]
 				Os=[]
@@ -327,7 +327,7 @@ def main():
 					Ps.append(float(row[0]))
 					Os.append(float(row[1]))
 				Os=np.asarray(Os)	
-				print("    Simplex refined mode ", nth)
+				print("    Simplex refined mode ", nth+1)
 				print("    bounds ", bounds_constraint)
 				print("    Ps ", Ps)
 				print("    Os ", Os.tolist())	

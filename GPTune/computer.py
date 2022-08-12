@@ -92,7 +92,7 @@ class Computer(object):
         return cond
 
 
-    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None): # P and I are in the normalized space
+    def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None, is_pilot = False): # P and I are in the normalized space
 
         O = []
         for i in range(len(I)):
@@ -103,7 +103,8 @@ class Computer(object):
             else:
                 D2 = None
             if(options['RCI_mode']==False):
-                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options)
+                print ("evaluate_objective is_pilot: ", is_pilot)
+                O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, is_pilot=is_pilot)
 
                 tmp = np.array(O2).reshape((len(O2), problem.DO))
                 O.append(tmp.astype(np.double))   #YL: convert single, double or int to double types
@@ -114,11 +115,31 @@ class Computer(object):
                 O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
 
                 if history_db is not None:
+
+                    if is_pilot == True:
+                        modeling = "Pilot"
+                    else:
+                        if options["TLA_method"] == None:
+                            modeling = "MLA_LCM"
+                        elif options["TLA_method"] == "Regression":
+                            modeling = "TLA_RegressionSum"
+                        elif options["TLA_method"] == "Sum":
+                            modeling = "TLA_Sum"
+                        elif options["TLA_method"] == "Stacking":
+                            modeling = "TLA_Stacking"
+                        elif options["TLA_method"] == "LCM_BF":
+                            modeling = "TLA_LCM_BF"
+                        else:
+                            modeling = "MLA_LCM"
+
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
                             tuning_parameter = P[i],\
                             evaluation_result = tmp,\
-                            evaluation_detail = tmp)
+                            evaluation_detail = tmp,\
+                            source = "RCI_measure",\
+                            modeling = modeling,\
+                            model_class = options["model_class"])
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
@@ -158,12 +179,27 @@ class Computer(object):
                     O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
 
                     if history_db is not None:
+                        if options["TLA_method"] == None:
+                            modeling = "MLA_LCM"
+                        elif options["TLA_method"] == "Regression":
+                            modeling = "TLA_RegressionSum"
+                        elif options["TLA_method"] == "Sum":
+                            modeling = "TLA_Sum"
+                        elif options["TLA_method"] == "Stacking":
+                            modeling = "TLA_Stacking"
+                        elif options["TLA_method"] == "LCM_BF":
+                            modeling = "TLA_LCM_BF"
+                        else:
+                            modeling = "MLA_LCM"
+
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = I[i], \
                                 tuning_parameter = P[i],\
                                 evaluation_result = tmp,\
                                 evaluation_detail = tmp,\
-                                source = "RCI_measure")
+                                source = "RCI_measure",\
+                                modeling = modeling,\
+                                model_class = options["model_class"])
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')
@@ -171,7 +207,7 @@ class Computer(object):
 
         return O
 
-    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None):  # T2 and P2 are in the normalized space
+    def evaluate_objective_onetask(self, problem : Problem, pids : Collection[int] = None, i_am_manager : bool = True, T2 : np.ndarray=None, P2 : np.ndarray=None, D2 : dict=None, history_db : HistoryDB=None, options:dict=None, is_pilot=False):  # T2 and P2 are in the normalized space
 
         I_orig = problem.IS.inverse_transform(np.array(T2, ndmin=2))[0]
 
@@ -256,13 +292,31 @@ class Computer(object):
                         o_detail = o
 
                     if history_db is not None:
+                        if is_pilot == True:
+                            modeling = "Pilot"
+                        else:
+                            if options["TLA_method"] == None:
+                                modeling = "MLA_LCM"
+                            elif options["TLA_method"] == "Regression":
+                                modeling = "TLA_RegressionSum"
+                            elif options["TLA_method"] == "Sum":
+                                modeling = "TLA_Sum"
+                            elif options["TLA_method"] == "Stacking":
+                                modeling = "TLA_Stacking"
+                            elif options["TLA_method"] == "LCM_BF":
+                                modeling = "TLA_LCM_BF"
+                            else:
+                                modeling = "MLA_LCM"
+
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = T2, \
                                 tuning_parameter = [P2[pid]],\
                                 evaluation_result = [o_eval], \
                                 evaluation_detail = [o_detail], \
                                 additional_output = additional_output,
-                                source = source)
+                                source = source,\
+                                modeling = modeling,\
+                                model_class = options["model_class"])
 
                     return o
 
@@ -308,13 +362,31 @@ class Computer(object):
                     o_detail = o
 
                 if history_db is not None:
+                    if is_pilot == True:
+                        modeling = "Pilot"
+                    else:
+                        if options["TLA_method"] == None:
+                            modeling = "MLA_LCM"
+                        elif options["TLA_method"] == "Regression":
+                            modeling = "TLA_RegressionSum"
+                        elif options["TLA_method"] == "Sum":
+                            modeling = "TLA_Sum"
+                        elif options["TLA_method"] == "Stacking":
+                            modeling = "TLA_Stacking"
+                        elif options["TLA_method"] == "LCM_BF":
+                            modeling = "TLA_LCM_BF"
+                        else:
+                            modeling = "MLA_LCM"
+
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = T2, \
                             tuning_parameter = [P2[j]],\
                             evaluation_result = [o_eval], \
                             evaluation_detail = [o_detail], \
                             additional_output = additional_output,
-                            source = source)
+                            source = source,\
+                            modeling = modeling,\
+                            model_class = options["model_class"])
 
                 O2.append(o_eval)
 
@@ -381,13 +453,29 @@ class Computer(object):
 
                 if source == "RCI_model":
                     if history_db is not None:
+
+                        if options["TLA_method"] == None:
+                            modeling = "MLA_LCM"
+                        elif options["TLA_method"] == "Regression":
+                            modeling = "TLA_RegressionSum"
+                        elif options["TLA_method"] == "Sum":
+                            modeling = "TLA_Sum"
+                        elif options["TLA_method"] == "Stacking":
+                            modeling = "TLA_Stacking"
+                        elif options["TLA_method"] == "LCM_BF":
+                            modeling = "TLA_LCM_BF"
+                        else:
+                            modeling = "MLA_LCM"
+
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = T2, \
                                 tuning_parameter = [P2[j]],\
                                 evaluation_result = [o_eval], \
                                 evaluation_detail = [o_detail], \
                                 additional_output = additional_output,
-                                source = source)
+                                source = source,\
+                                modeling = modeling,\
+                                model_class = options["model_class"])
                                 #np.array(O2_).reshape((len(O2_), problem.DO)), \
 
                 O2.append(o_eval)

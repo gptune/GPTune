@@ -57,7 +57,7 @@ class Search(abc.ABC):
         if (tids is None):
             tids = list(range(data.NI))
 
-        if ((kwargs['distributed_memory_parallelism'] or _platform == "darwin") and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned 
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned
             import mpi4py
             nproc = min(kwargs['search_multitask_processes'],data.NI)
             npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
@@ -147,12 +147,13 @@ class SurrogateProblem(object):
         self.models_transfer = models_transfer
         if (self.models != None and self.models_transfer != None and self.options['TLA_method'] == 'Regression'):
             self.models_weights = self.compute_weights()
-            with open(self.options['regression_log_name'], "a") as f_out:
-                for i in range(len(self.models_weights)):
-                    if i > 0:
-                        f_out.write(",")
-                    f_out.write(str(self.models_weights[i]))
-                f_out.write("\n")
+            if self.options['regression_logging'] == True:
+                with open(self.options['regression_log_name'], "a") as f_out:
+                    for i in range(len(self.models_weights)):
+                        if i > 0:
+                            f_out.write(",")
+                        f_out.write(str(self.models_weights[i]))
+                    f_out.write("\n")
 
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
@@ -278,16 +279,22 @@ class SurrogateProblem(object):
                 EI.append(0)
             else:
                 if self.models_transfer == None:
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu = mu[0][0]
-                    var = max(1e-18, var[0][0])
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
+                    if self.data.O == None:
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        EI.append(1.0/mu)
+                    else:
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu = mu[0][0]
+                        var = max(1e-18, var[0][0])
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        EI.append(-((ymin - mu) * Phi + var * phi))
+                        # EI.append(mu)
                 elif self.models_transfer is not None and self.models is None:
                     xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
                     xi=xi0[0]
@@ -303,12 +310,18 @@ class SurrogateProblem(object):
                         cond = self.computer.evaluate_constraints(self.problem, point)
 
                     mu_transfer = 0
-                    var_transfer = 0
-                    for i in range(len(self.models_transfer)):
+                    var_transfer = 1
+                    num_models_transfer = len(self.models_transfer)
+                    for i in range(num_models_transfer):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
                         mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
-                        var_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name+"_var"][0][0]
+                        try:
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), num_models_transfer)
+                        except:
+                            var_transfer_ = 1
+                        var_transfer *= var_transfer_
+                    var = max(1e-18, var_transfer)
                     EI.append(1.0/mu_transfer)
                 elif self.options['TLA_method'] == 'Regression':
                     xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
@@ -327,14 +340,18 @@ class SurrogateProblem(object):
                     ymin = self.data.O[self.tid][:,o].min()
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
-                    var_transfer = 0
+                    var_transfer = 1
                     for i in range(len(self.models_transfer)):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
                         mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
-                        var_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name+"_var"][0][0]
+                        try:
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), self.models_weights[i+1])
+                        except:
+                            var_transfer_ = 1
+                        var_transfer *= var_transfer_
                     mu = self.models_weights[0]*mu[0][0] + mu_transfer
-                    var = max(1e-18, self.models_weights[0]*var[0][0] + var_transfer)
+                    var = max(1e-18, self.models_weights[0]*var[0][0] * var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
@@ -369,13 +386,13 @@ class SurrogateProblem(object):
                     ymin = self.data.O[self.tid][:,o].min()
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
-                    var_transfer = 0
+                    var_transfer = 1
                     for model_transfer in self.models_transfer:
                         ret = model_transfer(point)
                         mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                        var_transfer += 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                        var_transfer *= 1*ret[self.problem.OS[o].name+"_var"][0][0]
                     mu = mu[0][0] + mu_transfer
-                    var = max(1e-18, var[0][0] + var_transfer)
+                    var = max(1e-18, var[0][0] * var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
