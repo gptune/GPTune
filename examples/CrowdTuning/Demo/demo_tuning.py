@@ -216,7 +216,7 @@ def main():
 
     if tuning_method == "TLA_Sum" or tuning_method == "TLA_Regression":
         giventask = [[round(tvalue,2)]]
-        (data, modeler, stats) = gt.TLA(NS=nrun, Igiven=giventask, NI=len(giventask), NS1=npilot, models_transfer = LoadModels())
+        (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=giventask, NI=len(giventask), NS1=npilot, models_transfer = LoadModels())
     elif tuning_method == "TLA_LCM_GPY":
         giventask = [[1.0,0],[round(tvalue,2),1]]
         (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())

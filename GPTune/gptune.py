@@ -941,8 +941,8 @@ class GPTune(object):
             else:
                 return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, models_transfer)
 
-    def TLA(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
-        print('\n\n\n------Starting TLA for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
+    def TLA_I(self, NS, NS1=None, NI=None, Igiven=None, models_transfer=None, **kwargs):
+        print('\n\n\n------Starting TLA_I for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
         if self.options['TLA_method'] == 'Regression':
             return self.TLA_Regression(NS, NS1, NI, Igiven, models_transfer)
         elif self.options['TLA_method'] == 'Sum':
@@ -1607,9 +1607,9 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA1(self, Tnew):
+    def TLA_II(self, Tnew):
 
-        print('\n\n\n------Starting TLA1 for task: ',Tnew)
+        print('\n\n\n------Starting TLA_II for task: ',Tnew)
 
         stats = {
             "time_total": 0,
@@ -1624,7 +1624,7 @@ class GPTune(object):
         ntsn = len(Tnew)
 
         if(self.data.O[0].shape[1]>1):
-            raise Exception("TLA1 only works for single-objective tuning")
+            raise Exception("TLA_II only works for single-objective tuning")
 
         PSopt =[]
         for i in range(ntso):
@@ -1689,7 +1689,7 @@ class GPTune(object):
         time_fun = time_fun + (t2-t1)/1e9
 
         #        print(aprxopts)
-        #        pickle.dump(aprxopts, open('TLA1.pkl', 'w'))
+        #        pickle.dump(aprxopts, open('TLA_II.pkl', 'w'))
 
         t4 = time.time_ns()
         stats['time_total'] = (t4-t3)/1e9
@@ -1697,9 +1697,6 @@ class GPTune(object):
 
         return (aprxopts, O, stats)
 
-    def TLA2(): # co-Kriging
-
-        pass
 
 
 class GPTune_MB(object):

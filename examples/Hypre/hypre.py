@@ -233,7 +233,7 @@ def main():
         if TLA is True:
             """ Call TLA for 2 new tasks using the constructed LCM model"""
             newtask = [[50, 50, 60], [80, 60, 70]]
-            (aprxopts, objval, stats) = gt.TLA1(newtask)
+            (aprxopts, objval, stats) = gt.TLA_II(newtask)
             print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""

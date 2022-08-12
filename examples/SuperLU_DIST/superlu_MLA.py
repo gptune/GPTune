@@ -243,7 +243,7 @@ def main():
 			""" Call TLA for a new task using the constructed LCM model"""    
 			newtask = [["big.rua"]]
 			# newtask = [["H2O.rb"]]
-			(aprxopts,objval,stats) = gt.TLA1(newtask)
+			(aprxopts,objval,stats) = gt.TLA_II(newtask)
 			print("stats: ",stats)
 
 			""" Print the optimal parameters and function evaluations"""	

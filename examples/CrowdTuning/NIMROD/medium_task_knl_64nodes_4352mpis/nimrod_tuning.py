@@ -259,7 +259,7 @@ def main():
     if tuning_method == "TLA_LCM":
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())
     elif tuning_method == "TLA_Regression" or tuning_method == "TLA_Sum" or tuning_method == "TLA_LCM_BF":
-        (data, model, stats) = gt.TLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, models_transfer = LoadModels())
+        (data, model, stats) = gt.TLA_I(NS=NS, NI=NI, Igiven=giventask, NS1=NS1, models_transfer = LoadModels())
     elif tuning_method == "SLA":
         (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
     elif tuning_method == "default_parameter":

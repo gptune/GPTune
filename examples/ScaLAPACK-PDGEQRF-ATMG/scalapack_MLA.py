@@ -58,7 +58,7 @@ def objectives(point):
     nproc = nodes*npernode
     nthreads = int(cores / npernode)  
 
-    # this becomes useful when the parameters returned by TLA1 do not respect the constraints
+    # this becomes useful when the parameters returned by TLA_II do not respect the constraints
     if(nproc == 0 or p == 0 or nproc < p):
         print('Warning: wrong parameters for objective function!!!')
         return 1e12
@@ -200,7 +200,7 @@ def main():
         if(tla==1):
             """ Call TLA for 2 new tasks using the constructed LCM model"""
             newtask = [[400, 500], [800, 600]]
-            (aprxopts, objval, stats) = gt.TLA1(newtask)
+            (aprxopts, objval, stats) = gt.TLA_II(newtask)
             print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""
