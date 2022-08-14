@@ -2414,7 +2414,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_II(self, Tnew, NS):
+    def TLA_II(self, Tnew):
 
         print('\n\n\n------Starting TLA_II for task: ',Tnew)
 
