@@ -148,7 +148,7 @@ def main():
     ntask = args.ntask
     nrun = args.nrun
     TUNER_NAME = args.optimization
-    TLA = False
+    tla_II = args.tla_II
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -200,7 +200,7 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class'] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options.validate(computer=computer)
     
@@ -230,10 +230,26 @@ def main():
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-        if TLA is True:
-            """ Call TLA for 2 new tasks using the constructed LCM model"""
-            newtask = [[50, 50, 60], [80, 60, 70]]
-            (aprxopts, objval, stats) = gt.TLA_II(newtask)
+        if tla_II == 1:
+            """ Call TLA for 2 new tasks """
+
+            # the data object initialized to run transfer learning as a new autotuning run
+            data = Data(problem)
+            historydb=HistoryDB() #meta_dict=tuning_metadata)
+            gt = GPTune(problem, computer=computer, data=data, options=options,historydb=historydb, driverabspath=os.path.abspath(__file__))
+
+            # load source function evaluation data
+            def LoadFunctionEvaluations(Tsrc):
+                function_evaluations = [[] for i in range(len(Tsrc))]
+                with open ("gptune.db/Hypre.json", "r") as f_in:
+                    for func_eval in json.load(f_in)["func_eval"]:
+                        task_parameter = [func_eval["task_parameter"]["nx"], func_eval["task_parameter"]["ny"], func_eval["task_parameter"]["nz"]]
+                        if task_parameter in Tsrc:
+                            function_evaluations[Tsrc.index(task_parameter)].append(func_eval)
+                return function_evaluations
+
+            newtask = [[20, 20, 20], [25, 25, 25]]
+            (aprxopts, objval, stats) = gt.TLA_II(Tnew=newtask, Tsrc=giventask, source_function_evaluations=LoadFunctionEvaluations(giventask))
             print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""
@@ -283,6 +299,7 @@ def parse_args():
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
+    parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')
     args = parser.parse_args()
 
     return args

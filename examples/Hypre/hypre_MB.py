@@ -196,7 +196,6 @@ def main():
     Nloop = args.Nloop
     restart = args.restart
     TUNER_NAME = args.optimization
-    TLA = False
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -312,18 +311,6 @@ def main():
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-        if TLA is True:
-            """ Call TLA for 2 new tasks using the constructed LCM model"""
-            newtask = [[0.5, 0.3], [0.2, 1.0]]
-            (aprxopts, objval, stats) = gt.TLA_II(newtask)
-            print("stats: ", stats)
-
-            """ Print the optimal parameters and function evaluations"""
-            for tid in range(len(newtask)):
-                print("new task: %s" % (newtask[tid]))
-                print('    predicted Popt: ', aprxopts[tid], ' objval: ', objval[tid])
-
-    
     if(TUNER_NAME=='opentuner'):
         NS = Btotal
         (data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)

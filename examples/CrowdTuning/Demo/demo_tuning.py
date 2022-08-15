@@ -179,7 +179,7 @@ def main():
         (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
     else:
         giventask = [[round(tvalue,2)]]
-        (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=giventask, models_transfer=LoadModels(), source_function_evaluations=LoadFunctionEvaluations())
+        (data, modeler, stats) = gt.TLA_I(NS=nrun, Tnew=giventask, models_transfer=LoadModels(), source_function_evaluations=LoadFunctionEvaluations())
 
     """ Print all input and parameter samples """
     print("stats: ", stats)

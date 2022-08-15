@@ -268,7 +268,7 @@ def main():
             data = Data(problem)
             gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
             newtask = [[400, 500]]
-            (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=newtask, source_function_evaluations=LoadFunctionEvaluations(giventask))
+            (data, modeler, stats) = gt.TLA_I(NS=nrun, Tnew=newtask, source_function_evaluations=LoadFunctionEvaluations(giventask))
 
             """ Print all input and parameter samples """
             for tid in range(len(data.I)):
@@ -347,8 +347,8 @@ def parse_args():
     parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments    
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
-    parser.add_argument('-tla_I', type=int, default=0, help='Whether perform TLA_I after MLA when optimization is GPTune')    
-    parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')    
+    parser.add_argument('-tla_I', type=int, default=0, help='Whether perform TLA_I after MLA when optimization is GPTune')
+    parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
