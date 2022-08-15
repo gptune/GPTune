@@ -2414,9 +2414,25 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_II(self, Tnew):
+    def TLA_II(self, Tnew, Tsrc = None, source_function_evaluations = None):
 
         print('\n\n\n------Starting TLA_II for task: ',Tnew)
+
+        if Tsrc == None and source_function_evaluations == None:
+            raise Exception("No historical data is given for TLA_II")
+
+        if Tsrc == None and source_function_evaluations != None:
+            Tsrc = []
+            for source_task_id in range(len(source_function_evaluations)):
+                source_task_parameter = []
+                for key in source_function_evaluations[source_task_id][0]["task_parameter"]:
+                    source_task_parameter.append(source_function_evaluations[source_task_id][0]["task_parameter"][key])
+                Tsrc.append(source_task_parameter)
+
+        """ Load history function evaluation data """
+        if self.historydb.load_func_eval == True:
+            # load function evaluations regardless of the modeling scheme of the sample
+            self.historydb.load_history_func_eval(self.data, self.problem, Igiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
 
         stats = {
             "time_total": 0,
@@ -2438,8 +2454,6 @@ class GPTune(object):
             PSopt.append(self.data.P[i][np.argmin(self.data.O[i])])
         # YSopt = np.array([[self.data.O[k].min()] for k in range(ntso)])
         MSopt = []
-
-
 
         # convert the task spaces to the normalized spaces
         INorms=[]
@@ -2466,8 +2480,6 @@ class GPTune(object):
         for j in range(self.problem.DP):
             PSoptNorms.append(np.asarray(columns[j]).reshape((ntso, -1)))
 
-
-
         # Predict optimums of new tasks
         for k in range(self.problem.DP):
             K = GPy.kern.RBF(input_dim=self.problem.DI)
@@ -2482,7 +2494,6 @@ class GPTune(object):
         # print('aprxoptsNorm',aprxoptsNorm,type(aprxoptsNorm))
         aprxopts = self.problem.PS.inverse_transform(aprxoptsNorm)
         # print('aprxopts',aprxopts,type(aprxopts),type(aprxopts[0]))
-
 
         aprxoptsNormList=[]
         # TnewNormList=[]
