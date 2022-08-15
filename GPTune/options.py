@@ -44,7 +44,7 @@ class Options(dict):
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
-        sample_random_seed = None # Specify a certain random seed for the pilot sampling phase
+        sample_random_seed = None # Specify a certain random seed for the pilot sampling phase. Currently only available for 'SampleOpenTURNS' 
 
 
         """ Options for the modeling phase """
