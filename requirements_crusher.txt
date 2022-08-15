@@ -1,0 +1,18 @@
+numpy
+joblib
+scikit-learn 
+scipy >= 1.7.0
+statsmodels >= 0.13.0
+pyaml
+matplotlib
+GPy
+openturns
+lhsmdu
+ipyparallel
+opentuner
+hpbandster
+filelock 
+requests
+pymoo
+cloudpickle
+SALib

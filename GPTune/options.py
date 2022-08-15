@@ -171,6 +171,17 @@ class Options(dict):
                 self["search_algo"]='nsga2'
 
         else:
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO')):
+                try:
+                    import pygmo as pg 
+                except:
+                    print("pygmo cannot be used. Use pymoo instead. ")
+                    self['search_class']='SearchPyMoo'
+                    if(self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'cmaes' or self["search_algo"] == 'dual_annealing' or self["search_algo"] == 'trust-constr' or self["search_algo"] == 'shgo'):
+                        self["search_algo"] == 'pso'
+                    if(self["search_algo"] == 'nspso' or self["search_algo"] == 'maco'):
+                        self["search_algo"] == 'nsga2'   
+
             if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):
                 self['model_class']='Model_GPy_LCM'
 
