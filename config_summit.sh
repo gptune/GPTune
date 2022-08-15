@@ -388,11 +388,13 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DTBB_ENABLE_IPO=OFF
 	make -j16
 	make install
+	rm -rf tbb
 	git clone https://github.com/wjakob/tbb.git
 	cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
 
 	cd $GPTUNEROOT
+	rm -rf openturns
 	git clone https://github.com/openturns/openturns.git
 	cd openturns
 	git checkout v1.17
