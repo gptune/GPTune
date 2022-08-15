@@ -3,7 +3,7 @@
 """
 Example of invocation of this script:
 
-mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nprocmin_pernode 1 -ntask 5 -nrun 10 -jobid 0 -tla 0
+mpirun -n 1 python scalapack_MLA.py -mmax 5000 -nmax 5000 -nprocmin_pernode 1 -ntask 5 -nrun 10 -jobid 0 -tla_I 0 -tla_II 0
 
 where:
     -mmax (nmax) is the maximum number of rows (columns) in a matrix
@@ -11,7 +11,8 @@ where:
     -ntask is the number of different matrix sizes that will be tuned
     -nrun is the number of calls per task 
     -jobid is optional. You can always set it to 0.
-    -tla is whether TLA is used after MLA
+    -tla_I is whether TLA_I is used after MLA
+    -tla_II is whether TLA_II is used after MLA
 """
 
 ################################################################################
@@ -92,7 +93,8 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     nrun = args.nrun
     truns = args.truns
-    tla = args.tla
+    tla_I = args.tla_I
+    tla_II = args.tla_II
     JOBID = args.jobid
     TUNER_NAME = args.optimization
 
@@ -221,7 +223,6 @@ def main():
     # giventask = [[177, 1303],[367, 381],[1990, 1850],[1123, 1046],[200, 143],[788, 1133],[286, 1673],[1430, 512],[1419, 1320],[622, 263] ]
     # giventask = [[177, 1303],[367, 381]]
     ntask=len(giventask)
-    
 
     data = Data(problem)
     if(TUNER_NAME=='GPTune'):
@@ -242,11 +243,61 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
-        
-        if(tla==1):
+
+        if(tla_I==1):
             """ Call TLA for 2 new tasks using the constructed LCM model"""
+
+            # the data object initialized to run transfer learning as a new autotuning run
+            data = Data(problem)
+            historydb=HistoryDB(meta_dict=tuning_metadata)
+            gt = GPTune(problem, computer=computer, data=data, options=options,historydb=historydb, driverabspath=os.path.abspath(__file__))
+
+            # load source function evaluation data
+            def LoadFunctionEvaluations(Tsrc):
+                function_evaluations = [[] for i in range(len(Tsrc))]
+                with open ("gptune.db/PDGEQRF.json", "r") as f_in:
+                    for func_eval in json.load(f_in)["func_eval"]:
+                        task_parameter = [func_eval["task_parameter"]["m"], func_eval["task_parameter"]["n"]]
+                        if task_parameter in Tsrc:
+                            function_evaluations[Tsrc.index(task_parameter)].append(func_eval)
+                return function_evaluations
+
+            options["TLA_method"] = "LCM"
+            options["model_class"] = "Model_GPy_LCM"
+            options.validate(computer=computer)
+            data = Data(problem)
+            gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
+            newtask = [[400, 500]]
+            (data, modeler, stats) = gt.TLA_I(NS=nrun, Igiven=newtask, source_function_evaluations=LoadFunctionEvaluations(giventask))
+
+            """ Print all input and parameter samples """
+            for tid in range(len(data.I)):
+                print("tid: %d" % (tid))
+                print("    m:%d n:%d" % (data.I[tid][0], data.I[tid][1]))
+                print("    Ps ", data.P[tid])
+                print("    Os ", data.O[tid].tolist())
+                print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+        if(tla_II==1):
+            """ Call TLA for 2 new tasks using the constructed LCM model"""
+
+            # the data object initialized to run transfer learning as a new autotuning run
+            data = Data(problem)
+            historydb=HistoryDB(meta_dict=tuning_metadata)
+            gt = GPTune(problem, computer=computer, data=data, options=options,historydb=historydb, driverabspath=os.path.abspath(__file__))
+
+            # load source function evaluation data
+            def LoadFunctionEvaluations(Tsrc):
+                function_evaluations = [[] for i in range(len(Tsrc))]
+                with open ("gptune.db/PDGEQRF.json", "r") as f_in:
+                    for func_eval in json.load(f_in)["func_eval"]:
+                        task_parameter = [func_eval["task_parameter"]["m"], func_eval["task_parameter"]["n"]]
+                        if task_parameter in Tsrc:
+                            function_evaluations[Tsrc.index(task_parameter)].append(func_eval)
+                return function_evaluations
+
             newtask = [[400, 500], [800, 600]]
-            (aprxopts, objval, stats) = gt.TLA_II(newtask)
+            (aprxopts, objval, stats) = gt.TLA_II(Tnew=newtask, Tsrc=giventask, source_function_evaluations=LoadFunctionEvaluations(giventask))
             print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""
@@ -271,6 +322,7 @@ def main():
     if(TUNER_NAME=='hpbandster'):
         NI = len(giventask)
         NS = nrun
+
         (data,stats)=HpBandSter(T=giventask, NS=NS, tp=problem, computer=computer, run_id="HpBandSter", niter=1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -295,7 +347,8 @@ def parse_args():
     parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments    
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
-    parser.add_argument('-tla', type=int, default=0, help='Whether perform TLA after MLA when optimization is GPTune')    
+    parser.add_argument('-tla_I', type=int, default=0, help='Whether perform TLA_I after MLA when optimization is GPTune')    
+    parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')    
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, help='Number of runs per task')
     parser.add_argument('-truns', type=int, help='Time of runs')
