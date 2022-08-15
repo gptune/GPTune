@@ -993,6 +993,26 @@ class GPTune(object):
         # Unified TLA interface
         # This supports only one target task
 
+        if models_transfer == None:
+            models_transfer = []
+
+            problem_space = {}
+            problem_space["input_space"] = self.historydb.problem_space_to_dict(self.problem.IS)
+            problem_space["parameter_space"] = self.historydb.problem_space_to_dict(self.problem.PS)
+            problem_space["output_space"] = self.historydb.problem_space_to_dict(self.problem.OS)
+
+            for i in range(len(source_function_evaluations)):
+                input_task = []
+                for key in source_function_evaluations[i][0]["task_parameter"]:
+                    input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                surrogate_model = BuildSurrogateModel(
+                    problem_space = problem_space,
+                    modeler = "Model_GPy_LCM",
+                    input_task = [input_task],
+                    function_evaluations = source_function_evaluations[i])
+                models_transfer.append(surrogate_model)
+
         NS1=0
         NI=1
         num_source_tasks = len(models_transfer)
