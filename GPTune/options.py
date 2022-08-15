@@ -177,6 +177,8 @@ class Options(dict):
                 except:
                     print("pygmo cannot be used. Use pymoo instead. ")
                     self['search_class']='SearchPyMoo'
+                    self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
+                    self['search_pop_size']=100                    
                     if(self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'cmaes' or self["search_algo"] == 'dual_annealing' or self["search_algo"] == 'trust-constr' or self["search_algo"] == 'shgo'):
                         self["search_algo"] == 'pso'
                     if(self["search_algo"] == 'nspso' or self["search_algo"] == 'maco'):
