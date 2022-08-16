@@ -828,8 +828,11 @@ class SearchSciPy(Search):
             print ("prob: ", prob)
         bestX = []
 
-        if(kwargs['sample_random_seed'] is not None): 
-            np.random.seed(kwargs['search_random_seed']+len(data.P[0]))
+        # set seeds for the samplers using 'search_random_seed' instead of 'sample_random_seed', as they are used to generate the intial guess for scipy optimizers
+        if(kwargs['search_random_seed'] is not None): 
+            kwargs['sample_random_seed'] = kwargs['search_random_seed'] +len(data.P[0])
+        else: 
+            kwargs['sample_random_seed'] = None
 
         sampler = eval(f'{kwargs["sample_class"]}()')
         check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
@@ -845,7 +848,7 @@ class SearchSciPy(Search):
         elif(kwargs["search_algo"] == 'l-bfgs-b'):        
             ret = sp.optimize.minimize(fun=prob.fitness, x0=x0, bounds=bounds_constraint, method='L-BFGS-B')
         elif(kwargs["search_algo"] == 'dual_annealing'): 
-            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)))
+            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)), seed=kwargs['search_random_seed'])
         else:
             raise Exception("GPTune only supports 'l-bfgs-b', 'dual_annealing', 'trust-constr' when 'SearchSciPy' is used")
 
