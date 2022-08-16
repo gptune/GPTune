@@ -707,7 +707,6 @@ class GPTune(object):
             option_tla = copy.deepcopy(self.options)
             option_tla["TLA_method"] = "Regression"
             searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = option_tla, models_transfer = models_transfer)')
-            print ("SEARCHER_TLA GENERATED")
             res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
             #print ("tmpP: ", tmpP)
@@ -756,10 +755,8 @@ class GPTune(object):
         t1 = time.time_ns()
 
         if (NSmin<NS1 or run_pilot_anyway == True):
-            print ("tmpP: ", tmpP)
             # print(tmpP,'dada',tmpP[0])
             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
-            print ("tmpO: ", tmpO)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
                 self.data.P = tmpP
@@ -1439,10 +1436,8 @@ class GPTune(object):
         if NS1 == 0:
             NS1 = 1
             searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
-            print ("SEARCHER_TLA GENERATED")
             res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
-            print ("tmpP: ", tmpP)
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
             #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
@@ -1757,10 +1752,8 @@ class GPTune(object):
         if NS1 == 0:
             NS1 = 1
             searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
-            print ("SEARCHER_TLA GENERATED")
             res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
-            print ("tmpP: ", tmpP)
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
             #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
@@ -2219,7 +2212,6 @@ class GPTune(object):
             NS1 = 1
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
             tmpP = [x[1][0] for x in res]
-            print ("tmpP: ", tmpP)
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
             #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]

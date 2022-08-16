@@ -103,7 +103,6 @@ class Computer(object):
             else:
                 D2 = None
             if(options['RCI_mode']==False):
-                print ("evaluate_objective is_pilot: ", is_pilot)
                 O2 = self.evaluate_objective_onetask(problem=problem, i_am_manager=True, T2=T2, P2=P2, D2=D2, history_db=history_db, options=options, is_pilot=is_pilot)
 
                 tmp = np.array(O2).reshape((len(O2), problem.DO))

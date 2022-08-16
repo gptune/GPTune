@@ -98,7 +98,6 @@ class Sample(abc.ABC):
             kwargs2.update(check_constraints_kwargs)
 
             xs__ = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
-            print ("xs__: ", xs__)
             xs = []
             while (len(xs) < n_samples):
                 gen_samples = n_samples - len(xs)
@@ -114,7 +113,6 @@ class Sample(abc.ABC):
                     if duplicate == False:
                         xs.append(list(elem_xs_))
             xs = np.array(xs)
-            print ("xs: ", xs)
 
             ##xs_orig = problem.PS.inverse_transform(np.array(xs, ndmin=2))
             ##print ("xs_orig: ", xs_orig)
