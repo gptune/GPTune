@@ -151,6 +151,7 @@ class SampleLHSMDU(Sample):
             if kwargs['sample_random_seed'] != None:
                 lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
             else:
+                np.random.seed()
                 lhs = lhsmdu.sample(len(space), n_samples)
 
         else:
@@ -162,6 +163,7 @@ class SampleLHSMDU(Sample):
                 if kwargs['sample_random_seed'] != None:
                     lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
                 else:
+                    np.random.seed()
                     lhs = lhsmdu.sample(len(space), n_samples)
             elif (kwargs['sample_algo'] == 'MCS'):
                 lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)

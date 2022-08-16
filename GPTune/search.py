@@ -833,10 +833,18 @@ class SearchSciPy(Search):
             print ("prob: ", prob)
         bestX = []
 
+        if(kwargs['sample_random_seed'] is not None): 
+            tmpseed=kwargs['sample_random_seed']
+            kwargs['sample_random_seed']=len(data.P[0])
+
         sampler = eval(f'{kwargs["sample_class"]}()')
         check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
         tmpP = sampler.sample_parameters(problem = self.problem, n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
         x0 = tmpP[0][0]
+
+        if(kwargs['sample_random_seed'] is not None): 
+            kwargs['sample_random_seed']=tmpseed
+
 
         lw = [0]*self.problem.DP
         up = [1]*self.problem.DP
