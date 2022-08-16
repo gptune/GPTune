@@ -202,10 +202,11 @@ def main():
     options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
+    options['search_class'] = 'SearchPyMoo'
     options['search_random_seed'] = 0
 
     # options['search_class'] = 'SearchSciPy'
-    # options['search_algo'] = 'l-bfgs-b'    
+    # options['search_algo'] = 'l-bfgs-b'
 
     options['verbose'] = False
     options.validate(computer=computer)

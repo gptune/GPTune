@@ -144,19 +144,27 @@ class SampleLHSMDU(Sample):
 
         kwargs = kwargs['kwargs']
 
-        if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
+        #if kwargs['sample_random_seed'] != None:
+        #    print ("SAMPLE RANDOM SEED: ", kwargs['sample_random_seed'])
+        #    lhsmdu.setRandomSeed(kwargs['sample_random_seed'])
 
+        if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
             #lhs = lhsmdu.resample() # YC: this can fall into too clustered samples if there are many constraints
-            lhs = lhsmdu.sample(len(space), n_samples)
+            if kwargs['sample_random_seed'] != None:
+                lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+            else:
+                lhs = lhsmdu.sample(len(space), n_samples)
 
         else:
-
             self.cached_n_samples = n_samples
             self.cached_space     = space
             self.cached_algo      = kwargs['sample_algo']
 
             if (kwargs['sample_algo'] == 'LHS-MDU'):
-                lhs = lhsmdu.sample(len(space), n_samples)
+                if kwargs['sample_random_seed'] != None:
+                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+                else:
+                    lhs = lhsmdu.sample(len(space), n_samples)
             elif (kwargs['sample_algo'] == 'MCS'):
                 lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)
             else:

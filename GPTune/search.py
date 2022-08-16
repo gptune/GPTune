@@ -496,7 +496,10 @@ class SearchPyMoo(Search):
                 raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
 
             bestX = []
-            res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
+            if kwargs['search_random_seed'] == None:
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
+            else:
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed'])
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
@@ -818,6 +821,9 @@ class SearchSciPy(Search):
             raise Exception("'SearchSciPy' cannot be used for multi-objective search")
 
         kwargs = kwargs['kwargs']
+
+        if kwargs['search_random_seed'] != None:
+            np.random.seed(kwargs['search_random_seed'])
 
         # print ("SEARCH!")
 
