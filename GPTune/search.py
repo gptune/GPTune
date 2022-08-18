@@ -499,7 +499,7 @@ class SearchPyMoo(Search):
             if kwargs['search_random_seed'] == None:
                 res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
             else:
-                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed'])
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed']+len(data.P[0]))
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
@@ -563,7 +563,7 @@ class SearchPyGMO(Search):
                 if kwargs['search_random_seed'] == None:
                     archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
                 else:
-                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed'])
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed']+len(data.P[0]))
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
                 champions_f = archi.get_champions_f()
