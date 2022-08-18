@@ -73,7 +73,9 @@ import pickle
 from random import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
+from callhybrid import GPTuneHybrid
 import math
+# from termcolor import colored
 
 # import mpi4py
 # from mpi4py import MPI
@@ -126,6 +128,7 @@ def objectives(point):
                trunc_factor, P_max_elmts, coarsen_type, relax_type, 
                smooth_type, smooth_num_levels, interp_type, agg_num_levels, nthreads, npernode)]
     runtime = hypredriver(params, niter=1, JOBID=-1)
+    # print(params, colored(' hypre time: ','white','on_red'), runtime)
     print(params, ' hypre time: ', runtime)
 
     return runtime
@@ -285,6 +288,26 @@ def main():
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+    if(TUNER_NAME=='GPTuneHybrid'):
+        NI = len(giventask)        
+        options['n_pilot_hybrid']=max(nrun//2, 1)
+        tmp = nrun-options['n_pilot_hybrid']
+        options['n_find_tree_hybrid']=max(int(math.sqrt(tmp)),1)
+        options['n_find_leaf_hybrid']=int(tmp/options['n_find_tree_hybrid'])
+        # print(options)
+
+        (data,stats) = GPTuneHybrid(T=giventask, tp=problem, computer=computer, options=options, run_id="GPTuneHybrid")
+        print("stats: ", stats)
+
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    nx:%d ny:%d nz:%d" % (data.I[tid][0], data.I[tid][1], data.I[tid][2]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -296,7 +319,7 @@ def parse_args():
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     # Algorithm related arguments
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune, GPTuneHybrid)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
     parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')

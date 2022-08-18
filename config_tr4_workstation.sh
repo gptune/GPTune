@@ -59,8 +59,8 @@ export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.a"
-export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
 
 
 
@@ -73,6 +73,8 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --upgrade --user -r requirements_lite.txt
 fi
+cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
+
 
 cd $GPTUNEROOT
 rm -rf build
@@ -91,6 +93,7 @@ cmake .. \
 	-DCMAKE_C_COMPILER=$MPICC \
 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
 	-DCMAKE_BUILD_TYPE=Release \
+	-DGPTUNE_INSTALL_PATH=$PWD \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
@@ -128,6 +131,11 @@ if [[ $BuildExample == 1 ]]; then
 	make config prefix=$ParMETIS_DIR
 	make -j8
 	make install
+	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	make config prefix=$ParMETIS_DIR
+	make -j8
+	make install
+
 	cd ../
 	rm -rf METIS
 	git clone https://github.com/KarypisLab/METIS.git
@@ -176,120 +184,120 @@ if [[ $BuildExample == 1 ]]; then
 	make pddrive
 
 
-	# cd $GPTUNEROOT/examples/Hypre
-	# rm -rf hypre
-	# git clone https://github.com/hypre-space/hypre.git
-	# cd hypre/src/
-	# git checkout v2.19.0
-	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	# make
-	# cp ../../hypre-driver/src/ij.c ./test/.
-	# make test
+	cd $GPTUNEROOT/examples/Hypre
+	rm -rf hypre
+	git clone https://github.com/hypre-space/hypre.git
+	cd hypre/src/
+	git checkout v2.19.0
+	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	make
+	cp ../../hypre-driver/src/ij.c ./test/.
+	make test
 
 
-	# cd $GPTUNEROOT/examples/ButterflyPACK
-	# rm -rf ButterflyPACK
-	# git clone https://github.com/liuyangzhuan/ButterflyPACK.git
-	# cd ButterflyPACK
-	# git clone https://github.com/opencollab/arpack-ng.git
-	# cd arpack-ng
-	# git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
-	# mkdir -p build
-	# cd build
-	# cmake .. \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DCMAKE_Fortran_FLAGS="" \
-	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DMPI=ON \
-	# 	-DEXAMPLES=ON \
-	# 	-DCOVERALLS=OFF 
-	# make
-	# cd ../../
-	# mkdir build
-	# cd build
-	# cmake .. \
-	# 	-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
-	# 	-DCMAKE_CXX_FLAGS="" \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
-	# 	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	# make -j32
-	# make install -j32
-
-
-
-	# cd $GPTUNEROOT/examples/STRUMPACK
-	# rm -rf scotch_6.1.0
-	# wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
-	# tar -xf scotch_6.1.0.tar.gz
-	# cd ./scotch_6.1.0
-	# mkdir install
-	# cd ./src
-	# cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
-	# sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
-	# sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
-	# sed -i "s/CCD/#CCD/" Makefile.inc
-	# printf "CCD = $MPICC\n" >> Makefile.inc
-	# sed -i "s/CCP/#CCP/" Makefile.inc
-	# printf "CCP = $MPICC\n" >> Makefile.inc
-	# sed -i "s/CCS/#CCS/" Makefile.inc
-	# printf "CCS = $MPICC\n" >> Makefile.inc
-	# cat Makefile.inc
-	# make ptscotch 
-	# make prefix=../install install
-
-
-	# cd ../../
-	# rm -rf STRUMPACK
-	# git clone https://github.com/pghysels/STRUMPACK.git
-	# cd STRUMPACK
-	# #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
-	# git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
-	# cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
-	# cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
-	# chmod +x examples/dense/KernelRegressionMPI.py
-	# mkdir build
-	# cd build
+	cd $GPTUNEROOT/examples/ButterflyPACK
+	rm -rf ButterflyPACK
+	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+	cd ButterflyPACK
+	git clone https://github.com/opencollab/arpack-ng.git
+	cd arpack-ng
+	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+	mkdir -p build
+	cd build
+	cmake .. \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DCMAKE_Fortran_FLAGS="" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DMPI=ON \
+		-DEXAMPLES=ON \
+		-DCOVERALLS=OFF 
+	make
+	cd ../../
+	mkdir build
+	cd build
+	cmake .. \
+		-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
+		-DCMAKE_CXX_FLAGS="" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+	make -j32
+	make install -j32
 
 
 
-	# cmake ../ \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_INSTALL_PREFIX=../install \
-	# 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DSTRUMPACK_COUNT_FLOPS=ON \
-	# 	-DSTRUMPACK_TASK_TIMERS=ON \
-	# 	-DTPL_ENABLE_SCOTCH=ON \
-	# 	-DTPL_ENABLE_ZFP=OFF \
-	# 	-DTPL_ENABLE_PTSCOTCH=ON \
-	# 	-DTPL_ENABLE_PARMETIS=ON \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	cd $GPTUNEROOT/examples/STRUMPACK
+	rm -rf scotch_6.1.0
+	wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+	tar -xf scotch_6.1.0.tar.gz
+	cd ./scotch_6.1.0
+	mkdir install
+	cd ./src
+	cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+	sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+	sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+	sed -i "s/CCD/#CCD/" Makefile.inc
+	printf "CCD = $MPICC\n" >> Makefile.inc
+	sed -i "s/CCP/#CCP/" Makefile.inc
+	printf "CCP = $MPICC\n" >> Makefile.inc
+	sed -i "s/CCS/#CCS/" Makefile.inc
+	printf "CCS = $MPICC\n" >> Makefile.inc
+	cat Makefile.inc
+	make ptscotch 
+	make prefix=../install install
 
-	# make install -j32
-	# make examples -j32
+
+	cd ../../
+	rm -rf STRUMPACK
+	git clone https://github.com/pghysels/STRUMPACK.git
+	cd STRUMPACK
+	#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+	git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
+	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
+	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
+	chmod +x examples/dense/KernelRegressionMPI.py
+	mkdir build
+	cd build
+
+
+
+	cmake ../ \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=../install \
+		-DCMAKE_INSTALL_LIBDIR=../install/lib \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DSTRUMPACK_COUNT_FLOPS=ON \
+		-DSTRUMPACK_TASK_TIMERS=ON \
+		-DTPL_ENABLE_SCOTCH=ON \
+		-DTPL_ENABLE_ZFP=OFF \
+		-DTPL_ENABLE_PTSCOTCH=ON \
+		-DTPL_ENABLE_PARMETIS=ON \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.so" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+
+	make install -j32
+	make examples -j32
 
 
 	# cd $GPTUNEROOT/examples/MFEM
@@ -325,15 +333,15 @@ if [[ $BuildExample == 1 ]]; then
 	# make ex3p_indef
 
 
-	cd $GPTUNEROOT/examples/heffte_RCI
-	rm -rf heffte
-	git clone https://bitbucket.org/icl/heffte.git
-	cd heffte
-	mkdir build
-	cd build
-	# ignoring the MKL, FFTW, and CUDA dependencies for now 
-	cmake -DHeffte_ENABLE_MKL=OFF -DHeffte_ENABLE_FFTW=OFF -DHeffte_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE="-O3" ..
-	make -j8
+	# cd $GPTUNEROOT/examples/heffte_RCI
+	# rm -rf heffte
+	# git clone https://bitbucket.org/icl/heffte.git
+	# cd heffte
+	# mkdir build
+	# cd build
+	# # ignoring the MKL, FFTW, and CUDA dependencies for now 
+	# cmake -DHeffte_ENABLE_MKL=OFF -DHeffte_ENABLE_FFTW=OFF -DHeffte_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE="-O3" ..
+	# make -j8
 
 fi
 
@@ -372,8 +380,11 @@ cd autotune/
 env CC=$MPICC pip install --user -e .
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
+rm -rf hybridMinimization
+git clone https://github.com/hrluo/hybridMinimization.git
+cd hybridMinimization/
+python setup.py install --user
 
-# cd $GPTUNEROOT
-# python setup.py build 
-# python setup.py install --user
+
+
+

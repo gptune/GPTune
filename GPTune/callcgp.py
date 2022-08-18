@@ -93,8 +93,8 @@ class cGP_constrained_gptune(cgpc.cGP_constrained):
         if (cond):
             #y = float(self.tp.objective(kwargs2)[0])
 
-            transform_T = self.tp.input_space.transform([np.array(t)])[0]
-            transform_X = self.tp.parameter_space.transform(np.array(X))
+            transform_T = self.tp.input_space.transform([t])[0]
+            transform_X = self.tp.parameter_space.transform(X)
             result = self.computer.evaluate_objective_onetask(
                     problem = self.problem,
                     i_am_manager = True,
