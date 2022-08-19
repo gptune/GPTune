@@ -171,7 +171,7 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 else 
 	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_perlmutter.txt
 fi
-cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then

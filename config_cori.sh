@@ -295,7 +295,7 @@ else
 	# scipy>=1.7.0 in requriement.txt doesn't work if --prefix=$PREFIX_PATH is used. Use --user instead. 
 	env CC=$MPICC pip install --user -r requirements.txt
 fi
-cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then

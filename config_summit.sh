@@ -100,7 +100,7 @@ else
 	cd $GPTUNEROOT
 	env CC=$MPICC pip install --user -r requirements_lite.txt
 fi
-cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
 
 

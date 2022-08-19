@@ -161,7 +161,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --force-reinstall --upgrade  -r requirements_lite.txt
 fi
-cp ./patches/opentuner/manipulator.py  ./env/lib/python3.9/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  ./env/lib/python3.9/site-packages/opentuner/search/.
 
 
 

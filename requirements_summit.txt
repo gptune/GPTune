@@ -8,7 +8,7 @@ matplotlib
 GPy
 lhsmdu
 ipyparallel
-opentuner
+opentuner >= 0.8.8
 hpbandster
 filelock 
 pybind11

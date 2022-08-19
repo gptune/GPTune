@@ -77,7 +77,7 @@ export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib
 
 
 env CC=$MPICC pip install --user -r requirements_crusher.txt
-cp $GPTUNEROOT/patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
+# cp $GPTUNEROOT/patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
 
 # if openmpi, scalapack needs to be built from source

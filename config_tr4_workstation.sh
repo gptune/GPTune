@@ -73,7 +73,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --upgrade --user -r requirements_lite.txt
 fi
-cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
 
 
 cd $GPTUNEROOT

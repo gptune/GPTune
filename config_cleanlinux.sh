@@ -174,7 +174,7 @@ else
 	pip install --upgrade -r requirements_lite.txt
 fi
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.
+# cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.
 
 
 # manually install dependencies from cmake and make

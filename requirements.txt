@@ -9,7 +9,7 @@ GPy
 openturns
 lhsmdu
 ipyparallel
-opentuner
+opentuner >= 0.8.8
 hpbandster
 pygmo
 filelock 
