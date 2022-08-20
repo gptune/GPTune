@@ -110,7 +110,7 @@ tar -xvf download
 cd boost_1_68_0/  
 ./bootstrap.sh --prefix=$PWD/build  
 ./b2 install  
-export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/stage 
+export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/build 
 
 ```
 The following lines install TBB, pagmo and pygmo from source:
@@ -153,6 +153,12 @@ cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="$SITE_PACKAG
 make -j16  
 make install  
 ```
+Note that, if you have installed TBB, pagmo, and pygmo2 from source codes with the installation paths described in the above instructions, then, to use the pygmo module in GPTune, you may need to provide the path to the TBB and pagmo library, for example:
+```
+export LD_LIBRARY_PATH=$GPTUNEROOT/pagmo2/build/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$GPTUNEROOT/oneTBB/build/lib:$LD_LIBRARY_PATH
+```
+
 ### Runtime error: "ModuleNotFoundError: No module named 'fn'"
 This is due to the dependency on fn from opentuner. Note fn has been removed from opentuner (https://github.com/jansel/opentuner/pull/155). Make sure you use the patch file provided by GPTune, as
 ```
