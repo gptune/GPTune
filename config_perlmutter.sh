@@ -501,7 +501,7 @@ cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 # cd boost_1_68_0/
 # ./bootstrap.sh --prefix=$PWD/build
 # ./b2 install
-# export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/stage
+# export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/build
 
 cd $GPTUNEROOT
 rm -rf pagmo2
