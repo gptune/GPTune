@@ -5,19 +5,19 @@
 ##################################################
 
 # ################ crusher
- export machine=crusher
- export proc=EPYC   # knl,haswell,gpu
- export mpi=craympich    # craympich
- export compiler=gnu   # gnu, intel	
- export nodes=1  # number of nodes to be used
+# export machine=crusher
+# export proc=EPYC   # knl,haswell,gpu
+# export mpi=craympich    # craympich
+# export compiler=gnu   # gnu, intel	
+# export nodes=1  # number of nodes to be used
 
 
-# # ################ summit
-#  export machine=summit
-#  export proc=power9   
-#  export mpi=spectrummpi  
-#  export compiler=gnu   
-#  export nodes=1  # number of nodes to be used
+ # ################ summit
+  export machine=summit
+  export proc=power9   
+  export mpi=spectrummpi  
+  export compiler=gnu   
+  export nodes=1  # number of nodes to be used
 
 
 # # # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
@@ -505,7 +505,7 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
     module load cmake
     module load cuda
     module load python
-    module load boost
+  #  module load boost
     PY_VERSION=3.8
 
     PREFIX_PATH=$PYTHONUSERBASE
@@ -516,6 +516,7 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
     export PATH=$PATH:$PWD/jq-1.6
     export PYTHONPATH=$PYTHONPATH:$PWD/openturns/build/share/gdb/auto-load/$PWD
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_69_0/build/lib
      
     export MPIRUN=jsrun
     cores=42
