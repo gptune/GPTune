@@ -208,7 +208,7 @@ class HistoryDB(dict):
         #self.crowd_repo_upload_url = "http://127.0.0.1:8000/repo/direct-upload/" # debug
 
         """ Path to JSON data files """
-        self.history_db_path = "./"
+        self.historydb_path = "./gptune.db"
 
         """ Pass machine-related information """
         self.machine_configuration = {
@@ -262,7 +262,7 @@ class HistoryDB(dict):
             self.loadable_software_configurations = ast.literal_eval(os.environ.get('CKGPTUNE_LOADABLE_SOFTWARE_CONFIGURATIONS', '{}'))
 
             os.system("mkdir -p ./gptune.db")
-            self.history_db_path = "./gptune.db"
+            self.historydb_path = "./gptune.db"
 
             if (os.environ.get('CKGPTUNE_LOAD_MODEL') == 'yes'):
                 self.load_surrogate_model = True
@@ -318,12 +318,20 @@ class HistoryDB(dict):
             if "historydb_api_key" in metadata:
                 self.historydb_api_key = metadata["historydb_api_key"]
 
-            if "history_db_path" in metadata:
-                self.history_db_path = metadata["history_db_path"]
+            if "historydb_path" in metadata:
+                self.historydb_path = metadata["historydb_path"]
+
+            os.system("mkdir -p " + self.historydb_path)
+
+            if "save_model" in metadata:
+                if metadata["save_model"] == "yes" or metadata["save_model"] == "y":
+                    self.save_model = True
+                elif metadata["save_model"] == "no" or metadata["save_model"] == "n":
+                    self.save_model = False
+                else:
+                    self.save_model = True
             else:
-                if self.tuning_problem_name is not None:
-                    os.system("mkdir -p ./gptune.db")
-                    self.history_db_path = "./gptune.db"
+                self.save_model = True
 
             if "load_func_eval" in metadata:
                 if metadata["load_func_eval"] == "yes" or metadata["load_func_eval"] == "y":
@@ -433,7 +441,7 @@ class HistoryDB(dict):
             os.system("rm -rf test.lock")
 
             if self.tuning_problem_name is not None:
-                json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+                json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
                 create_db_file = False
                 if os.path.exists(json_data_path):
@@ -625,7 +633,7 @@ class HistoryDB(dict):
 
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             if self.use_crowd_repo == True:
                 try:
@@ -873,7 +881,7 @@ class HistoryDB(dict):
     def load_model_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, model_data : dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 print ("[HistoryDB] Found a history database file")
                 if self.file_synchronization_method == 'filelock':
@@ -977,7 +985,7 @@ class HistoryDB(dict):
         # print (problem.constants)
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             new_function_evaluation_results = []
 
@@ -1268,7 +1276,7 @@ class HistoryDB(dict):
             return ret
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1304,7 +1312,7 @@ class HistoryDB(dict):
     def load_MLE_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1352,7 +1360,7 @@ class HistoryDB(dict):
     def load_AIC_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1404,7 +1412,7 @@ class HistoryDB(dict):
         import math
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1455,7 +1463,7 @@ class HistoryDB(dict):
     def load_max_evals_surrogate_model_hyperparameters(self, tuningproblem : TuningProblem,
             input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1502,7 +1510,7 @@ class HistoryDB(dict):
 
     def load_surrogate_model_hyperparameters_by_uid(self, model_uid):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1537,7 +1545,7 @@ class HistoryDB(dict):
             #tuningproblem : TuningProblem,
             #input_given : np.ndarray, objective : int, modeler : str):
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1605,7 +1613,7 @@ class HistoryDB(dict):
         model_configurations = []
 
         if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
             if os.path.exists(json_data_path):
                 if self.file_synchronization_method == 'filelock':
                     with FileLock(json_data_path+".lock"):
@@ -1701,8 +1709,8 @@ class HistoryDB(dict):
             gradients : np.ndarray,\
             iteration : int):
 
-        if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+        if (self.save_model is True and self.tuning_problem_name is not None):
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             new_surrogate_models = []
 
@@ -1809,8 +1817,8 @@ class HistoryDB(dict):
             modeling_options : dict,\
             model_stats : dict):
 
-        if (self.tuning_problem_name is not None):
-            json_data_path = self.history_db_path+"/"+self.tuning_problem_name+".json"
+        if (self.save_model is True and self.tuning_problem_name is not None):
+            json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             new_surrogate_models = []
 
