@@ -166,13 +166,13 @@ class Options(dict):
             self['search_more_samples']=1
             self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
             self['search_pop_size']=100
-            
-            # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
-            # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
-            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
-                self['search_class']='SearchSciPy'
-            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
-                self['search_class']='SearchPyMoo'
+
+            ## use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
+            ## use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
+            #if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
+            #    self['search_class']='SearchSciPy'
+            #if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
+            #    self['search_class']='SearchPyMoo'
 
             # set the default search algorithm in 'SearchSciPy'
             if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
