@@ -15,7 +15,7 @@ module load netlib-scalapack
 module load cmake
 module load cuda
 module load python
-module load boost
+#module load boost
 PY_VERSION=3.8
 
 
@@ -410,27 +410,41 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON 
 	make install -j16
 
-	# module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
-	# cd $GPTUNEROOT
-	# rm -rf pagmo2
-	# git clone https://github.com/esa/pagmo2.git
-	# cd pagmo2
-	# mkdir build
-	# cd build
-	# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
-	# make -j16
-	# make install
+	 module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
+	
+	
+	cd $GPTUNEROOT
+        rm -rf download
+        wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+        tar -xvf download
+        cd boost_1_69_0/
+        ./bootstrap.sh --prefix=$PWD/build
+        ./b2 install
+        export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+	
+	
+	
+	 cd $GPTUNEROOT
+	 rm -rf pagmo2
+	 git clone https://github.com/esa/pagmo2.git
+	 cd pagmo2
+	 git checkout 1d41b1b5f70e59db8481ff8e6213f06f3b8b51f2
+	 mkdir build
+	 cd build
+	 cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+	 make -j16
+	 make install
 
-	# cd $GPTUNEROOT
-	# rm -rf pygmo2
-	# git clone https://github.com/esa/pygmo2.git
-	# cd pygmo2
-	# mkdir build
-	# cd build
-	# cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-	# make -j16
-	# make install
-	# module swap gcc/7.5.0 gcc 
+	 cd $GPTUNEROOT
+	 rm -rf pygmo2
+	 git clone https://github.com/esa/pygmo2.git
+	 cd pygmo2
+	 mkdir build
+	 cd build
+	 cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
+	 make -j16
+	 make install
+	 module swap gcc/7.5.0 gcc 
 
 	cd $GPTUNEROOT
 	rm -rf mpi4py
