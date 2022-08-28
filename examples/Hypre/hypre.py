@@ -290,10 +290,9 @@ def main():
 
     if(TUNER_NAME=='GPTuneHybrid'):
         NI = len(giventask)        
+        options['n_budget_hybrid']=nrun
         options['n_pilot_hybrid']=max(nrun//2, 1)
-        tmp = nrun-options['n_pilot_hybrid']
-        options['n_find_tree_hybrid']=max(int(math.sqrt(tmp)),1)
-        options['n_find_leaf_hybrid']=int(tmp/options['n_find_tree_hybrid'])
+        options['n_find_leaf_hybrid']=1
         # print(options)
 
         (data,stats) = GPTuneHybrid(T=giventask, tp=problem, computer=computer, options=options, run_id="GPTuneHybrid")

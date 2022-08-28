@@ -417,7 +417,7 @@ env pip install --prefix=$PREFIX_PATH -e .
 
 cd $GPTUNEROOT
 rm -rf hybridMinimization
-git clone https://github.com/hrluo/hybridMinimization.git
+git clone https://github.com/gptune/hybridMinimization.git
 cd hybridMinimization/
 python setup.py install --prefix=$PREFIX_PATH
 

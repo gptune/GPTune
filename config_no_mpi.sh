@@ -46,7 +46,7 @@ cp ../patches/autotune/problem.py autotune/.
 env CC=$CC pip install  -e .
 cd $GPTUNEROOT
 rm -rf hybridMinimization
-git clone https://github.com/hrluo/hybridMinimization.git
+git clone https://github.com/gptune/hybridMinimization.git
 cd hybridMinimization/
 $PY setup.py install
 

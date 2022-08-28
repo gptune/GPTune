@@ -6,7 +6,7 @@ rm -rf ~/.local/lib
 ##################################################
 
 export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 ##################################################
 ##################################################
@@ -381,7 +381,7 @@ env CC=$MPICC pip install --user -e .
 
 cd $GPTUNEROOT
 rm -rf hybridMinimization
-git clone https://github.com/hrluo/hybridMinimization.git
+git clone https://github.com/gptune/hybridMinimization.git
 cd hybridMinimization/
 python setup.py install --user
 

@@ -124,9 +124,9 @@ class Options(dict):
         selection_criterion_hybrid='custom' # 'custom' (our novel selection criteria) loglik (log likelihood of the joint GP model), AIC (Akaike information criteria), BIC (Bayesian information criteria), HQC (Hannan–Quinn information criterion).
         policy_hybrid='UCTS' # MCTS search policy: Currently it supports UCTS (UCB),UCTS_var (UCB with variance modification),EXP3 (EXP3),'Multinomial' (Bayesian strategy, detailed in our paper).
         exploration_probability_hybrid=0.1 # random search probability when the MCTS decides not to roll out a heuristic choice but a random choice.
+        n_budget_hybrid=20 # number of total number of samples
         n_pilot_hybrid=10 # number of random pilot samples
-        n_find_tree_hybrid=5 # number of samples for traversing the tree
-        n_find_leaf_hybrid=5 # number of samples in each leaf node. total sample count: n_find_leaf*n_find_tree+n_pilot_hybrid    
+        n_find_leaf_hybrid=1 # number of samples in each leaf node.
         acquisition_GP_hybrid='GP-EI' # acuisition functions for the GP of the leaf nodes. Currently we support 'GP-EI' and 'GP-UCB' 
         random_seed_hybrid=1 # random seed for reproducibility
         bigval_hybrid=1e12 #return this big value in the objective function when constraints are not respected

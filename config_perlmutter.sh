@@ -496,12 +496,13 @@ git clone https://github.com/wjakob/tbb.git
 cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
 # cd $GPTUNEROOT
-# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.68.0/boost_1_68_0.tar.bz2/download'
+# rm -rf download
+# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
 # tar -xvf download
-# cd boost_1_68_0/
+# cd boost_1_69_0/
 # ./bootstrap.sh --prefix=$PWD/build
 # ./b2 install
-# export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/build
+# export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
 
 cd $GPTUNEROOT
 rm -rf pagmo2
@@ -560,7 +561,7 @@ env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
 cd $GPTUNEROOT
 rm -rf hybridMinimization
-git clone https://github.com/hrluo/hybridMinimization.git
+git clone https://github.com/gptune/hybridMinimization.git
 cd hybridMinimization/
 python setup.py install --prefix=$PREFIX_PATH
 

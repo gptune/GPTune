@@ -44,7 +44,7 @@ class gptunehybrid_worker(object):
         self.computer    = computer
         self.t           = t
         self.problem     = Problem(tp, driverabspath=None, models_update=None)
-        self.NS          = options['n_pilot_hybrid'] + options['n_find_tree_hybrid']*options['n_find_leaf_hybrid']
+        self.NS          = options['n_budget_hybrid']
         self.count_runs  = 0
         self.timefun     = 0
         self.bigval=options['bigval_hybrid']
@@ -198,7 +198,7 @@ def GPTuneHybrid(T, tp : TuningProblem, computer : Computer, options: Options, r
                                                 continuous_trained_model=None,\
                                                 observed_X = X0,\
                                                 observed_Y = Y0,\
-                                                n_find_tree=options['n_find_tree_hybrid'],\
+                                                n_find_tree=int(options['n_budget_hybrid']/options['n_find_leaf_hybrid']),\
                                                 n_find_leaf=options['n_find_leaf_hybrid'],\
                                                 node_optimize=options['acquisition_GP_hybrid'],\
                                                 random_seed=options['random_seed_hybrid'],\
