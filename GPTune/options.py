@@ -17,6 +17,7 @@
 
 import math
 import os
+import importlib
 
 class Options(dict):
 
@@ -167,12 +168,20 @@ class Options(dict):
             self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
             self['search_pop_size']=100
 
-            ## use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
-            ## use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
-            #if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
-            #    self['search_class']='SearchSciPy'
-            #if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
-            #    self['search_class']='SearchPyMoo'
+            # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective and if `PyGMO' is not properly loaded
+            # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective and if 'PyGMO' is  not properly loaded
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use SciPy (SearchSciPy) instead.")
+                    self['search_class']='SearchSciPy'
+                #else:
+                #    print ("PyGMO module loaded. Use PyGMO (SearchPyGMO).")
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use PyMoo (SearchPyMoo) instead.")
+                    self['search_class']='SearchPyMoo'
+                #else:
+                #    print ("PyGMO module loaded. Use PyGMO (SearchPyGMO).")
 
             # set the default search algorithm in 'SearchSciPy'
             if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
