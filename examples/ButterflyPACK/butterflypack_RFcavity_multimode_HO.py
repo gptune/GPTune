@@ -66,6 +66,9 @@ def objectives(point):                  # should always use this name for user-d
 	#########################################	
 	
 	postprocess=0
+	tdplot=1
+	noport=0
+	noloss=1
 	baca_batch=64
 	knn=0
 	verbosity=1
@@ -81,6 +84,7 @@ def objectives(point):                  # should always use this name for user-d
 
 	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
 	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
+	# os.system("cp %s/fdmom_port ."%(BINDIR))
 	os.system("cp %s/fdmom_eigen ."%(BINDIR))
 	os.system("cp %s/%s.inp ."%(RUNDIR,model))
 	os.system("cp %s/materials.inp ."%(RUNDIR))
@@ -95,11 +99,10 @@ def objectives(point):                  # should always use this name for user-d
 	info.Set('env',envstr)
 	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
     
-   
-    ##### YL: note that '--noport', '1' as the port issue still remains to be fixed. 
 
 	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '1', '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+	comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-5','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+	# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
 	""" gather the return value using the inter-communicator """							
 	tmpdata = np.array([0, 0],dtype=np.float64)
@@ -188,14 +191,15 @@ def main():
 	
 
 	# Task parameters
-	geomodels = ["rfq_mirror_50K_feko","cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko"]
+	geomodels = ["rect_waveguide_2000","rect_waveguide_30000","rfq_mirror_50K_feko","cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko","cavity_rec_17K_2nd_mesh"]
 	# geomodels = ["cavity_wakefield_4K_feko"]
 	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
 
 
 	# Input parameters  # the frequency resolution is 100Khz
 	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (15000, 30000, transform="normalize", name="freq")
+	freq      = Integer     (15000, 33000, transform="normalize", name="freq")
+	# freq      = Integer     (9000, 11000, transform="normalize", name="freq")
 	# freq      = Integer     (19300, 22300, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 18000, transform="normalize", name="freq")
@@ -246,13 +250,21 @@ def main():
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
 	# giventask = [["cavity_5cell_30K_feko"]]		
-	giventask = [["cavity_rec_17K_feko"]]		
+	giventask = [["cavity_rec_17K_feko"]]
+	# giventask = [["cavity_rec_17K_2nd_mesh"]]
+	# # giventask = [["rect_waveguide_2000"]]		
+	# giventask = [["rect_waveguide_30000"]]		
 	# giventask = [["cavity_wakefield_4K_feko"]]		
 
 	if(TUNER_NAME=='GPTune'):
 		t3 = time.time_ns()
 		data = Data(problem)
 		# data.P = [[[15138],[19531],[21741],[22168],[23337]]]
+		# data.P = [[[15138],[19531],[21741],[22160],[21290],[23380],[23860],[24040],[25120],[25190],[28680],[29260]]]
+		data.P = [[[15138],[19531],[21741],[22160],[23352],[24134],[25120],[25219],[27447],[27803],[28673],[29455],[29532],[31110],[32415],[32462],[32507],[32562]]]
+		# data.P = [[[23380],[23860],[24040],[25120],[25190],[28680],[29260],[29300],[31080]]]
+		# data.P = [[[10000]]]
+		# data.P = [[[25190]]]
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 		
 		NI = len(giventask)
@@ -272,7 +284,7 @@ def main():
 			Nmode = 0
 			print("no mode found in the intial samples")
 		
-		NmodeMAX=8 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
+		NmodeMAX=20 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
 		for nn in range(NS):
 			mm=0
 			while mm<min(Nmode,NmodeMAX):
