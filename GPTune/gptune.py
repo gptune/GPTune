@@ -798,12 +798,6 @@ class GPTune(object):
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
-                #tmpdata = copy.deepcopy(self.data)
-                #print ("tmpdata.I: ", tmpdata.I)
-                #print ("tmpdata.P: ", tmpdata.P)
-                #print ("tmpdata.O: ", tmpdata.O)
-                #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
-
                 tmpdata = Data(self.problem)
                 self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -815,14 +809,18 @@ class GPTune(object):
                         else:
                             tmp.append(np.empty( shape=(0, self.problem.DP) ))
                     tmpdata.P=tmp
+                if(tmpdata.P is not None):
+                    for i in range(len(tmpdata.P)):
+                        if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                            tmpdata.P[i] = copy.deepcopy(self.data.P[i])
+                            tmpdata.O[i] = copy.deepcopy(self.data.O[i])
 
-                for i in range(len(tmpdata.P)):
-                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
-                        tmpdata.P[i] = copy.deepcopy(self.data.P[i])
-                        tmpdata.O[i] = copy.deepcopy(self.data.O[i])
+                    if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                        tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                else:
+                    tmpdata = copy.deepcopy(self.data)
+                    tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
-                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
-                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
                 #print ("tmpdata.I: ", tmpdata.I)
                 #print ("self data P: ", self.data.P)
                 #print ("tmpdata.P: ", tmpdata.P)
