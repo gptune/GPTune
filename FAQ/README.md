@@ -106,7 +106,7 @@ For python3.9+ pip install pygmo doesn't work. You need to install pygmo from so
 ```
 cd $GPTUNEROOT  
 rm -rf download
-wget -c 'http://sourceforge.net/projects/boost/files/boost/1.68.0/boost_1_69_0.tar.bz2/download'  
+wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'  
 tar -xvf download  
 cd boost_1_69_0/  
 ./bootstrap.sh --prefix=$PWD/build  
