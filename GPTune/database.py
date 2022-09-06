@@ -594,18 +594,18 @@ class HistoryDB(dict):
 
         return True
 
-    def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Igiven : np.ndarray):
+    def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Tgiven : np.ndarray):
         task_id = -1
 
-        for i in range(len(Igiven)):
+        for i in range(len(Tgiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
                 if problem.IS[j].name == "tla_id":
                     continue
-                if type(Igiven[i][j]) == float:
-                    given_value = round(Igiven[i][j], 6)
+                if type(Tgiven[i][j]) == float:
+                    given_value = round(Tgiven[i][j], 6)
                 else:
-                    given_value = Igiven[i][j]
+                    given_value = Tgiven[i][j]
                 if (func_eval["task_parameter"][problem.IS[j].name] != given_value):
                     compare_all_elems = False
                     break
@@ -629,7 +629,7 @@ class HistoryDB(dict):
 
         return False
 
-    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
+    def load_history_func_eval(self, data : Data, problem : Problem, Tgiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
 
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
@@ -688,7 +688,7 @@ class HistoryDB(dict):
                 if function_evaluations != None:
                     historical_function_evaluations.extend(function_evaluations)
 
-                num_tasks = len(Igiven)
+                num_tasks = len(Tgiven)
 
                 PS_history = [[] for i in range(num_tasks)]
                 OS_history = [[] for i in range(num_tasks)]
@@ -714,7 +714,7 @@ class HistoryDB(dict):
                         print ("best_y: ", best_y)
 
                         if self.load_check == False or self.check_load_deps(func_eval):
-                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
                                 # # if the same parameter data has been loaded once (duplicated)
@@ -763,7 +763,7 @@ class HistoryDB(dict):
                                 continue
 
                         if self.load_check == False or self.check_load_deps(func_eval):
-                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
                                 # # if the same parameter data has been loaded once (duplicated)
@@ -841,7 +841,7 @@ class HistoryDB(dict):
                         #        continue
 
                         #if self.load_check == False or self.check_load_deps(func_eval):
-                        task_id = len(Igiven)-len(source_function_evaluations)+source_task_id
+                        task_id = len(Tgiven)-len(source_function_evaluations)+source_task_id
                         parameter_arr = []
                         for k in range(len(problem.PS)):
                             if type(problem.PS[k]).__name__ == "Categoricalnorm":
@@ -861,7 +861,7 @@ class HistoryDB(dict):
                         num_loaded_data += 1
 
             if (num_loaded_data > 0):
-                data.I = Igiven #IS_history
+                data.I = Tgiven #IS_history
                 data.P = PS_history
                 data.O=[] # YL: OS is a list of 2D numpy arrays
                 for i in range(len(OS_history)):
@@ -878,7 +878,7 @@ class HistoryDB(dict):
             else:
                 print ("no history data has been loaded")
 
-    def load_model_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, model_data : dict):
+    def load_model_func_eval(self, data : Data, problem : Problem, Tgiven : np.ndarray, model_data : dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
@@ -899,7 +899,7 @@ class HistoryDB(dict):
                         history_data = json.load(f_in)
                 print ("history_data: ", history_data)
 
-                num_tasks = len(Igiven)
+                num_tasks = len(Tgiven)
 
                 num_loaded_data = 0
 
@@ -920,7 +920,7 @@ class HistoryDB(dict):
                             parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
                         else:
                             parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
-                    task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                    task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                     PS_history[task_id].append(parameter_arr)
                     OS_history[task_id].append(\
                         [func_eval["evaluation_result"][problem.OS[k].name] \
@@ -928,7 +928,7 @@ class HistoryDB(dict):
                     num_loaded_data += 1
 
                 if (num_loaded_data > 0):
-                    data.I = Igiven #IS_history
+                    data.I = Tgiven #IS_history
                     data.P = PS_history
                     data.O=[] # YL: OS is a list of 2D numpy arrays
                     for i in range(len(OS_history)):
@@ -1267,12 +1267,12 @@ class HistoryDB(dict):
 
         return True
 
-    def read_surrogate_models(self, tuningproblem=None, Igiven=None, modeler="Model_LCM"):
+    def read_surrogate_models(self, tuningproblem=None, Tgiven=None, modeler="Model_LCM"):
         ret = []
         print ("problem ", tuningproblem)
         print ("problem input_space ", self.problem_space_to_dict(tuningproblem.input_space))
 
-        if tuningproblem == "None" or Igiven == "None":
+        if tuningproblem == "None" or Tgiven == "None":
             return ret
 
         if (self.tuning_problem_name is not None):
@@ -1300,7 +1300,7 @@ class HistoryDB(dict):
                     surrogate_model = history_data["surrogate_model"][i]
                     if (self.check_surrogate_model_exact_match(
                         surrogate_model,
-                        Igiven,
+                        Tgiven,
                         self.problem_space_to_dict(tuningproblem.input_space),
                         self.problem_space_to_dict(tuningproblem.parameter_space),
                         self.problem_space_to_dict(tuningproblem.output_space)) and

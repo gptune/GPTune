@@ -205,7 +205,7 @@ def main():
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """

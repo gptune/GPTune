@@ -176,7 +176,7 @@ def main():
 
     if tuning_method == "SLA":
         giventask = [[round(tvalue,2)]]
-        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
+        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Tgiven=giventask, NS1=npilot)
     else:
         giventask = [[round(tvalue,2)]]
         (data, modeler, stats) = gt.TLA_I(NS=nrun, Tnew=giventask, models_transfer=LoadModels(), source_function_evaluations=LoadFunctionEvaluations())
