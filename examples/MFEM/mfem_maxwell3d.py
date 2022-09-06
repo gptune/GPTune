@@ -84,7 +84,7 @@ def objectives(point):                  # should always use this name for user-d
 	if(sp_reordering_method == 'metis'):
 		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
 
-	npernode = 2**point['npernode']
+	npernode = 2**point['lg2npernode']
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 
@@ -159,7 +159,7 @@ def main():
 
 	# Tuning parameters
 	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 	sp_compression_min_sep_size     = Integer     (5, 9, transform="normalize", name="sp_compression_min_sep_size")
 	sp_compression_min_front_size     = Integer     (8, 12, transform="normalize", name="sp_compression_min_front_size")
 	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
@@ -171,8 +171,8 @@ def main():
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 
 	IS = Space([mesh,omega])
-	# PS = Space([sp_reordering_method,npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size,hodlr_rel_tol, hodlr_knn,hodlr_BF_sampling_parameter])
-	PS = Space([npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size, hodlr_knn,hodlr_BF_sampling_parameter])
+	# PS = Space([sp_reordering_method,lg2npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size,hodlr_rel_tol, hodlr_knn,hodlr_BF_sampling_parameter])
+	PS = Space([lg2npernode, sp_compression_min_sep_size,sp_compression_min_front_size,hodlr_leaf_size, hodlr_knn,hodlr_BF_sampling_parameter])
 	OS = Space([result])
 	constraints = {}
 	models = {}

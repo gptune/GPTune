@@ -57,7 +57,7 @@ def print_model_predication(point):
     p = point['p']
     mb = point['b']*bunit
     nb = point['b']*bunit
-    npernode = 2**point['npernode']
+    npernode = 2**point['lg2npernode']
     nproc = nodes*npernode
     nthreads = int(cores / npernode)  
 
@@ -97,7 +97,7 @@ def models(point):
     nodes = point['nodes']
     mb = point['b']*bunit
     nb = point['b']*bunit
-    npernode = 2**point['npernode']
+    npernode = 2**point['lg2npernode']
     nproc = nodes*npernode
 
 
@@ -141,8 +141,8 @@ def models_update(data):
 
         b = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[0])]*data.D[i]['bunit']
 
-        npernode = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[1])]
-        npernode = 2**npernode
+        lg2npernode = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[1])]
+        npernode = 2**lg2npernode
         nproc = data.D[i]['nodes']*npernode
         p = X0[np.ix_(np.linspace(0,Ns-1,Ns,dtype=int),[2])]
         q = np.floor(nproc/p)
@@ -184,7 +184,7 @@ def objectives(point):
     mb = point['b']*bunit
     nb = point['b']*bunit
     p = point['p']
-    npernode = 2**point['npernode']
+    npernode = 2**point['lg2npernode']
     nproc = nodes*npernode
     nthreads = int(cores / npernode)    
 
@@ -206,10 +206,10 @@ def objectives(point):
 
 def cst1(b,p,m,bunit):
     return b*bunit * p <= m
-def cst2(b,npernode,n,p,nodes,bunit):
-    return b * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p,nodes):
-    return nodes * 2**npernode >= p
+def cst2(b,lg2npernode,n,p,nodes,bunit):
+    return b * bunit * nodes * 2**lg2npernode <= n * p
+def cst3(lg2npernode,p,nodes):
+    return nodes * 2**lg2npernode >= p
 
 def main():
 
@@ -270,12 +270,12 @@ def main():
     m = Integer(mmin, mmax, transform="normalize", name="m")
     n = Integer(nmin, nmax, transform="normalize", name="n")
     b = Integer(4, 16, transform="normalize", name="b")
-    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
-    PS = Space([b, npernode, p])
+    PS = Space([b, lg2npernode, p])
     OS = Space([r])
 
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}

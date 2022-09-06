@@ -37,7 +37,7 @@ def objectives(point):
         mb = point['mb']*bunit
         nb = point['nb']*bunit
         p = point['p']
-        npernode = 2**point['npernode']
+        npernode = 2**point['lg2npernode']
         nproc = nodes*npernode
         nthreads = int(cores / npernode)  
 
@@ -63,16 +63,16 @@ def objectives(point):
         #    'n': point['n'],
         #    'mb': point['mb'],
         #    'nb': point['nb'],
-        #    'npernode': point['npernode'],
+        #    'lg2npernode': point['lg2npernode'],
         #    'p': point['p']})
         #return (ret) #ret['r']
 
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
-def cst2(nb,npernode,n,p,nodes,bunit):
-    return nb * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p,nodes):
-    return nodes * 2**npernode >= p
+def cst2(nb,lg2npernode,n,p,nodes,bunit):
+    return nb * bunit * nodes * 2**lg2npernode <= n * p
+def cst3(lg2npernode,p,nodes):
+    return nodes * 2**lg2npernode >= p
 
 def main():
 
@@ -142,12 +142,12 @@ def main():
     n = Integer(nmin, nmax, transform="normalize", name="n")
     mb = Integer(1, 16, transform="normalize", name="mb")
     nb = Integer(1, 16, transform="normalize", name="nb")
-    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
-    PS = Space([mb, nb, npernode, p])
+    PS = Space([mb, nb, lg2npernode, p])
     OS = Space([r])
     
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
@@ -234,7 +234,7 @@ def main():
                 "upper_bound": 16
               },
               {
-                "name": "npernode",
+                "name": "lg2npernode",
                 "type": "int",
                 "transformer": "normalize",
                 "lower_bound": 0,
