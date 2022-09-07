@@ -652,11 +652,6 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
         if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Tgiven
 
@@ -984,6 +979,8 @@ class GPTune(object):
 
         if NS1 == None:
             NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
 
         return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
@@ -1392,11 +1389,6 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
         if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Tgiven
 
@@ -1709,11 +1701,6 @@ class GPTune(object):
         kwargs.update(options1)
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
         if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Tgiven
 
@@ -2018,11 +2005,6 @@ class GPTune(object):
         t1 = time.time_ns()
 
         """ Multi-task Learning Autotuning """
-
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
 
         if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
             self.data.I = Tgiven
