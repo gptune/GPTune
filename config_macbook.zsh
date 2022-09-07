@@ -3,10 +3,10 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.13_1
-gccversion=11.3.0_1
-openblasversion=0.3.20
-lapackversion=3.10.1
+pythonversion=3.9.13_4
+gccversion=12.2.0
+openblasversion=0.3.21
+lapackversion=3.10.1_1
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
@@ -44,9 +44,9 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
-	CC=$BREWPATH/gcc/$gccversion/bin/gcc-11
-	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-11
-	CPP=$BREWPATH/gcc/$gccversion/bin/g++-11
+	CC=$BREWPATH/gcc/$gccversion/bin/gcc-12
+	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-12
+	CPP=$BREWPATH/gcc/$gccversion/bin/g++-12
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
@@ -105,8 +105,8 @@ then
     exit 
 fi
 
-alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3
+alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3.9  # this makes sure virtualenv uses the correct python version
+alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3.9
 
 python -m pip install virtualenv 
 rm -rf env

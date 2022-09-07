@@ -169,10 +169,10 @@ def main():
 
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-    #(data, modeler, stats) = gt.TLA3(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), models_transfer = LoadModels())
-    #(data, modeler, stats) = gt.TLA3(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), models_transfer = None)
-    (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
-    # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+    #(data, modeler, stats) = gt.TLA3(NS=NS, Tgiven=giventask, NI=NI, NS1=int(NS/2), models_transfer = LoadModels())
+    #(data, modeler, stats) = gt.TLA3(NS=NS, Tgiven=giventask, NI=NI, NS1=int(NS/2), models_transfer = None)
+    (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=npilot)
+    # (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=NS-1)
     print("stats: ", stats)
     """ Print all input and parameter samples """
     for tid in range(NI):

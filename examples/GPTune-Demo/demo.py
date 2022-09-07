@@ -228,8 +228,8 @@ def main():
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), T_sampleflag=[True]*NI)
-        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+        (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=int(NS/2), T_sampleflag=[True]*NI)
+        # (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=NS-1)
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):
