@@ -473,7 +473,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             model_reupdate = model_reupdate + 1
@@ -589,7 +589,6 @@ class GPTune(object):
         return
 
     def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
-        print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -787,7 +786,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -978,7 +977,16 @@ class GPTune(object):
         elif NS1 > NS:
             raise Exception("NS1>NS")
 
-        return self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        print("\n\n\n------Starting SLA (%d samples)"%(NS))
+
+        (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+
+        data.I = data.I[0]
+        data.P = data.P[0]
+        data.O = data.O[0]
+        data.D = data.D[0]
+
+        return data, modeler, stats
 
     def MLA(self, NS, NS1 = None, NI = None, Tgiven = None):
 
@@ -986,6 +994,8 @@ class GPTune(object):
             NS1 = int(NS/2)
         elif NS1 > NS:
             raise Exception("NS1>NS")
+
+        print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
 
         return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
@@ -1497,7 +1507,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -1807,7 +1817,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -2266,7 +2276,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
