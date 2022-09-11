@@ -973,7 +973,12 @@ class GPTune(object):
 
     def SLA(self, NS, NS1, Tgiven):
 
-        return self.MLA_(NS, NS1, 1, Tgiven, T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        if NS1 == None:
+            NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
+
+        return self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
     def MLA(self, NS, NS1 = None, NI = None, Tgiven = None):
 
