@@ -129,6 +129,7 @@ def main():
 	options['shared_memory_parallelism'] = False
 	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
+	# options['sample_class'] = 'SampleOpenTURNS'
 	# options['search_algo'] = 'dual_annealing' #'maco' #'moead' #'nsga2' #'nspso' 
 	options['search_pop_size'] = 1000
 	options['search_gen'] = 10
