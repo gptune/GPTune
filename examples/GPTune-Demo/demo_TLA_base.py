@@ -215,7 +215,7 @@ def main():
 
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-    (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
+    (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=npilot)
     print("stats: ", stats)
     """ Print all input and parameter samples """
     for tid in range(NI):

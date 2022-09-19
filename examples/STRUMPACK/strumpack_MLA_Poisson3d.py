@@ -88,7 +88,7 @@ def objectives(point):                  # should always use this name for user-d
 	if(sp_reordering_method == 'metis'):
 		extra_str = extra_str + ['--sp_enable_METIS_NodeNDP']
 
-	npernode = 2**point['npernode']
+	npernode = 2**point['lg2npernode']
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	
@@ -150,7 +150,7 @@ def main():
 	# sp_compression   = Categoricalnorm (['none','hss'], transform="onehot", name="sp_compression")
 	# sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf'], transform="onehot", name="sp_compression")
 	sp_compression   = Categoricalnorm (['none','hss','hodlr','hodbf','blr'], transform="onehot", name="sp_compression")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 	sp_nd_param     = Integer     (8, 32, transform="normalize", name="sp_nd_param")
 	sp_compression_min_sep_size     = Integer     (2, 5, transform="normalize", name="sp_compression_min_sep_size")
 	sp_compression_min_front_size     = Integer     (4, 10, transform="normalize", name="sp_compression_min_front_size")
@@ -160,7 +160,7 @@ def main():
 
 	result   = Real        (float("-Inf") , float("Inf"),name="r")
 	IS = Space([gridsize])
-	PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,npernode])
+	PS = Space([sp_reordering_method,sp_compression,sp_nd_param,sp_compression_min_sep_size,sp_compression_min_front_size,sp_compression_leaf_size,sp_compression_rel_tol,lg2npernode])
 	OS = Space([result])
 	constraints = {}
 	models = {}

@@ -73,7 +73,9 @@ import pickle
 from random import *
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
+from callhybrid import GPTuneHybrid
 import math
+# from termcolor import colored
 
 # import mpi4py
 # from mpi4py import MPI
@@ -126,6 +128,7 @@ def objectives(point):
                trunc_factor, P_max_elmts, coarsen_type, relax_type, 
                smooth_type, smooth_num_levels, interp_type, agg_num_levels, nthreads, npernode)]
     runtime = hypredriver(params, niter=1, JOBID=-1)
+    # print(params, colored(' hypre time: ','white','on_red'), runtime)
     print(params, ' hypre time: ', runtime)
 
     return runtime
@@ -148,7 +151,7 @@ def main():
     ntask = args.ntask
     nrun = args.nrun
     TUNER_NAME = args.optimization
-    TLA = False
+    tla_II = args.tla_II
 
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
@@ -200,7 +203,7 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class'] = 'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM'
     options['verbose'] = False
     options.validate(computer=computer)
     
@@ -230,10 +233,26 @@ def main():
             print("    Os ", data.O[tid])
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
-        if TLA is True:
-            """ Call TLA for 2 new tasks using the constructed LCM model"""
-            newtask = [[50, 50, 60], [80, 60, 70]]
-            (aprxopts, objval, stats) = gt.TLA_II(newtask)
+        if tla_II == 1:
+            """ Call TLA for 2 new tasks """
+
+            # the data object initialized to run transfer learning as a new autotuning run
+            data = Data(problem)
+            historydb=HistoryDB() #meta_dict=tuning_metadata)
+            gt = GPTune(problem, computer=computer, data=data, options=options,historydb=historydb, driverabspath=os.path.abspath(__file__))
+
+            # load source function evaluation data
+            def LoadFunctionEvaluations(Tsrc):
+                function_evaluations = [[] for i in range(len(Tsrc))]
+                with open ("gptune.db/Hypre.json", "r") as f_in:
+                    for func_eval in json.load(f_in)["func_eval"]:
+                        task_parameter = [func_eval["task_parameter"]["nx"], func_eval["task_parameter"]["ny"], func_eval["task_parameter"]["nz"]]
+                        if task_parameter in Tsrc:
+                            function_evaluations[Tsrc.index(task_parameter)].append(func_eval)
+                return function_evaluations
+
+            newtask = [[20, 20, 20], [25, 25, 25]]
+            (aprxopts, objval, stats) = gt.TLA_II(Tnew=newtask, Tsrc=giventask, source_function_evaluations=LoadFunctionEvaluations(giventask))
             print("stats: ", stats)
 
             """ Print the optimal parameters and function evaluations"""
@@ -269,6 +288,25 @@ def main():
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+    if(TUNER_NAME=='GPTuneHybrid'):
+        NI = len(giventask)        
+        options['n_budget_hybrid']=nrun
+        options['n_pilot_hybrid']=max(nrun//2, 1)
+        options['n_find_leaf_hybrid']=1
+        # print(options)
+
+        (data,stats) = GPTuneHybrid(T=giventask, tp=problem, computer=computer, options=options, run_id="GPTuneHybrid")
+        print("stats: ", stats)
+
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    nx:%d ny:%d nz:%d" % (data.I[tid][0], data.I[tid][1], data.I[tid][2]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid])
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -280,9 +318,10 @@ def parse_args():
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
     # Algorithm related arguments
     # parser.add_argument('-optimization', type=str, help='Optimization algorithm (opentuner, spearmint, mogpo)')
-    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
+    parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune, GPTuneHybrid)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
+    parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')
     args = parser.parse_args()
 
     return args

@@ -1,13 +1,12 @@
-wheel
 numpy
 joblib
 scikit-learn 
-# on Summit on needs to use scipy == 1.3.1 to avoid a runtime error
 scipy >= 1.7.0
 statsmodels >= 0.13.0
 pyaml
 matplotlib
 GPy
+openturns
 lhsmdu
 ipyparallel
 opentuner >= 0.8.8

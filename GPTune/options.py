@@ -17,6 +17,7 @@
 
 import math
 import os
+import importlib
 
 class Options(dict):
 
@@ -44,7 +45,7 @@ class Options(dict):
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
-        sample_random_seed = None # Specify a certain random seed for the pilot sampling phase
+        sample_random_seed = None # Specify a certain random seed for the pilot sampling phase.
 
 
         """ Options for the modeling phase """
@@ -88,7 +89,7 @@ class Options(dict):
         search_evolve = 10  # Number of times migration in pgymo 
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
-        search_random_seed = None # Specify a certain random seed for the search phase (it works for only SearchPyGMO option for now)
+        search_random_seed = None # Specify a certain random seed for the search phase
 
         """ Options for transfer learning """
         TLA_method = None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
@@ -119,6 +120,18 @@ class Options(dict):
         N_COMPONENTS_CGP=3 # maximal number of clusters
         ACQUISITION_CGP='EI' #acquisition function: EI or MSPE
         BIGVAL_CGP=1e12 #return this big value in the objective function when constraints are not respected
+
+        """ Options for GPTuneHybrid """    
+        selection_criterion_hybrid='custom' # 'custom' (our novel selection criteria) loglik (log likelihood of the joint GP model), AIC (Akaike information criteria), BIC (Bayesian information criteria), HQC (Hannan–Quinn information criterion).
+        policy_hybrid='UCTS' # MCTS search policy: Currently it supports UCTS (UCB),UCTS_var (UCB with variance modification),EXP3 (EXP3),'Multinomial' (Bayesian strategy, detailed in our paper).
+        exploration_probability_hybrid=0.1 # random search probability when the MCTS decides not to roll out a heuristic choice but a random choice.
+        n_budget_hybrid=20 # number of total number of samples
+        n_pilot_hybrid=10 # number of random pilot samples
+        n_find_leaf_hybrid=1 # number of samples in each leaf node.
+        acquisition_GP_hybrid='GP-EI' # acuisition functions for the GP of the leaf nodes. Currently we support 'GP-EI' and 'GP-UCB' 
+        random_seed_hybrid=1 # random seed for reproducibility
+        bigval_hybrid=1e12 #return this big value in the objective function when constraints are not respected
+        
 
         self.update(locals())
         self.update(kwargs)
@@ -154,23 +167,42 @@ class Options(dict):
             self['search_more_samples']=1
             self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
             self['search_pop_size']=100
-            
-            # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective
-            # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective
+
+            # use 'SearchSciPy' to replace 'SearchPyGMO' if single-objective and if `PyGMO' is not properly loaded
+            # use 'SearchPyMoo' to replace 'SearchPyGMO' if multi-objective and if 'PyGMO' is  not properly loaded
             if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'pso' or self["search_algo"] == 'cmaes')):
-                self['search_class']='SearchSciPy'
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use SciPy (SearchSciPy) instead.")
+                    self['search_class']='SearchSciPy'
+                #else:
+                #    print ("PyGMO module loaded. Use PyGMO (SearchPyGMO).")
             if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO') and (self["search_algo"] == 'nsga2' or self["search_algo"] == 'nspso' or self["search_algo"] == 'maco' or self["search_algo"] == 'moead')):
-                self['search_class']='SearchPyMoo'               
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use PyMoo (SearchPyMoo) instead.")
+                    self['search_class']='SearchPyMoo'
+                #else:
+                #    print ("PyGMO module loaded. Use PyGMO (SearchPyGMO).")
 
-            # set the default search algorithm in 'SearchSciPy' 
+            # set the default search algorithm in 'SearchSciPy'
             if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
-                self["search_algo"]='trust-constr'
+                self["search_algo"]='dual_annealing'
 
-            # set the default search algorithm in 'SearchPyMoo' 
-            if(self['search_class']=='SearchPyMoo' and not (self["search_algo"] == 'nsga2' or self["search_algo"] == 'moead')):
-                self["search_algo"]='nsga2'
+            ## set the default search algorithm in 'SearchPyMoo'
+            #if(self['search_class']=='SearchPyMoo' and not (self["search_algo"] == 'nsga2' or self["search_algo"] == 'moead')):
+            #    self["search_algo"]='nsga2'
 
         else:
+            if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO')):
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use PyMoo (SearchPyMoo) instead.")
+                    self['search_class']='SearchPyMoo'
+                    self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
+                    self['search_pop_size']=100                    
+                    if(self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'cmaes' or self["search_algo"] == 'dual_annealing' or self["search_algo"] == 'trust-constr' or self["search_algo"] == 'shgo'):
+                        self["search_algo"] == 'pso'
+                    if(self["search_algo"] == 'nspso' or self["search_algo"] == 'maco'):
+                        self["search_algo"] == 'nsga2'   
+
             if ((self['model_class']=='Model_LCM' or self['model_class']=='Model_LCM_constrained') and self['RCI_mode']==True):
                 self['model_class']='Model_GPy_LCM'
 

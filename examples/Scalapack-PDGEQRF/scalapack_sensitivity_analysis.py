@@ -44,7 +44,7 @@ problem_space = {
     "parameter_space": [
         {"name":"mb", "type":"integer", "transformer": "normalize", "lower_bound":1, "upper_bound": 16},
         {"name":"nb", "type":"integer", "transformer": "normalize", "lower_bound":1, "upper_bound": 16},
-        {"name":"npernode", "type":"integer", "transformer": "normalize", "lower_bound":int(math.log2(nprocmin_pernode)), "upper_bound":int(math.log2(cores))},
+        {"name":"lg2npernode", "type":"integer", "transformer": "normalize", "lower_bound":int(math.log2(nprocmin_pernode)), "upper_bound":int(math.log2(cores))},
         {"name":"p", "type":"integer", "transformer": "normalize", "lower_bound":1, "upper_bound": nodes*cores}
     ],
     "output_space": [

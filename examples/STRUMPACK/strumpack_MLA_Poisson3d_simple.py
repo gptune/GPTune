@@ -39,6 +39,7 @@ import mpi4py
 from mpi4py import MPI
 from array import array
 import math
+from callhybrid import GPTuneHybrid
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
@@ -194,6 +195,7 @@ def main():
 	
 	
 	# """ Building MLA with the given list of tasks """
+	# giventask = [[30]]		
 	giventask = [[100]]		
 	data = Data(problem)
 
@@ -216,7 +218,7 @@ def main():
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='opentuner'):
-		NI = ntask
+		NI = ntask 
 		NS = nrun
 		(data,stats) = OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
 		print("stats: ", stats)
@@ -243,7 +245,22 @@ def main():
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
+	if(TUNER_NAME=='GPTuneHybrid'):
+		NI = len(giventask)        
+		options['n_budget_hybrid']=nrun
+		options['n_pilot_hybrid']=max(nrun//2, 1)
+		options['n_find_leaf_hybrid']=1
 
+		(data,stats) = GPTuneHybrid(T=giventask, tp=problem, computer=computer, options=options, run_id="GPTuneHybrid")
+		print("stats: ", stats)
+
+		""" Print all input and parameter samples """
+		for tid in range(NI):
+			print("tid: %d"%(tid))
+			print("    matrix:%s"%(data.I[tid][0]))
+			print("    Ps ", data.P[tid])
+			print("    Os ", data.O[tid])
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 def parse_args():

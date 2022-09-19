@@ -23,6 +23,7 @@ $PY -m venv env
 source env/bin/activate
 
 $PIP install --upgrade -r requirements.txt
+cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.
 
 rm -rf scikit-optimize
 git clone https://github.com/scikit-optimize/scikit-optimize.git
@@ -41,8 +42,14 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
+# cp ../patches/autotune/problem.py autotune/.
 env CC=$CC pip install  -e .
+cd $GPTUNEROOT
+rm -rf hybridMinimization
+git clone https://github.com/gptune/hybridMinimization.git
+cd hybridMinimization/
+$PY setup.py install
+
 
 if [[ $(uname -s) == "Darwin" ]]; then
     cd $GPTUNEROOT
@@ -57,4 +64,3 @@ if [[ $(uname -s) == "Darwin" ]]; then
 fi
 
 cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.

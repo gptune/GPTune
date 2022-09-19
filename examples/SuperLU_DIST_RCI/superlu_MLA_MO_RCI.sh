@@ -79,14 +79,14 @@ matrix=${input_para[0]}
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
 COLPERM=${tuning_para[0]}
 LOOKAHEAD=${tuning_para[1]}
-npernode=${tuning_para[2]}
+lg2npernode=${tuning_para[2]}
 nprows=${tuning_para[3]}
 NSUP=${tuning_para[4]}
 NREL=${tuning_para[5]}
 
 
 # call the application
-npernode=$((2**$npernode))
+npernode=$((2**$lg2npernode))
 export OMP_NUM_THREADS=$(($cores / $npernode))
 export NREL=$NREL
 export NSUP=$NSUP

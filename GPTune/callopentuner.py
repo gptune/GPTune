@@ -83,8 +83,8 @@ class OpenTunerInterface(opentuner.MeasurementInterface):
         if (cond):
             #y = float(self.args.tp.objective(kwargs2)[0])
 
-            transform_T = self.args.tp.input_space.transform([np.array(t)])[0]
-            transform_X = self.args.tp.parameter_space.transform(np.array([x]))
+            transform_T = self.args.tp.input_space.transform([t])[0]
+            transform_X = self.args.tp.parameter_space.transform([x])
             result = self.args.computer.evaluate_objective_onetask(
                     problem = self.args.problem,
                     i_am_manager = True,

@@ -69,7 +69,7 @@ def objectives(point):                  # should always use this name for user-d
 	lrlevel = point['lrlevel']
 	xyzsort = point['xyzsort']
 	nmin_leaf = 2**point['nmin_leaf']
-	npernode = 2**point['npernode']
+	npernode = 2**point['lg2npernode']
 	nproc = nodes*npernode 
 	nthreads = int(cores / npernode)
 
@@ -138,14 +138,14 @@ def main():
 	lrlevel   = Categoricalnorm (['0','100'], transform="onehot", name="lrlevel")
 	xyzsort   = Categoricalnorm (['0','1','2'], transform="onehot", name="xyzsort")
 	nmin_leaf = Integer     (5, 9, transform="normalize", name="nmin_leaf")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 
 
 	result1   = Real        (float("-Inf") , float("Inf"),name="r1")
 
 
 	IS = Space([model2d,nunk,wavelength])
-	PS = Space([lrlevel,xyzsort,nmin_leaf,npernode])
+	PS = Space([lrlevel,xyzsort,nmin_leaf,lg2npernode])
 	OS = Space([result1])
 
 	constraints = {}

@@ -202,8 +202,11 @@ def main():
     options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
-    options['search_class'] = 'SearchPyGMO'
+    # options['search_class'] = 'SearchSciPy'
     options['search_random_seed'] = 0
+
+    # options['search_class'] = 'SearchSciPy'
+    # options['search_algo'] = 'l-bfgs-b'
 
     options['verbose'] = False
     options.validate(computer=computer)
@@ -225,8 +228,7 @@ def main():
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=int(NS/2), T_sampleflag=[True]*NI)
-        # (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS-1)
+        (data, modeler, stats) = gt.MLA(NS=NS, NS1=int(NS/2), NI=NI, Tgiven=giventask)
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):

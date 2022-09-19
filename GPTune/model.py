@@ -215,6 +215,7 @@ class Model_GPy_LCM(Model):
                 print("lengthscale: ", hyperparameters["lengthscale"])
                 print("variance: ", hyperparameters["variance"])
                 print("noise_variance: ", hyperparameters["noise_variance"])
+            print ("modeler: ", kwargs['model_class'])
             print ("M: ", self.M)
 
         return (hyperparameters, modeling_options, model_stats)
@@ -492,6 +493,19 @@ class Model_LCM(Model):
 
         return (bestxopt, neg_log_marginal_likelihood, gradients, iteration)
 
+    def train_stacked(self, data : Data, num_source_tasks, **kwargs):
+
+        if len(self.M_stacked) < 1+num_source_tasks:
+            self.M_stacked.append(self.M)
+            self.num_samples_stacked.append(len(data.P[0]))
+        elif len(self.M_stacked) == 1+num_source_tasks: # residual for the current target task
+            self.M_stacked[num_source_tasks] = self.M
+            self.num_samples_stacked[num_source_tasks] = len(data.P[0])
+        else:
+            print ("Unexpected. Stacking model count does not match")
+
+        return self.M_stacked
+
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
@@ -500,10 +514,29 @@ class Model_LCM(Model):
     # make prediction on a single sample point of a specific task tid
     def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        x = np.empty((1, points.shape[0] + 1))
-        x[0,:-1] = points
-        x[0,-1] = tid
-        (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
+        if len(self.M_stacked) > 0: # stacked model
+            x = np.empty((1, points.shape[0] + 1))
+            x[0,:-1] = points
+            x[0,-1] = tid
+
+            (mu, var) = self.M_stacked[0].predict_noiseless(x)
+            var[0][0] = max(1e-18, var[0][0])
+            num_samples_prior = self.num_samples_stacked[0]
+
+            for i in range(1, len(self.M_stacked), 1):
+                (mu_, var_) = self.M_stacked[i].predict_noiseless(x)
+                var_[0][0] = max(1e-18, var_[0][0])
+                num_samples_current = self.num_samples_stacked[i]
+                alpha = 1.0 # relative importance of the prior and current ones
+                beta = float((alpha*num_samples_current)/(alpha*num_samples_current+num_samples_prior))
+                mu[0][0] += mu_[0][0]
+                var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
+                num_samples_prior = num_samples_current
+        else:
+            x = np.empty((1, points.shape[0] + 1))
+            x[0,:-1] = points
+            x[0,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
 
         return (mu, var)
 

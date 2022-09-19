@@ -136,8 +136,8 @@ class HpBandSterWorker(hpbandster.core.worker.Worker):
             if (cond):
                 #y = float(self.tp.objective(kwargs2)[0])
 
-                transform_T = self.tp.input_space.transform([np.array(t)])[0]
-                transform_X = self.tp.parameter_space.transform(np.array([x]))
+                transform_T = self.tp.input_space.transform([t])[0]
+                transform_X = self.tp.parameter_space.transform([x])
                 result = self.computer.evaluate_objective_onetask(
                         problem = self.problem,
                         i_am_manager = True,

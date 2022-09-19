@@ -61,7 +61,7 @@ def objectives(point):                  # should always use this name for user-d
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
 	nprows = point['nprows']
-	npernode = 2**point['npernode']
+	npernode = 2**point['lg2npernode']
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	NSUP = point['NSUP']
@@ -102,8 +102,8 @@ def objectives(point):                  # should always use this name for user-d
 	
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
-def cst2(npernode,nprows):
-	return nodes * 2**npernode >= nprows		
+def cst2(lg2npernode,nprows):
+	return nodes * 2**lg2npernode >= nprows		
 def main():
 
 	global ROOTDIR
@@ -139,13 +139,13 @@ def main():
 	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
 	factor   = Real        (float("-Inf") , float("Inf"), name="factor_time")
 	solve    = Real        (float("-Inf") , float("Inf"), name="solve_time")
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
+	PS = Space([COLPERM, LOOKAHEAD, lg2npernode, nprows, NSUP, NREL])
 	OS = Space([factor, solve])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}

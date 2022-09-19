@@ -275,8 +275,8 @@ export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.a"
-export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.so
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
 
 
 
@@ -295,7 +295,7 @@ else
 	# scipy>=1.7.0 in requriement.txt doesn't work if --prefix=$PREFIX_PATH is used. Use --user instead. 
 	env CC=$MPICC pip install --user -r requirements.txt
 fi
-
+# cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
@@ -375,6 +375,11 @@ if [[ $BuildExample == 1 ]]; then
 	make config prefix=$ParMETIS_DIR
 	make -j8
 	make install
+	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	make config prefix=$ParMETIS_DIR
+	make -j8
+	make install
+
 	cd ../
 	rm -rf METIS
 	git clone https://github.com/KarypisLab/METIS.git
@@ -537,7 +542,7 @@ if [[ $BuildExample == 1 ]]; then
 	# 	-DTPL_ENABLE_PTSCOTCH=ON \
 	# 	-DTPL_ENABLE_PARMETIS=ON \
 	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.so" \
 	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 
@@ -624,10 +629,15 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
+# cp ../patches/autotune/problem.py autotune/.
 env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
+cd $GPTUNEROOT
+rm -rf hybridMinimization
+git clone https://github.com/gptune/hybridMinimization.git
+cd hybridMinimization/
+python setup.py install --prefix=$PREFIX_PATH
 
-cp ../patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
+
 cd $GPTUNEROOT
 

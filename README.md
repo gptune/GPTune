@@ -231,10 +231,6 @@ cmake .. \
     -DTPL_LAPACK_LIBRARIES="$LAPACK_LIB" \
     -DTPL_SCALAPACK_LIBRARIES=$SCALAPACK_LIB
 make 
-
-# install the patch for opentuner, which is required in requirements.txt
-cd $GPTUNEROOT
-cp ./patches/opentuner/manipulator.py  $SITE_PACKAGES_PATH/opentuner/search/.
 ```
 
 ### Using prebuilt docker images

@@ -112,7 +112,7 @@ def main():
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
 
     giventask = [[round(tvalue,2)]]
-    (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Tgiven=giventask, NS1=npilot)
 
     """ Print all input and parameter samples """
     print("stats: ", stats)

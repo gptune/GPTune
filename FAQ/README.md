@@ -102,15 +102,17 @@ This typically means that a wrong version of openmpi is used at runtime. Make su
 ### Runtime error: "ImportError: cannot import name '_centered' from 'scipy.signal.signaltools'"
 This is due to the use of scipy-1.8.0 (or newer) and statsmodels-0.12.2 (or older). You can upgrade statsmodels to 0.13.2. 
 ### Installation error: "Could not find a version that satisfies the requirement pygmo (from versions: none)"
-For python3.9+ pip install pygmo doesn't work. You need to install pygmo from source. Assume that your system has BOOST(>=1.68) installed at 'BOOST_ROOT' and pybind11 installed at 'SITE_PACKAGE'/pybind11. The C and C++ compilers are 'MPICC' and 'MPICXX'. If you don't have BOOST>=1.68, you can install it from source:
+For python3.9+ pip install pygmo doesn't work. You need to install pygmo from source. Assume that your system has BOOST(>=1.69) installed at 'BOOST_ROOT' and pybind11 installed at 'SITE_PACKAGE'/pybind11. The C and C++ compilers are 'MPICC' and 'MPICXX'. If you don't have BOOST>=1.69, you can install it from source:
 ```
 cd $GPTUNEROOT  
-wget -c 'http://sourceforge.net/projects/boost/files/boost/1.68.0/boost_1_68_0.tar.bz2/download'  
+rm -rf download
+rm -rf boost_1_69_0
+wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'  
 tar -xvf download  
-cd boost_1_68_0/  
+cd boost_1_69_0/  
 ./bootstrap.sh --prefix=$PWD/build  
 ./b2 install  
-export BOOST_ROOT=$GPTUNEROOT/boost_1_68_0/stage 
+export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build 
 
 ```
 The following lines install TBB, pagmo and pygmo from source:
@@ -135,7 +137,8 @@ cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 cd $GPTUNEROOT  
 rm -rf pagmo2  
 git clone https://github.com/esa/pagmo2.git  
-cd pagmo2  
+cd pagmo2
+git checkout 1d41b1b5f70e59db8481ff8e6213f06f3b8b51f2  
 mkdir build  
 cd build  
 cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib  
@@ -149,10 +152,16 @@ git clone https://github.com/esa/pygmo2.git
 cd pygmo2  
 mkdir build  
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="$SITE_PACKAGE" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX  
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="$SITE_PACKAGE" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
 make -j16  
 make install  
 ```
+Note that, if you have installed TBB, pagmo, and pygmo2 from source codes with the installation paths described in the above instructions, then, to use the pygmo module in GPTune, you may need to provide the path to the TBB and pagmo library, for example:
+```
+export LD_LIBRARY_PATH=$GPTUNEROOT/pagmo2/build/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$GPTUNEROOT/oneTBB/build/lib:$LD_LIBRARY_PATH
+```
+
 ### Runtime error: "ModuleNotFoundError: No module named 'fn'"
 This is due to the dependency on fn from opentuner. Note fn has been removed from opentuner (https://github.com/jansel/opentuner/pull/155). Make sure you use the patch file provided by GPTune, as
 ```

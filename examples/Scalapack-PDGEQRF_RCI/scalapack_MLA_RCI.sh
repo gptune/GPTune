@@ -88,12 +88,12 @@ n=${input_para[1]}
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
 mb=$((${tuning_para[0]}*$bunit))
 nb=$((${tuning_para[1]}*$bunit))
-npernode=${tuning_para[2]}
+lg2npernode=${tuning_para[2]}
 p=${tuning_para[3]}
 
 
 # call the application
-npernode=$((2**$npernode))
+npernode=$((2**$lg2npernode))
 export OMP_NUM_THREADS=$(($cores / $npernode))
 nproc=$(($nodes*$npernode))
 q=$(($nproc / $p))

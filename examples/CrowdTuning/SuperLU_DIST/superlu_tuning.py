@@ -263,7 +263,7 @@ def tuning_all(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot):
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -356,7 +356,7 @@ def tuning_reduced_default(matname, ntask, nprocmin_pernode, nbatch, nrun, npilo
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -451,7 +451,7 @@ def tuning_reduced_random(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """

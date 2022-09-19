@@ -47,7 +47,6 @@ from gptune import * # import all
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
 
 # from callopentuner import OpenTuner
 # from callhpbandster import HpBandSter
@@ -93,10 +92,10 @@ def main():
 
 	# Input/tuning parameters 
 	#### note that the px_i, py_i, px_o, py_o are in log scale
-	px_i    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="px_i")
-	py_i    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="py_i")
-	px_o    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="px_o")
-	py_o    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="py_o")
+	px_i    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="px_i")
+	py_i    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="py_i")
+	px_o    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="px_o")
+	py_o    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="py_o")
 	comm_type   = Categoricalnorm (['a2a', 'p2p'], transform="onehot", name="comm_type")
 	
 	# Tuning Objective 
@@ -111,7 +110,8 @@ def main():
 	constants={"nodes":nodes,"cores":cores,"npernode":npernode}
 
 	""" Print all input and parameter samples """	
-	print(IS, PS, OS, constraints, models)
+	# print(IS, PS, OS, constraints, models)
+	print('IS: \n', IS, '\nPS: \n',PS,'\nOS: \n',OS, '\nconstraints: \n',constraints,'\nmodels: \n',models)
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
@@ -129,7 +129,7 @@ def main():
 	options['shared_memory_parallelism'] = False
 	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
-	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+	# options['search_algo'] = 'dual_annealing' #'maco' #'moead' #'nsga2' #'nspso' 
 	options['search_pop_size'] = 1000
 	options['search_gen'] = 10
 	options['search_more_samples'] = 1	
@@ -150,7 +150,7 @@ def main():
 		
 		NI = len(giventask)
 		NS = nrun
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
 		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	

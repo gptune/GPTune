@@ -92,6 +92,7 @@ class Search(abc.ABC):
         for res_ in res:
             tid = res_[0]
             x = res_[1][0]
+            tmp = x
             duplicate = False
             for x_ in data.P[tid]:
                 x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
@@ -104,17 +105,16 @@ class Search(abc.ABC):
             while duplicate == True:
                 duplicate = False
                 # generate random sample if the sample already has duplicates
-                x = np.random.rand(len(x[0]))
+                x = np.random.rand(len(tmp[0]))
                 print ("generate random sample: ", x)
                 print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
-                res_[1][0] = x
+                res_[1][0] = np.array([x.tolist()], ndmin=2)
                 for x_ in data.P[tid]:
                     x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                     x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
                     if x_orig == x_orig_:
                         duplicate = True
                         break
-
         res.sort(key = lambda x : x[0])
         return res
 
@@ -473,7 +473,7 @@ class SearchPyMoo(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
         prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
@@ -496,7 +496,10 @@ class SearchPyMoo(Search):
                 raise Exception(f'Unknown optimization algorithm "{kwargs["search_algo"]}"')
 
             bestX = []
-            res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
+            if kwargs['search_random_seed'] == None:
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
+            else:
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed']+len(data.P[0]))
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
@@ -536,7 +539,7 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
@@ -560,7 +563,7 @@ class SearchPyGMO(Search):
                 if kwargs['search_random_seed'] == None:
                     archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
                 else:
-                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed'])
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed']+len(data.P[0]))
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
                 champions_f = archi.get_champions_f()
@@ -746,9 +749,10 @@ class SearchCMO(Search):
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
         import pygmo as pg
 
-        print ("SearchByCMO")
+        # print ("SearchByCMO")
 
         kwargs = kwargs['kwargs']
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblemCMO(self.problem, self.computer, data, models, self.options, tid)
 
@@ -819,29 +823,33 @@ class SearchSciPy(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
-
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
         if (kwargs['verbose']):
             print ("prob: ", prob)
         bestX = []
 
+        # set seeds for the samplers using 'search_random_seed' instead of 'sample_random_seed', as they are used to generate the intial guess for scipy optimizers
+        if(kwargs['search_random_seed'] is not None): 
+            kwargs['sample_random_seed'] = kwargs['search_random_seed'] +len(data.P[0])
+        else: 
+            kwargs['sample_random_seed'] = None
+
         sampler = eval(f'{kwargs["sample_class"]}()')
         check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
-        tmpP = sampler.sample_parameters(n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+        tmpP = sampler.sample_parameters(problem = self.problem, n_samples = 1, I = data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
         x0 = tmpP[0][0]
 
         lw = [0]*self.problem.DP
         up = [1]*self.problem.DP
         bounds_constraint = sp.optimize.Bounds(lw, up)
-        print(kwargs["search_algo"])
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
         if(kwargs["search_algo"] == 'trust-constr'):
             ret = sp.optimize.minimize(prob.fitness, x0, method='trust-constr',  jac="2-point", hess=sp.optimize.SR1(),constraints=[], options={'verbose': 1}, bounds=bounds_constraint)
         elif(kwargs["search_algo"] == 'l-bfgs-b'):        
             ret = sp.optimize.minimize(fun=prob.fitness, x0=x0, bounds=bounds_constraint, method='L-BFGS-B')
         elif(kwargs["search_algo"] == 'dual_annealing'): 
-            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)))
+            ret = sp.optimize.dual_annealing(prob.obj_scipy, bounds=list(zip(lw, up)), seed=kwargs['search_random_seed'])
         else:
             raise Exception("GPTune only supports 'l-bfgs-b', 'dual_annealing', 'trust-constr' when 'SearchSciPy' is used")
 

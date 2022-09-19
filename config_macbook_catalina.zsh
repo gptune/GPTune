@@ -348,11 +348,11 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
+# cp ../patches/autotune/problem.py autotune/.
 pip install --user -e .
 
 
-cp ../patches/opentuner/manipulator.py  /usr/local/lib/python3.7/site-packages/opentuner/search/.
-cp ../patches/opentuner/manipulator.py  ~/Library/Python/3.7/lib/python/site-packages/opentuner/search/.
+# cp ../patches/opentuner/manipulator.py  /usr/local/lib/python3.7/site-packages/opentuner/search/.
+# cp ../patches/opentuner/manipulator.py  ~/Library/Python/3.7/lib/python/site-packages/opentuner/search/.
 
 

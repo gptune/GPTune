@@ -3,10 +3,10 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.13_1
-gccversion=11.3.0_1
-openblasversion=0.3.20
-lapackversion=3.10.1
+pythonversion=3.9.13_4
+gccversion=12.2.0
+openblasversion=0.3.21
+lapackversion=3.10.1_1
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
@@ -44,9 +44,9 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
-	CC=$BREWPATH/gcc/$gccversion/bin/gcc-11
-	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-11
-	CPP=$BREWPATH/gcc/$gccversion/bin/g++-11
+	CC=$BREWPATH/gcc/$gccversion/bin/gcc-12
+	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-12
+	CPP=$BREWPATH/gcc/$gccversion/bin/g++-12
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
@@ -85,9 +85,8 @@ export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.dylib;$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libGKlib.a"
-export METIS_LIBRARIES=$ParMETIS_DIR/lib/libmetis.dylib
-
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.dylib;$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libGKlib.dylib"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.dylib;$ParMETIS_DIR/lib/libGKlib.dylib"
 
 
 
@@ -106,8 +105,8 @@ then
     exit 
 fi
 
-alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3
+alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3.9  # this makes sure virtualenv uses the correct python version
+alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3.9
 
 python -m pip install virtualenv 
 rm -rf env
@@ -162,7 +161,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --force-reinstall --upgrade  -r requirements_lite.txt
 fi
-
+# cp ./patches/opentuner/manipulator.py  ./env/lib/python3.9/site-packages/opentuner/search/.
 
 
 
@@ -259,6 +258,11 @@ if [[ $BuildExample == 1 ]]; then
 	make config prefix=$ParMETIS_DIR
 	make -j8
 	make install
+	sed -i "" "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	make config prefix=$ParMETIS_DIR
+	make -j8
+	make install
+
 	cd ../
 	rm -rf METIS
 	git clone https://github.com/KarypisLab/METIS.git
@@ -416,7 +420,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_ENABLE_PTSCOTCH=ON \
 		-DTPL_ENABLE_PARMETIS=ON \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.dylib" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 
@@ -515,10 +519,14 @@ cd $GPTUNEROOT
 rm -rf autotune
 git clone https://github.com/ytopt-team/autotune.git
 cd autotune/
-cp ../patches/autotune/problem.py autotune/.
+# cp ../patches/autotune/problem.py autotune/.
 pip install -e .
 
-
+cd $GPTUNEROOT
+rm -rf hybridMinimization
+git clone https://github.com/gptune/hybridMinimization.git
+cd hybridMinimization/
+python setup.py install
 
 cd $GPTUNEROOT
 rm -rf GPy
@@ -532,6 +540,4 @@ python setup.py install
 
 
 
-cd $GPTUNEROOT
-cp patches/opentuner/manipulator.py  ./env/lib/python3.9/site-packages/opentuner/search/.
 
