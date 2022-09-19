@@ -96,7 +96,20 @@ class gptunehybrid_worker(object):
             x.append(kwargs[n])    
         return (x,kwargs)
 
+
+    def blk_constraint(self,X):
+
+        t = self.t
+
+        (x,kwargs) = self.hybridx_to_gptunex(X)
         
+        kwargs2 = {d.name: t[i] for (i, d) in enumerate(self.tp.input_space)}
+        kwargs2.update(kwargs)
+        check_constraints = functools.partial(self.computer.evaluate_constraints, self.tp, inputs_only = False, kwargs = kwargs)
+        cond = check_constraints(kwargs2)
+        return cond
+
+
     def f_truth(self,X):
 
         t1 = time.time_ns()
@@ -189,7 +202,7 @@ def GPTuneHybrid(T, tp : TuningProblem, computer : Computer, options: Options, r
         # print(X0)
         # print(Y0)
 
-        h1_y,h1_x,h1_root,h1_model,h1_model_history = gptunehybrid.hybridMinimization(fn=worker.f_truth,\
+        h1_y,h1_x,h1_root,h1_model,h1_model_history = gptunehybrid.hybridMinimization(fn=worker.f_truth, blkcst=worker.blk_constraint, \
                                                 selection_criterion = options['selection_criterion_hybrid'],fix_model = -1,\
                                                 categorical_list=worker.categorical_list,\
                                                 categorical_trained_model=None,\

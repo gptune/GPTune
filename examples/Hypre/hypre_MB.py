@@ -300,7 +300,7 @@ def main():
         if args.nrun > 0:
             NS = args.nrun
         NS1 = max(NS//2, 1)
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS1)
         print("stats: ", stats)
 
         """ Print all input and parameter samples """
@@ -340,7 +340,7 @@ def main():
     if(TUNER_NAME=='GPTuneBand'):
         data = Data(problem)
         gt = GPTune_MB(problem, computer=computer, options=options)
-        (data, stats, data_hist)=gt.MB_LCM(NLOOP = Nloop, Igiven = giventask)
+        (data, stats, data_hist)=gt.MB_LCM(NLOOP = Nloop, Tgiven = giventask)
         print("Tuner: ", TUNER_NAME)
         print("stats: ", stats)
         """ Print all input and parameter samples """
@@ -373,7 +373,7 @@ def main():
             cur_task = [singletask]
             data = Data(problem)
             gt = GPTune_MB(problem, computer=computer, options=options)
-            (data, stats)=gt.MB_LCM(NLOOP = Nloop, Igiven = cur_task)
+            (data, stats)=gt.MB_LCM(NLOOP = Nloop, Tgiven = cur_task)
             data_all.append(data)
             merge_dict(stats_all, stats)
             print("Finish one single task tuning")

@@ -324,7 +324,7 @@ def main():
         NI = ntask
         NS = nrun
         NS1 = nrun1
-        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=NS1)
+        (data, model, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=NS1)
         print("stats: ", stats)
 
         """ Print all input and parameter samples """

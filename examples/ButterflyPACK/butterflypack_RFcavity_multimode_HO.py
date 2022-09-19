@@ -269,7 +269,7 @@ def main():
 		
 		NI = len(giventask)
 		NS = max(nrun//2, 1)
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS)
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS)
 		os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
 		
 		try:
@@ -294,7 +294,7 @@ def main():
 				gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 				
 				NI = len(giventask)
-				(data, model, stats) = gt.MLA(NS=len(data.P[0])+1, NI=NI, Igiven=giventask, NS1=len(data.P[0]))
+				(data, model, stats) = gt.MLA(NS=len(data.P[0])+1, NI=NI, Tgiven=giventask, NS1=len(data.P[0]))
 				os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
 
 				(Pall,Oall) = readdata(giventask[0][0])

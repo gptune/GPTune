@@ -446,9 +446,9 @@ class SurrogateProblem(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [float("Inf")]
+                return [1e12]
             else: 
-                return [float("Inf")]* self.problem.DO
+                return [1e12]* self.problem.DO
     
     def obj_scipy(self, x):
         return self.fitness(x)[0]
@@ -734,9 +734,9 @@ class SurrogateProblemCMO(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [float("Inf")]
+                return [1e12]
             else:
-                return [float("Inf")]* self.problem.DO
+                return [1e12]* self.problem.DO
 
 
 class SearchCMO(Search):

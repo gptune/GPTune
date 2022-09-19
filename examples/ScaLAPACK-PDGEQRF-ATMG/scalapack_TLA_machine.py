@@ -261,8 +261,8 @@ def main():
     """ Building MLA with the given list of tasks """
     NI = len(giventask)
     NS = nrun
-    (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
-    #(data, model, stats) = gt.MLA_LoadModel(NS=10, Igiven=giventask)
+    (data, model, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=max(NS//2, 1))
+    #(data, model, stats) = gt.MLA_LoadModel(NS=10, Tgiven=giventask)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
