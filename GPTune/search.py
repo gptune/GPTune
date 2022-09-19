@@ -473,7 +473,7 @@ class SearchPyMoo(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
         prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
@@ -539,7 +539,7 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
@@ -749,9 +749,10 @@ class SearchCMO(Search):
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
         import pygmo as pg
 
-        print ("SearchByCMO")
+        # print ("SearchByCMO")
 
         kwargs = kwargs['kwargs']
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblemCMO(self.problem, self.computer, data, models, self.options, tid)
 
@@ -842,7 +843,7 @@ class SearchSciPy(Search):
         lw = [0]*self.problem.DP
         up = [1]*self.problem.DP
         bounds_constraint = sp.optimize.Bounds(lw, up)
-        print(kwargs["search_algo"])
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
         if(kwargs["search_algo"] == 'trust-constr'):
             ret = sp.optimize.minimize(prob.fitness, x0, method='trust-constr',  jac="2-point", hess=sp.optimize.SR1(),constraints=[], options={'verbose': 1}, bounds=bounds_constraint)
         elif(kwargs["search_algo"] == 'l-bfgs-b'):        

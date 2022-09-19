@@ -215,6 +215,7 @@ class Model_GPy_LCM(Model):
                 print("lengthscale: ", hyperparameters["lengthscale"])
                 print("variance: ", hyperparameters["variance"])
                 print("noise_variance: ", hyperparameters["noise_variance"])
+            print ("modeler: ", kwargs['model_class'])
             print ("M: ", self.M)
 
         return (hyperparameters, modeling_options, model_stats)
