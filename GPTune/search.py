@@ -89,32 +89,33 @@ class Search(abc.ABC):
         # print(res)
 
         # check if there are duplicated samples
-        for res_ in res:
-            tid = res_[0]
-            x = res_[1][0]
-            tmp = x
-            duplicate = False
-            for x_ in data.P[tid]:
-                x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
-                x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
-                if x_orig == x_orig_:
-                    duplicate = True
-                    print ("duplicated sample: ", x)
-                    break
-
-            while duplicate == True:
+        if data.P is not None:
+            for res_ in res:
+                tid = res_[0]
+                x = res_[1][0]
+                tmp = x
                 duplicate = False
-                # generate random sample if the sample already has duplicates
-                x = np.random.rand(len(tmp[0]))
-                print ("generate random sample: ", x)
-                print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
-                res_[1][0] = np.array([x.tolist()], ndmin=2)
                 for x_ in data.P[tid]:
                     x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                     x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
                     if x_orig == x_orig_:
                         duplicate = True
+                        print ("duplicated sample: ", x)
                         break
+
+                while duplicate == True:
+                    duplicate = False
+                    # generate random sample if the sample already has duplicates
+                    x = np.random.rand(len(tmp[0]))
+                    print ("generate random sample: ", x)
+                    print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
+                    res_[1][0] = np.array([x.tolist()], ndmin=2)
+                    for x_ in data.P[tid]:
+                        x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                        x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                        if x_orig == x_orig_:
+                            duplicate = True
+                            break
         res.sort(key = lambda x : x[0])
         return res
 
@@ -506,7 +507,10 @@ class SearchPyMoo(Search):
             if kwargs['search_random_seed'] == None:
                 res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
             else:
-                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed']+len(data.P[0]))
+                seed = kwargs['search_random_seed']
+                if data.P is not None:
+                    seed += len(data.P[0])
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=seed)
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
@@ -570,7 +574,10 @@ class SearchPyGMO(Search):
                 if kwargs['search_random_seed'] == None:
                     archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
                 else:
-                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed']+len(data.P[0]))
+                    seed = kwargs['search_random_seed']
+                    if data.P is not None:
+                        seed += len(data.P[0])
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = seed)
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
                 champions_f = archi.get_champions_f()
@@ -838,7 +845,10 @@ class SearchSciPy(Search):
 
         # set seeds for the samplers using 'search_random_seed' instead of 'sample_random_seed', as they are used to generate the intial guess for scipy optimizers
         if(kwargs['search_random_seed'] is not None): 
-            kwargs['sample_random_seed'] = kwargs['search_random_seed'] +len(data.P[0])
+            seed = kwargs['search_random_seed']
+            if data.P is not None:
+                seed += len(data.P[0])
+            kwargs['sample_random_seed'] = seed
         else: 
             kwargs['sample_random_seed'] = None
 
