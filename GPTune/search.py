@@ -317,7 +317,7 @@ class SurrogateProblem(object):
                         ret = model_transfer(point)
                         mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
                         try:
-                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), num_models_transfer)
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/num_models_transfer))
                         except:
                             var_transfer_ = 1
                         var_transfer *= var_transfer_
@@ -341,6 +341,7 @@ class SurrogateProblem(object):
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
                     var_transfer = 1
+
                     for i in range(len(self.models_transfer)):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
@@ -351,7 +352,8 @@ class SurrogateProblem(object):
                             var_transfer_ = 1
                         var_transfer *= var_transfer_
                     mu = self.models_weights[0]*mu[0][0] + mu_transfer
-                    var = max(1e-18, self.models_weights[0]*var[0][0] * var_transfer)
+                    var_transfer *= math.pow(max(1e-18, var[0][0]), self.models_weights[0])
+                    var = max(1e-18, var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
@@ -390,9 +392,14 @@ class SurrogateProblem(object):
                     for model_transfer in self.models_transfer:
                         ret = model_transfer(point)
                         mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                        var_transfer *= 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                        try:
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/(num_models_transfer+1)))
+                        except:
+                            var_transfer_ = 1
+                        var_transfer *= var_transfer_
                     mu = mu[0][0] + mu_transfer
-                    var = max(1e-18, var[0][0] * var_transfer)
+                    var_transfer *= math.pow(max(1e-18, var[0][0]), float(1.0/(num_models_transfer+1)))
+                    var = max(1e-18, var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
