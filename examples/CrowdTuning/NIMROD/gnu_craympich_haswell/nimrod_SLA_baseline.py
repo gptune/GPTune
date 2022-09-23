@@ -50,7 +50,7 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "NIMROD_slu3d_SLA_baseline",
         "tuning_problem_category": "NIMROD",
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",

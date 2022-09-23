@@ -83,7 +83,7 @@ def main():
     #tuning_metadata = {
     #    "tuning_problem_name": "DGELS",
     #    "tuning_problem_category": "PLASMA",
-    #    "use_crowd_repo": "no",
+    #    "sync_crowd_repo": "no",
     #    "machine_configuration": {
     #        "machine_name": "Cori",
     #        "haswell": { "nodes": 1, "cores": 32 }
@@ -94,8 +94,8 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "PLASMA-DGELS-TUNING-1",
         "tuning_problem_category": "PLASMA",
-        "historydb_api_key":os.getenv("HISTORYDB_API_KEY",""),
-        "use_crowd_repo": "yes",
+        "crowdtuning_api_key":os.getenv("CROWDTUNING_API_KEY",""),
+        "sync_crowd_repo": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }

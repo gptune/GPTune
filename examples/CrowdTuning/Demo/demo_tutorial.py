@@ -80,8 +80,8 @@ def main():
 
     tuning_metadata = {
         "tuning_problem_name": "Demo-Tutorial",
-        "historydb_api_key": os.getenv("CROWDTUNING_API_KEY"),
-        "use_crowd_repo": "yes",
+        "crowdtuning_api_key": os.getenv("CROWDTUNING_API_KEY"),
+        "sync_crowd_repo": "yes",
         "load_func_eval": "no",
         "machine_configuration": {
             "machine_name": "mymachine",

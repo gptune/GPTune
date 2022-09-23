@@ -51,7 +51,7 @@ def QueryFunctionEvaluations(api_key:str=None,
 def UploadFunctionEvaluation(api_key:str=None,
         function_evaluation:dict={}):
     r = requests.post(url = self.crowd_repo_upload_url,
-            headers={"x-api-key":self.historydb_api_key},
+            headers={"x-api-key":self.crowdtuning_api_key},
             data={"tuning_problem_name":self.tuning_problem_name,
                 "function_evaluation_document":json.dumps(function_evaluation)},
             verify=False)

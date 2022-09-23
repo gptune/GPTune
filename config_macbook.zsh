@@ -3,7 +3,7 @@
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.13_4
+pythonversion=3.9.14
 gccversion=12.2.0
 openblasversion=0.3.21
 lapackversion=3.10.1_1

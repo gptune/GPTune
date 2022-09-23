@@ -81,7 +81,7 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "DGEQRF",
         "tuning_problem_category": "PLASMA",
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }

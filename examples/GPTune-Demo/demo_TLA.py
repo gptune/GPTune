@@ -172,7 +172,7 @@ def main():
 
     tuning_metadata = {
         "tuning_problem_name": "GPTune-Demo",
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "load_func_eval": "no",
         "machine_configuration": {
             "machine_name": "mymachine",

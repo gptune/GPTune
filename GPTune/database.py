@@ -200,8 +200,8 @@ class HistoryDB(dict):
         self.load_surrogate_model = False
 
         """ Crowd repository options """
-        self.use_crowd_repo = False
-        self.historydb_api_key = ""
+        self.sync_crowd_repo = False
+        self.crowdtuning_api_key = ""
         self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
         #self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
         self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
@@ -307,16 +307,16 @@ class HistoryDB(dict):
             if "tuning_problem_category" in metadata:
                 self.tuning_problem_category = metadata["tuning_problem_category"]
 
-            if "use_crowd_repo" in metadata:
-                if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
-                    self.use_crowd_repo = True
+            if "sync_crowd_repo" in metadata:
+                if metadata["sync_crowd_repo"] == "yes" or metadata["sync_crowd_repo"] == "y":
+                    self.sync_crowd_repo = True
                 else:
-                    self.use_crowd_repo = False
+                    self.sync_crowd_repo = False
             else:
-                self.use_crowd_repo = False
+                self.sync_crowd_repo = False
 
-            if "historydb_api_key" in metadata:
-                self.historydb_api_key = metadata["historydb_api_key"]
+            if "crowdtuning_api_key" in metadata:
+                self.crowdtuning_api_key = metadata["crowdtuning_api_key"]
 
             if "historydb_path" in metadata:
                 self.historydb_path = metadata["historydb_path"]
@@ -635,10 +635,10 @@ class HistoryDB(dict):
         if (self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
-            if self.use_crowd_repo == True:
+            if self.sync_crowd_repo == True:
                 try:
                     r = requests.get(url = self.crowd_repo_download_url,
-                            headers={"x-api-key":self.historydb_api_key},
+                            headers={"x-api-key":self.crowdtuning_api_key},
                             params={"tuning_problem_name":self.tuning_problem_name,
                                 "tuning_problem_category":self.tuning_problem_category},
                             verify=False)
@@ -1086,13 +1086,13 @@ class HistoryDB(dict):
 
                 new_function_evaluation_results.append(function_evaluation_document)
 
-                if self.use_crowd_repo == True:
+                if self.sync_crowd_repo == True:
                     print ("function_evaluation_document: ", str(function_evaluation_document))
-                    print ("API_KEY: ", self.historydb_api_key)
+                    print ("API_KEY: ", self.crowdtuning_api_key)
 
                     try:
                         r = requests.post(url = self.crowd_repo_upload_url,
-                                headers={"x-api-key":self.historydb_api_key},
+                                headers={"x-api-key":self.crowdtuning_api_key},
                                 data={"tuning_problem_name":self.tuning_problem_name,
                                     "tuning_problem_category":self.tuning_problem_category,
                                     "function_evaluation_document":json.dumps(function_evaluation_document)},
