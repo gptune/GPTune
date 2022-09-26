@@ -390,6 +390,7 @@ class SurrogateProblem(object):
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
                     var_transfer = 1
+                    num_models_transfer = len(self.models_transfer)
                     for model_transfer in self.models_transfer:
                         ret = model_transfer(point)
                         mu_transfer += 1*ret[self.problem.OS[o].name][0][0]

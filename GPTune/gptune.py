@@ -970,7 +970,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def SLA(self, NS, NS1, Tgiven):
+    def SLA(self, NS, NS1 = None, Tgiven = None):
 
         if NS1 == None:
             NS1 = int(NS/2)
@@ -999,7 +999,11 @@ class GPTune(object):
 
         return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
-    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
+    def TLA(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
+
+        return TLA_I(NS=NS, Tnew=Tnew, models_transfer=models_transfer, source_function_evaluations=source_function_evaluations, TLA_options=TLA_options)
+
+    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
 
         # Unified TLA interface
         # This supports only one target task
@@ -1295,14 +1299,14 @@ class GPTune(object):
 
                 if TLA_chosen == "Regression":
                     self.options["TLA_method"] = "Regression"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "Sum":
                     self.options["TLA_method"] = "Sum"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "LCM_BF":
                     self.options["TLA_method"] = "LCM_BF"
 
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
 
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
@@ -1313,15 +1317,15 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
-                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
                         task_parameter_vec = []
@@ -1331,18 +1335,18 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
                 # currently hard coded..
                 with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
