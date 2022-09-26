@@ -1273,12 +1273,13 @@ class GPTune(object):
                 for i in range(len(result_vec)):
                     result_vec[i] = result_vec[i]/sum_
                 for i in range(1, len(result_vec), 1):
-                    result_vec[i] == result_vec[i-1]
+                    result_vec[i] += result_vec[i-1]
 
                 # test
                 rand_num1 = np.random.rand()
                 if rand_num1 < exploration_rate:
                     option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
                 else:
                     rand_num = np.random.rand()
                     option_idx = 0
