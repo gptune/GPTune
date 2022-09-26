@@ -211,11 +211,7 @@ class HistoryDB(dict):
         self.historydb_path = "./gptune.db"
 
         """ Pass machine-related information """
-        self.machine_configuration = {
-                    "machine":"Unknown",
-                    "nodes":"Unknown",
-                    "cores":"Unknown"
-                }
+        self.machine_configuration = {}
 
         """ Pass software-related information """
         self.software_configuration = {}
@@ -427,9 +423,25 @@ class HistoryDB(dict):
             if "loadable_machine_configurations" in metadata:
                 self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
             else:
-                self.loadable_machine_configurations = self.machine_configuration
+                #self.loadable_machine_configurations = self.machine_configuration
+                if "machine_name" in self.machine_configuration:
+                    machine_name = self.machine_configuration["machine_name"]
+                    self.loadable_machine_configurations = {
+                        machine_name: {}
+                    }
+                    processor_list = list(self.machine_configuration.keys())
+                    processor_list.remove("machine_name")
+                    for processor in processor_list:
+                        self.loadable_machine_configurations[machine_name][processor] = {}
+                        num_nodes = self.machine_configuration[processor]["nodes"]
+                        num_cores = self.machine_configuration[processor]["cores"]
+                        self.loadable_machine_configurations[machine_name][processor]["nodes"] = num_nodes
+                        self.loadable_machine_configurations[machine_name][processor]["cores"] = num_cores
             if "loadable_software_configurations" in metadata:
                 self.loadable_software_configurations = metadata["loadable_software_configurations"]
+            else:
+                for software_name in self.software_configuration.keys():
+                    self.loadable_software_configurations[software_name] = self.software_configuration[software_name]
 
             try:
                 with FileLock("test.lock", timeout=0):
@@ -507,7 +519,11 @@ class HistoryDB(dict):
 
         ''' check machine configuration dependencies '''
         loadable_machine_configurations = self.loadable_machine_configurations
+        if not "machine_configuration" in func_eval:
+            return False
         machine_configuration = func_eval['machine_configuration']
+        if not "machine_name" in machine_configuration:
+            return False
         machine_name = machine_configuration['machine_name']
         processor_list = list(machine_configuration.keys())
         processor_list.remove("machine_name")
@@ -861,6 +877,7 @@ class HistoryDB(dict):
                         num_loaded_data += 1
 
             if (num_loaded_data > 0):
+                print ("loaded function evaluations: ", num_loaded_data)
                 data.I = Tgiven #IS_history
                 data.P = PS_history
                 data.O=[] # YL: OS is a list of 2D numpy arrays
