@@ -150,6 +150,7 @@ def main():
     nprocmin_pernode = args.nprocmin_pernode
     ntask = args.ntask
     nrun = args.nrun
+    npilot = args.npilot
     TUNER_NAME = args.optimization
     tla_II = args.tla_II
 
@@ -203,7 +204,10 @@ def main():
     options['distributed_memory_parallelism'] = False
     options['shared_memory_parallelism'] = False
     # options['mpi_comm'] = None
-    options['model_class'] = 'Model_GPy_LCM'
+    options['sample_class'] = 'SampleOpenTURNS'
+    # Use the following two lines if you want to specify a certain random seed for surrogate modeling
+    options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
+    # Use the following two lines if you want to specify a certain random seed for the search phase
     options['verbose'] = False
     options.validate(computer=computer)
     
@@ -222,7 +226,7 @@ def main():
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
         NS = nrun
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
         print("stats: ", stats)
         
         """ Print all input and parameter samples """
@@ -321,6 +325,7 @@ def parse_args():
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune, GPTuneHybrid)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
     parser.add_argument('-nrun', type=int, default=-1, help='Number of runs per task')
+    parser.add_argument('-npilot', type=int, default=0, help='Number of runs per task')
     parser.add_argument('-tla_II', type=int, default=0, help='Whether perform TLA_II after MLA when optimization is GPTune')
     args = parser.parse_args()
 
