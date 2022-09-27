@@ -2348,7 +2348,6 @@ class GPTune(object):
         # train stacking models based on residuals
         for o in range(self.problem.DO):
             for i in range(1, num_source_tasks, 1):
-                print ("train_stacked i: ", i)
                 modelers[o].train_stacked(data=load_residuals(self.problem, modelers[o], source_function_evaluations[i]), num_source_tasks=num_source_tasks, **kwargs)
 
         initial_modelers = copy.deepcopy(modelers)
@@ -2512,17 +2511,23 @@ class GPTune(object):
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
 
                 def data_to_dict(problem, data):
+                    data_ = copy.deepcopy(data)
+                    if data_.I is not None:    # from 2D numpy array to a list of lists
+                        data_.I = problem.IS.inverse_transform(data_.I)
+                    if data_.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                        data_.P = [problem.PS.inverse_transform(x) for x in data_.P]
+
                     task_id = 0
                     documents = []
 
-                    num_evals = len(data.P[task_id])
+                    num_evals = len(data_.P[task_id])
                     print ("num_evals: ", num_evals)
 
                     for i in range(num_evals):
                         document = {}
-                        document["task_parameter"] = { problem.IS[k].name:data.I[task_id][k] for k in range(len(problem.IS)) }
-                        document["tuning_parameter"] = { problem.PS[k].name:data.P[task_id][i][k] for k in range(len(problem.PS)) }
-                        document["evaluation_result"] = { problem.OS[k].name:data.O[task_id][i][k] for k in range(len(problem.OS)) }
+                        document["task_parameter"] = { problem.IS[k].name:data_.I[task_id][k] for k in range(len(problem.IS)) }
+                        document["tuning_parameter"] = { problem.PS[k].name:data_.P[task_id][i][k] for k in range(len(problem.PS)) }
+                        document["evaluation_result"] = { problem.OS[k].name:data_.O[task_id][i][k] for k in range(len(problem.OS)) }
 
                         print ("document: ", document)
 
