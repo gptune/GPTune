@@ -53,7 +53,7 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 # t1 = time.time_ns()
-                S2 = self.sample(n_samples, space, kwargs=kwargs)
+                S2 = self.sample(n_samples, space, n_itr, kwargs=kwargs)
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
 
@@ -138,7 +138,7 @@ class SampleLHSMDU(Sample):
         self.cached_space     = None
         self.cached_algo      = None
 
-    def sample(self, n_samples : int, space : Space, **kwargs):
+    def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
 
         kwargs = kwargs['kwargs']
 
@@ -149,7 +149,7 @@ class SampleLHSMDU(Sample):
         if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
             #lhs = lhsmdu.resample() # YC: this can fall into too clustered samples if there are many constraints
             if kwargs['sample_random_seed'] != None:
-                lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+                lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
             else:
                 np.random.seed()
                 lhs = lhsmdu.sample(len(space), n_samples)
@@ -161,7 +161,7 @@ class SampleLHSMDU(Sample):
 
             if (kwargs['sample_algo'] == 'LHS-MDU'):
                 if kwargs['sample_random_seed'] != None:
-                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
                 else:
                     np.random.seed()
                     lhs = lhsmdu.sample(len(space), n_samples)
@@ -190,13 +190,13 @@ class SampleOpenTURNS(Sample):
         self.cached_space        = None
         self.cached_distribution = None
 
-    def sample(self, n_samples : int, space : Space, **kwargs):
+    def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
 
         kwargs = kwargs['kwargs']
 
         import openturns as ot
         if kwargs['sample_random_seed'] != None:
-            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed'])
+            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed']+n_itr)
 
         if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution
