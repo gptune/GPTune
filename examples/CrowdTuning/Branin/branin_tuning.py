@@ -210,6 +210,7 @@ def main():
             options.validate(computer=computer)
         elif tuning_method == "TLA_Ensemble_Prob":
             options["TLA_method"] = "Ensemble_Prob"
+            options.validate(computer=computer)
         elif tuning_method == "TLA_Ensemble_ProbDyn":
             options["TLA_method"] = "Ensemble_ProbDyn"
             options.validate(computer=computer)
