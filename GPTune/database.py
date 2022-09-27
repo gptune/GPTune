@@ -761,7 +761,10 @@ class HistoryDB(dict):
                     for func_eval in historical_function_evaluations:
                         if options != None and options["model_input_separation"] == True:
                             if options["TLA_method"] == None:
-                                modeling_load = "MLA_LCM"
+                                if len(data.I) == 1:
+                                    modeling_load = "SLA_GP"
+                                elif len(data.I) > 1:
+                                    modeling_load = "MLA_LCM"
                             elif options["TLA_method"] == "Regression":
                                 modeling_load = "TLA_RegressionSum"
                             elif options["TLA_method"] == "Sum":
@@ -770,8 +773,13 @@ class HistoryDB(dict):
                                 modeling_load = "TLA_Stacking"
                             elif options["TLA_method"] == "LCM_BF":
                                 modeling_load = "TLA_LCM_BF"
+                            elif options["TLA_method"] == "LCM":
+                                modeling_load = "TLA_LCM"
                             else:
-                                modeling_load = "MLA_LCM"
+                                if len(data.I) == 1:
+                                    modeling_load = "SLA_GP"
+                                elif len(data.I) > 1:
+                                    modeling_load = "MLA_LCM"
 
                             if func_eval["modeling"] != "Pilot" and \
                                (func_eval["modeling"] != modeling_load or
@@ -839,7 +847,10 @@ class HistoryDB(dict):
                     for func_eval in source_function_evaluations[source_task_id]:
                         #if options != None and options["model_input_separation"] == True:
                         #    if options["TLA_method"] == None:
-                        #        modeling_load = "MLA_LCM"
+                        #        if len(data.I) == 1:
+                        #            modeling_load = "SLA_GP"
+                        #        elif len(data.I) > 1:
+                        #            modeling_load = "MLA_LCM"
                         #    elif options["TLA_method"] == "Regression":
                         #        modeling_load = "TLA_RegressionSum"
                         #    elif options["TLA_method"] == "Sum":
@@ -848,8 +859,13 @@ class HistoryDB(dict):
                         #        modeling_load = "TLA_Stacking"
                         #    elif options["TLA_method"] == "LCM_BF":
                         #        modeling_load = "TLA_LCM_BF"
+                        #    elif options["TLA_method"] == "LCM":
+                        #        modeling_load = "TLA_LCM"
                         #    else:
-                        #        modeling_load = "MLA_LCM"
+                        #        if len(data.I) == 1:
+                        #            modeling_load = "SLA_GP"
+                        #        elif len(data.I) > 1:
+                        #            modeling_load = "MLA_LCM"
 
                         #    if func_eval["modeling"] != "Pilot" and \
                         #       (func_eval["modeling"] != modeling_load or

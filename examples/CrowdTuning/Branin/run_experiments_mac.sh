@@ -57,7 +57,7 @@ cd -
 #    ./branin_base.py -tid ${tid} -nbatch 0 -npilot 200 -nrun 200
 #done
 
-nrun=20
+nrun=30
 npilot=0
 
 for tid_source in 0 1
@@ -66,7 +66,8 @@ do
     do
         for nbatch in 0 1 2 3 4
         do
-            for tuning_method in SLA TLA_Sum TLA_Regression TLA_LCM_BF TLA_LCM TLA_Stacking TLA_Ensemble_Toggling TLA_Ensemble_Peeking TLA_Ensemble_Prob1 TLA_Ensemble_Prob2
+            #for tuning_method in SLA TLA_Sum TLA_Regression TLA_LCM_BF TLA_LCM TLA_Stacking TLA_Ensemble_Toggling TLA_Ensemble_Peeking TLA_Ensemble_Prob1 TLA_Ensemble_Prob2
+            for tuning_method in TLA_Ensemble_Prob
             do
                 ./branin_tuning.py -tuning_method ${tuning_method} -tid_target ${tid_target} -tid_source ${tid_source} -nbatch ${nbatch} -npilot ${npilot} -nrun ${nrun}
             done

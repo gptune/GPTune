@@ -1349,15 +1349,159 @@ class GPTune(object):
                     self.options["TLA_method"] = None
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
+                # currently hard coded.. it will work only for single target task TLA
+                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
+
+            return (data, model, stats)
+
+        elif self.options['TLA_method'] == 'Ensemble_ProbDyn':
+            print('\n\n\n------Starting TLA (Ensemble Probability) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            best_result = {}
+            for TLA_option in TLA_options:
+                best_result[TLA_option] = 1.0
+            num_TLA_options = len(TLA_options)
+
+            def sigmoid(num_samples, num_options, num_parameters):
+                x = (num_options*(num_parameters))*1.0/num_samples
+                return float(x)/(1+abs(x))
+                #return float(x)/math.sqrt(1+x**2)
+
+            def select_via_probability(exploration_rate, best_result):
+                option_vec = [k for k in best_result]
+                result_vec = np.array([best_result[k] for k in best_result])
+                best_min = np.min(result_vec)
+                if (best_min <= 0.0):
+                    diff = 1 - best_min
+                    for i in range(len(result_vec)):
+                        result_vec[i] = diff + result_vec[i]
+                for i in range(len(result_vec)):
+                    result_vec[i] = 1.0/result_vec[i]
+                sum_ = np.sum(result_vec)
+                for i in range(len(result_vec)):
+                    result_vec[i] = result_vec[i]/sum_
+                for i in range(1, len(result_vec), 1):
+                    result_vec[i] += result_vec[i-1]
+
+                # test
+                rand_num1 = np.random.rand()
+                if rand_num1 < exploration_rate:
+                    option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
+                else:
+                    rand_num = np.random.rand()
+                    option_idx = 0
+                    for i in range(len(result_vec)):
+                        if rand_num <= result_vec[i]:
+                            option_idx = i
+                            return option_vec[option_idx]
+
+            for n_sample in range(1, NS+1, 1):
+
+                if n_sample <= num_TLA_options:
+                    TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+                else:
+                    exploration_rate = sigmoid(n_sample-1, len(TLA_options), len(self.problem.PS))
+                    TLA_chosen = select_via_probability(exploration_rate, best_result)
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Tnew__ = copy.deepcopy(Tnew_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Tnew__ = copy.deepcopy(Tnew_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+
                 # currently hard coded..
                 with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
-                    result = json.load(f_in)["func_eval"][-1]["evaluation_result"][objective_name]
-                    print ("recent result: ", result)
-                    if n_sample <= num_TLA_options:
-                        best_result[TLA_option] = result
-                    else:
-                        if result < best_result[TLA_option]:
-                            best_result[TLA_option] = result
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
 
             return (data, model, stats)
 

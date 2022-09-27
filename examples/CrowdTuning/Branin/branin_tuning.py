@@ -82,7 +82,7 @@ def LoadSourceFunctionEvaluations(tid_source=0):
             problem_space = problem_space,
             configuration_space = configuration_space)
 
-    print ("crowdtuning API, downloaded function evaluations: ", ret)
+    print ("crowdtuning API, number of downloaded function evaluations: ", len(ret))
 
     return [ret]
 
@@ -208,12 +208,10 @@ def main():
         elif tuning_method == "TLA_Ensemble_Peeking":
             options["TLA_method"] = "Ensemble_Peeking"
             options.validate(computer=computer)
-        elif tuning_method == "TLA_Ensemble_Prob1":
+        elif tuning_method == "TLA_Ensemble_Prob":
             options["TLA_method"] = "Ensemble_Prob"
-            options.validate(computer=computer)
-        elif tuning_method == "TLA_Ensemble_Prob2":
-            options["TLA_method"] = "Ensemble_Prob"
-            options["TLA_ensemble_exploration_rate"] = 0.5
+        elif tuning_method == "TLA_Ensemble_ProbDyn":
+            options["TLA_method"] = "Ensemble_ProbDyn"
             options.validate(computer=computer)
         gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
         giventask = [[a_value, b_value, c_value, r_value, s_value, t_value]]
