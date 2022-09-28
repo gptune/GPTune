@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-
+cd ..
 
 # PY_VERSION=3.7
 # PY_TIME=2019.07

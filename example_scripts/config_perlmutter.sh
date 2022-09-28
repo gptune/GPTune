@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 
 if [[ $NERSC_HOST != "perlmutter" ]]; then
 	echo "This script can only be used for perlmutter"

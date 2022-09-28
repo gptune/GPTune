@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+cd ..
+
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
