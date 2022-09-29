@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 
 if [[ $(dnsdomainname) != "summit.olcf.ornl.gov" ]]; then
 	echo "This script can only be used for Summit"

@@ -2,6 +2,7 @@
 
 rm -rf ~/.local/lib
 
+cd ..
 
 ###################################
 # The following loads preinstalled compiler, openmpi, and python, make sure to change them to the correct paths on your machine

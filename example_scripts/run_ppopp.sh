@@ -2,7 +2,7 @@
 
 
 BuildExample=0 # whether all the examples have been built
-
+cd ..
 . ./run_env.sh
 
 
