@@ -36,7 +36,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 ################################################################################
 
-def LoadFunctionEvaluations():
+def LoadSourceFunctionEvaluations():
     api_key = os.getenv("CROWDTUNING_API_KEY")
 
     import crowdtune
@@ -67,8 +67,10 @@ def LoadFunctionEvaluations():
         tuning_problem_name = "NIMROD_slu3d",
         problem_space = problem_space,
         configuration_space = configuration_space)
-    for func_eval in function_evaluations:
-        func_eval["task_parameter"]["tla_id_"] = 0
+    #for func_eval in function_evaluations:
+    #    func_eval["task_parameter"]["tla_id_"] = 0
+
+    print ("number of downloaded function evaluations: ", len(function_evaluations))
 
     return [function_evaluations]
 
@@ -135,12 +137,9 @@ def main():
     lphi      = Integer     (1, 3, transform="normalize", name="lphi")
     mx      = Integer     (5, 6, transform="normalize", name="mx")
     my      = Integer     (7, 8, transform="normalize", name="my")
-    tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
+    #tla_id_ = Integer(0,1, transform="normalize", name="tla_id_")
 
-    if tuning_method == "TLA_LCM":
-        IS = Space([mx,my,lphi,tla_id_])
-    else:
-        IS = Space([mx,my,lphi])
+    IS = Space([mx,my,lphi])
     # PS = Space([ROWPERM, COLPERM, nprows, nproc, NSUP, NREL])
     # PS = Space([ROWPERM, COLPERM, NSUP, NREL, nbx, nby])
     PS = Space([NSUP, NREL, nbx, nby, npz])
@@ -225,7 +224,7 @@ def main():
     elif tuning_method == "default_parameter":
         (data, modeler, stats) = gt.MLA(NS=1, NS1=1, NI=1, Tgiven=giventask)
     else:
-        (data, modeler, stats) = gt.TLA_I(NS=NS, Tnew=giventask, source_function_evaluations=LoadSourceFunctionEvaluations(tid_source=tid_source))
+        (data, modeler, stats) = gt.TLA_I(NS=NS, Tnew=giventask, source_function_evaluations=LoadSourceFunctionEvaluations())
     # print("stats: ", stats)
     print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
     print("Model class: ", options['model_class'])
