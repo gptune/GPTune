@@ -42,9 +42,9 @@ def LoadFunctionEvaluations():
     import crowdtune
     problem_space = {
         "input_space": [
-            {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
-            {"name":"my", "type":"integer", "transformer":"normalize", "lower_bound":7, "upper_bound":8},
-            {"name":"lphi", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3}
+            {"name":"mx", "value":5},
+            {"name":"my", "value":7},
+            {"name":"lphi", "value":1}
         ],
         "constants": [
             {"ROWPERM":'1',"COLPERM":'4',"nodes":32,"cores":32,"nstep":30}
@@ -70,43 +70,7 @@ def LoadFunctionEvaluations():
     for func_eval in function_evaluations:
         func_eval["task_parameter"]["tla_id_"] = 0
 
-    return function_evaluations
-
-def LoadModels():
-    api_key = os.getenv("CROWDTUNING_API_KEY")
-
-    import crowdtune
-    problem_space = {
-        "input_space": [
-            {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
-            {"name":"my", "type":"integer", "transformer":"normalize", "lower_bound":7, "upper_bound":8},
-            {"name":"lphi", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3}
-        ],
-        "constants": [
-            {"ROWPERM":'1',"COLPERM":'4',"nodes":32,"cores":32,"nstep":30}
-        ],
-        "parameter_space": [
-            {"name":"NSUP", "type":"integer", "transformer":"normalize", "lower_bound":30, "upper_bound":300},
-            {"name":"NREL", "type":"integer", "transformer":"normalize", "lower_bound":10, "upper_bound":40},
-            {"name":"nbx", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
-            {"name":"nby", "type":"integer", "transformer":"normalize", "lower_bound":1, "upper_bound":3},
-            {"name":"npz", "type":"integer", "transformer":"normalize", "lower_bound":0, "upper_bound":5}
-        ],
-        "output_space": [
-            {"name":"time", "type":"real", "transformer":"identity", "lower_bound":0, "upper_bound":499.9}
-        ]
-    }
-
-    configuration_space = {}
-
-    surrogate_model = crowdtune.QuerySurrogateModel(
-        api_key = api_key,
-        tuning_problem_name = "NIMROD_slu3d",
-        problem_space = problem_space,
-        configuration_space = configuration_space,
-        input_task = [5,7,1])
-
-    return [surrogate_model]
+    return [function_evaluations]
 
 # Define Problem
 def objectives(point):
@@ -119,17 +83,6 @@ def main():
     seed = args.seed
     nstep = args.nstep
     tuning_method = args.tuning_method
-    tla_method = None
-    if tuning_method == "SLA":
-        tla_method = None
-    elif tuning_method == "TLA_LCM":
-        tla_method = "LCM"
-    elif tuning_method == "TLA_LCM_BF":
-        tla_method = "LCM_BF"
-    elif tuning_method == "TLA_Regression":
-        tla_method = "Regression"
-    elif tuning_method == "TLA_Sum":
-        tla_method = "Sum"
 
     tuning_metadata = {
         "tuning_problem_name": "NIMROD_slu3d_"+tuning_method+"_"+str(expid)+"_npilot"+str(args.npilot),
@@ -142,7 +95,7 @@ def main():
         },
         "software_configuration": {
             "cray-mpich": {
-              "version_split": [7,7,10]
+              "version_split": [7,7,19]
             },
             "libsci": {
               "version_split": [19,6,1]
@@ -228,19 +181,30 @@ def main():
     options['search_random_seed'] = seed
     options['model_output_constraint'] = 'Ignore'
 
-    if tla_method != None:
-        options['TLA_method'] = tla_method
-    if tla_method == "Regression":
-        options['regression_log_name'] = "NIMROD_slu3d_"+tuning_method+"_"+str(expid)+"_npilot"+str(args.npilot)+"-models-weights.log"
-    # options['sample_class'] = 'SampleLHSMDU'
-    # options['sample_algo'] = 'LHS-MDU'
+    if tuning_method == "SLA":
+        options["TLA_method"] = None
+    elif tuning_method == "TLA_Sum":
+        options["TLA_method"] = "Sum"
+    elif tuning_method == "TLA_Regression":
+        options["TLA_method"] = "Regression"
+    elif tuning_method == "TLA_LCM_BF":
+        options["TLA_method"] = "LCM_BF"
+    elif tuning_method == "TLA_LCM":
+        options["TLA_method"] = "LCM"
+    elif tuning_method == "TLA_Stacking":
+        options["TLA_method"] = "Stacking"
+    elif tuning_method == "TLA_Ensemble_Toggling":
+        options["TLA_method"] = "Ensemble_Toggling"
+    elif tuning_method == "TLA_Ensemble_Peeking":
+        options["TLA_method"] = "Ensemble_Peeking"
+    elif tuning_method == "TLA_Ensemble_Prob":
+        options["TLA_method"] = "Ensemble_Prob"
+    elif tuning_method == "TLA_Ensemble_ProbDyn":
+        options["TLA_method"] = "Ensemble_ProbDyn"
     options.validate(computer=computer)
 
     data = Data(problem)
-    if tuning_method == "TLA_LCM":
-        giventask = [[5,7,1,0],[5,7,1,1]]
-    else:
-        giventask = [[5,7,1]]
+    giventask = [[5,7,1]]
     NI=len(giventask)
     
     np.set_printoptions(suppress=False, precision=4)
@@ -256,14 +220,13 @@ def main():
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
     """ Building MLA with the given list of tasks """
     #(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS1)
-    if tuning_method == "TLA_LCM":
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS1, T_sampleflag=[False, True], function_evaluations=LoadFunctionEvaluations(), models_transfer=LoadModels())
-    elif tuning_method == "TLA_Regression" or tuning_method == "TLA_Sum" or tuning_method == "TLA_LCM_BF":
-        (data, model, stats) = gt.TLA_I(NS=NS, Tnew=giventask, models_transfer = LoadModels())
-    elif tuning_method == "SLA":
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS1)
+
+    if tuning_method == "SLA":
+        (data, modeler, stats) = gt.MLA(NS=NS, NS1=NS1, NI=1, Tgiven=giventask)
     elif tuning_method == "default_parameter":
-        (data, model, stats) = gt.MLA(NS=1, NI=NI, Tgiven=giventask, NS1=1)
+        (data, modeler, stats) = gt.MLA(NS=1, NS1=1, NI=1, Tgiven=giventask)
+    else:
+        (data, modeler, stats) = gt.TLA_I(NS=NS, Tnew=giventask, source_function_evaluations=LoadSourceFunctionEvaluations(tid_source=tid_source))
     # print("stats: ", stats)
     print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
     print("Model class: ", options['model_class'])
@@ -279,7 +242,6 @@ def main():
         C = model[0].get_correlation_metric(NI)
         print("The correlation matrix C is \n", C)
 
-    
     """ Print all input and parameter samples """
     for tid in range(NI):
         print("tid: %d"%(tid))

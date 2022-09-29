@@ -374,9 +374,9 @@ class HistoryDB(dict):
                     self.machine_configuration = {
                         "machine_name": machine_name,
                         architecture_feature: {
-                            "num_nodes":num_nodes,
+                            "nodes":num_nodes,
                             "node_list":node_list,
-                            "num_cores":num_cores,
+                            "cores":num_cores,
                             "num_logical_cores":num_logical_cores,
                             "num_threads_per_core":num_threads_per_core,
                             "cores_per_socket":cores_per_socket,
