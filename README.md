@@ -69,6 +69,74 @@ GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Projec
 Our GPTune website at https://gptune.lbl.gov provides a shared database repository where the user can share their tuning performance data with other users.
 
 ## Installation
+
+### Installation using nix (for single-node systems)
+
+Nix may be used to install GPTune and all its dependencies on single-node systems, including personal computers and cloud servers (both with and without root access). Nix pulls in independent copies of GPTune's dependencies, and as a result it will neither affect nor be affected by the state of your system's packages.
+#### 1. Install Nix
+
+**If you have root access,** run this command to automatically install Nix, then immediately proceed to step 2:
+
+```sh <(curl -L https://nixos.org/nix/install) --daemon``` 
+
+For more details, see the [manual](https://nixos.org/manual/nix/stable/installation/installing-binary.html) for full details).
+
+**If you do *not* have root access,** you can install Nix as an unpriviliged user using one of [these] methods. For systems supporting user namespaces (follow the instructions [here](https://github.com/nix-community/nix-user-chroot#check-if-your-kernel-supports-user-namespaces-for-unprivileged-users) to check for user namespace support), including Debian, Ubuntu, and Arch, [nix-user-chroot](https://github.com/nix-community/nix-user-chroot) is recommended; the following steps may be used to install it. First, download the appropriate [static binary](https://github.com/nix-community/nix-user-chroot/releases) for your hardware platform:
+
+```
+#replace the link below with the appropriate build for your architecture
+wget -O nix-user-chroot https://github.com/nix-community/nix-user-chroot/releases/download/1.2.2/nix-user-chroot-bin-1.2.2-x86_64-unknown-linux-musl
+chmod +x nix-user-chroot
+#optionally, add nix-user-chroot to $PATH - you'll be running it a lot
+```
+
+Then, select an installation location. For this example, we will use `~/.nix`. Note that Nix will perform a significant amount of disk I/O to this location, so make sure that this directory is not located on a network drive (NFS, etc.) or builds may be slowed by up to an order of magnitude (for example, we recommend that UC Berkeley Millennium cluster users use a folder in `/scratch` or `/nscratch` instead). You may then install nix with:
+
+```
+mkdir -m 0755 ~/.nix
+./nix-user-chroot ~/.nix bash -c "curl -L https://nixos.org/nix/install | bash"
+```
+
+You may now enter the nix chroot environment with
+
+```./nix-user-chroot ~/.nix bash -l```
+
+This works much like a python virtualenv or conda shell - it will drop you into a environment where the Nix package manager and tools you have installed with Nix are available. As with a python virtualenv, you must be inside this environment in order to access tools (e.g. GPTune) that are installed with Nix (i.e. you must run it in each shell where you need these tools). All programs, files, etc. outside the environment should be accessible from within the environment as well.
+
+*Troubleshooting note: if you run into "out of space" errors during builds, set the `TMPDIR` environment variable when you run this command to a location on a disk with plenty of space, e.g. `TMPDIR=/scratch/dinh/tmp nix-user-chroot /scratch/dinh/.nix bash`*
+
+**If you do *not* have root access and your system does *not* support user namespaces**, you can [install Nix using proot](https://nixos.wiki/wiki/Nix_Installation_Guide#PRoot).
+
+#### 2: Enable nix flakes
+
+Nix flakes, which we use to build GPTune, are technically an experimental feature in nix (this is not a mark of instability - flakes have existed and been widely used for years, but remain marked as experimental since there's a slim possibility that their interface might change). As a result, they must be manually enabled, which can be done by adding this line:
+
+```
+experimental-features = nix-command flakes
+```
+
+to any one (or more) of the following locations (if the file(s) in question don't exist, feel free to create them):
+
+- `~/.config/nix/nix.conf` (recommended, affects your user account only)
+- `/etc/nix/nix.conf` (if you have root access, and want to enable flakes for everyone on your system)
+- `/nix/etc/nix/nix.conf` (for chroot-based installs only)
+
+#### 3: Build GPTune
+
+Clone the GPTune repo and cd into its directory:
+
+```
+git clone https://github.com/gptune/GPTune
+cd GPTune
+```
+
+then run
+
+```nix develop```
+
+to enter an environment where the `python` executable has all the dependencies needed.
+
+Alternatively, if you just want the C++ libraries for GPTune (e.g. to link with), run `nix build .#gptune-libs`, which will put the librarires in `result/gptune`.
 ### Installation using example scripts
 The following example build scripts are available for a collection of tested systems. 
 
