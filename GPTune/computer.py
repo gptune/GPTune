@@ -95,6 +95,7 @@ class Computer(object):
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None, is_pilot = False): # P and I are in the normalized space
 
         O = []
+
         for i in range(len(I)):
             T2 = I[i]
             P2 = P[i]
@@ -312,9 +313,9 @@ class Computer(object):
                             modeling = "Pilot"
                         else:
                             if options["TLA_method"] == None:
-                                if len(I) == 1:
+                                if problem.DI == 1:
                                     modeling = "SLA_GP"
-                                elif len(I) > 1:
+                                elif problem.DI > 1:
                                     modeling = "MLA_LCM"
                             elif options["TLA_method"] == "Regression":
                                 modeling = "TLA_RegressionSum"
@@ -327,9 +328,9 @@ class Computer(object):
                             elif options["TLA_method"] == "LCM":
                                 modeling = "TLA_LCM"
                             else:
-                                if len(I) == 1:
+                                if problem.DI == 1:
                                     modeling = "SLA_GP"
-                                elif len(I) > 1:
+                                elif problem.DI > 1:
                                     modeling = "MLA_LCM"
 
                         history_db.store_func_eval(problem = problem,\
@@ -390,9 +391,9 @@ class Computer(object):
                         modeling = "Pilot"
                     else:
                         if options["TLA_method"] == None:
-                            if len(I) == 1:
+                            if problem.DI == 1:
                                 modeling = "SLA_GP"
-                            elif len(I) > 1:
+                            elif problem.DI > 1:
                                 modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
@@ -405,9 +406,9 @@ class Computer(object):
                         elif options["TLA_method"] == "LCM":
                             modeling = "TLA_LCM"
                         else:
-                            if len(I) == 1:
+                            if problem.DI == 1:
                                 modeling = "SLA_GP"
-                            elif len(I) > 1:
+                            elif problem.DI > 1:
                                 modeling = "MLA_LCM"
 
                     history_db.store_func_eval(problem = problem,\
@@ -487,9 +488,9 @@ class Computer(object):
                     if history_db is not None:
 
                         if options["TLA_method"] == None:
-                            if len(I) == 1:
+                            if problem.DI == 1:
                                 modeling = "SLA_GP"
-                            elif len(I) > 1:
+                            elif problem.DI > 1:
                                 modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
@@ -502,9 +503,9 @@ class Computer(object):
                         elif options["TLA_method"] == "LCM":
                             modeling = "TLA_LCM"
                         else:
-                            if len(I) == 1:
+                            if problem.DI == 1:
                                 modeling = "SLA_GP"
-                            elif len(I) > 1:
+                            elif problem.DI > 1:
                                 modeling = "MLA_LCM"
 
                         history_db.store_func_eval(problem = problem,\
