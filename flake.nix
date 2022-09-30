@@ -61,6 +61,7 @@
             (self: super: {
               scalapack = super.scalapack.overrideAttrs (oldAttrs: rec {
                 meta.broken = false;
+                doCheck = false;
               });
             })
           ] ++ nixpkgs.lib.optionals (system == "aarch64-darwin") [
@@ -69,6 +70,7 @@
             (self: super: {
               scalapack = super.scalapack.overrideAttrs (oldAttrs: rec {
                 meta.broken = false;
+                doCheck = false;
               });
             })
           ];
@@ -301,8 +303,6 @@
 
           postInstall = ''
             cat ${./setup.py} > $out/setup.py
-            mkdir -p $out/GPTune
-            cat ${./GPTune/__version__.py} > $out/GPTune/__version__.py
           '';
         };
 
@@ -314,7 +314,7 @@
         packages.gptune-py-pkg = pkgs.python39Packages.buildPythonPackage rec {
           pname = "GPTune";
           inherit version;
-          src = "${packages.gptune-libs}";
+          src = ./.;
           propagatedBuildInputs = pydeps;
           doCheck = false;
         };
