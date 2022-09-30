@@ -63,6 +63,14 @@
                 meta.broken = false;
               });
             })
+          ] ++ nixpkgs.lib.optionals (system == "aarch64-darwin") [
+            #scalapack fails two tests out of 150 (xslu, xsllt) on x86 mac
+            #should still be fine for our purposes, so override to allow building
+            (self: super: {
+              scalapack = super.scalapack.overrideAttrs (oldAttrs: rec {
+                meta.broken = false;
+              });
+            })
           ];
         };
 
@@ -293,6 +301,8 @@
 
           postInstall = ''
             cat ${./setup.py} > $out/setup.py
+            mkdir -p $out/GPTune
+            cat ${./GPTune/__version__.py} > $out/GPTune/__version__.py
           '';
         };
 
