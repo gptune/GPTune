@@ -1122,7 +1122,7 @@ class GPTune(object):
 
         elif self.options['TLA_method'] == 'Stacking':
             print('\n\n\n------Starting TLA (Stacking) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
-            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations)
+            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
 
         elif self.options['TLA_method'] == 'Ensemble_Toggling':
             print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
@@ -1179,7 +1179,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
@@ -1242,7 +1242,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
@@ -1344,7 +1344,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
@@ -1474,7 +1474,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
@@ -2124,7 +2124,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_Stacking(self, NS, NS1 = None, NI = None, Tgiven = None, source_function_evaluations = list, **kwargs):
+    def TLA_Stacking(self, NS, NS1 = None, NI = None, Tgiven = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -2369,7 +2369,8 @@ class GPTune(object):
         run_pilot_anyway = False
         if NS1 == 0:
             NS1 = 1
-            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
