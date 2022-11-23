@@ -225,7 +225,7 @@ class SurrogateProblem(object):
                     print ("RET: ", ret)
                     mu = ret[self.problem.OS[o].name][0][0]
                     ret = model_transfer(point_x_star_orig)
-                    mu_star = ret[self.problem.OS[o].name][0][0]
+                    mu_star = max(1e-18, ret[self.problem.OS[o].name][0][0])
                     if self.options['TLA_method'] == 'Regression_No_Scale':
                         RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
                     else:
