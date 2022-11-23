@@ -1016,17 +1016,48 @@ class GPTune(object):
             problem_space["parameter_space"] = self.historydb.problem_space_to_dict(self.problem.PS)
             problem_space["output_space"] = self.historydb.problem_space_to_dict(self.problem.OS)
 
-            for i in range(len(source_function_evaluations)):
-                input_task = []
-                for key in source_function_evaluations[i][0]["task_parameter"]:
-                    input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+            use_LCM_for_source = False
 
-                surrogate_model = BuildSurrogateModel(
-                    problem_space = problem_space,
-                    modeler = "Model_GPy_LCM",
-                    input_task = [input_task],
-                    function_evaluations = source_function_evaluations[i])
-                models_transfer.append(surrogate_model)
+            if use_LCM_for_source == True:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+
+                    input_task_ = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task_.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    input_task.append(input_task_)
+
+                    for j in range(len(source_function_evaluations)):
+                        if i != j:
+                            input_task_ = []
+                            for key in source_function_evaluations[j][0]["task_parameter"]:
+                                input_task_.append(source_function_evaluations[j][0]["task_parameter"][key])
+                            input_task.append(input_task_)
+
+                    function_evaluations_all = []
+                    for j in range(len(source_function_evaluations)):
+                        function_evaluations_all += source_function_evaluations[j]
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = input_task,
+                        function_evaluations = function_evaluations_all)
+                        #function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
+            else:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = [input_task],
+                        function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
 
         NS1=0
         NI=1
