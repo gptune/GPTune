@@ -82,7 +82,8 @@ class Model_GPy_LCM(Model):
         if kwargs['model_random_seed'] != None:
             seed = kwargs['model_random_seed']
             if data.P is not None:
-                seed += len(data.P[0])
+                for P_ in data.P:
+                    seed += len(P_)
             np.random.seed(seed)
 
         import copy
@@ -310,7 +311,8 @@ class Model_GPy_LCM(Model):
         if kwargs['model_random_seed'] != None:
             seed = kwargs['model_random_seed']
             if data.P is not None:
-                seed += len(data.P[0])
+                for P_ in data.P:
+                    seed += len(P_)
             np.random.seed(seed)
 
         if modeling_options["multitask"] == "yes":
@@ -457,7 +459,8 @@ class Model_LCM(Model):
                 else:
                     seed = kwargs['model_random_seed']
                     if data.P is not None:
-                        seed += len(data.P[0])
+                        for P_ in data.P:
+                            seed += len(P_)
                     np.random.seed(seed)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)

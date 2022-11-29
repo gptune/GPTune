@@ -510,7 +510,8 @@ class SearchPyMoo(Search):
             else:
                 seed = kwargs['search_random_seed']
                 if data.P is not None:
-                    seed += len(data.P[0])
+                    for P_ in data.P:
+                        seed += len(P_)
                 res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=seed)
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
@@ -577,7 +578,8 @@ class SearchPyGMO(Search):
                 else:
                     seed = kwargs['search_random_seed']
                     if data.P is not None:
-                        seed += len(data.P[0])
+                        for P_ in data.P:
+                            seed += len(P_)
                     archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = seed)
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
@@ -848,7 +850,8 @@ class SearchSciPy(Search):
         if(kwargs['search_random_seed'] is not None): 
             seed = kwargs['search_random_seed']
             if data.P is not None:
-                seed += len(data.P[0])
+                for P_ in data.P:
+                    seed += len(P_)
             kwargs['sample_random_seed'] = seed
         else: 
             kwargs['sample_random_seed'] = None
