@@ -33,7 +33,7 @@ class Sample(abc.ABC):
 
         raise Exception("Abstract method")
 
-    def sample_constrained(self, n_samples : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
+    def sample_constrained(self, n_samples : int, repeat : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
             S = self.sample(n_samples, space)
@@ -53,7 +53,7 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 # t1 = time.time_ns()
-                S2 = self.sample(n_samples, space, n_itr, kwargs=kwargs)
+                S2 = self.sample(n_samples, space, n_itr+repeat, kwargs=kwargs)
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
 
@@ -86,7 +86,7 @@ class Sample(abc.ABC):
 
     def sample_inputs(self, n_samples : int, IS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
-        return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
+        return self.sample_constrained(n_samples, 0, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
@@ -97,11 +97,13 @@ class Sample(abc.ABC):
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
 
-            xs__ = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+            xs__ = self.sample_constrained(n_samples, 0, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
             xs = []
+
+            repeat = 0
             while (len(xs) < n_samples):
                 gen_samples = n_samples - len(xs)
-                xs_ = self.sample_constrained(gen_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+                xs_ = self.sample_constrained(gen_samples, repeat, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
                 for elem_xs_ in xs_: # remove any duplicates
                     duplicate = False
                     for elem_xs in xs:
@@ -112,6 +114,7 @@ class Sample(abc.ABC):
                             break
                     if duplicate == False:
                         xs.append(list(elem_xs_))
+                repeat += 1
             xs = np.array(xs)
 
             ##xs_orig = problem.PS.inverse_transform(np.array(xs, ndmin=2))
