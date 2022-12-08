@@ -535,7 +535,7 @@ class SearchPyMoo(Search):
             bestX.append(xss)
 
         if (kwargs['verbose']):
-            print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
+            print(tid); sys.stdout.flush()
             print("bestX",bestX)
         return (tid, bestX)
 
