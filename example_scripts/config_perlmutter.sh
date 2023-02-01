@@ -246,7 +246,7 @@ if [[ $BuildExample == 1 ]]; then
 	## make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 	## make install > make_parmetis_install.log 2>&1
 	## cd ../
-	## cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	## cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
 	## cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
