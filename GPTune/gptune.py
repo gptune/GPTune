@@ -2853,7 +2853,7 @@ class GPTune_MB(object):
                 # print(newtasks)
                 # print(T_sampleflag)
 
-                (data1, _, stats0) = gt.MLA(NS=ntotal, Tgiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
+                (data1, _, stats0) = gt.MLA_(NS=ntotal, Tgiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
                 
                 # print("Finish Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
                 # merge new results to history
