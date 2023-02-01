@@ -271,15 +271,17 @@ export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
-export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
+# export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/
 export METIS_DIR=$ParMETIS_DIR
 export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
-export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
-
+# export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+# export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 
 if [[ $ModuleEnv == *"intel"* ]]; then
@@ -366,7 +368,7 @@ if [[ $BuildExample == 1 ]]; then
 	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 	make install > make_parmetis_install.log 2>&1
 	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
 	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
