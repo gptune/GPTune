@@ -19,9 +19,9 @@ import abc
 from typing import Collection, Tuple
 import numpy as np
 
-from problem import Problem
-from computer import Computer
-from data import Data
+from .problem import Problem
+from .computer import Computer
+from .data import Data
 
 import math
 

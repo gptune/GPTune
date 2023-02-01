@@ -15,7 +15,7 @@
 # other to do so.
 #
 import numpy as np
-from problem import Problem
+from .problem import Problem
 from typing import Collection
 
 import skopt.space

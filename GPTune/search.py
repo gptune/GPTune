@@ -27,12 +27,12 @@ import functools
 from joblib import *
 
 
-from problem import Problem
-from computer import Computer
-from options import Options
-from data import Data
-from model import Model
-from sample import *
+from .problem import Problem
+from .computer import Computer
+from .options import Options
+from .data import Data
+from .model import Model
+from .sample import *
 
 from pathlib import Path
 import importlib

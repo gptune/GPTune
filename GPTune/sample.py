@@ -16,7 +16,7 @@
 #
 
 import abc
-from problem import Problem
+from .problem import Problem
 from typing import Callable
 import numpy as np
 import math

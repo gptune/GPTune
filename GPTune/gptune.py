@@ -22,14 +22,14 @@ import time
 from autotune.problem import TuningProblem
 from autotune.space import *
 
-from problem import Problem
-from computer import Computer
-from options import Options
-from data import *
-from database import *
-from sample import *
-from model import *
-from search import *
+from .problem import Problem
+from .computer import Computer
+from .options import Options
+from .data import *
+from .database import *
+from .sample import *
+from .model import *
+from .search import *
 import math
 import os
 

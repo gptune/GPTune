@@ -16,10 +16,10 @@
 #
 import numpy as np
 from autotune.problem import TuningProblem
-from problem import Problem
-from options import Options
-from computer import Computer
-from database import HistoryDB
+from .problem import Problem
+from .options import Options
+from .computer import Computer
+from .database import HistoryDB
 from typing import Collection
 
 import skopt.space

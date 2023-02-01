@@ -18,9 +18,9 @@
 #
 
 import numpy as np
-from problem import Problem
-from data import Data
-from database import HistoryDB
+from .problem import Problem
+from .data import Data
+from .database import HistoryDB
 from typing import Collection, Callable
 import os
 import sys
