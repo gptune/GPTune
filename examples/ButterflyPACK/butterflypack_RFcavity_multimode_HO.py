@@ -36,9 +36,6 @@ import argparse
 import pickle
 import copy
 import time
-
-import mpi4py
-from mpi4py import MPI
 from array import array
 import math
 
@@ -66,18 +63,16 @@ def objectives(point):                  # should always use this name for user-d
 	#########################################	
 	
 	postprocess=0
-	tdplot=1
-	noport=0
-	noloss=1
-	baca_batch=64
+	tdplot=0
+	noloss=0
+	baca_batch=16
 	knn=0
 	verbosity=1
-	norm_thresh=500
 	model = point['model']
 	freq = point['freq']*1e5
 	# freq = 22281*1e5
 
-	nproc     = nodes*cores/nthreads
+	nproc     = int(nodes*cores/nthreads)
 	npernode =  math.ceil(float(cores)/nthreads) 
 
 	params = [model, 'freq', freq]
@@ -93,28 +88,51 @@ def objectives(point):                  # should always use this name for user-d
 
 	TUNER_NAME = os.environ['TUNER_NAME']
 	
-	""" pass some parameters through environment variables """	
-	info = MPI.Info.Create()
-	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
-	info.Set('env',envstr)
-	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-    
+	if (os.environ.get('GPTUNE_LITE_MODE') is None): # default MPI spawn mode 
+		import mpi4py
+		from mpi4py import MPI
+		""" pass some parameters through environment variables """	
+		info = MPI.Info.Create()
+		envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
+		info.Set('env',envstr)
+		info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+		
 
-	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-5','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
-	# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
+		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '40', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
-	""" gather the return value using the inter-communicator """							
-	tmpdata = np.array([0, 0],dtype=np.float64)
-	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	comm.Disconnect()	
-	# if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
-	# 	tmpdata[0]=1e0
-	# print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
+		""" gather the return value using the inter-communicator """							
+		tmpdata = np.array([0, 0],dtype=np.float64)
+		comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
+		comm.Disconnect()	
+		# if(tmpdata[1]<100):  # small 1-norm of the eigenvector means this is a false resonance
+		# 	tmpdata[0]=1e0
+		# print(params, '[ abs of eigval, 1-norm of eigvec ]:', tmpdata)
 
-	# return [tmpdata[0]] 
-	
-	return [0] # return a dummy value, the true vale will be read from file by readdata
+		# return [tmpdata[0]] 
+		return [0] # return a dummy value, the true vale will be read from file by readdata
+	else:
+
+		my_env = os.environ.copy()
+		my_env["OMP_NUM_THREADS"]=str(nthreads)
+		mpirun_command = os.getenv("MPIRUN")
+		mpi_argument = os.getenv("MPIARG")
+		if(mpi_argument is None):
+			mpi_argument=''
+		
+		# Build up command with command-line options from current set of parameters
+		argslist = [mpirun_command, mpi_argument,'-np', str(nproc), "%s/fdmom_eigen"%(RUNDIR), '-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)]
+		
+		print("Running: " + " ".join(argslist),flush=True)
+		p = subprocess.run(argslist,capture_output=True,env=my_env)
+		# Decode the stdout and stderr as they are in "bytes" format
+		stdout = p.stdout.decode('ascii')
+		stderr = p.stderr.decode('ascii')
+
+		print(stdout) # these lines can be commented out to make the runlog cleaner
+		print(stderr)
+		return [0] # return a dummy value, the true vale will be read from file by readdata
 
 
 
@@ -160,11 +178,135 @@ def readdata(model):
 
 	return (Pall,Oall)
 
+# mergemode('cavity_rec_17K_feko')
 
-	
+# checking and merging when there are any pair of modes that should be treated as one mode
+def mergemode(model):
+	file =open(model+'_order_%s_Nmodes.txt'%(order),'r')
+	Lines = file.readlines()
+	Nmode = int(Lines[0].strip())
+	Nmode_new = Nmode
+	file.close()
+	subnames=['left','right','min']
+	eigvecss=[]
+	eiginfo=[]
+	for mm in range(Nmode): 
+		# preload all the eigvectors
+		eigvecs=[]
+		for i in range(len(subnames)):
+			filename_i=model+'_order_%s_mode_vec_%s'%(order,subnames[i])+str(mm+1)+'.out'	
+			if(os.path.exists(filename_i)):
+				with open(filename_i) as f:
+					polyShape = []
+					for line in f:
+						line = line.split() # to deal with blank 
+						if line:            # lines (ie skip them)
+							line = float(line[0])+float(line[1])*1j
+							polyShape.append(line)
+					eigvec_i = np.array(polyShape)
+					eigvecs.append(eigvec_i)
+		eigvecss.append(eigvecs)
+		# read the min/max frequency and minimum eigenvalue of each mode
+		filename_v=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
+		if(os.path.exists(filename_v)):
+			file =open(filename_v,'r')
+			Lines = file.readlines()
+			freqs = []
+			eigvals = []
+			for nn in range(len(Lines)): 
+				freq =int(round(float(Lines[nn].split()[0])/1e5)) 
+				eigval =float(Lines[nn].split()[1])
+				freqs.append(freq)
+				eigvals.append(eigval)
+			file.close()
+			freqs = np.array(freqs)
+			eigvals = np.array(eigvals)
+			info=np.array([np.amin(freqs),np.amax(freqs),np.amin(eigvals)])
+			eiginfo.append(info)	
+	# pair-wise comparision starts here	
+	for mm in range(Nmode):
+		for nn in range(Nmode):
+			if(len(eigvecss[mm])>0): 
+				if(len(eigvecss[nn])>0): 
+					if(nn>mm):
+						similar=0
+						for i in range(len(subnames)):
+							for j in range(len(subnames)):
+								eigvec_i = eigvecss[mm][i]
+								eigvec_j = eigvecss[nn][j]
+								if(eigvec_i.shape[0]==eigvec_j.shape[0]):
+									dot = np.abs(np.vdot(eigvec_i,eigvec_j))
+									if(dot>0.7):
+										print('checking mode %s %s vs mode %s %s %f'%(mm+1,subnames[i],nn+1,subnames[j],dot))
+									# if(dot>dotproduct_thresh and not (mm==5 and nn==7)): # need to rule out these two modes as their inner product are large, but they seem different modes
+									if(dot>dotproduct_thresh):
+										similar=1
+						if(similar==1):
+							print('mode %s is merged into mode %s'%(nn+1,mm+1))
+							if(eiginfo[nn][0]<eiginfo[mm][0]): # new left frequency
+								# print('new left frequency')
+								eiginfo[mm][0] = eiginfo[nn][0]
+								eigvecss[mm][0] = copy.deepcopy(eigvecss[nn][0])
+								filename_i=model+'_order_%s_mode_vec_%s'%(order,subnames[0])+str(mm+1)+'.out'	
+								filename_j=model+'_order_%s_mode_vec_%s'%(order,subnames[0])+str(nn+1)+'.out'	
+								os.system("cp %s %s "%(filename_j,filename_i)) 
+							if(eiginfo[nn][1]>eiginfo[mm][1]): # new right frequency
+								# print('new right frequency')
+								eiginfo[mm][1] = eiginfo[nn][1]
+								eigvecss[mm][1] = copy.deepcopy(eigvecss[nn][1])
+								filename_i=model+'_order_%s_mode_vec_%s'%(order,subnames[1])+str(mm+1)+'.out'	
+								filename_j=model+'_order_%s_mode_vec_%s'%(order,subnames[1])+str(nn+1)+'.out'	
+								os.system("cp %s %s "%(filename_j,filename_i)) 								
+							if(eiginfo[nn][2]<eiginfo[mm][2]): # new min eig value
+								# print('new min eig value')
+								eiginfo[mm][2] = eiginfo[nn][2]
+								eigvecss[mm][2] = copy.deepcopy(eigvecss[nn][2])
+								filename_i=model+'_order_%s_mode_vec_%s'%(order,subnames[2])+str(mm+1)+'.out'	
+								filename_j=model+'_order_%s_mode_vec_%s'%(order,subnames[2])+str(nn+1)+'.out'	
+								os.system("cp %s %s "%(filename_j,filename_i))
+							filename_v_m=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
+							filename_v_n=model+'_order_%s_EigVals_'%(order)+str(nn+1)+'.out'
+							os.system("cat %s >> %s "%(filename_v_n,filename_v_m)) # merge the objective function samples
+							eiginfo[nn]=[]
+							eigvecss[nn]=[]
+							os.system("rm %s"%(filename_v_n))
+							for j in range(len(subnames)):
+								filename_j=model+'_order_%s_mode_vec_%s'%(order,subnames[j])+str(nn+1)+'.out'	
+								os.system("rm %s"%(filename_j))
+							# name = input("Continue? ")
+	# rename the files
+	Nmode_new=0
+	for mm in range(Nmode):
+		filename_old=model+'_order_%s_EigVals_'%(order)+str(mm+1)+'.out'
+		if(os.path.exists(filename_old)):
+			Nmode_new = Nmode_new + 1
+			if(Nmode_new != mm+1):
+				filename_new=model+'_order_%s_EigVals_'%(order)+str(Nmode_new)+'.out'
+				os.system("mv %s %s "%(filename_old,filename_new))
+				for i in range(len(subnames)):
+					filename_i_old=model+'_order_%s_mode_vec_%s'%(order,subnames[i])+str(mm+1)+'.out'	
+					filename_i_new=model+'_order_%s_mode_vec_%s'%(order,subnames[i])+str(Nmode_new)+'.out'	
+					os.system("mv %s %s "%(filename_i_old,filename_i_new))
+	filename=model+'_order_%s_Nmodes.txt'%(order)
+	os.system("echo %s > %s "%(Nmode_new, filename)) 
+
 def main():
 	global order
+	global norm_thresh
+	global eig_thresh
+	global dotproduct_thresh
+	global noport
 
+	norm_thresh=1000
+	eig_thresh=5e-7
+	noport=1
+	
+	if(noport==0):
+		### with ports 
+		dotproduct_thresh=0.9 #0.85
+	else:
+		### without ports: modes are typically very different, so dotproduct_thresh can be small 
+		dotproduct_thresh=0.7
 
 	# Parse command line arguments
 
@@ -197,8 +339,8 @@ def main():
 
 
 	# Input parameters  # the frequency resolution is 100Khz
-	# freq      = Integer     (22000, 23500, transform="normalize", name="freq")
-	freq      = Integer     (15000, 33000, transform="normalize", name="freq")
+	# freq      = Integer     (23300, 25226, transform="normalize", name="freq")
+	freq      = Integer     (14000, 30000, transform="normalize", name="freq")
 	# freq      = Integer     (9000, 11000, transform="normalize", name="freq")
 	# freq      = Integer     (19300, 22300, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
@@ -229,6 +371,7 @@ def main():
 	""" Set and validate options """	
 	options = Options()
 	options['model_processes'] = 1
+	options['sample_class'] = 'SampleOpenTURNS'
 	# options['model_threads'] = 1
 	options['model_restarts'] = 1
 	# options['search_multitask_processes'] = 1
@@ -250,6 +393,7 @@ def main():
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
 	# giventask = [["cavity_5cell_30K_feko"]]		
+	# giventask = [["cavity_rec_5K_feko"]]
 	giventask = [["cavity_rec_17K_feko"]]
 	# giventask = [["cavity_rec_17K_2nd_mesh"]]
 	# # giventask = [["rect_waveguide_2000"]]		
@@ -261,10 +405,16 @@ def main():
 		data = Data(problem)
 		# data.P = [[[15138],[19531],[21741],[22168],[23337]]]
 		# data.P = [[[15138],[19531],[21741],[22160],[21290],[23380],[23860],[24040],[25120],[25190],[28680],[29260]]]
-		data.P = [[[15138],[19531],[21741],[22160],[23352],[24134],[25120],[25219],[27447],[27803],[28673],[29455],[29532],[31110],[32415],[32462],[32507],[32562]]]
+		# data.P = [[[15130],[19531],[21290],[23380],[23860],[24040],[25120],[25190],[28680],[29260],[29300]]]
+		# data.P = [[[15130],[19531],[25120],[25190]]]
+		# data.P = [[[15138],[19531],[21741],[22160],[23352],[24134],[25120],[25219],[27447],[27803],[28673],[29455],[29532],[31110],[32415],[32462],[32507],[32562]]]
 		# data.P = [[[23380],[23860],[24040],[25120],[25190],[28680],[29260],[29300],[31080]]]
 		# data.P = [[[10000]]]
+		data.P = [[[15130]]]
+		# data.P = [[[24040]]]
+		# data.P = [[[23380]]]
 		# data.P = [[[25190]]]
+		# data.P = [[[23860]]]
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 		
 		NI = len(giventask)
@@ -287,6 +437,8 @@ def main():
 		NmodeMAX=20 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
 		for nn in range(NS):
 			mm=0
+			# merge the modes as two curves can belong to the same mode when dotproduct_thresh is large
+			mergemode(giventask[0][0])
 			while mm<min(Nmode,NmodeMAX):
 				data = Data(problem)
 				data.P=[Pall[mm]]
