@@ -80,7 +80,11 @@ class Model_GPy_LCM(Model):
 
     def train(self, data : Data, **kwargs):
         if kwargs['model_random_seed'] != None:
-            np.random.seed(kwargs['model_random_seed'])
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
 
         import copy
         self.M_last = copy.deepcopy(self.M)
@@ -215,6 +219,7 @@ class Model_GPy_LCM(Model):
                 print("lengthscale: ", hyperparameters["lengthscale"])
                 print("variance: ", hyperparameters["variance"])
                 print("noise_variance: ", hyperparameters["noise_variance"])
+            print ("modeler: ", kwargs['model_class'])
             print ("M: ", self.M)
 
         return (hyperparameters, modeling_options, model_stats)
@@ -304,7 +309,11 @@ class Model_GPy_LCM(Model):
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
 
         if kwargs['model_random_seed'] != None:
-            np.random.seed(kwargs['model_random_seed'])
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
 
         if modeling_options["multitask"] == "yes":
             multitask = True
@@ -448,7 +457,11 @@ class Model_LCM(Model):
                 if kwargs['model_random_seed'] == None:
                     np.random.seed()
                 else:
-                    np.random.seed(kwargs['model_random_seed'])
+                    seed = kwargs['model_random_seed']
+                    if data.P is not None:
+                        for P_ in data.P:
+                            seed += len(P_)
+                    np.random.seed(seed)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                 return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))

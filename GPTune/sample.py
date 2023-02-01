@@ -33,7 +33,7 @@ class Sample(abc.ABC):
 
         raise Exception("Abstract method")
 
-    def sample_constrained(self, n_samples : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
+    def sample_constrained(self, n_samples : int, repeat : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
             S = self.sample(n_samples, space)
@@ -53,7 +53,7 @@ class Sample(abc.ABC):
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
                 # t1 = time.time_ns()
-                S2 = self.sample(n_samples, space, kwargs=kwargs)
+                S2 = self.sample(n_samples, space, n_itr+repeat, kwargs=kwargs)
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
 
@@ -86,7 +86,7 @@ class Sample(abc.ABC):
 
     def sample_inputs(self, n_samples : int, IS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
-        return self.sample_constrained(n_samples, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
+        return self.sample_constrained(n_samples, 0, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
@@ -97,11 +97,13 @@ class Sample(abc.ABC):
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
 
-            xs__ = self.sample_constrained(n_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+            xs__ = self.sample_constrained(n_samples, 0, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
             xs = []
+
+            repeat = 0
             while (len(xs) < n_samples):
                 gen_samples = n_samples - len(xs)
-                xs_ = self.sample_constrained(gen_samples, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+                xs_ = self.sample_constrained(gen_samples, repeat, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
                 for elem_xs_ in xs_: # remove any duplicates
                     duplicate = False
                     for elem_xs in xs:
@@ -112,6 +114,7 @@ class Sample(abc.ABC):
                             break
                     if duplicate == False:
                         xs.append(list(elem_xs_))
+                repeat += 1
             xs = np.array(xs)
 
             ##xs_orig = problem.PS.inverse_transform(np.array(xs, ndmin=2))
@@ -138,7 +141,7 @@ class SampleLHSMDU(Sample):
         self.cached_space     = None
         self.cached_algo      = None
 
-    def sample(self, n_samples : int, space : Space, **kwargs):
+    def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
 
         kwargs = kwargs['kwargs']
 
@@ -149,7 +152,7 @@ class SampleLHSMDU(Sample):
         if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
             #lhs = lhsmdu.resample() # YC: this can fall into too clustered samples if there are many constraints
             if kwargs['sample_random_seed'] != None:
-                lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+                lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
             else:
                 np.random.seed()
                 lhs = lhsmdu.sample(len(space), n_samples)
@@ -161,7 +164,7 @@ class SampleLHSMDU(Sample):
 
             if (kwargs['sample_algo'] == 'LHS-MDU'):
                 if kwargs['sample_random_seed'] != None:
-                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"])
+                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
                 else:
                     np.random.seed()
                     lhs = lhsmdu.sample(len(space), n_samples)
@@ -190,13 +193,13 @@ class SampleOpenTURNS(Sample):
         self.cached_space        = None
         self.cached_distribution = None
 
-    def sample(self, n_samples : int, space : Space, **kwargs):
+    def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
 
         kwargs = kwargs['kwargs']
 
         import openturns as ot
         if kwargs['sample_random_seed'] != None:
-            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed'])
+            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed']+n_itr)
 
         if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution

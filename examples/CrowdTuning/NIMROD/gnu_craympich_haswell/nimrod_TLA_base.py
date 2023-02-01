@@ -50,7 +50,7 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "NIMROD_slu3d_TLA_base",
         "tuning_problem_category": "NIMROD",
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -154,7 +154,7 @@ def main():
 
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
     """ Building MLA with the given list of tasks """
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS1)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS1)
     # print("stats: ", stats)
     print("Sampler class: ", options['sample_class'], "Sample algo:", options['sample_algo'])
     print("Model class: ", options['model_class'])

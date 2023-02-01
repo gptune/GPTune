@@ -57,8 +57,8 @@ def objectives(point):
 	
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
-def cst2(npernode,nprows,nodes):
-	return nodes * 2**npernode >= nprows
+def cst2(lg2npernode,nprows,nodes):
+	return nodes * 2**lg2npernode >= nprows
 
 def main():
 
@@ -94,7 +94,7 @@ def main():
 	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")
 
@@ -104,7 +104,7 @@ def main():
 		result   = Real        (float("-Inf") , float("Inf"),name="memory")
 
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
+	PS = Space([COLPERM, LOOKAHEAD, lg2npernode, nprows, NSUP, NREL])
 	OS = Space([result])
 
 	constraints = {"cst1" : cst1, "cst2" : cst2}
@@ -149,7 +149,7 @@ def main():
 		
 		NI = len(giventask)
 		NS = nrun
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
 		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	

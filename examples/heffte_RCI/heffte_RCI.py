@@ -18,13 +18,13 @@
 ################################################################################
 """
 Example of invocation of this script:
-python heffte_RCI.py -npernode 1 -nrun 80 
+python heffte_RCI.py -npernode 1 -nrun 80
 
 where:
 	-npernode is the number of MPIs (in linear scale) per node for launching the application code
-    -nrun is the number of calls per task 
+    -nrun is the number of calls per task
 """
- 
+
 ################################################################################
 
 import sys
@@ -37,6 +37,7 @@ import pickle
 # from mpi4py import MPI
 from array import array
 import math
+from callhybrid import GPTuneHybrid
 
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
@@ -53,7 +54,7 @@ from autotune.search import *
 import math
 
 ################################################################################
-def objectives(point):                 
+def objectives(point):
 	print('objective is not needed when options["RCI_mode"]=True')
 
 def cst1(px_i,py_i,px_o,py_o,nodes,npernode):
@@ -77,7 +78,7 @@ def main():
 	# Extract arguments
 	npernode = args.npernode
 	nrun = args.nrun
-	TUNER_NAME = 'GPTune'
+	TUNER_NAME = 'GPTune' # 'GPTuneHybrid'
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
 
@@ -90,15 +91,15 @@ def main():
 	dimy      = Integer     (64, 128, transform="normalize", name="dimy")
 	dimz      = Integer     (64, 128, transform="normalize", name="dimz")
 
-	# Input/tuning parameters 
+	# Input/tuning parameters
 	#### note that the px_i, py_i, px_o, py_o are in log scale
-	px_i    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="px_i")
-	py_i    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="py_i")
-	px_o    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="px_o")
-	py_o    = Integer     (0, np.log2(nodes*npernode), transform="normalize", name="py_o")
+	px_i    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="px_i")
+	py_i    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="py_i")
+	px_o    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="px_o")
+	py_o    = Integer     (0, int(np.log2(nodes*npernode)), transform="normalize", name="py_o")
 	comm_type   = Categoricalnorm (['a2a', 'p2p'], transform="onehot", name="comm_type")
-	
-	# Tuning Objective 
+
+	# Tuning Objective
 	time   = Real        (float("-Inf") , float("Inf"), name="time")
 
 	IS = Space([dimx, dimy, dimz])
@@ -109,14 +110,15 @@ def main():
 	models = {}
 	constants={"nodes":nodes,"cores":cores,"npernode":npernode}
 
-	""" Print all input and parameter samples """	
-	print(IS, PS, OS, constraints, models)
+	""" Print all input and parameter samples """
+	# print(IS, PS, OS, constraints, models)
+	print('IS: \n', IS, '\nPS: \n',PS,'\nOS: \n',OS, '\nconstraints: \n',constraints,'\nmodels: \n',models)
 
 
 	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
-	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
+	computer = Computer(nodes = nodes, cores = cores, hosts = None)
 
-	""" Set and validate options """	
+	""" Set and validate options """
 	options = Options()
 	options['RCI_mode'] = True
 	options['model_processes'] = 1
@@ -128,31 +130,32 @@ def main():
 	options['shared_memory_parallelism'] = False
 	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
-	options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
+	# options['sample_class'] = 'SampleOpenTURNS'
+	# options['search_algo'] = 'dual_annealing' #'maco' #'moead' #'nsga2' #'nspso'
 	options['search_pop_size'] = 1000
 	options['search_gen'] = 10
-	options['search_more_samples'] = 1	
+	options['search_more_samples'] = 1
 
 	options.validate(computer = computer)
 
-	giventask = [[128, 64, 128]]	
+	giventask = [[128, 64, 128]]
 	data = Data(problem)
 
 
-	# # # the following makes sure the first sample is using default parameters 
+	# # # the following makes sure the first sample is using default parameters
 	# data.I = giventask
 	# data.P = [[['4',128,20,10, 4, 0]]]
 
 
 	if(TUNER_NAME=='GPTune'):
-		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
-		
+		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+
 		NI = len(giventask)
 		NS = nrun
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
 		# print("stats: ", stats)
 
-		""" Print all input and parameter samples """	
+		""" Print all input and parameter samples """
 		for tid in range(NI):
 			print("tid: %d"%(tid))
 			print("    Transform sizes:%s %s %s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
@@ -160,8 +163,21 @@ def main():
 			print("    Os ", data.O[tid].tolist())
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+	if(TUNER_NAME=='GPTuneHybrid'):
+		NI = len(giventask)
+		options['n_budget_hybrid']=nrun
+		options['n_pilot_hybrid']=max(nrun//2, 1)
+		options['n_find_leaf_hybrid']=1
 
-
+		(data,stats) = GPTuneHybrid(T=giventask, tp=problem, computer=computer, options=options, run_id="GPTuneHybrid")
+		print("stats: ", stats)
+		""" Print all input and parameter samples """
+		for tid in range(NI):
+			print("tid: %d"%(tid))
+			print("    Transform sizes:%s %s %s"%(data.I[tid][0],data.I[tid][1],data.I[tid][2]))
+			print("    Ps ", data.P[tid])
+			print("    Os ", data.O[tid].tolist())
+			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 
 def parse_args():
@@ -179,5 +195,5 @@ def parse_args():
 
 
 if __name__ == "__main__":
- 
+
 	main()

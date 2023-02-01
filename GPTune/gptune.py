@@ -69,7 +69,7 @@ class GPTune(object):
 
         kwargs.update(self.options)
 
-        Igiven = task_parameters
+        Tgiven = task_parameters
 
         """ Load history function evaluation data """
 
@@ -77,7 +77,7 @@ class GPTune(object):
             print ("no history data has been loaded")
             return
 
-        num_tasks = len(Igiven)
+        num_tasks = len(Tgiven)
 
         PS_history = [[] for i in range(num_tasks)]
         OS_history = [[] for i in range(num_tasks)]
@@ -92,13 +92,13 @@ class GPTune(object):
                     parameter_arr.append(float(func_eval["tuning_parameter"][self.problem.PS[k].name]))
                 else:
                     parameter_arr.append(func_eval["tuning_parameter"][self.problem.PS[k].name])
-            task_id = self.historydb.search_func_eval_task_id(func_eval, self.problem, Igiven)
+            task_id = self.historydb.search_func_eval_task_id(func_eval, self.problem, Tgiven)
             if task_id >= 0:
                 PS_history[task_id].append(parameter_arr)
                 OS_history[task_id].append(\
                     [func_eval["evaluation_result"][self.problem.OS[k].name] \
                     for k in range(len(self.problem.OS))])
-        self.data.I = Igiven
+        self.data.I = Tgiven
         self.data.P = PS_history
         self.data.O=[]
         for i in range(len(OS_history)):
@@ -112,8 +112,8 @@ class GPTune(object):
 
         """ Update data space """
 
-        if(Igiven is not None and self.data.I is None):
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None:
@@ -165,20 +165,20 @@ class GPTune(object):
             #print ("tuning_parameter_names: ", tuning_parameter_names)
             #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
-            #print ("Igiven: ", Igiven)
+            #print ("Tgiven: ", Tgiven)
             #print ("point: ", point)
 
-            input_task = Igiven[tid]
+            input_task = Tgiven[tid]
 
             #input_task = []
             #for task_parameter_name in task_parameter_names:
             #    input_task.append(point[task_parameter_name])
 
             #tid = -1
-            #for i in range(len(Igiven)):
+            #for i in range(len(Tgiven)):
             #    is_equal = True
-            #    for j in range(len(Igiven[i])):
-            #        if Igiven[i][j] != input_task[j]:
+            #    for j in range(len(Tgiven[i])):
+            #        if Tgiven[i][j] != input_task[j]:
             #            is_equal = False
             #    if (is_equal):
             #        tid = i
@@ -236,17 +236,17 @@ class GPTune(object):
 
     def LoadSurrogateModel(self, model_data : dict, **kwargs):
 
-        Igiven = model_data["task_parameters"]
+        Tgiven = model_data["task_parameters"]
 
         """ Load history function evaluation data """
 
         self.historydb.load_model_func_eval(data = self.data, problem = self.problem,
-                Igiven = Igiven, model_data = model_data)
+                Tgiven = Tgiven, model_data = model_data)
 
         """ Update data space """
 
-        if(Igiven is not None and self.data.I is None):
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None:
@@ -299,17 +299,17 @@ class GPTune(object):
             #print ("tuning_parameter_names: ", tuning_parameter_names)
             #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
-            #print ("Igiven: ", Igiven)
+            #print ("Tgiven: ", Tgiven)
 
             input_task = []
             for task_parameter_name in task_parameter_names:
                 input_task.append(point[task_parameter_name])
 
             tid = -1
-            for i in range(len(Igiven)):
+            for i in range(len(Tgiven)):
                 is_equal = True
-                for j in range(len(Igiven[i])):
-                    if Igiven[i][j] != input_task[j]:
+                for j in range(len(Tgiven[i])):
+                    if Tgiven[i][j] != input_task[j]:
                         is_equal = False
                 if (is_equal):
                     tid = i
@@ -365,8 +365,8 @@ class GPTune(object):
 
         return (modelers, model_function)
 
-    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
-        print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
+    def MLA_LoadModel(self, NS = 0, Tgiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
+        print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Tgiven),NS))
         stats = {
             "time_total": 0,
             "time_fun": 0,
@@ -380,7 +380,7 @@ class GPTune(object):
         time_model=0
 
         """ Load history function evaluation data """
-        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         if (self.data.P is not None):
@@ -398,8 +398,8 @@ class GPTune(object):
         kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -433,19 +433,19 @@ class GPTune(object):
 
                 if method == "max_evals":
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
                     (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
                     (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
                     (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 else:
                     (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
 
             else:
                 (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
@@ -473,7 +473,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             model_reupdate = model_reupdate + 1
@@ -580,16 +580,15 @@ class GPTune(object):
         options = copy.deepcopy(self.options)
         kwargs.update(options)
 
-        Igiven = self.problem.IS.transform([T])[0]
+        Tgiven = self.problem.IS.transform([T])[0]
 
         for i in range(len(P)):
             xNorm = self.problem.PS.transform([P[i]])
-            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Igiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
 
         return
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
-        print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
+    def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -612,12 +611,12 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
 
             ## in case source function evaluation data is used for transfer learning
             #if source_function_evaluations != None:
             #    print ("DATA:P: ", self.data.P)
-            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Igiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
+            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Tgiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -652,13 +651,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
 ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -718,7 +712,7 @@ class GPTune(object):
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
@@ -792,14 +786,14 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -976,14 +970,40 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
-        if self.historydb.history_db is True:
-            if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
-                return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
-            else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, None, models_transfer)
+    def SLA(self, NS, NS1 = None, Tgiven = None):
 
-    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
+        if NS1 == None:
+            NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
+
+        print("\n\n\n------Starting SLA (%d samples)"%(NS))
+
+        (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+
+        data.I = data.I[0]
+        data.P = data.P[0]
+        data.O = data.O[0]
+        data.D = data.D[0]
+
+        return data, modeler, stats
+
+    def MLA(self, NS, NS1 = None, NI = None, Tgiven = None):
+
+        if NS1 == None:
+            NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
+
+        print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
+
+        return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+
+    def TLA(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
+
+        return TLA_I(NS=NS, Tnew=Tnew, models_transfer=models_transfer, source_function_evaluations=source_function_evaluations, TLA_options=TLA_options)
+
+    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
 
         # Unified TLA interface
         # This supports only one target task
@@ -996,17 +1016,48 @@ class GPTune(object):
             problem_space["parameter_space"] = self.historydb.problem_space_to_dict(self.problem.PS)
             problem_space["output_space"] = self.historydb.problem_space_to_dict(self.problem.OS)
 
-            for i in range(len(source_function_evaluations)):
-                input_task = []
-                for key in source_function_evaluations[i][0]["task_parameter"]:
-                    input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+            use_LCM_for_source = False
 
-                surrogate_model = BuildSurrogateModel(
-                    problem_space = problem_space,
-                    modeler = "Model_GPy_LCM",
-                    input_task = [input_task],
-                    function_evaluations = source_function_evaluations[i])
-                models_transfer.append(surrogate_model)
+            if use_LCM_for_source == True:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+
+                    input_task_ = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task_.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    input_task.append(input_task_)
+
+                    for j in range(len(source_function_evaluations)):
+                        if i != j:
+                            input_task_ = []
+                            for key in source_function_evaluations[j][0]["task_parameter"]:
+                                input_task_.append(source_function_evaluations[j][0]["task_parameter"][key])
+                            input_task.append(input_task_)
+
+                    function_evaluations_all = []
+                    for j in range(len(source_function_evaluations)):
+                        function_evaluations_all += source_function_evaluations[j]
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = input_task,
+                        function_evaluations = function_evaluations_all)
+                        #function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
+            else:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = [input_task],
+                        function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
 
         NS1=0
         NI=1
@@ -1053,7 +1104,7 @@ class GPTune(object):
 
         if self.options['TLA_method'] == None:
             print('\n\n\n------Starting Single-task learning (no TLA method option is given) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-            return self.MLA_HistoryDB(NS, NS1, NI, Tnew_)
+            return self.MLA_(NS, NS1, NI, Tnew_)
 
         elif self.options['TLA_method'] == 'Regression':
             print('\n\n\n------Starting TLA (Regression Weighted Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
@@ -1098,11 +1149,11 @@ class GPTune(object):
             T_sampleflag = [False]*NI_
             T_sampleflag[0] = True
 
-            return self.MLA_HistoryDB(NS, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+            return self.MLA_(NS, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
 
         elif self.options['TLA_method'] == 'Stacking':
             print('\n\n\n------Starting TLA (Stacking) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
-            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations)
+            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
 
         elif self.options['TLA_method'] == 'Ensemble_Toggling':
             print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
@@ -1138,7 +1189,7 @@ class GPTune(object):
                     (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
                     Tnew__ = copy.deepcopy(Tnew_)
@@ -1156,13 +1207,13 @@ class GPTune(object):
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
             return (data, model, stats)
 
@@ -1201,7 +1252,7 @@ class GPTune(object):
                     (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
                     Tnew__ = copy.deepcopy(Tnew_)
@@ -1219,13 +1270,13 @@ class GPTune(object):
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
             return (data, model, stats)
 
@@ -1253,12 +1304,13 @@ class GPTune(object):
                 for i in range(len(result_vec)):
                     result_vec[i] = result_vec[i]/sum_
                 for i in range(1, len(result_vec), 1):
-                    result_vec[i] == result_vec[i-1]
+                    result_vec[i] += result_vec[i-1]
 
                 # test
                 rand_num1 = np.random.rand()
                 if rand_num1 < exploration_rate:
                     option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
                 else:
                     rand_num = np.random.rand()
                     option_idx = 0
@@ -1279,14 +1331,14 @@ class GPTune(object):
 
                 if TLA_chosen == "Regression":
                     self.options["TLA_method"] = "Regression"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "Sum":
                     self.options["TLA_method"] = "Sum"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "LCM_BF":
                     self.options["TLA_method"] = "LCM_BF"
 
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
 
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
@@ -1297,15 +1349,15 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
-                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
                         task_parameter_vec = []
@@ -1315,32 +1367,176 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
-                # currently hard coded..
+                # currently hard coded.. it will work only for single target task TLA
                 with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
-                    result = json.load(f_in)["func_eval"][-1]["evaluation_result"][objective_name]
-                    print ("recent result: ", result)
-                    if n_sample <= num_TLA_options:
-                        best_result[TLA_option] = result
-                    else:
-                        if result < best_result[TLA_option]:
-                            best_result[TLA_option] = result
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
 
             return (data, model, stats)
 
-    def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+        elif self.options['TLA_method'] == 'Ensemble_ProbDyn':
+            print('\n\n\n------Starting TLA (Ensemble Probability) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            best_result = {}
+            for TLA_option in TLA_options:
+                best_result[TLA_option] = 1.0
+            num_TLA_options = len(TLA_options)
+
+            def sigmoid(num_samples, num_options, num_parameters):
+                x = (num_options*(num_parameters))*1.0/num_samples
+                return float(x)/(1+abs(x))
+                #return float(x)/math.sqrt(1+x**2)
+
+            def select_via_probability(exploration_rate, best_result):
+                option_vec = [k for k in best_result]
+                result_vec = np.array([best_result[k] for k in best_result])
+                best_min = np.min(result_vec)
+                if (best_min <= 0.0):
+                    diff = 1 - best_min
+                    for i in range(len(result_vec)):
+                        result_vec[i] = diff + result_vec[i]
+                for i in range(len(result_vec)):
+                    result_vec[i] = 1.0/result_vec[i]
+                sum_ = np.sum(result_vec)
+                for i in range(len(result_vec)):
+                    result_vec[i] = result_vec[i]/sum_
+                for i in range(1, len(result_vec), 1):
+                    result_vec[i] += result_vec[i-1]
+
+                # test
+                rand_num1 = np.random.rand()
+                if rand_num1 < exploration_rate:
+                    option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
+                else:
+                    rand_num = np.random.rand()
+                    option_idx = 0
+                    for i in range(len(result_vec)):
+                        if rand_num <= result_vec[i]:
+                            option_idx = i
+                            return option_vec[option_idx]
+
+            for n_sample in range(1, NS+1, 1):
+
+                if n_sample <= num_TLA_options:
+                    TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+                else:
+                    exploration_rate = sigmoid(n_sample-1, len(TLA_options), len(self.problem.PS))
+                    TLA_chosen = select_via_probability(exploration_rate, best_result)
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Tnew__ = copy.deepcopy(Tnew_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Tnew__ = copy.deepcopy(Tnew_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+
+                # currently hard coded..
+                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
+
+            return (data, model, stats)
+
+    def TLA_Regression(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1362,7 +1558,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
 
         print ("self.data.P: ", self.data.P)
 
@@ -1388,13 +1584,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
 ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1496,7 +1687,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -1508,7 +1699,7 @@ class GPTune(object):
                 #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -1657,7 +1848,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1674,12 +1865,12 @@ class GPTune(object):
         time_search=0
         time_model=0
 
-        print ("Igiven")
-        print (Igiven)
+        print ("Tgiven")
+        print (Tgiven)
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven) #, function_evaluations, options=kwargs)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven) #, function_evaluations, options=kwargs)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1705,13 +1896,8 @@ class GPTune(object):
         kwargs.update(options1)
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1811,7 +1997,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -1969,7 +2155,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_Stacking(self, NS, NS1 = None, NI = None, Igiven = None, source_function_evaluations = list, **kwargs):
+    def TLA_Stacking(self, NS, NS1 = None, NI = None, Tgiven = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1991,7 +2177,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -2015,13 +2201,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -2085,10 +2266,10 @@ class GPTune(object):
                     for k in range(len(problem.OS))])
                 num_loaded_data += 1
 
-            print ("Igiven: ", Igiven)
+            print ("Tgiven: ", Tgiven)
 
             if (num_loaded_data > 0):
-                data.I = Igiven # fake task info (may change to IS_history)
+                data.I = Tgiven # fake task info (may change to IS_history)
                 #data.P = PS_history
                 data.P=[]
                 for i in range(len(PS_history)):
@@ -2108,6 +2289,18 @@ class GPTune(object):
                         if(any(ele==[None] for ele in OS_history[i])):
                             print ("history data contains null function values")
                             exit()
+
+                data.I = problem.IS.transform(data.I)
+                if data.P is not None:
+                    tmp=[]
+                    for x in data.P:
+                        if(len(x)>0):
+                            xNorm = problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    data.P=tmp
+
                 #print ("db: data.I: " + str(data.I))
                 #print ("db: data.P: " + str(data.P))
                 #print ("db: data.O: " + str(data.O))
@@ -2168,7 +2361,7 @@ class GPTune(object):
                 num_loaded_data += 1
 
             if (num_loaded_data > 0):
-                data.I = Igiven #IS_history
+                data.I = Tgiven #IS_history
                 #data.P = PS_history
                 data.P=[]
                 for i in range(len(PS_history)):
@@ -2198,7 +2391,6 @@ class GPTune(object):
         # train stacking models based on residuals
         for o in range(self.problem.DO):
             for i in range(1, num_source_tasks, 1):
-                print ("train_stacked i: ", i)
                 modelers[o].train_stacked(data=load_residuals(self.problem, modelers[o], source_function_evaluations[i]), num_source_tasks=num_source_tasks, **kwargs)
 
         initial_modelers = copy.deepcopy(modelers)
@@ -2208,7 +2400,8 @@ class GPTune(object):
         run_pilot_anyway = False
         if NS1 == 0:
             NS1 = 1
-            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
@@ -2218,7 +2411,7 @@ class GPTune(object):
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
@@ -2275,7 +2468,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -2284,7 +2477,7 @@ class GPTune(object):
                 #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -2362,17 +2555,23 @@ class GPTune(object):
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
 
                 def data_to_dict(problem, data):
+                    data_ = copy.deepcopy(data)
+                    if data_.I is not None:    # from 2D numpy array to a list of lists
+                        data_.I = problem.IS.inverse_transform(data_.I)
+                    if data_.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                        data_.P = [problem.PS.inverse_transform(x) for x in data_.P]
+
                     task_id = 0
                     documents = []
 
-                    num_evals = len(data.P[task_id])
+                    num_evals = len(data_.P[task_id])
                     print ("num_evals: ", num_evals)
 
                     for i in range(num_evals):
                         document = {}
-                        document["task_parameter"] = { problem.IS[k].name:data.I[task_id][k] for k in range(len(problem.IS)) }
-                        document["tuning_parameter"] = { problem.PS[k].name:data.P[task_id][i][k] for k in range(len(problem.PS)) }
-                        document["evaluation_result"] = { problem.OS[k].name:data.O[task_id][i][k] for k in range(len(problem.OS)) }
+                        document["task_parameter"] = { problem.IS[k].name:data_.I[task_id][k] for k in range(len(problem.IS)) }
+                        document["tuning_parameter"] = { problem.PS[k].name:data_.P[task_id][i][k] for k in range(len(problem.PS)) }
+                        document["evaluation_result"] = { problem.OS[k].name:data_.O[task_id][i][k] for k in range(len(problem.OS)) }
 
                         print ("document: ", document)
 
@@ -2442,7 +2641,7 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
 
         stats = {
             "time_total": 0,
@@ -2580,15 +2779,15 @@ class GPTune_MB(object):
         self.data     = Data(tp)
 
 
-    def MB_LCM(self, NLOOP=None, Igiven=None, Pdefault=None, **kwargs):
+    def MB_LCM(self, NLOOP=None, Tgiven=None, Pdefault=None, **kwargs):
         """
-        Igiven		 : a list of tasks 
+        Tgiven		 : a list of tasks 
         NLOOP	     : number of GPTuneBand loops 
         Pdefault     : assuming there is a default parameter configuration among all tasks
         """
 
         np.set_printoptions(suppress=False, precision=4)
-        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d loops for task' % (NS), Igiven)
+        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d loops for task' % (NS), Tgiven)
 
         stats = {
             "time_total": 0,
@@ -2609,7 +2808,7 @@ class GPTune_MB(object):
         info = [[x, y] for x, y in zip(self.budgets, self.NSs)]
         print('total samples:', info)
                 
-        self.data.I = Igiven
+        self.data.I = Tgiven
         # self.data.D = [] 
         self.data.P = []
         self.data.O = []
@@ -2623,9 +2822,9 @@ class GPTune_MB(object):
             if(self.data.D is not None):
                 data1.D = []
             for s1 in range(0, len(self.budgets)):
-                for t in range(len(Igiven)):
+                for t in range(len(Tgiven)):
                     budget1 = self.budgets[s1]
-                    tmp = [budget1]+Igiven[t]
+                    tmp = [budget1]+Tgiven[t]
                     newtasks.append(tmp)
                     if(self.data.D is not None):
                         if(len(self.data.D)>0):
@@ -2645,16 +2844,16 @@ class GPTune_MB(object):
                     data1.P = [[Pdefault]] * len(newtasks) # as gt.MLA will load available database, Pdefault is effective only if database is empty   
                 
                 # print("Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
-                # print(f"NS={ntotal}, Igiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
+                # print(f"NS={ntotal}, Tgiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
                 gt = GPTune(self.tp, computer=self.computer,
                             data=data1, options=self.options)
                 T_sampleflag = [False] * (len(newtasks))
-                idx = s*len(Igiven) 
+                idx = s*len(Tgiven) 
                 T_sampleflag[idx:] = [True]*(len(newtasks)-idx)
                 # print(newtasks)
                 # print(T_sampleflag)
 
-                (data1, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
+                (data1, _, stats0) = gt.MLA(NS=ntotal, Tgiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
                 
                 # print("Finish Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
                 # merge new results to history
@@ -2668,8 +2867,8 @@ class GPTune_MB(object):
 
             # bug fix: data1 will load all available data from database, the following make srue that it only contains MLA samples generated at the current loop    
             for s in range(len(self.budgets)):  # loop over the budget levels
-                idx = s*len(Igiven) 
-                for i in range(len(Igiven)):
+                idx = s*len(Tgiven) 
+                for i in range(len(Tgiven)):
                     data1.P[idx+i] = data1.P[idx+i][NSs1[s] - self.NSs[s]:NSs1[s]]
                     data1.O[idx+i] = data1.O[idx+i][NSs1[s] - self.NSs[s]:NSs1[s],:]
 
@@ -2680,10 +2879,10 @@ class GPTune_MB(object):
             # print("data1.D = ", data1.D)
 
             if Nloop == 0:
-                self.data.P = data1.P[0:len(Igiven)]  # the first 0:len(Igiven) tasks of data1 are highest budget
-                self.data.O = data1.O[0:len(Igiven)] 
+                self.data.P = data1.P[0:len(Tgiven)]  # the first 0:len(Tgiven) tasks of data1 are highest budget
+                self.data.O = data1.O[0:len(Tgiven)] 
             else:
-                # self.data.P = [np.concatenate((self.data.P[i], data1.P[0:len(Igiven)][i])) for i in range(len(self.data.P))]
+                # self.data.P = [np.concatenate((self.data.P[i], data1.P[0:len(Tgiven)][i])) for i in range(len(self.data.P))]
                 self.data.P = [self.data.P[i] + data1.P[i] for i in range(len(self.data.P))]
                 self.data.O = [np.concatenate((self.data.O[i], data1.O[i])) for i in range(len(self.data.O))]
             
@@ -2701,12 +2900,12 @@ class GPTune_MB(object):
                 # print(f'\n\n\nArm {s}, Initial budget = {budget}, number of total samples = {ns}')
                 ratio = int(ns/self.options['budget_base'])
                 # print(f'Current s = {s}, budget = {budget}, ns = {ns}')
-                idx = s*len(Igiven) 
-                temp_I = data1.I[idx:idx+len(Igiven)]
+                idx = s*len(Tgiven) 
+                temp_I = data1.I[idx:idx+len(Tgiven)]
                 # print(f'Tasks: ', temp_I)
-                temp_O = list(map(np.squeeze, data1.O[idx:idx+len(Igiven)]))
-                # temp_P = list(map(np.array, data1.P[idx:idx+len(Igiven)]))
-                temp_P = data1.P[idx:idx+len(Igiven)]
+                temp_O = list(map(np.squeeze, data1.O[idx:idx+len(Tgiven)]))
+                # temp_P = list(map(np.array, data1.P[idx:idx+len(Tgiven)]))
+                temp_P = data1.P[idx:idx+len(Tgiven)]
                 for ri in range(s):
                     idx_sort = list(map(np.argsort, temp_O))
                     temp_O = [y[x[:ratio]] for (x, y) in zip(idx_sort, temp_O)]
@@ -2765,7 +2964,7 @@ class GPTune_MB(object):
                     stats['time_total'] += timefun
                 # print(newdata.I,'jia')
                 # print(newdata.P,'dia')
-                newdata.I = Igiven
+                newdata.I = Tgiven
                 # print('newdata before merge')
                 # print('newdata.P = ', newdata.P)
                 # print('self.data.P = ', self.data.P)

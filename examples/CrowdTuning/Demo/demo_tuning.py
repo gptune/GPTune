@@ -130,7 +130,7 @@ def main():
 
     tuning_metadata = {
         "tuning_problem_name": "GPTune-Demo-"+str(tuning_method)+"-"+str(tvalue)+"-"+str(nbatch)+"-npilot"+str(npilot),
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -176,7 +176,7 @@ def main():
 
     if tuning_method == "SLA":
         giventask = [[round(tvalue,2)]]
-        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
+        (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Tgiven=giventask, NS1=npilot)
     else:
         giventask = [[round(tvalue,2)]]
         (data, modeler, stats) = gt.TLA_I(NS=nrun, Tnew=giventask, models_transfer=LoadModels(), source_function_evaluations=LoadFunctionEvaluations())

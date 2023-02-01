@@ -89,32 +89,33 @@ class Search(abc.ABC):
         # print(res)
 
         # check if there are duplicated samples
-        for res_ in res:
-            tid = res_[0]
-            x = res_[1][0]
-            tmp = x
-            duplicate = False
-            for x_ in data.P[tid]:
-                x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
-                x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
-                if x_orig == x_orig_:
-                    duplicate = True
-                    print ("duplicated sample: ", x)
-                    break
-
-            while duplicate == True:
+        if data.P is not None:
+            for res_ in res:
+                tid = res_[0]
+                x = res_[1][0]
+                tmp = x
                 duplicate = False
-                # generate random sample if the sample already has duplicates
-                x = np.random.rand(len(tmp[0]))
-                print ("generate random sample: ", x)
-                print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
-                res_[1][0] = np.array([x.tolist()], ndmin=2)
                 for x_ in data.P[tid]:
                     x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                     x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
                     if x_orig == x_orig_:
                         duplicate = True
+                        print ("duplicated sample: ", x)
                         break
+
+                while duplicate == True:
+                    duplicate = False
+                    # generate random sample if the sample already has duplicates
+                    x = np.random.rand(len(tmp[0]))
+                    print ("generate random sample: ", x)
+                    print ("generate random sample (orig): ", self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0])
+                    res_[1][0] = np.array([x.tolist()], ndmin=2)
+                    for x_ in data.P[tid]:
+                        x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                        x_orig_ = self.problem.PS.inverse_transform(np.array(x_, ndmin=2))[0]
+                        if x_orig == x_orig_:
+                            duplicate = True
+                            break
         res.sort(key = lambda x : x[0])
         return res
 
@@ -224,7 +225,7 @@ class SurrogateProblem(object):
                     print ("RET: ", ret)
                     mu = ret[self.problem.OS[o].name][0][0]
                     ret = model_transfer(point_x_star_orig)
-                    mu_star = ret[self.problem.OS[o].name][0][0]
+                    mu_star = max(1e-18, ret[self.problem.OS[o].name][0][0])
                     if self.options['TLA_method'] == 'Regression_No_Scale':
                         RHS_elem = (-1.0*float(mu))-(-1.0*(mu_star))
                     else:
@@ -317,7 +318,7 @@ class SurrogateProblem(object):
                         ret = model_transfer(point)
                         mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
                         try:
-                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), num_models_transfer)
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/num_models_transfer))
                         except:
                             var_transfer_ = 1
                         var_transfer *= var_transfer_
@@ -341,6 +342,7 @@ class SurrogateProblem(object):
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
                     var_transfer = 1
+
                     for i in range(len(self.models_transfer)):
                         model_transfer = self.models_transfer[i]
                         ret = model_transfer(point)
@@ -351,7 +353,8 @@ class SurrogateProblem(object):
                             var_transfer_ = 1
                         var_transfer *= var_transfer_
                     mu = self.models_weights[0]*mu[0][0] + mu_transfer
-                    var = max(1e-18, self.models_weights[0]*var[0][0] * var_transfer)
+                    var_transfer *= math.pow(max(1e-18, var[0][0]), self.models_weights[0])
+                    var = max(1e-18, var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
@@ -387,12 +390,18 @@ class SurrogateProblem(object):
                     (mu, var) = self.models[o].predict(x, tid=self.tid)
                     mu_transfer = 0
                     var_transfer = 1
+                    num_models_transfer = len(self.models_transfer)
                     for model_transfer in self.models_transfer:
                         ret = model_transfer(point)
                         mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                        var_transfer *= 1*ret[self.problem.OS[o].name+"_var"][0][0]
+                        try:
+                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/(num_models_transfer+1)))
+                        except:
+                            var_transfer_ = 1
+                        var_transfer *= var_transfer_
                     mu = mu[0][0] + mu_transfer
-                    var = max(1e-18, var[0][0] * var_transfer)
+                    var_transfer *= math.pow(max(1e-18, var[0][0]), float(1.0/(num_models_transfer+1)))
+                    var = max(1e-18, var_transfer)
                     std = np.sqrt(var)
                     chi = (ymin - mu) / std
                     Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
@@ -446,9 +455,9 @@ class SurrogateProblem(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [float("Inf")]
+                return [1e12]
             else: 
-                return [float("Inf")]* self.problem.DO
+                return [1e12]* self.problem.DO
     
     def obj_scipy(self, x):
         return self.fitness(x)[0]
@@ -473,7 +482,7 @@ class SearchPyMoo(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
         prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
@@ -499,7 +508,11 @@ class SearchPyMoo(Search):
             if kwargs['search_random_seed'] == None:
                 res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=1)
             else:
-                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=kwargs['search_random_seed']+len(data.P[0]))
+                seed = kwargs['search_random_seed']
+                if data.P is not None:
+                    for P_ in data.P:
+                        seed += len(P_)
+                res = minimize(prob_pymoo,algo,verbose=kwargs['verbose'],seed=seed)
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
@@ -522,7 +535,7 @@ class SearchPyMoo(Search):
             bestX.append(xss)
 
         if (kwargs['verbose']):
-            print(tid, 'OK' if cond else 'KO'); sys.stdout.flush()
+            print(tid); sys.stdout.flush()
             print("bestX",bestX)
         return (tid, bestX)
 
@@ -539,7 +552,7 @@ class SearchPyGMO(Search):
 
         kwargs = kwargs['kwargs']
 
-        # print ("SEARCH!")
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
@@ -563,7 +576,11 @@ class SearchPyGMO(Search):
                 if kwargs['search_random_seed'] == None:
                     archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'])
                 else:
-                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = kwargs['search_random_seed']+len(data.P[0]))
+                    seed = kwargs['search_random_seed']
+                    if data.P is not None:
+                        for P_ in data.P:
+                            seed += len(P_)
+                    archi = pg.archipelago(n = kwargs['search_threads'], prob = prob, algo = algo, udi = udi, pop_size = kwargs['search_pop_size'], seed = seed)
                 archi.evolve(n = kwargs['search_evolve'])
                 archi.wait()
                 champions_f = archi.get_champions_f()
@@ -734,9 +751,9 @@ class SurrogateProblemCMO(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [float("Inf")]
+                return [1e12]
             else:
-                return [float("Inf")]* self.problem.DO
+                return [1e12]* self.problem.DO
 
 
 class SearchCMO(Search):
@@ -749,9 +766,10 @@ class SearchCMO(Search):
     def search(self, data : Data, models : Collection[Model], tid : int, **kwargs) -> np.ndarray:
         import pygmo as pg
 
-        print ("SearchByCMO")
+        # print ("SearchByCMO")
 
         kwargs = kwargs['kwargs']
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblemCMO(self.problem, self.computer, data, models, self.options, tid)
 
@@ -830,7 +848,11 @@ class SearchSciPy(Search):
 
         # set seeds for the samplers using 'search_random_seed' instead of 'sample_random_seed', as they are used to generate the intial guess for scipy optimizers
         if(kwargs['search_random_seed'] is not None): 
-            kwargs['sample_random_seed'] = kwargs['search_random_seed'] +len(data.P[0])
+            seed = kwargs['search_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            kwargs['sample_random_seed'] = seed
         else: 
             kwargs['sample_random_seed'] = None
 
@@ -842,7 +864,7 @@ class SearchSciPy(Search):
         lw = [0]*self.problem.DP
         up = [1]*self.problem.DP
         bounds_constraint = sp.optimize.Bounds(lw, up)
-        print(kwargs["search_algo"])
+        print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
         if(kwargs["search_algo"] == 'trust-constr'):
             ret = sp.optimize.minimize(prob.fitness, x0, method='trust-constr',  jac="2-point", hess=sp.optimize.SR1(),constraints=[], options={'verbose': 1}, bounds=bounds_constraint)
         elif(kwargs["search_algo"] == 'l-bfgs-b'):        

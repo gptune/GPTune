@@ -18,7 +18,8 @@ echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_softwa
 ################## Illustrate basic functionalities ######################################
 tuner=GPTune
 rm -rf gptune.db/*.json # do not load any database 
-$RUN  python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
+#$RUN  
+python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
 ###########################################################################################
 
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 
 if [[ $NERSC_HOST != "perlmutter" ]]; then
 	echo "This script can only be used for perlmutter"
@@ -27,7 +28,7 @@ module load cmake/3.22.0
 ##################################################
 ##################################################
 machine=perlmutter
-proc=gpu   # milan,gpu
+proc=milan   # milan,gpu
 mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 

@@ -131,7 +131,7 @@ def main():
 
     tuning_metadata = {
         "tuning_problem_name": "SuperLU_DIST-pddrive_spawn-"+str(matname)+"-"+str(nbatch),
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -205,7 +205,7 @@ def main():
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """

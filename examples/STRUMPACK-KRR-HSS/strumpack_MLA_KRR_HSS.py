@@ -192,7 +192,7 @@ def main():
 
         NI = len(giventask)
         NS = nrun
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
         print("stats: ", stats)
 
         """ Print all input and parameter samples """
@@ -250,7 +250,7 @@ def main():
 
         NI = len(giventask)
         NS = nrun
-        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=NS)
+        (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=NS)
         print("stats: ", stats)
 
         """ Print all input and parameter samples """

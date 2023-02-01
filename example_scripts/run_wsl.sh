@@ -1,3 +1,4 @@
+  cd .. 
   export GPROOT=$PWD
   export CXX="g++"
   export CC="gcc"

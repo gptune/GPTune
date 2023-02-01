@@ -55,4 +55,6 @@ setup(
   url='https://github.com/gptune/GPTune',
   install_requires=REQUIRED,
   extras_require=EXTRAS,
+  include_package_data=True,
+  package_data = {'GPTune': ['lib_*']}
 )

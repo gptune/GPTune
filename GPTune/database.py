@@ -200,8 +200,8 @@ class HistoryDB(dict):
         self.load_surrogate_model = False
 
         """ Crowd repository options """
-        self.use_crowd_repo = False
-        self.historydb_api_key = ""
+        self.sync_crowd_repo = False
+        self.crowdtuning_api_key = ""
         self.crowd_repo_download_url = "https://gptune.lbl.gov/repo/direct-download/" # GPTune HistoryDB repo
         #self.crowd_repo_download_url = "http://127.0.0.1:8000/repo/direct-download/" # debug
         self.crowd_repo_upload_url = "https://gptune.lbl.gov/repo/direct-upload/" # GPTune HistoryDB repo
@@ -211,11 +211,7 @@ class HistoryDB(dict):
         self.historydb_path = "./gptune.db"
 
         """ Pass machine-related information """
-        self.machine_configuration = {
-                    "machine":"Unknown",
-                    "nodes":"Unknown",
-                    "cores":"Unknown"
-                }
+        self.machine_configuration = {}
 
         """ Pass software-related information """
         self.software_configuration = {}
@@ -307,16 +303,16 @@ class HistoryDB(dict):
             if "tuning_problem_category" in metadata:
                 self.tuning_problem_category = metadata["tuning_problem_category"]
 
-            if "use_crowd_repo" in metadata:
-                if metadata["use_crowd_repo"] == "yes" or metadata["use_crowd_repo"] == "y":
-                    self.use_crowd_repo = True
+            if "sync_crowd_repo" in metadata:
+                if metadata["sync_crowd_repo"] == "yes" or metadata["sync_crowd_repo"] == "y":
+                    self.sync_crowd_repo = True
                 else:
-                    self.use_crowd_repo = False
+                    self.sync_crowd_repo = False
             else:
-                self.use_crowd_repo = False
+                self.sync_crowd_repo = False
 
-            if "historydb_api_key" in metadata:
-                self.historydb_api_key = metadata["historydb_api_key"]
+            if "crowdtuning_api_key" in metadata:
+                self.crowdtuning_api_key = metadata["crowdtuning_api_key"]
 
             if "historydb_path" in metadata:
                 self.historydb_path = metadata["historydb_path"]
@@ -378,9 +374,9 @@ class HistoryDB(dict):
                     self.machine_configuration = {
                         "machine_name": machine_name,
                         architecture_feature: {
-                            "num_nodes":num_nodes,
+                            "nodes":num_nodes,
                             "node_list":node_list,
-                            "num_cores":num_cores,
+                            "cores":num_cores,
                             "num_logical_cores":num_logical_cores,
                             "num_threads_per_core":num_threads_per_core,
                             "cores_per_socket":cores_per_socket,
@@ -427,9 +423,25 @@ class HistoryDB(dict):
             if "loadable_machine_configurations" in metadata:
                 self.loadable_machine_configurations = metadata["loadable_machine_configurations"]
             else:
-                self.loadable_machine_configurations = self.machine_configuration
+                #self.loadable_machine_configurations = self.machine_configuration
+                if "machine_name" in self.machine_configuration:
+                    machine_name = self.machine_configuration["machine_name"]
+                    self.loadable_machine_configurations = {
+                        machine_name: {}
+                    }
+                    processor_list = list(self.machine_configuration.keys())
+                    processor_list.remove("machine_name")
+                    for processor in processor_list:
+                        self.loadable_machine_configurations[machine_name][processor] = {}
+                        num_nodes = self.machine_configuration[processor]["nodes"]
+                        num_cores = self.machine_configuration[processor]["cores"]
+                        self.loadable_machine_configurations[machine_name][processor]["nodes"] = num_nodes
+                        self.loadable_machine_configurations[machine_name][processor]["cores"] = num_cores
             if "loadable_software_configurations" in metadata:
                 self.loadable_software_configurations = metadata["loadable_software_configurations"]
+            else:
+                for software_name in self.software_configuration.keys():
+                    self.loadable_software_configurations[software_name] = self.software_configuration[software_name]
 
             try:
                 with FileLock("test.lock", timeout=0):
@@ -507,7 +519,11 @@ class HistoryDB(dict):
 
         ''' check machine configuration dependencies '''
         loadable_machine_configurations = self.loadable_machine_configurations
+        if not "machine_configuration" in func_eval:
+            return False
         machine_configuration = func_eval['machine_configuration']
+        if not "machine_name" in machine_configuration:
+            return False
         machine_name = machine_configuration['machine_name']
         processor_list = list(machine_configuration.keys())
         processor_list.remove("machine_name")
@@ -594,18 +610,18 @@ class HistoryDB(dict):
 
         return True
 
-    def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Igiven : np.ndarray):
+    def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Tgiven : np.ndarray):
         task_id = -1
 
-        for i in range(len(Igiven)):
+        for i in range(len(Tgiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
                 if problem.IS[j].name == "tla_id":
                     continue
-                if type(Igiven[i][j]) == float:
-                    given_value = round(Igiven[i][j], 6)
+                if type(Tgiven[i][j]) == float:
+                    given_value = round(Tgiven[i][j], 6)
                 else:
-                    given_value = Igiven[i][j]
+                    given_value = Tgiven[i][j]
                 if (func_eval["task_parameter"][problem.IS[j].name] != given_value):
                     compare_all_elems = False
                     break
@@ -629,16 +645,16 @@ class HistoryDB(dict):
 
         return False
 
-    def load_history_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
+    def load_history_func_eval(self, data : Data, problem : Problem, Tgiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
 
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
-            if self.use_crowd_repo == True:
+            if self.sync_crowd_repo == True:
                 try:
                     r = requests.get(url = self.crowd_repo_download_url,
-                            headers={"x-api-key":self.historydb_api_key},
+                            headers={"x-api-key":self.crowdtuning_api_key},
                             params={"tuning_problem_name":self.tuning_problem_name,
                                 "tuning_problem_category":self.tuning_problem_category},
                             verify=False)
@@ -688,7 +704,7 @@ class HistoryDB(dict):
                 if function_evaluations != None:
                     historical_function_evaluations.extend(function_evaluations)
 
-                num_tasks = len(Igiven)
+                num_tasks = len(Tgiven)
 
                 PS_history = [[] for i in range(num_tasks)]
                 OS_history = [[] for i in range(num_tasks)]
@@ -714,7 +730,7 @@ class HistoryDB(dict):
                         print ("best_y: ", best_y)
 
                         if self.load_check == False or self.check_load_deps(func_eval):
-                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
                                 # # if the same parameter data has been loaded once (duplicated)
@@ -745,7 +761,10 @@ class HistoryDB(dict):
                     for func_eval in historical_function_evaluations:
                         if options != None and options["model_input_separation"] == True:
                             if options["TLA_method"] == None:
-                                modeling_load = "MLA_LCM"
+                                if len(data.I) == 1:
+                                    modeling_load = "SLA_GP"
+                                elif len(data.I) > 1:
+                                    modeling_load = "MLA_LCM"
                             elif options["TLA_method"] == "Regression":
                                 modeling_load = "TLA_RegressionSum"
                             elif options["TLA_method"] == "Sum":
@@ -754,8 +773,13 @@ class HistoryDB(dict):
                                 modeling_load = "TLA_Stacking"
                             elif options["TLA_method"] == "LCM_BF":
                                 modeling_load = "TLA_LCM_BF"
+                            elif options["TLA_method"] == "LCM":
+                                modeling_load = "TLA_LCM"
                             else:
-                                modeling_load = "MLA_LCM"
+                                if len(data.I) == 1:
+                                    modeling_load = "SLA_GP"
+                                elif len(data.I) > 1:
+                                    modeling_load = "MLA_LCM"
 
                             if func_eval["modeling"] != "Pilot" and \
                                (func_eval["modeling"] != modeling_load or
@@ -763,7 +787,7 @@ class HistoryDB(dict):
                                 continue
 
                         if self.load_check == False or self.check_load_deps(func_eval):
-                            task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                            task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
                                 # # if the same parameter data has been loaded once (duplicated)
@@ -823,7 +847,10 @@ class HistoryDB(dict):
                     for func_eval in source_function_evaluations[source_task_id]:
                         #if options != None and options["model_input_separation"] == True:
                         #    if options["TLA_method"] == None:
-                        #        modeling_load = "MLA_LCM"
+                        #        if len(data.I) == 1:
+                        #            modeling_load = "SLA_GP"
+                        #        elif len(data.I) > 1:
+                        #            modeling_load = "MLA_LCM"
                         #    elif options["TLA_method"] == "Regression":
                         #        modeling_load = "TLA_RegressionSum"
                         #    elif options["TLA_method"] == "Sum":
@@ -832,8 +859,13 @@ class HistoryDB(dict):
                         #        modeling_load = "TLA_Stacking"
                         #    elif options["TLA_method"] == "LCM_BF":
                         #        modeling_load = "TLA_LCM_BF"
+                        #    elif options["TLA_method"] == "LCM":
+                        #        modeling_load = "TLA_LCM"
                         #    else:
-                        #        modeling_load = "MLA_LCM"
+                        #        if len(data.I) == 1:
+                        #            modeling_load = "SLA_GP"
+                        #        elif len(data.I) > 1:
+                        #            modeling_load = "MLA_LCM"
 
                         #    if func_eval["modeling"] != "Pilot" and \
                         #       (func_eval["modeling"] != modeling_load or
@@ -841,7 +873,7 @@ class HistoryDB(dict):
                         #        continue
 
                         #if self.load_check == False or self.check_load_deps(func_eval):
-                        task_id = len(Igiven)-len(source_function_evaluations)+source_task_id
+                        task_id = len(Tgiven)-len(source_function_evaluations)+source_task_id
                         parameter_arr = []
                         for k in range(len(problem.PS)):
                             if type(problem.PS[k]).__name__ == "Categoricalnorm":
@@ -861,7 +893,8 @@ class HistoryDB(dict):
                         num_loaded_data += 1
 
             if (num_loaded_data > 0):
-                data.I = Igiven #IS_history
+                print ("loaded function evaluations: ", num_loaded_data)
+                data.I = Tgiven #IS_history
                 data.P = PS_history
                 data.O=[] # YL: OS is a list of 2D numpy arrays
                 for i in range(len(OS_history)):
@@ -878,7 +911,7 @@ class HistoryDB(dict):
             else:
                 print ("no history data has been loaded")
 
-    def load_model_func_eval(self, data : Data, problem : Problem, Igiven : np.ndarray, model_data : dict):
+    def load_model_func_eval(self, data : Data, problem : Problem, Tgiven : np.ndarray, model_data : dict):
         """ Init history database JSON file """
         if (self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
@@ -899,7 +932,7 @@ class HistoryDB(dict):
                         history_data = json.load(f_in)
                 print ("history_data: ", history_data)
 
-                num_tasks = len(Igiven)
+                num_tasks = len(Tgiven)
 
                 num_loaded_data = 0
 
@@ -920,7 +953,7 @@ class HistoryDB(dict):
                             parameter_arr.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
                         else:
                             parameter_arr.append(func_eval["tuning_parameter"][problem.PS[k].name])
-                    task_id = self.search_func_eval_task_id(func_eval, problem, Igiven)
+                    task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                     PS_history[task_id].append(parameter_arr)
                     OS_history[task_id].append(\
                         [func_eval["evaluation_result"][problem.OS[k].name] \
@@ -928,7 +961,7 @@ class HistoryDB(dict):
                     num_loaded_data += 1
 
                 if (num_loaded_data > 0):
-                    data.I = Igiven #IS_history
+                    data.I = Tgiven #IS_history
                     data.P = PS_history
                     data.O=[] # YL: OS is a list of 2D numpy arrays
                     for i in range(len(OS_history)):
@@ -1086,13 +1119,13 @@ class HistoryDB(dict):
 
                 new_function_evaluation_results.append(function_evaluation_document)
 
-                if self.use_crowd_repo == True:
+                if self.sync_crowd_repo == True:
                     print ("function_evaluation_document: ", str(function_evaluation_document))
-                    print ("API_KEY: ", self.historydb_api_key)
+                    print ("API_KEY: ", self.crowdtuning_api_key)
 
                     try:
                         r = requests.post(url = self.crowd_repo_upload_url,
-                                headers={"x-api-key":self.historydb_api_key},
+                                headers={"x-api-key":self.crowdtuning_api_key},
                                 data={"tuning_problem_name":self.tuning_problem_name,
                                     "tuning_problem_category":self.tuning_problem_category,
                                     "function_evaluation_document":json.dumps(function_evaluation_document)},
@@ -1267,12 +1300,12 @@ class HistoryDB(dict):
 
         return True
 
-    def read_surrogate_models(self, tuningproblem=None, Igiven=None, modeler="Model_LCM"):
+    def read_surrogate_models(self, tuningproblem=None, Tgiven=None, modeler="Model_LCM"):
         ret = []
         print ("problem ", tuningproblem)
         print ("problem input_space ", self.problem_space_to_dict(tuningproblem.input_space))
 
-        if tuningproblem == "None" or Igiven == "None":
+        if tuningproblem == "None" or Tgiven == "None":
             return ret
 
         if (self.tuning_problem_name is not None):
@@ -1300,7 +1333,7 @@ class HistoryDB(dict):
                     surrogate_model = history_data["surrogate_model"][i]
                     if (self.check_surrogate_model_exact_match(
                         surrogate_model,
-                        Igiven,
+                        Tgiven,
                         self.problem_space_to_dict(tuningproblem.input_space),
                         self.problem_space_to_dict(tuningproblem.parameter_space),
                         self.problem_space_to_dict(tuningproblem.output_space)) and

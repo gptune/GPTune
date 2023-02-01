@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 # Provide correct path/alias/version information for your system
 CC=gcc-9
 CXX=g++-9

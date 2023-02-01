@@ -185,7 +185,7 @@ class Options(dict):
 
             # set the default search algorithm in 'SearchSciPy'
             if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
-                self["search_algo"]='trust-constr'
+                self["search_algo"]='dual_annealing'
 
             ## set the default search algorithm in 'SearchPyMoo'
             #if(self['search_class']=='SearchPyMoo' and not (self["search_algo"] == 'nsga2' or self["search_algo"] == 'moead')):
@@ -193,10 +193,8 @@ class Options(dict):
 
         else:
             if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO')):
-                try:
-                    import pygmo as pg 
-                except:
-                    print("pygmo cannot be used. Use pymoo instead. ")
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use PyMoo (SearchPyMoo) instead.")
                     self['search_class']='SearchPyMoo'
                     self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
                     self['search_pop_size']=100                    
