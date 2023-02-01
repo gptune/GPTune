@@ -49,6 +49,7 @@ echo "The ModuleEnv is $ModuleEnv"
 if [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module swap PrgEnv-intel PrgEnv-gnu
+	module swap gcc gcc/8.3.0
 	GPTUNEROOT=$PWD
 	BLAS_LIB="/opt/cray/pe/libsci/20.09.1/GNU/8.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="/opt/cray/pe/libsci/20.09.1/GNU/8.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
@@ -356,52 +357,52 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/xiaoyeli/superlu_dist.git
 	cd superlu_dist
 
-	#### the following server is often down, so switch to the github repository 
-	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	# tar -xf parmetis-4.0.3.tar.gz
-	# cd parmetis-4.0.3/
-	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	# mkdir -p install
-	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	# make install > make_parmetis_install.log 2>&1
+	### the following server is often down, so switch to the github repository 
+	wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	tar -xf parmetis-4.0.3.tar.gz
+	cd parmetis-4.0.3/
+	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	mkdir -p install
+	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1
+	cd ../
+	cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+
+	# mkdir -p $ParMETIS_DIR
+	# rm -f GKlib
+	# git clone https://github.com/KarypisLab/GKlib.git
+	# cd GKlib
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+
 	# cd ../
-	# cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	mkdir -p $ParMETIS_DIR
-	rm -f GKlib
-	git clone https://github.com/KarypisLab/GKlib.git
-	cd GKlib
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-
-	cd ../
-	rm -rf METIS
-	git clone https://github.com/KarypisLab/METIS.git
-	cd METIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	make -j8
-	make install	
-	cd ../
-	rm -rf ParMETIS
-	git clone https://github.com/KarypisLab/ParMETIS.git
-	cd ParMETIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	make -j8
-	make install
-	cd ..
+	# rm -rf METIS
+	# git clone https://github.com/KarypisLab/METIS.git
+	# cd METIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	# make -j8
+	# make install	
+	# cd ../
+	# rm -rf ParMETIS
+	# git clone https://github.com/KarypisLab/ParMETIS.git
+	# cd ParMETIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# cd ..
 	
 	mkdir -p build
 	cd build
@@ -431,15 +432,15 @@ if [[ $BuildExample == 1 ]]; then
 	make install
 
 
-	cd $GPTUNEROOT/examples/Hypre
-	rm -rf hypre
-	git clone https://github.com/hypre-space/hypre.git
-	cd hypre/src/
-	git checkout v2.19.0
-	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make
-	cp ../../hypre-driver/src/ij.c ./test/.
-	make test
+	# cd $GPTUNEROOT/examples/Hypre
+	# rm -rf hypre
+	# git clone https://github.com/hypre-space/hypre.git
+	# cd hypre/src/
+	# git checkout v2.19.0
+	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	# make
+	# cp ../../hypre-driver/src/ij.c ./test/.
+	# make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
