@@ -860,7 +860,6 @@ class GPTune(object):
 
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
-                        points0 = tmpdata.D[i]
                         t = tmpdata.I[i]
                         I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
                         points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
@@ -870,7 +869,8 @@ class GPTune(object):
                             x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                             points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
                             points.update(points1)
-                            points.update(points0)
+                            if(tmpdata.D is not None):
+                                points.update(tmpdata.D[i])
                             if(self.problem.constants is not None):
                                 points.update(self.problem.constants)
                             modeldata.append(self.problem.models(points))
