@@ -16,3 +16,4 @@ requests
 pybind11
 pymoo
 cloudpickle
+termcolor

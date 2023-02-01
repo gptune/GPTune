@@ -16,3 +16,4 @@ requests
 pymoo
 cloudpickle
 SALib
+termcolor
