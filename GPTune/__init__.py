@@ -15,4 +15,4 @@
 # other to do so.
 #
 
-from .gptune import *
+from gptune import *
