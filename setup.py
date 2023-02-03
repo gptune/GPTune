@@ -2,14 +2,14 @@ from setuptools import setup
 import os
 import io
 
-NAME = 'gptune'
+NAME = 'GPTune'
 DESCRIPTION = ''
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 # Load the package's __version__.py module as a dictionary.
 about = dict()
-with open(os.path.join(here, 'GPTune', '__version__.py')) as f:
+with open(os.path.join(here, NAME, '__version__.py')) as f:
     exec(f.read(), about)
 
 # Import the README and use it as the long-description.
@@ -56,5 +56,5 @@ setup(
   install_requires=REQUIRED,
   extras_require=EXTRAS,
   include_package_data=True,
-  package_data = {'gptune': ['lib_*']}
+  package_data = {'GPTune': ['lib_*']}
 )
