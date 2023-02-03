@@ -294,10 +294,10 @@ target_link_libraries(pdqrdriver ${MPI_Fortran_LIBRARIES} ${BLAS_LIB} ${LAPACK_L
 # Installation setup.
 if(GPTUNE_INSTALL_PATH STREQUAL "")
     message(STATUS "GPTune will be installed in the default location: ${Python3_SITEARCH}")
-    set(_GPTUNE_INSTALL_DIR "${Python3_SITEARCH}/gptune")
+    set(_GPTUNE_INSTALL_DIR "${Python3_SITEARCH}/GPTune")
 else()
     message(STATUS "GPTune will be installed in the custom location: ${GPTUNE_INSTALL_PATH}")
-    set(_GPTUNE_INSTALL_DIR "${GPTUNE_INSTALL_PATH}/gptune")
+    set(_GPTUNE_INSTALL_DIR "${GPTUNE_INSTALL_PATH}/GPTune")
 endif()
 
 
