@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 import io
 
-NAME = 'GPTune'
+NAME = 'gptune'
 DESCRIPTION = ''
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -56,5 +56,5 @@ setup(
   install_requires=REQUIRED,
   extras_require=EXTRAS,
   include_package_data=True,
-  package_data = {'GPTune': ['lib_*']}
+  package_data = {'gptune': ['lib_*']}
 )
