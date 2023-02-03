@@ -24,7 +24,7 @@ from typing import Collection
 
 import skopt.space
 from skopt.space import *
-from data import *
+from .data import *
 import math
 import opentuner
 import argparse
