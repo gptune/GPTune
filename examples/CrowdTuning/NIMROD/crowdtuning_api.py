@@ -52,9 +52,11 @@ ret = crowdtune.QueryFunctionEvaluations(api_key = api_key,
         tuning_problem_name = "NIMROD_slu3d",
         problem_space = problem_space,
         configuration_space = configuration_space)
-print ("Print function evaluations")
-print (ret) # list of dict
-print ("number of queried (and filtered) function evaluations: ", len(ret))
+
+with open("usage_QueryFunctionEvaluations.out", "w") as f_out:
+    f_out.write("Print function evaluations\n")
+    f_out.write("Return: " + str(ret))
+    f_out.write("Number of queried (and filtered) function evaluations: " + str(len(ret)))
 
 # Usage 2: Run a sensitivity analysis (SA)
 ret = crowdtune.QuerySensitivityAnalysis(
@@ -65,8 +67,10 @@ ret = crowdtune.QuerySensitivityAnalysis(
     modeler = "Model_GPy_LCM",
     method = "Sobol",
     input_task = [5,7,1])
-print ("Sobol analysis result")
-print (ret) # print SA result
+
+with open("usage_QuerySensitivityAnalysis.out", "w") as f_out:
+    f_out.write("Sobol Analysis Result\n")
+    f_out.write("Return: " + str(ret))
 
 # Usage 3: Query a surrogate performance model (as a black-box function)
 surrogate_model = crowdtune.QuerySurrogateModel(
@@ -83,8 +87,12 @@ ret = surrogate_model(
             "nby": 2,
             "npz": 1
         })
-print ("Black-box surrogate model output")
-print (ret)
+
+with open("usage_QuerySurrogateModel.out", "w") as f_out:
+    f_out.write("Query a Black-box Surrogate Model\n")
+    f_out.write("Make Prediction using the Queried Surrogate Model\n")
+    f_out.write("Input task = { mx:5, my:7, lphi:1 }, Input parameters = { NSUP:43, NREL:36, nbx:2, nby:2, npz:1 }\n")
+    f_out.write("Return: " + str(ret))
 
 # Usage 4: Make a prediction using the crowd repository
 ret = crowdtune.QueryPredictOutput(
@@ -95,6 +103,9 @@ ret = crowdtune.QueryPredictOutput(
     input_task = [5,7,1],
     input_parameter=[43,36,2,2,1])
     #input_parameter={"NSUP":43, "NREL":36, "nbx":2, "nby":2, "npz":1})
-print ("Make prediction")
-print (ret)
+
+with open("usage_QueryPredictOutput.out", "w") as f_out:
+    f_out.write("Make Prediction\n")
+    f_out.write("Input task = { mx:5, my:7, lphi:1 }, Input parameters = { NSUP:43, NREL:36, nbx:2, nby:2, npz:1 }\n")
+    f_out.write("Return: " + str(ret))
 
