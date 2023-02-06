@@ -164,6 +164,10 @@ def main():
         options['TLA_method'] = "LCM_BF"
     elif tuning_method == "TLA_LCM_GPY":
         options['TLA_method'] = "LCM"
+    elif tuning_method == "TLA_Stacking":
+        options['TLA_method'] = "Stacking"
+    elif tuning_method == "TLA_Ensemble":
+        options['TLA_method'] = "Ensemble_ProbDyn"
 
     if tuning_method == "TLA_Regression":
         options['regression_log_name'] = "GPTune-Demo-"+str(tuning_method)+"-"+str(tvalue)+"-"+str(nbatch)+"-npilot"+str(npilot) + "-models-weights.log"
