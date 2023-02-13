@@ -1381,7 +1381,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
                 # currently hard coded.. it will work only for single target task TLA
-                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                with open(self.historydb_path+"/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
                     loaded_function_evaluations = json.load(f_in)["func_eval"]
 
                     for TLA_option in TLA_options:
@@ -1511,7 +1511,7 @@ class GPTune(object):
                     (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
                 # currently hard coded..
-                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                with open(self.historydb_path+"/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
                     loaded_function_evaluations = json.load(f_in)["func_eval"]
 
                     for TLA_option in TLA_options:
