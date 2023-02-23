@@ -147,19 +147,19 @@ def main():
         print("stats: ", stats)
 
         """ Print all input and parameter samples """
-        import pygmo as pg
+        import pymoo
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
         for tid in range(NI):
             print("tid: %d"%(tid))
             print("    problem:%s"%(data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
-            ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-            front = ndf[0]
+            front = NonDominatedSorting(method="fast_non_dominated_sort").do(data.O[tid], only_non_dominated_front=True)
             # print('front id: ',front)
             fopts = data.O[tid][front]
             xopts = [data.P[tid][i] for i in front]
             print('    Popts ', xopts)
-            print('    Oopts ', fopts.tolist())
+            print('    Oopts ', fopts.tolist())  
 
 if __name__ == "__main__":
     main()
