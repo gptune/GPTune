@@ -2381,6 +2381,18 @@ class GPTune(object):
                         if(any(ele==[None] for ele in OS_history[i])):
                             print ("history data contains null function values")
                             exit()
+
+                data.I = problem.IS.transform(data.I)
+                if data.P is not None:
+                    tmp=[]
+                    for x in data.P:
+                        if(len(x)>0):
+                            xNorm = problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    data.P=tmp
+
                 # print ("db: data.I: " + str(data.I))
                 # print ("db: data.P: " + str(data.P))
                 # print ("db: data.O: " + str(OS_history))
