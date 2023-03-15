@@ -390,9 +390,11 @@ class Model_GPy_LCM(Model):
                 self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
             self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
 
-            self.M.kern['GPy_GP.lengthscale'][0] = hyperparameters["lengthscale"][0]
-            self.M.kern['GPy_GP.lengthscale'][1] = hyperparameters["lengthscale"][1]
-            self.M.kern['GPy_GP.lengthscale'][2] = hyperparameters["lengthscale"][2]
+            print ("len: ", len(self.M.kern['GPy_GP.lengthscale']))
+
+            for i in range(len(self.M.kern['GPy_GP.lengthscale'])):
+                self.M.kern['GPy_GP.lengthscale'][i] = hyperparameters["lengthscale"][i]
+
             self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
             self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
 

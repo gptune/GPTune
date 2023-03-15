@@ -365,7 +365,7 @@ class GPTune(object):
 
         return (modelers, model_function)
 
-    def MLA_LoadModel(self, NS = 0, Tgiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
+    def MLA_LoadModel(self, NS = 0, Tgiven = None, method = "max_evals", update = 0, model_uid = None, **kwargs):
         print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Tgiven),NS))
         stats = {
             "time_total": 0,
@@ -428,29 +428,31 @@ class GPTune(object):
             # current limitations
             # - only model LCM
             # - not considering edge cases (e.g. no model is available)
-            if model_uids == None:
+            if model_uid == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
 
                 if method == "max_evals":
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
-                    (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_MLE_surrogate_model_hyperparameters(
                             self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
-                    (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_AIC_surrogate_model_hyperparameters(
                             self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
-                    (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_BIC_model_hyperparameters(
                             self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 else:
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
                             self.tuningproblem, Tgiven, i, kwargs["model_class"])
 
             else:
-                (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
+                (hyperparameters, parameter_names, model_options) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uid)
+
             modelers[i].gen_model_from_hyperparameters(self.data,
                     hyperparameters,
+                    model_options,
                     **kwargs)
 
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
