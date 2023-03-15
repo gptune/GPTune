@@ -1075,17 +1075,14 @@ class GPTune(object):
             if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
                 lower_bound_ = input_space_info["lower_bound"]
                 upper_bound_ = input_space_info["upper_bound"]
-                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_))
             elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
                 lower_bound_ = input_space_info["lower_bound"]
                 upper_bound_ = input_space_info["upper_bound"]
-                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Real(lower_bound_, upper_bound_, transform=transformer_, name=name_))
             elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
                 categories = input_space_info["categories"]
-                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Categoricalnorm(categories, transform=transformer_, name=name_))
         input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
         IS = Space(input_space_arr)
 
