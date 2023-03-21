@@ -1184,7 +1184,6 @@ class GPTune(object):
             num_evaluation_instances = kwargs["objective_multisample_processes"]
         elif kwargs["shared_memory_parallelism"] == True:
             num_evaluation_instances = kwargs["objective_multisample_threads"]
-        print ("num_evaluation_instances: ", num_evaluation_instances)
 
         while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
 
@@ -1370,14 +1369,11 @@ class GPTune(object):
                 stats["search_time"].append((t2-t1)/1e9)
                 time_search = time_search + (t2-t1)/1e9
 
-                O2 = []
                 newdata_for_replica.O = []
                 for i in range(NI):
                     for o in range(self.problem.DO):
                         (mu, var) = modelers[o].predict(np.array(newdata_for_replica.P[i][0]), i)
-                        O2.append(mu)
-                tmp = np.array(O2).reshape((len(O2), self.problem.DO))
-                newdata_for_replica.O.append(tmp.astype(np.double))
+                        newdata_for_replica.O.append(mu)
 
                 data_replica.merge(newdata_for_replica)
 
