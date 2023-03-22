@@ -610,6 +610,59 @@ class HistoryDB(dict):
 
         return True
 
+    def check_space_boundary(self, problem, func_eval):
+
+        is_passed = True
+
+        task_parameter_space = self.problem_space_to_dict(problem.IS)
+        for space_ in task_parameter_space:
+            name_ = space_["name"]
+            if name_ not in func_eval["task_parameter"]:
+                is_passed = False
+
+            type_ = space_["type"]
+            transformer_ = space_["transformer"]
+
+            if type_ == "real" or type_ == "int" or type_ == "integer":
+                lower_bound_ = space_["lower_bound"]
+                upper_bound_ = space_["upper_bound"]
+                if func_eval["task_parameter"][name_] < lower_bound_ or func_eval["task_parameter"][name_] > upper_bound_:
+                    is_passed = False
+
+            elif type_ == "categorical":
+
+                categories_ = space_["categories"]
+                if func_eval["task_parameter"][name_] not in categories_:
+                    is_passed = False
+
+        tuning_parameter_space = self.problem_space_to_dict(problem.PS)
+        for space_ in tuning_parameter_space:
+            name_ = space_["name"]
+            if name_ not in func_eval["tuning_parameter"]:
+                is_passed = False
+
+            type_ = space_["type"]
+            transformer_ = space_["transformer"]
+
+            if type_ == "real" or type_ == "int" or type_ == "integer":
+                lower_bound_ = space_["lower_bound"]
+                upper_bound_ = space_["upper_bound"]
+                if func_eval["tuning_parameter"][name_] < lower_bound_ or func_eval["tuning_parameter"][name_] > upper_bound_:
+                    is_passed = False
+
+            elif type_ == "categorical":
+
+                categories_ = space_["categories"]
+                if func_eval["tuning_parameter"][name_] not in categories_:
+                    is_passed = False
+
+        if (is_passed == False):
+            if (self.verbose):
+                print ("Boundary checking failed for the following function evaluation: ", str(func_eval))
+            return False
+
+        return True
+
     def search_func_eval_task_id(self, func_eval : dict, problem : Problem, Tgiven : np.ndarray):
         task_id = -1
 
@@ -729,7 +782,8 @@ class HistoryDB(dict):
                         print ("i: ", i)
                         print ("best_y: ", best_y)
 
-                        if self.load_check == False or self.check_load_deps(func_eval):
+                        #if self.load_check == False or self.check_load_deps(func_eval):
+                        if self.load_check == False or (self.check_load_deps(func_eval) and self.check_space_boundary(problem, func_eval)):
                             task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
@@ -786,7 +840,7 @@ class HistoryDB(dict):
                                 func_eval["model_class"] != options["model_class"]):
                                 continue
 
-                        if self.load_check == False or self.check_load_deps(func_eval):
+                        if self.load_check == False or (self.check_load_deps(func_eval) and self.check_space_boundary(problem, func_eval)):
                             task_id = self.search_func_eval_task_id(func_eval, problem, Tgiven)
                             if (task_id != -1):
                                 # # current policy: skip loading the func eval result
