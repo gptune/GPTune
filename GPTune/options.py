@@ -41,7 +41,7 @@ class Options(dict):
         objective_nprocmax = None # Maximum number of cores for each application call, default to computer.cores*computer.nodes-1
         objective_nospawn = False # Whether the application code is launched via MPI spawn. If True, self['objective_nprocmax'] cores are used per function evaluation, otherwise self['objective_nprocmax']+1 cores are used. 
 
-        BO_objective_evaluation_parallelism_method = None #"LiarStrategy"
+        BO_objective_evaluation_parallelism = False #True
 
         """ Options for the sampling phase """
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'

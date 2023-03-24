@@ -982,10 +982,10 @@ class GPTune(object):
 
         print("self.options: ", self.options)
 
-        if self.options["BO_objective_evaluation_parallelism_method"] == None:
+        if self.options["BO_objective_evaluation_parallelism"] == False:
             (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
-        elif self.options["BO_objective_evaluation_parallelism_method"] == "LiarStrategy":
-            (data, modeler, stats) = self.MLA_LiarStrategy_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        elif self.options["BO_objective_evaluation_parallelism"] == True:
+            (data, modeler, stats) = self.MLA_ParallelEval_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
             (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
@@ -996,7 +996,7 @@ class GPTune(object):
 
         return data, modeler, stats
 
-    def MLA_LiarStrategy_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
+    def MLA_ParallelEval_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1417,10 +1417,10 @@ class GPTune(object):
 
         print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
 
-        if self.options["BO_objective_evaluation_parallelism_method"] == None:
+        if self.options["BO_objective_evaluation_parallelism"] == False:
             return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
-        elif self.options["BO_objective_evaluation_parallelism_method"] == "LiarStrategy":
-            return self.MLA_LiarStrategy_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        elif self.options["BO_objective_evaluation_parallelism"] == True:
+            return self.MLA_ParallelEval_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
             return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 

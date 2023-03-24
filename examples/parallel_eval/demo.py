@@ -103,7 +103,7 @@ def main():
     options['shared_memory_parallelism'] = True
     options['objective_multisample_threads'] = 4
     options['objective_multisample_processes'] = 1
-    options['BO_objective_evaluation_parallelism_method'] = 'LiarStrategy'
+    options['BO_objective_evaluation_parallelism'] = True
 
     options["oversubscribe"] = True
 
