@@ -137,11 +137,10 @@ class SurrogateProblem(object):
         if (self.options['verbose']):
             print ("self.IOrig: ", self.IOrig)
 
-        # self.POrig = self.data.P[tid]
-        if self.data.P is not None:
+        if self.data.P is not None and len(self.data.P[tid]) > 0:
             self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
         else:
-            self.POrig = [[]]
+            self.POrig = [] # self.POrig = [[]]
         if (self.options['verbose']):
             print ("self.POrig: ", self.POrig)
 
