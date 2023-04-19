@@ -94,7 +94,7 @@ class Options(dict):
         search_random_seed = None # Specify a certain random seed for the search phase
 
         """ Options for transfer learning """
-        TLA_method = None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
+        TLA_method = 'LCM' #None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
         TLA_ensemble_exploration_rate = 0
         regression_logging = False
         regression_log_name = 'models_weights.log'
