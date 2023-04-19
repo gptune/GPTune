@@ -210,7 +210,7 @@ def main():
 	
 	if(noport==0):
 		### with ports 
-		dotproduct_thresh=0.85 #0.9
+		dotproduct_thresh=0.75 #0.9
 	else:
 		### without ports: modes are typically very different, so dotproduct_thresh can be small 
 		dotproduct_thresh=0.7

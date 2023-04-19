@@ -62,7 +62,6 @@ def objectives(point):                  # should always use this name for user-d
 	nthreads = point['nthreads']	
 	#########################################	
 	
-	postprocess=0
 	tdplot=0
 	noloss=0
 	baca_batch=16
@@ -77,8 +76,8 @@ def objectives(point):                  # should always use this name for user-d
 
 	params = [model, 'freq', freq]
 
-	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
-	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
+	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
 	# os.system("cp %s/fdmom_port ."%(BINDIR))
 	os.system("cp %s/fdmom_eigen ."%(BINDIR))
 	os.system("cp %s/%s.inp ."%(RUNDIR,model))
@@ -99,7 +98,7 @@ def objectives(point):                  # should always use this name for user-d
 		
 
 		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '40', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '200', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
 		""" gather the return value using the inter-communicator """							
@@ -292,14 +291,15 @@ def mergemode(model):
 
 def main():
 	global order
+	global postprocess
 	global norm_thresh
 	global eig_thresh
 	global dotproduct_thresh
 	global noport
 
 	norm_thresh=1000
-	eig_thresh=5e-7
-	noport=1
+	eig_thresh=1e-6
+	noport=0
 	
 	if(noport==0):
 		### with ports 
@@ -319,6 +319,7 @@ def main():
 	optimization = args.optimization
 	nrun = args.nrun
 	order = args.order
+	postprocess = args.postprocess
 	
 	
 	TUNER_NAME = args.optimization	
@@ -340,12 +341,13 @@ def main():
 
 	# Input parameters  # the frequency resolution is 100Khz
 	# freq      = Integer     (23300, 25226, transform="normalize", name="freq")
-	freq      = Integer     (14000, 30000, transform="normalize", name="freq")
+	# freq      = Integer     (14000, 30000, transform="normalize", name="freq")
 	# freq      = Integer     (9000, 11000, transform="normalize", name="freq")
 	# freq      = Integer     (19300, 22300, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 18000, transform="normalize", name="freq")
 	# freq      = Integer     (6320, 6430, transform="normalize", name="freq")
+	freq      = Integer     (6300, 10000, transform="normalize", name="freq")
 	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
 	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
 	# freq      = Integer     (500, 900, transform="normalize", name="freq")
@@ -392,9 +394,9 @@ def main():
 	# giventask = [["pillbox_4000"]]		
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
-	# giventask = [["cavity_5cell_30K_feko"]]		
+	giventask = [["cavity_5cell_30K_feko"]]		
 	# giventask = [["cavity_rec_5K_feko"]]
-	giventask = [["cavity_rec_17K_feko"]]
+	# giventask = [["cavity_rec_17K_feko"]]
 	# giventask = [["cavity_rec_17K_2nd_mesh"]]
 	# # giventask = [["rect_waveguide_2000"]]		
 	# giventask = [["rect_waveguide_30000"]]		
@@ -410,7 +412,8 @@ def main():
 		# data.P = [[[15138],[19531],[21741],[22160],[23352],[24134],[25120],[25219],[27447],[27803],[28673],[29455],[29532],[31110],[32415],[32462],[32507],[32562]]]
 		# data.P = [[[23380],[23860],[24040],[25120],[25190],[28680],[29260],[29300],[31080]]]
 		# data.P = [[[10000]]]
-		data.P = [[[15130]]]
+		# data.P = [[[15130]]]
+		data.P = [[[6300],[6350],[6400],[6450],[6500],[9400]]]
 		# data.P = [[[24040]]]
 		# data.P = [[[23380]]]
 		# data.P = [[[25190]]]
@@ -487,6 +490,7 @@ def parse_args():
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 	parser.add_argument('-order', type=int, default=0, help='order of the FDIE code')
+	parser.add_argument('-postprocess', type=int, default=0, help='whether postprocessing is performed')
 
 	args   = parser.parse_args()
 	return args
