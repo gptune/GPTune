@@ -121,7 +121,7 @@ def objectives(point):                  # should always use this name for user-d
 			mpi_argument=''
 		
 		# Build up command with command-line options from current set of parameters
-		argslist = [mpirun_command, mpi_argument,'-np', str(nproc), "%s/fdmom_eigen"%(RUNDIR), '-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)]
+		argslist = [mpirun_command, mpi_argument,'-np', str(nproc), "%s/fdmom_eigen"%(RUNDIR), '-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', nev, '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)]
 		
 		print("Running: " + " ".join(argslist),flush=True)
 		p = subprocess.run(argslist,capture_output=True,env=my_env)
@@ -296,17 +296,8 @@ def main():
 	global eig_thresh
 	global dotproduct_thresh
 	global noport
+	global nev
 
-	norm_thresh=1000
-	eig_thresh=1e-6
-	noport=0
-	
-	if(noport==0):
-		### with ports 
-		dotproduct_thresh=0.9 #0.85
-	else:
-		### without ports: modes are typically very different, so dotproduct_thresh can be small 
-		dotproduct_thresh=0.7
 
 	# Parse command line arguments
 
@@ -320,8 +311,76 @@ def main():
 	nrun = args.nrun
 	order = args.order
 	postprocess = args.postprocess
-	
-	
+	meshmodel = args.meshmodel
+
+
+	# the default
+	norm_thresh=1000
+	eig_thresh=5e-7
+	noport=1
+	nev=40
+	fmin=15000
+	fmax=18000
+	initial_guess=[[[15000],[18000]]]	
+	if(noport==0):
+		### with ports 
+		dotproduct_thresh=0.9 #0.85
+	else:
+		### without ports: modes are typically very different, so dotproduct_thresh can be small 
+		dotproduct_thresh=0.7	
+
+
+####### cavity_rec_17K_feko
+	if(meshmodel=="cavity_rec_17K_feko"):
+		norm_thresh=1000
+		eig_thresh=5e-7
+		noport=0
+		nev=40
+		fmin=14000
+		fmax=30000
+		initial_guess=[[[15130],[19531],[25120],[25190]]]
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.9 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
+
+####### cavity_5cell_30K_feko
+	if(meshmodel=="cavity_5cell_30K_feko"):
+		norm_thresh=1000
+		eig_thresh=1e-6
+		noport=0
+		nev=200
+		fmin=6300
+		fmax=10000
+		initial_guess=[[[6300],[6350],[6400],[6450],[6500],[9400]]]
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.9 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
+
+
+####### cavity_5cell_30K_feko_copy
+	if(meshmodel=="cavity_5cell_30K_feko_copy"):
+		norm_thresh=1000
+		eig_thresh=1e-6
+		noport=0
+		nev=200
+		fmin=21000
+		fmax=22000
+		initial_guess=[[[21000],[21200],[21400],[21800],[22000]]]
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.8 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
+
+
+
 	TUNER_NAME = args.optimization	
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -334,7 +393,7 @@ def main():
 	
 
 	# Task parameters
-	geomodels = ["rect_waveguide_2000","rect_waveguide_30000","rfq_mirror_50K_feko","cavity_5cell_30K_feko","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko","cavity_rec_17K_2nd_mesh"]
+	geomodels = ["rect_waveguide_2000","rect_waveguide_30000","rfq_mirror_50K_feko","cavity_5cell_30K_feko","cavity_5cell_30K_feko_copy","pillbox_4000","pillbox_1000","cavity_wakefield_4K_feko","cavity_rec_5K_feko","cavity_rec_17K_feko","cavity_rec_17K_2nd_mesh"]
 	# geomodels = ["cavity_wakefield_4K_feko"]
 	model    = Categoricalnorm (geomodels, transform="onehot", name="model")
 
@@ -347,8 +406,9 @@ def main():
 	# freq      = Integer     (15000, 40000, transform="normalize", name="freq")
 	# freq      = Integer     (15000, 18000, transform="normalize", name="freq")
 	# freq      = Integer     (6320, 6430, transform="normalize", name="freq")
-	freq      = Integer     (6300, 10000, transform="normalize", name="freq")
-	# freq      = Integer     (21000, 22800, transform="normalize", name="freq")
+	# freq      = Integer     (6300, 10000, transform="normalize", name="freq")
+	# freq      = Integer     (21000, 22000, transform="normalize", name="freq")
+	freq      = Integer     (fmin, fmax, transform="normalize", name="freq")
 	# freq      = Integer     (11400, 12000, transform="normalize", name="freq")
 	# freq      = Integer     (500, 900, transform="normalize", name="freq")
 	# freq      = Integer     (3000, 4000, transform="normalize", name="freq")
@@ -394,7 +454,8 @@ def main():
 	# giventask = [["pillbox_4000"]]		
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
-	giventask = [["cavity_5cell_30K_feko"]]		
+	# giventask = [["cavity_5cell_30K_feko"]]		
+	giventask = [[meshmodel]]		
 	# giventask = [["cavity_rec_5K_feko"]]
 	# giventask = [["cavity_rec_17K_feko"]]
 	# giventask = [["cavity_rec_17K_2nd_mesh"]]
@@ -413,7 +474,9 @@ def main():
 		# data.P = [[[23380],[23860],[24040],[25120],[25190],[28680],[29260],[29300],[31080]]]
 		# data.P = [[[10000]]]
 		# data.P = [[[15130]]]
-		data.P = [[[6300],[6350],[6400],[6450],[6500],[9400]]]
+		# data.P = [[[6300],[6350],[6400],[6450],[6500],[9400]]]
+		# data.P = [[[21000],[21200],[21400],[21800],[22000]]]
+		data.P = initial_guess
 		# data.P = [[[24040]]]
 		# data.P = [[[23380]]]
 		# data.P = [[[25190]]]
@@ -437,7 +500,7 @@ def main():
 			Nmode = 0
 			print("no mode found in the intial samples")
 		
-		NmodeMAX=20 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
+		NmodeMAX=40 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
 		for nn in range(NS):
 			mm=0
 			# merge the modes as two curves can belong to the same mode when dotproduct_thresh is large
@@ -491,6 +554,7 @@ def parse_args():
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 	parser.add_argument('-order', type=int, default=0, help='order of the FDIE code')
 	parser.add_argument('-postprocess', type=int, default=0, help='whether postprocessing is performed')
+	parser.add_argument('-meshmodel', type=str, default='cavity_5cell_30K_feko', help='Name of the mesh file')
 
 	args   = parser.parse_args()
 	return args

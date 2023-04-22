@@ -173,7 +173,7 @@ def objectives(point, nodes, cores, nthreads, model, nth):                  # sh
 		
 
 		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '200', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '200', '--nev', nev, '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
 		""" gather the return value using the inter-communicator """							
@@ -255,18 +255,8 @@ def main():
 	global dotproduct_thresh
 	global noport
 	global postprocess
+	global nev
 
-	postprocess=0
-	norm_thresh=1000
-	eig_thresh=1e-6
-	noport=0 # whether the port is treated as closed boundary or open port
-	
-	if(noport==0):
-		### with ports 
-		dotproduct_thresh=0.9 #0.85
-	else:
-		### without ports: modes are typically very different, so dotproduct_thresh can be small 
-		dotproduct_thresh=0.7  # you may want to use 0.9 for the final postprocessing 
 
 	# Parse command line arguments
 
@@ -274,14 +264,60 @@ def main():
 
 	# Extract arguments
 
-	postprocess = args.postprocess
 	ntask = args.ntask
 	nthreads = args.nthreads
 	optimization = args.optimization
 	nrun = args.nrun
 	order = args.order
-	
-	
+	postprocess = args.postprocess
+	meshmodel = args.meshmodel
+
+	# the default
+	norm_thresh=1000
+	eig_thresh=1e-6
+	noport=0 # whether the port is treated as closed boundary or open port
+	nev=40
+	if(noport==0):
+		### with ports 
+		dotproduct_thresh=0.9 #0.85
+	else:
+		### without ports: modes are typically very different, so dotproduct_thresh can be small 
+		dotproduct_thresh=0.7  # you may want to use 0.9 for the final postprocessing 
+
+
+####### cavity_rec_17K_feko
+	if(meshmodel=="cavity_rec_17K_feko"):
+		norm_thresh=1000
+		eig_thresh=5e-7
+		noport=0
+		nev=40
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.9 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
+
+####### cavity_5cell_30K_feko
+	if(meshmodel=="cavity_5cell_30K_feko"):
+		norm_thresh=1000
+		eig_thresh=1e-6
+		noport=0
+		nev=200
+
+
+####### cavity_5cell_30K_feko_copy
+	if(meshmodel=="cavity_5cell_30K_feko_copy"):
+		norm_thresh=1000
+		eig_thresh=1e-6
+		noport=0
+		nev=200
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.8 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
 	TUNER_NAME = args.optimization	
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -298,7 +334,7 @@ def main():
 	# giventask = [["pillbox_4000"]]		
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
-	giventask = [["cavity_5cell_30K_feko"]]		
+	giventask = [[meshmodel]]
 	# giventask = [["cavity_rec_17K_feko"]]		
 	# giventask = [["cavity_wakefield_4K_feko"]]		
 
@@ -390,6 +426,7 @@ def parse_args():
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 	parser.add_argument('-order', type=int, default=0, help='order of the FDIE code')
 	parser.add_argument('-postprocess', type=int, default=0, help='whether postprocessing is performed')
+	parser.add_argument('-meshmodel', type=str, default='cavity_5cell_30K_feko', help='Name of the mesh file')
 
 	args   = parser.parse_args()
 	return args
