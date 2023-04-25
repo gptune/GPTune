@@ -210,7 +210,7 @@ def main():
 	
 	if(noport==0):
 		### with ports 
-		dotproduct_thresh=0.75 #0.9
+		dotproduct_thresh=0.7 #0.9
 	else:
 		### without ports: modes are typically very different, so dotproduct_thresh can be small 
 		dotproduct_thresh=0.7
@@ -232,7 +232,8 @@ def main():
 	# giventask = [["pillbox_4000"]]		
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
-	giventask = [["cavity_5cell_30K_feko"]]		
+	# giventask = [["cavity_5cell_30K_feko"]]		
+	giventask = [["cavity_5cell_30K_feko_copy"]]		
 	# giventask = [["cavity_rec_5K_feko"]]
 	# giventask = [["cavity_rec_17K_feko"]]
 	# giventask = [["cavity_rec_17K_2nd_mesh"]]

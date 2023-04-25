@@ -98,7 +98,7 @@ def objectives(point):                  # should always use this name for user-d
 		
 
 		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '200', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '%s'%(nev),'--nev_nodefault', '%s'%(nev_nodefault), '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 
 		""" gather the return value using the inter-communicator """							
@@ -121,7 +121,7 @@ def objectives(point):                  # should always use this name for user-d
 			mpi_argument=''
 		
 		# Build up command with command-line options from current set of parameters
-		argslist = [mpirun_command, mpi_argument,'-np', str(nproc), "%s/fdmom_eigen"%(RUNDIR), '-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', nev, '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)]
+		argslist = [mpirun_command, mpi_argument,'-np', str(nproc), "%s/fdmom_eigen"%(RUNDIR), '-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '%s'%(nev),'--nev_nodefault', '%s'%(nev_nodefault), '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1', '--near_para', '2.0', '--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)]
 		
 		print("Running: " + " ".join(argslist),flush=True)
 		p = subprocess.run(argslist,capture_output=True,env=my_env)
@@ -297,6 +297,7 @@ def main():
 	global dotproduct_thresh
 	global noport
 	global nev
+	global nev_nodefault
 
 
 	# Parse command line arguments
@@ -319,6 +320,7 @@ def main():
 	eig_thresh=5e-7
 	noport=1
 	nev=40
+	nev_nodefault=nev/2
 	fmin=15000
 	fmax=18000
 	initial_guess=[[[15000],[18000]]]	
@@ -336,6 +338,7 @@ def main():
 		eig_thresh=5e-7
 		noport=0
 		nev=40
+		nev_nodefault=nev/2
 		fmin=14000
 		fmax=30000
 		initial_guess=[[[15130],[19531],[25120],[25190]]]
@@ -352,6 +355,7 @@ def main():
 		eig_thresh=1e-6
 		noport=0
 		nev=200
+		nev_nodefault=nev/2
 		fmin=6300
 		fmax=10000
 		initial_guess=[[[6300],[6350],[6400],[6450],[6500],[9400]]]
@@ -366,9 +370,10 @@ def main():
 ####### cavity_5cell_30K_feko_copy
 	if(meshmodel=="cavity_5cell_30K_feko_copy"):
 		norm_thresh=1000
-		eig_thresh=1e-6
+		eig_thresh=3e-7
 		noport=0
 		nev=200
+		nev_nodefault=50
 		fmin=21000
 		fmax=22000
 		initial_guess=[[[21000],[21200],[21400],[21800],[22000]]]
