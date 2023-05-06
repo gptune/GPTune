@@ -171,7 +171,6 @@ def objectives(point, nodes, cores, nthreads, model, nth):                  # sh
 		info.Set('env',envstr)
 		info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
 		
-
 		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
 		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '%s'%(nev),'--nev_nodefault', '%s'%(nev_nodefault), '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
 		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
@@ -278,7 +277,7 @@ def main():
 	eig_thresh=1e-6
 	noport=0 # whether the port is treated as closed boundary or open port
 	nev=40
-	nev_nodefault=nev/2
+	nev_nodefault=int(nev/2)
 	if(noport==0):
 		### with ports 
 		dotproduct_thresh=0.9 #0.85
@@ -291,9 +290,9 @@ def main():
 	if(meshmodel=="cavity_rec_17K_feko"):
 		norm_thresh=1000
 		eig_thresh=5e-7
-		noport=0
+		noport=1
 		nev=40
-		nev_nodefault=nev/2
+		nev_nodefault=int(nev/2)
 		if(noport==0):
 			### with ports 
 			dotproduct_thresh=0.9 #0.85
@@ -307,7 +306,7 @@ def main():
 		eig_thresh=1e-6
 		noport=0
 		nev=200
-		nev_nodefault=nev/2
+		nev_nodefault=int(nev/2)
 
 
 ####### cavity_5cell_30K_feko_copy
