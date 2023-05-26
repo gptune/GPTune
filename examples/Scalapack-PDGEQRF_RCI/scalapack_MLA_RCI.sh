@@ -106,7 +106,11 @@ RUNDIR=./scalapack-driver/exp/$machine/GPTune/$jobid/
 python ./scalapack-driver/spt/pdqrdriver_in_out.py -machine $machine -jobid $jobid -niter $niter -mode 'in' -m $m -n $n -nodes $nodes -cores $cores -mb $mb -nb $nb -nthreads $OMP_NUM_THREADS -nproc $nproc -p $p -q $q -npernode $npernode
 
 # call the application, read data from the input file, dump results to an output file 
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+if [[ $ModuleEnv == *"ex3"* ]]; then
+############ ex3 mpirun doesn't work correctly
+    echo "srun -n $nproc $BINDIR/pdqrdriver $RUNDIR"
+    srun -n $nproc $BINDIR/pdqrdriver $RUNDIR 
+elif [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR"
     mpirun --allow-run-as-root -n $nproc $BINDIR/pdqrdriver $RUNDIR 
