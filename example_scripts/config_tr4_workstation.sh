@@ -19,11 +19,14 @@ fi
 
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
-    module load gcc/9.1.0
+	module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module load python/gcc-9.1.0/3.7.4
+    module swap python python/gcc-9.1.0/3.10.8
 	module load cmake/3.19.2
+	shopt -s expand_aliases
+	alias python='python3.10'
+	alias pip='pip3.10'
 	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
@@ -39,11 +42,6 @@ fi
 
 
 GPTUNEROOT=$PWD
-
-
-#shopt -s expand_aliases
-#alias python='python3.7'
-#alias pip='pip3.7'
 
 
 export PATH=$PATH:/home/administrator/.local/bin/
@@ -64,7 +62,7 @@ export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/li
 export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
 
 
-
+module list
 
 python --version
 pip --version
