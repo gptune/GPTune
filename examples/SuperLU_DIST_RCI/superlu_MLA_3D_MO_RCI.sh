@@ -98,7 +98,11 @@ RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
 
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+if [[ $ModuleEnv == *"ex3"* ]]; then
+############ ex3 mpirun doesn't work correctly
+    echo "srun -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out"
+    srun -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -q $COLPERM -d $nzdep $INPUTDIR/$matrix | tee a.out
+elif [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive3d -l $LOOKAHEAD -c $npcols -r $nprows -d $nzdep -q $COLPERM $INPUTDIR/$matrix | tee a.out

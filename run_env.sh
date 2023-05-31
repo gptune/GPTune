@@ -44,13 +44,13 @@
 #export nodes=1  # number of nodes to be used
 
 
-################ Yang's tr4 machine
-export machine=tr4-workstation
-export proc=AMD1950X   
-export mpi=openmpi  
-export compiler=gnu   
-export nodes=1  # number of nodes to be used
-#
+# ################ Yang's tr4 machine
+# export machine=tr4-workstation
+# export proc=AMD1950X   
+# export mpi=openmpi  
+# export compiler=gnu   
+# export nodes=1  # number of nodes to be used
+# #
 
 # ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
 # export machine=cleanlinux
@@ -58,6 +58,15 @@ export nodes=1  # number of nodes to be used
 # export mpi=openmpi
 # export compiler=gnu
 # export nodes=1  # number of nodes to be used
+
+
+# ################ ex3 simula
+export machine=ex3
+export proc=xeongold16q
+export mpi=openmpi
+export compiler=gnu
+export nodes=1  # number of nodes to be used
+
 
 
 ##################################################
@@ -76,21 +85,6 @@ fi
 
 
 
-
-############### automatic machine checking
-if [[ $(hostname -s) = "tr4-workstation" ]]; then
-    export machine=tr4-workstation
-elif [[ $NERSC_HOST = "cori" ]]; then
-    export machine=cori
-elif [[ $NERSC_HOST = "perlmutter" ]]; then
-    export machine=perlmutter    
-elif [[ $(uname -s) = "Darwin" ]]; then
-    export machine=mac
-elif [[ $(dnsdomainname) = "summit.olcf.ornl.gov" ]]; then
-    export machine=summit
-elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") == *"Ubuntu"* || $(cat /etc/os-release | grep "PRETTY_NAME") == *"Debian"* ]]; then
-    export machine=cleanlinux    
-fi    
 
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
@@ -111,6 +105,30 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [9,1,0]}}")
+# fi
+###############
+############### ex3 simula
+elif [ $ModuleEnv = 'ex3-xeongold16q-openmpi-gnu' ]; then
+    module load python37
+	module load cmake/gcc/3.26.3
+	module load openblas/dynamic/0.3.7
+	# module load openmpi/gcc/64/4.1.4
+	module load openmpi/gcc/64/4.0.1
+	module load scalapack/gcc/2.0.2
+	module load metis/gcc/5.1.0
+	module load parmetis/gcc/4.0.3
+	module load scotch/gcc/6.0.7
+	module load slurm
+    export OMPI_MCA_btl=^openib
+    export OMPI_MCA_pml=^yalla
+    ulimit -s 10240
+    export PATH=$PWD/env/bin/:$PATH
+    export MPIRUN=mpirun 
+    export MPIARG=
+    cores=32
+    gpus=0
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,5,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,0,2]},\"gcc\":{\"version_split\": [7,5,0]}}")
 # fi
 ###############
 ############### macbook

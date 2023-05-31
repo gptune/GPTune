@@ -99,7 +99,11 @@ pz_o=$(($nproc / $px_o / $py_o))
 RUNDIR="../heffte_RCI/heffte/build/benchmarks"
 
 
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+if [[ $ModuleEnv == *"ex3"* ]]; then
+############ ex3 mpirun doesn't work correctly
+    echo "srun -n $nproc $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out"
+    srun -n $nproc $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out
+elif [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/speed3d_c2c stock double $dimx $dimy $dimz -ingrid $px_i $py_i $pz_i -outgrid $px_o $py_o $pz_o -$comm_type | tee a.out
