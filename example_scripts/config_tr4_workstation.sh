@@ -7,7 +7,7 @@ cd ..
 ##################################################
 
 export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
-BuildExample=0 # whether to build all examples
+BuildExample=1 # whether to build all examples
 
 ##################################################
 ##################################################
@@ -22,11 +22,11 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module swap python python/gcc-9.1.0/3.10.8
+    module swap python python/gcc-9.1.0/3.8.4
 	module load cmake/3.19.2
 	shopt -s expand_aliases
-	alias python='python3.10'
-	alias pip='pip3.10'
+	alias python='python3.8'
+	alias pip='pip3.8'
 	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
@@ -52,14 +52,14 @@ export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
-export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/
 export METIS_DIR=$ParMETIS_DIR
 export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
-export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 
 module list
@@ -110,52 +110,52 @@ if [[ $BuildExample == 1 ]]; then
 	cd superlu_dist
 
 
-	##### the following server is often down, so switch to the github repository 
-	# wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
-	# tar -xf parmetis_4.0.3.orig.tar.gz
-	# cd parmetis-4.0.3/
-	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	# mkdir -p install
-	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	# make install > make_parmetis_install.log 2>&1
+	#### the following server is often down, so switch to the github repository 
+	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	tar -xf parmetis_4.0.3.orig.tar.gz
+	cd parmetis-4.0.3/
+	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	mkdir -p install
+	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1
+	cd ../
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+
+	# mkdir -p $ParMETIS_DIR
+	# rm -f GKlib
+	# git clone https://github.com/KarypisLab/GKlib.git
+	# cd GKlib
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+
 	# cd ../
-	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	mkdir -p $ParMETIS_DIR
-	rm -f GKlib
-	git clone https://github.com/KarypisLab/GKlib.git
-	cd GKlib
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-
-	cd ../
-	rm -rf METIS
-	git clone https://github.com/KarypisLab/METIS.git
-	cd METIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	make -j8
-	make install	
-	cd ../
-	rm -rf ParMETIS
-	git clone https://github.com/KarypisLab/ParMETIS.git
-	cd ParMETIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	make -j8
-	make install
-	cd ..
+	# rm -rf METIS
+	# git clone https://github.com/KarypisLab/METIS.git
+	# cd METIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	# make -j8
+	# make install	
+	# cd ../
+	# rm -rf ParMETIS
+	# git clone https://github.com/KarypisLab/ParMETIS.git
+	# cd ParMETIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# cd ..
 
 	mkdir -p build
 	cd build
@@ -183,120 +183,120 @@ if [[ $BuildExample == 1 ]]; then
 	make pddrive
 
 
-	cd $GPTUNEROOT/examples/Hypre
-	rm -rf hypre
-	git clone https://github.com/hypre-space/hypre.git
-	cd hypre/src/
-	git checkout v2.19.0
-	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make
-	cp ../../hypre-driver/src/ij.c ./test/.
-	make test
+	# cd $GPTUNEROOT/examples/Hypre
+	# rm -rf hypre
+	# git clone https://github.com/hypre-space/hypre.git
+	# cd hypre/src/
+	# git checkout v2.19.0
+	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	# make
+	# cp ../../hypre-driver/src/ij.c ./test/.
+	# make test
 
 
-	cd $GPTUNEROOT/examples/ButterflyPACK
-	rm -rf ButterflyPACK
-	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
-	cd ButterflyPACK
-	git clone https://github.com/opencollab/arpack-ng.git
-	cd arpack-ng
-	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
-	mkdir -p build
-	cd build
-	cmake .. \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_INSTALL_PREFIX=. \
-		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="" \
-		-DBLAS_LIBRARIES="${BLAS_LIB}" \
-		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DMPI=ON \
-		-DEXAMPLES=ON \
-		-DCOVERALLS=OFF 
-	make
-	cd ../../
-	mkdir build
-	cd build
-	cmake .. \
-		-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
-		-DCMAKE_CXX_FLAGS="" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_INSTALL_PREFIX=. \
-		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
-		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	make -j32
-	make install -j32
-
-
-
-	cd $GPTUNEROOT/examples/STRUMPACK
-	rm -rf scotch_6.1.0
-	wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
-	tar -xf scotch_6.1.0.tar.gz
-	cd ./scotch_6.1.0
-	mkdir install
-	cd ./src
-	cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
-	sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
-	sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
-	sed -i "s/CCD/#CCD/" Makefile.inc
-	printf "CCD = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCP/#CCP/" Makefile.inc
-	printf "CCP = $MPICC\n" >> Makefile.inc
-	sed -i "s/CCS/#CCS/" Makefile.inc
-	printf "CCS = $MPICC\n" >> Makefile.inc
-	cat Makefile.inc
-	make ptscotch 
-	make prefix=../install install
-
-
-	cd ../../
-	rm -rf STRUMPACK
-	git clone https://github.com/pghysels/STRUMPACK.git
-	cd STRUMPACK
-	#git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
-	git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
-	cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
-	cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
-	chmod +x examples/dense/KernelRegressionMPI.py
-	mkdir build
-	cd build
+	# cd $GPTUNEROOT/examples/ButterflyPACK
+	# rm -rf ButterflyPACK
+	# git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+	# cd ButterflyPACK
+	# git clone https://github.com/opencollab/arpack-ng.git
+	# cd arpack-ng
+	# git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+	# mkdir -p build
+	# cd build
+	# cmake .. \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DCMAKE_INSTALL_PREFIX=. \
+	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DCMAKE_Fortran_FLAGS="" \
+	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DMPI=ON \
+	# 	-DEXAMPLES=ON \
+	# 	-DCOVERALLS=OFF 
+	# make
+	# cd ../../
+	# mkdir build
+	# cd build
+	# cmake .. \
+	# 	-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
+	# 	-DCMAKE_CXX_FLAGS="" \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_INSTALL_PREFIX=. \
+	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	# 	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+	# make -j32
+	# make install -j32
 
 
 
-	cmake ../ \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_INSTALL_PREFIX=../install \
-		-DCMAKE_INSTALL_LIBDIR=../install/lib \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DSTRUMPACK_COUNT_FLOPS=ON \
-		-DSTRUMPACK_TASK_TIMERS=ON \
-		-DTPL_ENABLE_SCOTCH=ON \
-		-DTPL_ENABLE_ZFP=OFF \
-		-DTPL_ENABLE_PTSCOTCH=ON \
-		-DTPL_ENABLE_PARMETIS=ON \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.so" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	# cd $GPTUNEROOT/examples/STRUMPACK
+	# rm -rf scotch_6.1.0
+	# wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
+	# tar -xf scotch_6.1.0.tar.gz
+	# cd ./scotch_6.1.0
+	# mkdir install
+	# cd ./src
+	# cp ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+	# sed -i "s/-DSCOTCH_PTHREAD//" Makefile.inc
+	# sed -i "s/-DIDXSIZE64/-DIDXSIZE32/" Makefile.inc
+	# sed -i "s/CCD/#CCD/" Makefile.inc
+	# printf "CCD = $MPICC\n" >> Makefile.inc
+	# sed -i "s/CCP/#CCP/" Makefile.inc
+	# printf "CCP = $MPICC\n" >> Makefile.inc
+	# sed -i "s/CCS/#CCS/" Makefile.inc
+	# printf "CCS = $MPICC\n" >> Makefile.inc
+	# cat Makefile.inc
+	# make ptscotch 
+	# make prefix=../install install
 
-	make install -j32
-	make examples -j32
+
+	# cd ../../
+	# rm -rf STRUMPACK
+	# git clone https://github.com/pghysels/STRUMPACK.git
+	# cd STRUMPACK
+	# #git checkout 959ff1115438e7fcd96b029310ed1a23375a5bf6  # head commit has compiler error, requiring fixes
+	# git checkout 09fb3626cb9d7482528fce522dedad3ad9a4bc9d
+	# cp ../STRUMPACK-driver/src/testPoisson3dMPIDist.cpp examples/sparse/. 
+	# cp ../STRUMPACK-driver/src/KernelRegressionMPI.py examples/dense/. 
+	# chmod +x examples/dense/KernelRegressionMPI.py
+	# mkdir build
+	# cd build
+
+
+
+	# cmake ../ \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_INSTALL_PREFIX=../install \
+	# 	-DCMAKE_INSTALL_LIBDIR=../install/lib \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DSTRUMPACK_COUNT_FLOPS=ON \
+	# 	-DSTRUMPACK_TASK_TIMERS=ON \
+	# 	-DTPL_ENABLE_SCOTCH=ON \
+	# 	-DTPL_ENABLE_ZFP=OFF \
+	# 	-DTPL_ENABLE_PTSCOTCH=ON \
+	# 	-DTPL_ENABLE_PARMETIS=ON \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.so" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+
+	# make install -j32
+	# make examples -j32
 
 
 	# cd $GPTUNEROOT/examples/MFEM
