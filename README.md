@@ -31,7 +31,7 @@ Table of Contents
       * [Using prebuilt docker images](#using-prebuilt-docker-images)
    * [Examples](#examples)
       * [GPTune-Demo](#gptune-demo)
-      * [SCALAPCK QR](#scalapck-qr)
+      * [SCALAPACK QR](#scalapack-qr)
       * [SuperLU_DIST](#superlu_dist)
    * [Usage](#usage)
       * [Problem description](#problem-description)
