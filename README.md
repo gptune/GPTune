@@ -327,7 +327,7 @@ or
 edit ../../run_env.sh
 bash run_examples.sh
 ```
-### SCALAPCK QR
+### SCALAPACK QR
 The files `scalapack_*.py` in the `examples/Scalapack-PDGEQRF` folder shows how to tune the parallel QR factorization subroutine PDGEQRF with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/Scalapack-PDGEQRF
