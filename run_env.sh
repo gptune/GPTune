@@ -93,9 +93,12 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module load python/gcc-9.1.0/3.7.4
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
-    export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/GPTune/:$PYTHONPATH
+    module swap python python/gcc-9.1.0/3.10.8
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    # export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/GPTune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/lib/python3.10/site-packages/:$PYTHONPATH
+    shopt -s expand_aliases
+    alias python='python3.10'
     export MPIRUN=mpirun 
     export MPIARG=--allow-run-as-root
     cores=16

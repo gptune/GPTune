@@ -188,6 +188,7 @@ def main():
     options['model_processes'] = 1
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
+    options['model_optimzier'] = 'lbfgs'
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
