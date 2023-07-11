@@ -106,18 +106,21 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 ###############
 ############### ex3 simula
 elif [ $ModuleEnv = 'ex3-xeongold16q-openmpi-gnu' ]; then
-    module load python37
-	module load cmake/gcc/3.26.3
-	module load openblas/dynamic/0.3.7
-	# module load openmpi/gcc/64/4.1.4
-	module load openmpi/gcc/64/4.0.1
-	module load scalapack/gcc/2.0.2
-	module load metis/gcc/5.1.0
-	module load parmetis/gcc/4.0.3
-	module load scotch/gcc/6.0.7
-	module load slurm
-    export OMPI_MCA_btl=^openib
-    export OMPI_MCA_pml=^yalla
+        module load cmake/gcc/3.26.4
+        # module load python37
+      module load openblas/dynamic/0.3.7
+        # module load openblas/dynamic/0.3.23
+        module load openmpi/gcc/64/4.1.5
+        module load jq/1.6
+        module load scalapack/gcc/2.0.2
+        # module load openmpi/gcc/64/4.1.4
+        module load metis/gcc/5.1.0
+        module load parmetis/gcc/4.0.3
+        module load scotch/gcc/6.0.7
+        module load slurm/20.02.7
+        module list
+    export OMPI_MCA_btl="^openib,self"
+    export OMPI_MCA_pml="^ucx"
     ulimit -s 10240
     export PATH=$PWD/env/bin/:$PATH
     export MPIRUN=mpirun 
