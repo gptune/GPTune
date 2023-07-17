@@ -97,48 +97,49 @@ def main():
     tla_II = args.tla_II
     JOBID = args.jobid
     TUNER_NAME = args.optimization
-
-    tuning_metadata = {
-        "tuning_problem_name": "PDGEQRF",
-        "machine_configuration": {
-            "machine_name": "Cori",
-            "haswell": {
-                "nodes": 1,
-                "cores": 32
-            }
-        },
-        "software_configuration": {
-            "openmpi": {
-                "version_split": [4,0,1]
-            },
-            "scalapack": {
-                "version_split": [2,1,0]
-            },
-            "gcc": {
-                "version_split": [8,3,0]
-            }
-        },
-        "loadable_machine_configurations": {
-            "Cori" : {
-                "haswell": {
-                    "nodes":1,
-                    "cores":32
-                }
-            }
-        },
-        "loadable_software_configurations": {
-            "openmpi": {
-                "version_from":[4,0,1],
-                "version_to":[5,0,0]
-            },
-            "scalapack":{
-                "version_split":[2,1,0]
-            },
-            "gcc": {
-                "version_split": [8,3,0]
-            }
-        }
-    }
+    ##### YL: the following shouldn't be hardcoded as this example always works on one machine. TLA across machines can use CrowdTuning/ScaLAPACK-PDGEQRF
+    # tuning_metadata = {
+    #     "tuning_problem_name": "PDGEQRF",
+    #     "machine_configuration": {
+    #         "machine_name": "mac",
+    #         "intel": {
+    #             "nodes": 1,
+    #             "cores": 8
+    #         }
+    #     },
+    #     "software_configuration": {
+    #         "openmpi": {
+    #             "version_split": [4,1,5]
+    #         },
+    #         "scalapack": {
+    #             "version_split": [2,2,0]
+    #         },
+    #         "gcc": {
+    #             "version_split": [13,1,0]
+    #         }
+    #     },
+    #     "loadable_machine_configurations": {
+    #         "mac" : {
+    #             "intel": {
+    #                 "nodes":1,
+    #                 "cores":8
+    #             }
+    #         }
+    #     },
+    #     "loadable_software_configurations": {
+    #         "openmpi": {
+    #             "version_from":[4,1,5],
+    #             "version_to":[5,0,0]
+    #         },
+    #         "scalapack":{
+    #             "version_split":[2,2,0]
+    #         },
+    #         "gcc": {
+    #             "version_split": [13,1,0]
+    #         }
+    #     }
+    # }
+    tuning_metadata=None
 
 #    (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = tuning_metadata)
     (machine, processor, nodes, cores) = GetMachineConfiguration()    

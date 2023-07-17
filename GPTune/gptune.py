@@ -1510,7 +1510,8 @@ class GPTune(object):
             elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
                 categories = input_space_info["categories"]
                 input_space_arr.append(Categoricalnorm(categories, transform=transformer_, name=name_))
-        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
+        # YL: temporarily comment out the following line as it's causing TLA_I in examples/Scalapack-PDGEQRF to fail  
+        # input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
         IS = Space(input_space_arr)
 
         self.tuningproblem.update_input_space(IS)

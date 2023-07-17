@@ -897,6 +897,7 @@ class HistoryDB(dict):
                         json.dump(json_data, f_out, indent=2)
 
             if source_function_evaluations != None:
+                num_loaded_data=0 # YL: it seems that this counter needs to be reset here
                 for source_task_id in range(len(source_function_evaluations)):
                     for func_eval in source_function_evaluations[source_task_id]:
                         #if options != None and options["model_input_separation"] == True:
