@@ -840,10 +840,11 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+
+                            if out_of_range == True: # or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([1000000000.0 for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -1259,10 +1260,10 @@ class GPTune(object):
                                     if output_result < lower_bound or \
                                        output_result > upper_bound:
                                         out_of_range = True
-                                if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                     if (kwargs["model_output_constraint"] == 'LargeNum'):
                                         tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                        tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                        tmp_tmpdata.O[t].append([1000000000.0 for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                     elif (kwargs["model_output_constraint"] == 'Ignore'):
                                         pass
                                 else:
@@ -2158,10 +2159,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([1000000000.0 for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -2449,10 +2450,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([1000000000.0 for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -2504,7 +2505,7 @@ class GPTune(object):
                                    output_result > upper_bound:
                                     out_of_range = True
 
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
 
                     (bestxopt, neg_log_marginal_likelihood,
@@ -2948,10 +2949,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([1000000000.0 for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
