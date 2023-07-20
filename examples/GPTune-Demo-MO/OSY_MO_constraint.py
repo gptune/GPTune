@@ -143,6 +143,7 @@ def main():
         options['search_more_samples'] = 4
         options['model_class'] = 'Model_GPy_LCM'
         options['model_output_constraint'] = "LargeNum" #True
+        options['model_bigval_LargeNum'] = 100
         options['verbose'] = False
         options['sample_class'] = 'SampleOpenTURNS'
         options.validate(computer=computer)
@@ -224,6 +225,7 @@ def main():
         options['search_more_samples'] = 4
         options['model_class'] = 'Model_GPy_LCM'
         options['model_output_constraint'] = "LargeNum"
+        options['model_bigval_LargeNum'] = 100
         options['verbose'] = False
         options['sample_class'] = 'SampleOpenTURNS'
         options.validate(computer=computer)

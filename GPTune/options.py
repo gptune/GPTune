@@ -54,6 +54,7 @@ class Options(dict):
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
         model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52'
         model_output_constraint = None # Check output range constraints and disregard out-of-range outputs. Supported options: 'LargeNum': Put a large number, 'Ignore': Ignore those configurations, None: do not check out-of-range outputs.
+        model_bigval_LargeNum = 1000000000.0  # Specify the big value to be used in model_output_constraint='LargeNum' (see above)
         model_input_separation = False # Set true if you want to ensure to use samples from the same modeling scheme
         model_peeking_level = 1 # Peeking level in the model peeking-based TLA (peeking level > 1 for the peeking-based TLA)
         model_threads = None  # Number of threads used for building one GP model in Model_LCM
