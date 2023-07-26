@@ -815,7 +815,7 @@ class GPTune(object):
                         if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
                             tmpdata.P[i] = copy.deepcopy(self.data.P[i])
                             tmpdata.O[i] = copy.deepcopy(self.data.O[i])
-                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to line 817
+                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
                     if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                         tmpdata.I = self.problem.IS.transform(tmpdata.I)
                 else:
