@@ -26,7 +26,7 @@ import scipy as sp
 import functools
 from joblib import *
 
-
+import copy
 from problem import Problem
 from computer import Computer
 from options import Options
@@ -155,6 +155,33 @@ class SurrogateProblem(object):
                         f_out.write(str(self.models_weights[i]))
                     f_out.write("\n")
 
+        #### precompute the adjusted bounds and Pereto Front given all the existing samples
+        dataO = copy.deepcopy(self.data.O)
+        A = []
+        B = []
+        for o in range(self.problem.DO):
+            lower_bound, upper_bound = self.problem.OS.bounds[o]
+            if(math.isinf(upper_bound)):
+                upper_bound=dataO[self.tid][:,o].max()
+            else:
+                dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
+
+            if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                dataO[self.tid][:,o]=upper_bound
+
+
+
+            A.append(lower_bound)
+            B.append(upper_bound)
+        self.A=np.array(A).reshape(self.problem.DO,)
+        self.B=np.array(B).reshape(self.problem.DO,)
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+        PF_idx = NonDominatedSorting(method="fast_non_dominated_sort").do(dataO[self.tid], only_non_dominated_front=True)            
+        PF = [dataO[self.tid][i,:] for i in PF_idx]
+        self.PF=np.array(PF).reshape(len(PF_idx),self.problem.DO)
+
+
+
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
         #The formula that defines the regression, which determines the weights:
@@ -262,29 +289,161 @@ class SurrogateProblem(object):
 
         return ([0. for i in range(DP)], [1. for  i in range(DP)])
 
-    # Acquisition function
-    def ei(self, x):
+    def is_dominated(self, x, S):
+        is_dom = False
+        for pt in S:
+            if np.all(pt <= x):
+                is_dom = True
+                break
+        return is_dom
 
-        """ Expected Improvement """
-        EI=[]
-        for o in range(self.problem.DO):
-            optimize = self.problem.OS[o].optimize
-            # YC: If PSO is given by user, for no-optimize objectives we can simply ignore the objectives' outputs in EI product
-            if (self.options['search_algo']=='pso' and optimize == False):
-                #print ("o: ", self.problem.OS[o].name, "is not optimize")
-                continue
-            # YC: If NSGA2 is given by user (e.g. more than three objectives tuning and one no-optimize objective), for no-optimize objectives we still need to return some value for running NSGA2. Maybe we can fix this later.
-            elif (optimize == False):
-                #print ("o: ", self.problem.OS[o].name, "is not optimize")
-                EI.append(0)
+    # Acquisition function
+    def af(self, x):
+
+        if self.options['search_af'] == 'UCB-HVI':
+            uhvi_pt = np.empty(self.problem.DO)
+            for o in range(self.problem.DO):
+                # print(o,self.models[o].M.kern.lengthscale)
+                (mu, var) = self.models[o].predict(x, tid=self.tid)
+                var = max(1e-18, var[0][0])
+                uhvi_pt[o] = (mu - np.sqrt(self.options['search_ucb_beta']* var))
+            uhvi_pt = np.where(uhvi_pt > self.A, uhvi_pt, self.A)
+            for o in range(self.problem.DO):
+                if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                    uhvi_pt[o]=self.B[o]
+            if self.is_dominated(uhvi_pt, self.PF) or np.any(uhvi_pt > self.B):
+                uhvi = 0
             else:
-                if self.models_transfer == None:
-                    if self.data.O == None:
+                #add the uhvi_pt to the list of points
+                points = np.vstack((self.PF,np.atleast_2d(uhvi_pt)))
+                if importlib.util.find_spec("pygmo") is not None:
+                    import pygmo as pg
+                    hv = pg.hypervolume(points)
+                    #calculate the exclusive contribution to the hypervolume from our point
+                    uhvi = hv.exclusive(len(points)-1, self.B)
+                else:
+                    from pymoo.indicators.hv import HV
+                    ref_point = np.array(self.B)
+                    ind = HV(ref_point=ref_point)
+                    uhvi = ind(points) - ind(self.PF)
+                    # print(uhvi,ind(points),ind(self.PF),uhvi_pt,self.B,self.A)
+
+            
+            return [-uhvi]
+        else:
+            AF=[]
+            for o in range(self.problem.DO):
+                optimize = self.problem.OS[o].optimize
+                # YC: If PSO is given by user, for no-optimize objectives we can simply ignore the objectives' outputs in AF product
+                if (self.options['search_algo']=='pso' and optimize == False):
+                    #print ("o: ", self.problem.OS[o].name, "is not optimize")
+                    continue
+                # YC: If NSGA2 is given by user (e.g. more than three objectives tuning and one no-optimize objective), for no-optimize objectives we still need to return some value for running NSGA2. Maybe we can fix this later.
+                elif (optimize == False):
+                    #print ("o: ", self.problem.OS[o].name, "is not optimize")
+                    AF.append(0)
+                else:
+                    if self.models_transfer == None:
+                        if self.data.O == None:
+                            (mu, var) = self.models[o].predict(x, tid=self.tid)
+                            mu = mu[0][0]
+                            var = max(1e-18, var[0][0])
+                            AF.append(1.0/mu)
+                        else:
+                            if self.options['search_af'] == 'EI':
+                                ymin = self.data.O[self.tid][:,o].min()
+                                (mu, var) = self.models[o].predict(x, tid=self.tid)
+                                mu = mu[0][0]
+                                var = max(1e-18, var[0][0])
+                                std = np.sqrt(var)                            
+                                chi = (ymin - mu) / std
+                                Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                                phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                                AF.append(-((ymin - mu) * Phi + std * phi))
+                            elif self.options['search_af'] == 'UCB': # as we are minimizing af, use mu - sqrt(beta)std (LCB) instead of mu + sqrt(beta)std (UCB)
+                                (mu, var) = self.models[o].predict(x, tid=self.tid)
+                                mu = mu[0][0]
+                                var = max(1e-18, var[0][0])
+                                std = np.sqrt(var)                            
+                                AF.append(mu - np.sqrt(self.options['search_ucb_beta'])*std)
+                            elif self.options['search_af'] == 'MSPE': #min square prediction error as used in cGP                          
+                                X_joint = np.vstack((x,np.array(self.data.P[self.tid], ndmin=2)))
+                                (mu_cross, sigma_cross) = self.models[o].predict(X_joint, tid=self.tid, full_cov=True)
+                                sigma = sigma_cross[0:1,0:1]
+                                sigma_obs = sigma_cross[1:sigma_cross.shape[1],1:sigma_cross.shape[1]]
+                                sigma_cross = sigma_cross[0:1,1:sigma_cross.shape[1]]
+                                sigma_cross = sigma_cross.reshape(-1,1).T                            
+                                mspe = (sigma - sigma_cross @ sigma_obs @ sigma_cross.T)/(X_joint.shape[0]-1)
+                                AF.append(mspe[0][0])
+                            else:
+                                raise Exception("unknown aquicision function %s"%(self.options['search_af']))
+                            # AF.append(mu)
+                    elif self.models_transfer is not None and self.models is None:
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
+
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        mu_transfer = 0
+                        var_transfer = 1
+                        num_models_transfer = len(self.models_transfer)
+                        for i in range(num_models_transfer):
+                            model_transfer = self.models_transfer[i]
+                            ret = model_transfer(point)
+                            mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
+                            try:
+                                var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/num_models_transfer))
+                            except:
+                                var_transfer_ = 1
+                            var_transfer *= var_transfer_
+                        var = max(1e-18, var_transfer)
+                        AF.append(1.0/mu_transfer)
+                    elif self.options['TLA_method'] == 'Regression':
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
+
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
+
+                        ymin = self.data.O[self.tid][:,o].min()
                         (mu, var) = self.models[o].predict(x, tid=self.tid)
-                        mu = mu[0][0]
-                        var = max(1e-18, var[0][0])
-                        EI.append(1.0/mu)
-                    else:
+                        mu_transfer = 0
+                        var_transfer = 1
+
+                        for i in range(len(self.models_transfer)):
+                            model_transfer = self.models_transfer[i]
+                            ret = model_transfer(point)
+                            mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
+                            try:
+                                var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), self.models_weights[i+1])
+                            except:
+                                var_transfer_ = 1
+                            var_transfer *= var_transfer_
+                        mu = self.models_weights[0]*mu[0][0] + mu_transfer
+                        var_transfer *= math.pow(max(1e-18, var[0][0]), self.models_weights[0])
+                        var = max(1e-18, var_transfer)
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        AF.append(-((ymin - mu) * Phi + std * phi))
+                        # AF.append(mu)
+                    elif self.options['TLA_method'] == 'LCM' or self.options['TLA_method'] == 'LCM_BF':
                         ymin = self.data.O[self.tid][:,o].min()
                         (mu, var) = self.models[o].predict(x, tid=self.tid)
                         mu = mu[0][0]
@@ -293,126 +452,50 @@ class SurrogateProblem(object):
                         chi = (ymin - mu) / std
                         Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
                         phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                        EI.append(-((ymin - mu) * Phi + var * phi))
-                        # EI.append(mu)
-                elif self.models_transfer is not None and self.models is None:
-                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                    xi=xi0[0]
+                        AF.append(-((ymin - mu) * Phi + std * phi))
+                        # AF.append(mu)
+                    elif self.options['TLA_method'] == 'Sum':
+                        xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
+                        xi=xi0[0]
 
-                    if (any(xx==xi for xx in self.POrig)):
-                        cond = False
-                    else:
-                        point0 = self.D
-                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                        point.update(point0)
-                        point.update(point2)
-                        cond = self.computer.evaluate_constraints(self.problem, point)
+                        if (any(xx==xi for xx in self.POrig)):
+                            cond = False
+                        else:
+                            point0 = self.D
+                            point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
+                            point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
+                            point.update(point0)
+                            point.update(point2)
+                            cond = self.computer.evaluate_constraints(self.problem, point)
 
-                    mu_transfer = 0
-                    var_transfer = 1
-                    num_models_transfer = len(self.models_transfer)
-                    for i in range(num_models_transfer):
-                        model_transfer = self.models_transfer[i]
-                        ret = model_transfer(point)
-                        mu_transfer += 1.0/len(self.models_transfer)*ret[self.problem.OS[o].name][0][0]
-                        try:
-                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/num_models_transfer))
-                        except:
-                            var_transfer_ = 1
-                        var_transfer *= var_transfer_
-                    var = max(1e-18, var_transfer)
-                    EI.append(1.0/mu_transfer)
-                elif self.options['TLA_method'] == 'Regression':
-                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                    xi=xi0[0]
+                        ymin = self.data.O[self.tid][:,o].min()
+                        (mu, var) = self.models[o].predict(x, tid=self.tid)
+                        mu_transfer = 0
+                        var_transfer = 1
+                        num_models_transfer = len(self.models_transfer)
+                        for model_transfer in self.models_transfer:
+                            ret = model_transfer(point)
+                            mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
+                            try:
+                                var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/(num_models_transfer+1)))
+                            except:
+                                var_transfer_ = 1
+                            var_transfer *= var_transfer_
+                        mu = mu[0][0] + mu_transfer
+                        var_transfer *= math.pow(max(1e-18, var[0][0]), float(1.0/(num_models_transfer+1)))
+                        var = max(1e-18, var_transfer)
+                        std = np.sqrt(var)
+                        chi = (ymin - mu) / std
+                        Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
+                        phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
+                        AF.append(-((ymin - mu) * Phi + std * phi))
+                        # AF.append(mu)
 
-                    if (any(xx==xi for xx in self.POrig)):
-                        cond = False
-                    else:
-                        point0 = self.D
-                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                        point.update(point0)
-                        point.update(point2)
-                        cond = self.computer.evaluate_constraints(self.problem, point)
-
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu_transfer = 0
-                    var_transfer = 1
-
-                    for i in range(len(self.models_transfer)):
-                        model_transfer = self.models_transfer[i]
-                        ret = model_transfer(point)
-                        mu_transfer += self.models_weights[i+1]*ret[self.problem.OS[o].name][0][0]
-                        try:
-                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), self.models_weights[i+1])
-                        except:
-                            var_transfer_ = 1
-                        var_transfer *= var_transfer_
-                    mu = self.models_weights[0]*mu[0][0] + mu_transfer
-                    var_transfer *= math.pow(max(1e-18, var[0][0]), self.models_weights[0])
-                    var = max(1e-18, var_transfer)
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
-                elif self.options['TLA_method'] == 'LCM' or self.options['TLA_method'] == 'LCM_BF':
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu = mu[0][0]
-                    var = max(1e-18, var[0][0])
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
-                elif self.options['TLA_method'] == 'Sum':
-                    xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
-                    xi=xi0[0]
-
-                    if (any(xx==xi for xx in self.POrig)):
-                        cond = False
-                    else:
-                        point0 = self.D
-                        point2 = {self.problem.IS[k].name: self.IOrig[k] for k in range(self.problem.DI)}
-                        point  = {self.problem.PS[k].name: xi[k] for k in range(self.problem.DP)}
-                        point.update(point0)
-                        point.update(point2)
-                        cond = self.computer.evaluate_constraints(self.problem, point)
-
-                    ymin = self.data.O[self.tid][:,o].min()
-                    (mu, var) = self.models[o].predict(x, tid=self.tid)
-                    mu_transfer = 0
-                    var_transfer = 1
-                    num_models_transfer = len(self.models_transfer)
-                    for model_transfer in self.models_transfer:
-                        ret = model_transfer(point)
-                        mu_transfer += 1*ret[self.problem.OS[o].name][0][0]
-                        try:
-                            var_transfer_ = math.pow(max(1e-18, ret[self.problem.OS[o].name+"_var"][0][0]), float(1.0/(num_models_transfer+1)))
-                        except:
-                            var_transfer_ = 1
-                        var_transfer *= var_transfer_
-                    mu = mu[0][0] + mu_transfer
-                    var_transfer *= math.pow(max(1e-18, var[0][0]), float(1.0/(num_models_transfer+1)))
-                    var = max(1e-18, var_transfer)
-                    std = np.sqrt(var)
-                    chi = (ymin - mu) / std
-                    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
-                    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-                    EI.append(-((ymin - mu) * Phi + var * phi))
-                    # EI.append(mu)
-
-        if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
-            EI_prod = np.prod(EI)
-            return [-1.0*EI_prod if EI_prod>0 else EI_prod]
-        else:
-            return EI
+            if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
+                AF_prod = np.prod(AF)
+                return [-1.0*AF_prod if AF_prod>0 else AF_prod]
+            else:
+                return AF
 
     def fitness(self, x):   # x is the normalized space
         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
@@ -448,18 +531,18 @@ class SurrogateProblem(object):
 
 
 
-            # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
-            #print ("EI: ", self.ei(xNorm))
-            return self.ei(xNorm)
+            # print("cond",cond,- self.af(x),'x',x,'xi',xi)
+            #print ("AF: ", self.af(xNorm))
+            return self.af(xNorm)
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
                 return [1e12]
-            else: 
+            elif(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'): 
+                return [1e12]
+            else:
                 return [1e12]* self.problem.DO
     
-    def obj_scipy(self, x):
-        return self.fitness(x)[0]
 
 
 
@@ -552,7 +635,6 @@ class SearchPyGMO(Search):
         kwargs = kwargs['kwargs']
 
         print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
-
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
 
         if (kwargs['verbose']):
@@ -563,7 +645,8 @@ class SearchPyGMO(Search):
         except:
             raise Exception('Unknown user-defined-island "{kwargs["search_udi"]}"')
 
-        if(self.problem.DO==1): # single objective optimizer
+        # if(self.problem.DO==1 or kwargs['search_algo']=='pso' or kwargs['search_algo']=='cmaes' or kwargs['search_algo']==['search_af'] == 'UCB-HVI'): # single objective optimizer
+        if(self.problem.DO==1 ): # single objective optimizer
             try:
                 algo = eval(f'pg.{kwargs["search_algo"]}(gen = kwargs["search_gen"])')
             except:
@@ -666,7 +749,7 @@ class SurrogateProblemCMO(object):
         return ([0. for i in range(DP)], [1. for  i in range(DP)])
 
     # Acquisition function
-    def ei(self, x):
+    def af(self, x):
 
         out_of_range = False
         for o in range(self.problem.DO):
@@ -695,7 +778,7 @@ class SurrogateProblemCMO(object):
             return [-1.0*ret]
 
             #""" Expected Improvement """
-            #EI=[]
+            #AF=[]
             #for o in range(self.problem.DO):
             #    ymin = self.data.O[self.tid][:,o].min()
             #    (mu, var) = self.models[o].predict(x, tid=self.tid)
@@ -705,15 +788,15 @@ class SurrogateProblemCMO(object):
             #    chi = (ymin - mu) / std
             #    Phi = 0.5 * (1.0 + sp.special.erf(chi / np.sqrt(2)))
             #    phi = np.exp(-0.5 * chi**2) / np.sqrt(2 * np.pi * var)
-            #    EI.append(-((ymin - mu) * Phi + var * phi))
+            #    AF.append(-((ymin - mu) * Phi + std * phi))
 
-            ##print ("EI: ", EI)
+            ##print ("AF: ", AF)
 
             #if(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'):
-            #    EI_prod = np.prod(EI)
+            #    EI_prod = np.prod(AF)
             #    return [-1.0*EI_prod if EI_prod>0 else EI_prod]
             #else:
-            #    return EI
+            #    return AF
 
     def fitness(self, x):   # x is the normalized space
         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
@@ -744,9 +827,9 @@ class SurrogateProblemCMO(object):
                 xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
                 # print(xNorm)
 
-            # print("cond",cond,- self.ei(x),'x',x,'xi',xi)
-            print ("EI: ", self.ei(xNorm))
-            return self.ei(xNorm)
+            # print("cond",cond,- self.af(x),'x',x,'xi',xi)
+            # print ("AF: ", self.af(xNorm))
+            return self.af(xNorm)
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer

@@ -54,7 +54,7 @@ class Model(abc.ABC):
         raise Exception("Abstract method")
 
     @abc.abstractmethod
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         raise Exception("Abstract method")
 
@@ -247,7 +247,7 @@ class Model_GPy_LCM(Model):
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -268,10 +268,12 @@ class Model_GPy_LCM(Model):
                 var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
                 num_samples_prior = num_samples_current
         else:
-            x = np.empty((1, points.shape[0] + 1))
-            x[0,:-1] = points
-            x[0,-1] = tid
-            (mu, var) = self.M.predict_noiseless(x)
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x,full_cov=full_cov)
 
         return (mu, var)
 
@@ -526,7 +528,7 @@ class Model_LCM(Model):
         self.train(newdata, **kwargs)
 
     # make prediction on a single sample point of a specific task tid
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -641,7 +643,7 @@ class Model_DGP(Model):
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         (mu, var) = self.M.predict(np.concatenate((self.I[tid], x)).reshape((1, self.DT + self.DI)))
 

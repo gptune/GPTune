@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-npilot', type=int, default=10, help='Number of initial runs per task')
-    parser.add_argument('-constraint_mode', type=int, default=1, help='Number of initial runs per task')
+    parser.add_argument('-constraint_mode', type=int, default=1, help='Different ways to specify constrained optimizations')
 
     args = parser.parse_args()
 
@@ -218,11 +218,14 @@ def main():
         options['objective_nprocmax'] = 1
         options['model_processes'] = 1
 
-        options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+        # options['search_algo'] = 'pso' 
+        # options['search_af']='UCB-HVI'
+        options['search_algo'] = 'nsga2' 
+        options['search_af']='EI'
         options['search_pop_size'] = 1000
         options['search_gen'] = 50
 
-        options['search_more_samples'] = 4
+        options['search_more_samples'] = 1
         options['model_class'] = 'Model_GPy_LCM'
         options['model_output_constraint'] = "LargeNum"
         options['model_bigval_LargeNum'] = 100
@@ -270,6 +273,49 @@ def main():
         options['verbose'] = False
         options['sample_class'] = 'SampleOpenTURNS'
         options.validate(computer=computer)
+
+    elif constraint_mode == 5:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), float("Inf"), name="y1")
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
+
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+
+        historydb = HistoryDB(meta_dict=database_metadata)
+
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
+
+        options['search_algo'] = 'pso' 
+        options['search_af']='UCB-HVI'
+        # options['search_algo'] = 'nsga2' 
+        # options['search_af']='EI'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+        options['search_more_samples'] = 1
+        options['model_class'] = 'Model_GPy_LCM'
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
+
 
     giventask = [["OSY"]]
 
@@ -352,6 +398,8 @@ def main():
             plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y1 and Y2) \n (Option: Large value)")
         elif constraint_mode == 4:
             plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y1 and Y2) \n (Option: Ignore)")
+        elif constraint_mode == 5:
+            plt.title("Tuning on OSY \n (No output constraint; Minimize Y1 and Y2) \n")
 
         plt.legend(loc="upper right")
         plt.xlabel('Y1')

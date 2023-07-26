@@ -764,7 +764,13 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
+
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
@@ -809,7 +815,7 @@ class GPTune(object):
                         if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
                             tmpdata.P[i] = copy.deepcopy(self.data.P[i])
                             tmpdata.O[i] = copy.deepcopy(self.data.O[i])
-
+                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to line 817
                     if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                         tmpdata.I = self.problem.IS.transform(tmpdata.I)
                 else:
@@ -817,9 +823,10 @@ class GPTune(object):
                     tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 #print ("tmpdata.I: ", tmpdata.I)
+                # print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
                 #print ("tmpdata.P: ", tmpdata.P)
-                #print ("tmpdata.O: ", tmpdata.O)
+                # print ("tmpdata.O: ", tmpdata.O)
                 #print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
@@ -904,6 +911,7 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
+                    # print(tmpdata.O)
                     (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
@@ -912,6 +920,7 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
+
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -923,7 +932,6 @@ class GPTune(object):
             t2 = time.time_ns()
             stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
-
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, tids=tids, **kwargs)
             newdata.P=[]
