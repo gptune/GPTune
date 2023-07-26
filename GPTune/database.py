@@ -698,6 +698,55 @@ class HistoryDB(dict):
 
         return False
 
+    def parameter_exists_in_db(self, problem : Problem, task_parameter, tuning_parameter):
+        json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
+
+        if os.path.exists(json_data_path):
+            print ("[HistoryDB] Found a history database file")
+            if self.file_synchronization_method == 'filelock':
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+            elif self.file_synchronization_method == 'rsync':
+                temp_path = json_data_path + "." + self.process_uid + ".temp"
+                os.system("rsync -a " + json_data_path + " " + temp_path)
+                with open(temp_path, "r") as f_in:
+                    history_data = json.load(f_in)
+                os.system("rm " + temp_path)
+            else:
+                with open(json_data_path, "r") as f_in:
+                    history_data = json.load(f_in)
+
+            for func_eval in history_data["func_eval"]:
+
+                task_parameter_ = []
+                for k in range(len(problem.IS)):
+                    if type(problem.IS[k]).__name__ == "Categoricalnorm":
+                        task_parameter_.append(str(func_eval["task_parameter"][problem.IS[k].name]))
+                    elif type(problem.IS[k]).__name__ == "Integer":
+                        task_parameter_.append(int(func_eval["task_parameter"][problem.IS[k].name]))
+                    elif type(problem.IS[k]).__name__ == "Real":
+                        task_parameter_.append(float(func_eval["task_parameter"][problem.IS[k].name]))
+                    else:
+                        task_parameter_.append(func_eval["task_parameter"][problem.IS[k].name])
+
+                tuning_parameter_ = []
+                for k in range(len(problem.PS)):
+                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                        tuning_parameter_.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Integer":
+                        tuning_parameter_.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Real":
+                        tuning_parameter_.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    else:
+                        tuning_parameter_.append(func_eval["tuning_parameter"][problem.PS[k].name])
+
+                if task_parameter == task_parameter_ and\
+                   tuning_parameter == tuning_parameter_:
+                    return True
+
+        return False
+
     def load_history_func_eval(self, data : Data, problem : Problem, Tgiven : np.ndarray, function_evaluations : list = None, source_function_evaluations : list = None, options : dict = None):
 
         """ Init history database JSON file """

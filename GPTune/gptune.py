@@ -585,8 +585,35 @@ class GPTune(object):
         Tgiven = self.problem.IS.transform([T])[0]
 
         for i in range(len(P)):
-            xNorm = self.problem.PS.transform([P[i]])
-            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            if (options['RCI_mode'] == False):
+                xNorm = self.problem.PS.transform([P[i]])
+                self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            else:
+                new_RCI_sample = False
+
+                if self.historydb is not None:
+                    # check if the sample is already in the database
+                    if not self.historydb.parameter_exists_in_db(problem=self.problem, task_parameter=T,
+                                                                 tuning_parameter = P[i]):
+                        xNorm = self.problem.PS.transform([P[i]])
+                        tmp = np.empty( shape=(len(P[i]), self.problem.DO))
+                        tmp[:] = np.NaN
+
+                        self.historydb.store_func_eval(problem = self.problem,\
+                                task_parameter = Tgiven,\
+                                tuning_parameter = xNorm,\
+                                evaluation_result = tmp,\
+                                evaluation_detail = tmp,\
+                                source = "RCI_measure",\
+                                modeling = "Manual",\
+                                model_class = "Manual")
+
+                        new_RCI_sample == True
+
+                if (new_RCI_sample == True):
+                    if (options['RCI_mode'] == True):
+                        print('RCI: GPTune returns\n')
+                        exit()
 
         return
 
