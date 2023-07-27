@@ -1546,8 +1546,10 @@ class GPTune(object):
             elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
                 categories = input_space_info["categories"]
                 input_space_arr.append(Categoricalnorm(categories, transform=transformer_, name=name_))
-        # YL: temporarily comment out the following line as it's causing TLA_I in examples/Scalapack-PDGEQRF to fail  
-        # input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
+        # In TLA_I, tla_id is internally appended to the task parameter space.
+        # In some cases, the user can provide source data that have the same task parameter as the target task (e.g., the same task parameter but from different hardware)
+        # The internal tla_id allows us to differentiate between the source and the target tasks.
+        input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
         IS = Space(input_space_arr)
 
         self.tuningproblem.update_input_space(IS)

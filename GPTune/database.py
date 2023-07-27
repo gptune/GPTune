@@ -612,11 +612,16 @@ class HistoryDB(dict):
 
     def check_space_boundary(self, problem, func_eval):
 
+        # YC: FYI, in tuning metadata description, "no_load_check":"yes" setting makes not to fall into this checking.
+
         is_passed = True
 
         task_parameter_space = self.problem_space_to_dict(problem.IS)
         for space_ in task_parameter_space:
             name_ = space_["name"]
+            # The internal tla_id is not stored in the DB; therefore, no need to check
+            if name_ == "tla_id":
+                continue
             if name_ not in func_eval["task_parameter"]:
                 is_passed = False
 
@@ -669,6 +674,8 @@ class HistoryDB(dict):
         for i in range(len(Tgiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
+                # In TLA_I with LCM mode, it is possible that there are multiple tasks having the same task parameter (but different tla_id)
+                # In that case, this routine returns the smallest task ID among them, which indicates the target task id (in TLA_I with LCM, the target tasks use small task IDs; see gptune.py).
                 if problem.IS[j].name == "tla_id":
                     continue
                 if type(Tgiven[i][j]) == float:
@@ -781,6 +788,8 @@ class HistoryDB(dict):
                 except:
                     print ("direct download failed")
 
+            # Data can be loaded from the DB file (by reading) and/or the source_function_evaluations for TLA (provided by the user)
+            # This num_loaded_data variable aggregates them, and if it's higher than 0, we update the data arrays, data.I/P/O.
             num_loaded_data = 0
 
             if os.path.exists(json_data_path) or function_evaluations != None:
@@ -946,7 +955,6 @@ class HistoryDB(dict):
                         json.dump(json_data, f_out, indent=2)
 
             if source_function_evaluations != None:
-                num_loaded_data=0 # YL: it seems that this counter needs to be reset here
                 for source_task_id in range(len(source_function_evaluations)):
                     for func_eval in source_function_evaluations[source_task_id]:
                         #if options != None and options["model_input_separation"] == True:
