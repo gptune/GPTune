@@ -156,29 +156,31 @@ class SurrogateProblem(object):
                     f_out.write("\n")
 
         #### precompute the adjusted bounds and Pereto Front given all the existing samples
-        if self.options['search_af'] == 'UCB-HVI': # YC: the following computation is needed only for UCB-HVI.
-            # YC: Note: Using UCB-HVI in TLA_I can cause an error, because TLA_I can fall into this with 0 samples for the target task, so it can't compute the upper bound below.
-            dataO = copy.deepcopy(self.data.O)
-            A = []
-            B = []
-            for o in range(self.problem.DO):
-                lower_bound, upper_bound = self.problem.OS.bounds[o]
-                if(math.isinf(upper_bound)):
-                    upper_bound=dataO[self.tid][:,o].max()
-                else:
-                    dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
+        dataO = copy.deepcopy(self.data.O)
+        A = []
+        B = []
+        for o in range(self.problem.DO):
+            lower_bound, upper_bound = self.problem.OS.bounds[o]
+            if(math.isinf(upper_bound)):
+                upper_bound=dataO[self.tid][:,o].max()
+            else:
+                dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
 
-                if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
-                    dataO[self.tid][:,o]=upper_bound
+            if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                dataO[self.tid][:,o]=upper_bound
 
-                A.append(lower_bound)
-                B.append(upper_bound)
-            self.A=np.array(A).reshape(self.problem.DO,)
-            self.B=np.array(B).reshape(self.problem.DO,)
-            from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-            PF_idx = NonDominatedSorting(method="fast_non_dominated_sort").do(dataO[self.tid], only_non_dominated_front=True)
-            PF = [dataO[self.tid][i,:] for i in PF_idx]
-            self.PF=np.array(PF).reshape(len(PF_idx),self.problem.DO)
+
+
+            A.append(lower_bound)
+            B.append(upper_bound)
+        self.A=np.array(A).reshape(self.problem.DO,)
+        self.B=np.array(B).reshape(self.problem.DO,)
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+        PF_idx = NonDominatedSorting(method="fast_non_dominated_sort").do(dataO[self.tid], only_non_dominated_front=True)            
+        PF = [dataO[self.tid][i,:] for i in PF_idx]
+        self.PF=np.array(PF).reshape(len(PF_idx),self.problem.DO)
+
+
 
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
@@ -565,14 +567,14 @@ class SearchPyMoo(Search):
         print("searcher: ", kwargs["search_class"], "algorithm: ", kwargs["search_algo"])
 
         prob = SurrogateProblem(self.problem, self.computer, data, models, self.options, tid, self.models_transfer)
-        prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
 
         if (kwargs['verbose']):
             print ("prob: ", prob)
         bestX = []
 
 
-        if(self.problem.DO==1): # single objective optimizer
+        if(self.problem.DO==1 or kwargs['search_af']=='UCB-HVI'): # single objective optimizer
+            prob_pymoo = MyProblemPyMoo(self.problem.DP,1,prob)
             if('ga'==kwargs['search_algo']):
                 from pymoo.algorithms.soo.nonconvex.ga import GA
                 from pymoo.optimize import minimize
@@ -596,6 +598,7 @@ class SearchPyMoo(Search):
             bestX.append(np.array(res.X).reshape(1, self.problem.DP))
 
         else:                   # multi objective
+            prob_pymoo = MyProblemPyMoo(self.problem.DP,self.problem.DO,prob)
             if('nsga2'==kwargs['search_algo']):
                 from pymoo.algorithms.moo.nsga2 import NSGA2
                 from pymoo.optimize import minimize
