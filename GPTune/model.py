@@ -54,7 +54,7 @@ class Model(abc.ABC):
         raise Exception("Abstract method")
 
     @abc.abstractmethod
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         raise Exception("Abstract method")
 
@@ -136,7 +136,7 @@ class Model_GPy_LCM(Model):
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
 
-        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = kwargs['model_optimizer'], start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
 #        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
@@ -247,7 +247,7 @@ class Model_GPy_LCM(Model):
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -268,10 +268,12 @@ class Model_GPy_LCM(Model):
                 var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
                 num_samples_prior = num_samples_current
         else:
-            x = np.empty((1, points.shape[0] + 1))
-            x[0,:-1] = points
-            x[0,-1] = tid
-            (mu, var) = self.M.predict_noiseless(x)
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x,full_cov=full_cov)
 
         return (mu, var)
 
@@ -526,7 +528,7 @@ class Model_LCM(Model):
         self.train(newdata, **kwargs)
 
     # make prediction on a single sample point of a specific task tid
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -628,20 +630,20 @@ class Model_DGP(Model):
             self.M.layers[i].Gaussian_noise.variance = output_var*0.01
             self.M.layers[i].Gaussian_noise.variance.fix()
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = kwargs['model_optimizer'], start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
         # Unfix noise variance now that we have initialized the model
         for i in range(len(self.M.layers)):
             self.M.layers[i].Gaussian_noise.variance.unfix()
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = kwargs['model_optimizer'], start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         (mu, var) = self.M.predict(np.concatenate((self.I[tid], x)).reshape((1, self.DT + self.DI)))
 

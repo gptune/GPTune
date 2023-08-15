@@ -359,18 +359,17 @@ if [[ $BuildExample == 1 ]]; then
 	# git clone https://github.com/xiaoyeli/superlu_dist.git
 	# cd superlu_dist
 
-	# ### the following server is often down, so switch to the github repository 
-	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	# tar -xf parmetis-4.0.3.tar.gz
-	# cd parmetis-4.0.3/
-	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	# mkdir -p install
-	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	# make install > make_parmetis_install.log 2>&1
-	# cd ../
-	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
+	### the following server is often down, so switch to the github repository 
+	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	tar -xf parmetis_4.0.3.orig.tar.gz
+	cd parmetis-4.0.3/
+	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	mkdir -p install
+	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1
+	cd ../
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 	# mkdir -p $ParMETIS_DIR
 	# rm -f GKlib

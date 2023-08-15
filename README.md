@@ -31,7 +31,7 @@ Table of Contents
       * [Using prebuilt docker images](#using-prebuilt-docker-images)
    * [Examples](#examples)
       * [GPTune-Demo](#gptune-demo)
-      * [SCALAPCK QR](#scalapck-qr)
+      * [SCALAPACK QR](#scalapack-qr)
       * [SuperLU_DIST](#superlu_dist)
    * [Usage](#usage)
       * [Problem description](#problem-description)
@@ -327,7 +327,7 @@ or
 edit ../../run_env.sh
 bash run_examples.sh
 ```
-### SCALAPCK QR
+### SCALAPACK QR
 The files `scalapack_*.py` in the `examples/Scalapack-PDGEQRF` folder shows how to tune the parallel QR factorization subroutine PDGEQRF with different features of GPTune. 
 ```
 cd $GPTUNEROOT/examples/Scalapack-PDGEQRF

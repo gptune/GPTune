@@ -612,11 +612,16 @@ class HistoryDB(dict):
 
     def check_space_boundary(self, problem, func_eval):
 
+        # YC: FYI, in tuning metadata description, "no_load_check":"yes" setting makes not to fall into this checking.
+
         is_passed = True
 
         task_parameter_space = self.problem_space_to_dict(problem.IS)
         for space_ in task_parameter_space:
             name_ = space_["name"]
+            # The internal tla_id is not stored in the DB; therefore, no need to check
+            if name_ == "tla_id":
+                continue
             if name_ not in func_eval["task_parameter"]:
                 is_passed = False
 
@@ -669,6 +674,8 @@ class HistoryDB(dict):
         for i in range(len(Tgiven)):
             compare_all_elems = True
             for j in range(len(problem.IS)):
+                # In TLA_I with LCM mode, it is possible that there are multiple tasks having the same task parameter (but different tla_id)
+                # In that case, this routine returns the smallest task ID among them, which indicates the target task id (in TLA_I with LCM, the target tasks use small task IDs; see gptune.py).
                 if problem.IS[j].name == "tla_id":
                     continue
                 if type(Tgiven[i][j]) == float:
@@ -695,6 +702,55 @@ class HistoryDB(dict):
             if compare_all_elems == True:
                 print ("found a duplication of parameter set: ", parameter)
                 return True
+
+        return False
+
+    def parameter_exists_in_db(self, problem : Problem, task_parameter, tuning_parameter):
+        json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
+
+        if os.path.exists(json_data_path):
+            print ("[HistoryDB] Found a history database file")
+            if self.file_synchronization_method == 'filelock':
+                with FileLock(json_data_path+".lock"):
+                    with open(json_data_path, "r") as f_in:
+                        history_data = json.load(f_in)
+            elif self.file_synchronization_method == 'rsync':
+                temp_path = json_data_path + "." + self.process_uid + ".temp"
+                os.system("rsync -a " + json_data_path + " " + temp_path)
+                with open(temp_path, "r") as f_in:
+                    history_data = json.load(f_in)
+                os.system("rm " + temp_path)
+            else:
+                with open(json_data_path, "r") as f_in:
+                    history_data = json.load(f_in)
+
+            for func_eval in history_data["func_eval"]:
+
+                task_parameter_ = []
+                for k in range(len(problem.IS)):
+                    if type(problem.IS[k]).__name__ == "Categoricalnorm":
+                        task_parameter_.append(str(func_eval["task_parameter"][problem.IS[k].name]))
+                    elif type(problem.IS[k]).__name__ == "Integer":
+                        task_parameter_.append(int(func_eval["task_parameter"][problem.IS[k].name]))
+                    elif type(problem.IS[k]).__name__ == "Real":
+                        task_parameter_.append(float(func_eval["task_parameter"][problem.IS[k].name]))
+                    else:
+                        task_parameter_.append(func_eval["task_parameter"][problem.IS[k].name])
+
+                tuning_parameter_ = []
+                for k in range(len(problem.PS)):
+                    if type(problem.PS[k]).__name__ == "Categoricalnorm":
+                        tuning_parameter_.append(str(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Integer":
+                        tuning_parameter_.append(int(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    elif type(problem.PS[k]).__name__ == "Real":
+                        tuning_parameter_.append(float(func_eval["tuning_parameter"][problem.PS[k].name]))
+                    else:
+                        tuning_parameter_.append(func_eval["tuning_parameter"][problem.PS[k].name])
+
+                if task_parameter == task_parameter_ and\
+                   tuning_parameter == tuning_parameter_:
+                    return True
 
         return False
 
@@ -732,6 +788,8 @@ class HistoryDB(dict):
                 except:
                     print ("direct download failed")
 
+            # Data can be loaded from the DB file (by reading) and/or the source_function_evaluations for TLA (provided by the user)
+            # This num_loaded_data variable aggregates them, and if it's higher than 0, we update the data arrays, data.I/P/O.
             num_loaded_data = 0
 
             if os.path.exists(json_data_path) or function_evaluations != None:

@@ -585,8 +585,35 @@ class GPTune(object):
         Tgiven = self.problem.IS.transform([T])[0]
 
         for i in range(len(P)):
-            xNorm = self.problem.PS.transform([P[i]])
-            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            if (options['RCI_mode'] == False):
+                xNorm = self.problem.PS.transform([P[i]])
+                self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            else:
+                new_RCI_sample = False
+
+                if self.historydb is not None:
+                    # check if the sample is already in the database
+                    if not self.historydb.parameter_exists_in_db(problem=self.problem, task_parameter=T,
+                                                                 tuning_parameter = P[i]):
+                        xNorm = self.problem.PS.transform([P[i]])
+                        tmp = np.empty( shape=(len(P[i]), self.problem.DO))
+                        tmp[:] = np.NaN
+
+                        self.historydb.store_func_eval(problem = self.problem,\
+                                task_parameter = Tgiven,\
+                                tuning_parameter = xNorm,\
+                                evaluation_result = tmp,\
+                                evaluation_detail = tmp,\
+                                source = "RCI_measure",\
+                                modeling = "Manual",\
+                                model_class = "Manual")
+
+                        new_RCI_sample == True
+
+                if (new_RCI_sample == True):
+                    if (options['RCI_mode'] == True):
+                        print('RCI: GPTune returns\n')
+                        exit()
 
         return
 
@@ -764,7 +791,13 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
+
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
@@ -809,7 +842,7 @@ class GPTune(object):
                         if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
                             tmpdata.P[i] = copy.deepcopy(self.data.P[i])
                             tmpdata.O[i] = copy.deepcopy(self.data.O[i])
-
+                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
                     if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                         tmpdata.I = self.problem.IS.transform(tmpdata.I)
                 else:
@@ -817,9 +850,10 @@ class GPTune(object):
                     tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 #print ("tmpdata.I: ", tmpdata.I)
+                # print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
                 #print ("tmpdata.P: ", tmpdata.P)
-                #print ("tmpdata.O: ", tmpdata.O)
+                # print ("tmpdata.O: ", tmpdata.O)
                 #print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
@@ -840,10 +874,11 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+
+                            if out_of_range == True: # or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -903,6 +938,7 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
+                    # print(tmpdata.O)
                     (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
@@ -911,6 +947,7 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
+
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -922,7 +959,6 @@ class GPTune(object):
             t2 = time.time_ns()
             stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
-
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, tids=tids, **kwargs)
             newdata.P=[]
@@ -1259,10 +1295,10 @@ class GPTune(object):
                                     if output_result < lower_bound or \
                                        output_result > upper_bound:
                                         out_of_range = True
-                                if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                     if (kwargs["model_output_constraint"] == 'LargeNum'):
                                         tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                        tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                        tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                     elif (kwargs["model_output_constraint"] == 'Ignore'):
                                         pass
                                 else:
@@ -1510,6 +1546,9 @@ class GPTune(object):
             elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
                 categories = input_space_info["categories"]
                 input_space_arr.append(Categoricalnorm(categories, transform=transformer_, name=name_))
+        # In TLA_I, tla_id is internally appended to the task parameter space.
+        # In some cases, the user can provide source data that have the same task parameter as the target task (e.g., the same task parameter but from different hardware)
+        # The internal tla_id allows us to differentiate between the source and the target tasks.
         input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
         IS = Space(input_space_arr)
 
@@ -2157,10 +2196,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -2448,10 +2487,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -2503,8 +2542,8 @@ class GPTune(object):
                                    output_result > upper_bound:
                                     out_of_range = True
 
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
-                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                tmpdata.O[0][i][0] = kwargs['model_bigval_LargeNum'] #sys.float_info.max
 
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
@@ -2947,10 +2986,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -3130,7 +3169,7 @@ class GPTune(object):
             K = GPy.kern.RBF(input_dim=self.problem.DI)
             M = GPy.models.GPRegression(INorms, PSoptNorms[k], K)
             # M.optimize_restarts(num_restarts = 10, robust=True, verbose=False, parallel=False, num_processes=None, messages="False")
-            M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+            M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = kwargs['model_optimizer'], start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
             MSopt.append(M)
 
         aprxoptsNorm=np.hstack([MSopt[k].predict_noiseless(InewNorms)[0] for k in range(self.problem.DP)])  # the index [0] is the mean value, [1] is the variance
