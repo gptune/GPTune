@@ -26,7 +26,7 @@ PREFIX_PATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/
 echo $(which python) 
 
 module unload cmake
-module load cmake/3.22.1
+module load cmake
 
 
 ##################################################
@@ -354,22 +354,22 @@ make install
 
 if [[ $BuildExample == 1 ]]; then
 
-	cd $GPTUNEROOT/examples/SuperLU_DIST
-	rm -rf superlu_dist
-	git clone https://github.com/xiaoyeli/superlu_dist.git
-	cd superlu_dist
+	# cd $GPTUNEROOT/examples/SuperLU_DIST
+	# rm -rf superlu_dist
+	# git clone https://github.com/xiaoyeli/superlu_dist.git
+	# cd superlu_dist
 
-	### the following server is often down, so switch to the github repository 
-	wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	tar -xf parmetis-4.0.3.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1
-	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+	# ### the following server is often down, so switch to the github repository 
+	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	# tar -xf parmetis-4.0.3.tar.gz
+	# cd parmetis-4.0.3/
+	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# mkdir -p install
+	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	# make install > make_parmetis_install.log 2>&1
+	# cd ../
+	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
 	# mkdir -p $ParMETIS_DIR
@@ -406,32 +406,32 @@ if [[ $BuildExample == 1 ]]; then
 	# make install
 	# cd ..
 	
-	mkdir -p build
-	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	 	-DCMAKE_INSTALL_PREFIX=. \
-	 	-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn
-	make pzdrive_spawn
-	make pddrive3d
-	make install
+	# mkdir -p build
+	# cd build
+	# rm -rf CMakeCache.txt
+	# rm -rf DartConfiguration.tcl
+	# rm -rf CTestTestfile.cmake
+	# rm -rf cmake_install.cmake
+	# rm -rf CMakeFiles
+	# cmake .. \
+	# 	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+	# 	-DCMAKE_C_FLAGS="-DXSDK_INDEX_SIZE=64 -std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0 ${SLU_CUDA_FLAG}" \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	#  	-DCMAKE_INSTALL_PREFIX=. \
+	#  	-DCMAKE_INSTALL_LIBDIR=./lib \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
+	# 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	# 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+	# make pddrive_spawn
+	# make pzdrive_spawn
+	# make pddrive3d
+	# make install
 
 
 	# cd $GPTUNEROOT/examples/Hypre
@@ -452,6 +452,7 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/opencollab/arpack-ng.git
 	cd arpack-ng
 	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+	cp ../patches/PARPACK/pzneupd.f ./PARPACK/SRC/MPI/. 
 	mkdir -p build
 	cd build
 	cmake .. \
