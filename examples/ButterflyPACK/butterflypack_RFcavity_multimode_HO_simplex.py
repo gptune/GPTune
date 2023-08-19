@@ -155,8 +155,8 @@ def objectives(point, nodes, cores, nthreads, model, nth):                  # sh
 
 		params = [model, 'freq', freq]
 
-		BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
-		RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+		BINDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+		RUNDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
 		os.system("cp %s/fdmom_eigen ."%(BINDIR))
 		os.system("cp %s/%s.inp ."%(RUNDIR,model))
 		os.system("cp %s/materials.inp ."%(RUNDIR))
@@ -290,7 +290,7 @@ def main():
 	if(meshmodel=="cavity_rec_17K_feko"):
 		norm_thresh=1000
 		eig_thresh=5e-7
-		noport=1
+		noport=0
 		nev=40
 		nev_nodefault=int(nev/2)
 		if(noport==0):

@@ -50,16 +50,13 @@ echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_softwa
 ntask=1
 nthreads=1
 order=0
+# meshmodel=cavity_5cell_30K_feko_copy
 meshmodel=cavity_rec_17K_feko
 
-nrun=30
-tuner=GPTune
-$RUN python ./butterflypack_RFcavity_multimode_HO.py -meshmodel ${meshmodel} -order ${order} -nthreads ${nthreads} -ntask ${ntask} -nrun ${nrun} -optimization $tuner | tee -a a.out_butterflypackRFcavity_nodes${nodes}_cores${cores}_ntask${ntask}_nrun${nrun}_order${order}_${tuner}_${meshmodel}
 
-# nrun=1
+# nrun=30
 # tuner=GPTune
-# $RUN python ./butterflypack_RFcavity_multimode_HO_plotmodel.py -meshmodel ${meshmodel} -order ${order} -nthreads ${nthreads} -ntask ${ntask} -nrun ${nrun} -optimization $tuner | tee -a a.out_butterflypackRFcavity_nodes${nodes}_cores${cores}_ntask${ntask}_nrun${nrun}_order${order}_${tuner}_${meshmodel}_plotmodel
-
+# $RUN python ./butterflypack_RFcavity_multimode_HO.py -meshmodel ${meshmodel} -order ${order} -nthreads ${nthreads} -ntask ${ntask} -nrun ${nrun} -optimization $tuner | tee -a a.out_butterflypackRFcavity_nodes${nodes}_cores${cores}_ntask${ntask}_nrun${nrun}_order${order}_${tuner}_${meshmodel}
 
 # nrun=8
 # tuner=SIMPLEX
@@ -70,3 +67,7 @@ $RUN python ./butterflypack_RFcavity_multimode_HO.py -meshmodel ${meshmodel} -or
 # tuner=SIMPLEX
 # postprocess=1
 # $RUN python ./butterflypack_RFcavity_multimode_HO_simplex.py -meshmodel ${meshmodel} -order ${order} -postprocess ${postprocess} -nthreads ${nthreads} -ntask ${ntask} -nrun ${nrun} -optimization $tuner | tee -a a.out_butterflypackRFcavity_nodes${nodes}_cores${cores}_ntask${ntask}_nrun${nrun}_order${order}_${tuner}_${meshmodel}
+
+nrun=1
+tuner=GPTune
+$RUN python ./butterflypack_RFcavity_multimode_HO_plotmodel.py -meshmodel ${meshmodel} -order ${order} -nthreads ${nthreads} -ntask ${ntask} -nrun ${nrun} -optimization $tuner | tee -a a.out_butterflypackRFcavity_nodes${nodes}_cores${cores}_ntask${ntask}_nrun${nrun}_order${order}_${tuner}_${meshmodel}_plotGP

@@ -36,20 +36,20 @@
 # export nodes=16  # number of nodes to be used
 
 
-############## Perlmutter
-#export machine=perlmutter
-#export proc=milan   # milan,gpu
-#export mpi=craympich #openmpi  # craympich, openmpi
-#export compiler=gnu   # gnu, intel
-#export nodes=1  # number of nodes to be used
+############# Perlmutter
+export machine=perlmutter
+export proc=milan   # milan,gpu
+export mpi=openmpi #openmpi  # craympich, openmpi
+export compiler=gnu   # gnu, intel
+export nodes=3  # number of nodes to be used
 
-# ################ Yang's tr4 machine
-export machine=tr4-workstation
- export proc=AMD1950X   
- export mpi=openmpi  
- export compiler=gnu   
- export nodes=1  # number of nodes to be used
-# #
+# # ################ Yang's tr4 machine
+# export machine=tr4-workstation
+#  export proc=AMD1950X   
+#  export mpi=openmpi  
+#  export compiler=gnu   
+#  export nodes=1  # number of nodes to be used
+# # #
 
 # ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
 # export machine=cleanlinux
@@ -426,8 +426,13 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
-    export UCX_NET_DEVICES=mlx5_0:1
-    export UCX_TLS=rc
+    
+    # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
+    # export UCX_NET_DEVICES=mlx5_0:1
+    # export UCX_TLS=rc
+    #### the following is the workaround for openmpi 5.0.0
+    export OMPI_MCA_coll=self,libnbc,basic
+    
     export MPIRUN=mpirun
     cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
     gpus=4
@@ -457,10 +462,13 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
-    export UCX_NET_DEVICES=mlx5_0:1
-    export UCX_TLS=rc
+    # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
+    # export UCX_NET_DEVICES=mlx5_0:1
+    # export UCX_TLS=rc
+    #### the following is the workaround for openmpi 5.0.0
+    export OMPI_MCA_coll=self,libnbc,basic
     export MPIRUN=mpirun
-    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    cores=128 # 2 sockets of 64-core AMD EPYC 7763 (Milan)
     gpus=0
     software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,2]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [11,2,0]}}")
@@ -480,7 +488,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=mpirun
-    cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
+    cores=128 # 2 socket2 of 64-core AMD EPYC 7763 (Milan)
     gpus=0
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")

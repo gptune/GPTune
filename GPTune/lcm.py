@@ -463,7 +463,6 @@ if __name__ == "__main__":
 
             # res = mpi_comm.bcast(None, root=mpi4py.MPI.ROOT)
             # print('check',res)
-
             neg_log_marginal_likelihood = cliblcm.fun_jac ( x2.ctypes.data_as(POINTER(c_double)), z, gradients.ctypes.data_as(POINTER(c_double)) )
             if (mpi_rank == 0):
                 mpi_comm.send((neg_log_marginal_likelihood, gradients), dest=0)

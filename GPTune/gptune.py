@@ -617,7 +617,7 @@ class GPTune(object):
 
         return
 
-    def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
+    def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, mfs = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -796,8 +796,10 @@ class GPTune(object):
         #### YL: the following is the correct one
         modelers = []
         for i in range(self.problem.DO):
-            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
-
+            if mfs is None:
+                modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
+            else:
+                modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer, mf=mfs[i])'))
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
@@ -1007,7 +1009,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def SLA(self, NS, NS1 = None, Tgiven = None):
+    def SLA(self, NS, NS1 = None, Tgiven = None, mfs=None):
 
         if NS1 == None:
             NS1 = int(NS/2)
@@ -1019,11 +1021,11 @@ class GPTune(object):
         print("self.options: ", self.options)
 
         if self.options["BO_objective_evaluation_parallelism"] == False:
-            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
         elif self.options["BO_objective_evaluation_parallelism"] == True:
             (data, modeler, stats) = self.MLA_ParallelEval_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
-            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
 
         data.I = data.I[0]
         data.P = data.P[0]
@@ -1444,7 +1446,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Tgiven = None):
+    def MLA(self, NS, NS1 = None, NI = None, Tgiven = None, mfs=None):
 
         if NS1 == None:
             NS1 = int(NS/2)
@@ -1454,11 +1456,11 @@ class GPTune(object):
         print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
 
         if self.options["BO_objective_evaluation_parallelism"] == False:
-            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
         elif self.options["BO_objective_evaluation_parallelism"] == True:
             return self.MLA_ParallelEval_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
-            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
 
         #return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 

@@ -76,8 +76,8 @@ def objectives(point):                  # should always use this name for user-d
 
 	params = [model, 'freq', freq]
 
-	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
-	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+	BINDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+	RUNDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
 	# os.system("cp %s/fdmom_port ."%(BINDIR))
 	os.system("cp %s/fdmom_eigen ."%(BINDIR))
 	os.system("cp %s/%s.inp ."%(RUNDIR,model))

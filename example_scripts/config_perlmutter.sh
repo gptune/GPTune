@@ -29,11 +29,11 @@ module load cmake
 ##################################################
 machine=perlmutter
 proc=milan   # milan,gpu
-mpi=craympich    # craympich, openmpi
+mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -97,7 +97,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 	SLU_CUDA_FLAG="-I${OMPI_DIR}/include"
 	STRUMPACK_USE_CUDA=ON
 	STRUMPACK_CUDA_FLAGS="-I${OMPI_DIR}/include"
-	export UCX_NET_DEVICES=mlx5_0:1
+	# export UCX_NET_DEVICES=mlx5_0:1
 # fi 
 
 elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
@@ -120,7 +120,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 	MPIF90=mpif90
 	OPENMPFLAG=fopenmp
 	SLU_ENABLE_CUDA=FALSE
-	export UCX_NET_DEVICES=mlx5_0:1
+	# export UCX_NET_DEVICES=mlx5_0:1
 # fi 
 
 else
@@ -328,50 +328,51 @@ if [[ $BuildExample == 1 ]]; then
 	# make test
 
 
-	# cd $GPTUNEROOT/examples/ButterflyPACK
-	# rm -rf ButterflyPACK
-	# git clone https://github.com/liuyangzhuan/ButterflyPACK.git
-	# cd ButterflyPACK
-	# git clone https://github.com/opencollab/arpack-ng.git
-	# cd arpack-ng
-	# git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
-	# mkdir -p build
-	# cd build
-	# cmake .. \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
-	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DMPI=ON \
-	# 	-DEXAMPLES=ON \
-	# 	-DCOVERALLS=OFF 
-	# make
-	# cd ../../
-	# mkdir build
-	# cd build
-	# cmake .. \
-	# 	-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC -fallow-argument-mismatch"\
-	# 	-DCMAKE_CXX_FLAGS="" \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
-	# 	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	# make -j32
-	# make install -j32
+	cd $GPTUNEROOT/examples/ButterflyPACK
+	rm -rf ButterflyPACK
+	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+	cd ButterflyPACK
+	git clone https://github.com/opencollab/arpack-ng.git
+	cd arpack-ng
+	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+	cp ../patches/PARPACK/pzneupd.f ./PARPACK/SRC/MPI/. 
+	mkdir -p build
+	cd build
+	cmake .. \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DMPI=ON \
+		-DEXAMPLES=ON \
+		-DCOVERALLS=OFF 
+	make
+	cd ../../
+	mkdir build
+	cd build
+	cmake .. \
+		-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC -fallow-argument-mismatch" \
+		-DCMAKE_CXX_FLAGS="" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+	make -j32
+	make install -j32
 
 
 

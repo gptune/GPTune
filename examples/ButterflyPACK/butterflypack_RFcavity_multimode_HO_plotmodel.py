@@ -234,7 +234,8 @@ def predict_aug(modeler, gt, point,tid):   # point is the orginal space
     (mu, var) = modeler[0].predict(xNorm, tid=tid)
     return (mu, var)
 
-
+def mean_function(x):
+	return np.log(1e-8)
 
 def main():
 	global order
@@ -376,7 +377,7 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 
 	# options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso' 
@@ -437,6 +438,7 @@ def main():
 			Nmode = 0
 			print("no mode found in the intial samples")
 		
+
 		NmodeMAX=40 # used to control the budget, only at most the first NmodeMAX modes will be modeled by GP
 		for nn in range(NS):
 			mm=0
@@ -453,6 +455,11 @@ def main():
 				constraints = {}
 				models = {}
 				constants={"nodes":nodes,"cores":cores,"nthreads":nthreads}
+
+
+				mfs=[]
+				mfs.append(mean_function)
+
 
 				# """ Print all input and parameter samples """	
 				# print(IS, PS, OS, constraints, models)
@@ -490,7 +497,7 @@ def main():
 				gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 				
 				NI = len(giventask)
-				(data, modeler, stats) = gt.MLA(NS=len(data.P[0])+1, NI=NI, Tgiven=giventask, NS1=len(data.P[0]))
+				(data, modeler, stats) = gt.MLA(NS=len(data.P[0])+1, NI=NI, Tgiven=giventask, NS1=len(data.P[0]),mfs=mfs)
 				os.system("rm -rf gptune.db/*.json") # need to delete database file as multiple modes will conflict
 
 				# idxs = np.where(data.O[0]<1)[0]
