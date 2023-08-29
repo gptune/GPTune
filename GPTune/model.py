@@ -33,16 +33,14 @@ class Model(abc.ABC):
 
         self.problem = problem
         self.computer = computer
-        def mf_xnorm(xnorm):
-            xi0 = self.problem.PS.inverse_transform(np.array(xnorm, ndmin=2))
-            xi=xi0[0]
-            # print(xnorm,xi)
-            return mf(xi)
-        self.mf=mf_xnorm
+        self.mf=mf
         self.M = None
         self.M_last = None # used for TLA with model regression
         self.M_stacked = [] # used for TLA with model stacking
         self.num_samples_stacked = [] # number of samples used for models in model stacking
+
+    def mfnorm(self,xnorm):
+        return self.mf(self.problem.PS.inverse_transform(np.array(xnorm, ndmin=2))[0])
 
     @abc.abstractmethod
     def train(self, data : Data, **kwargs):
@@ -138,7 +136,7 @@ class Model_GPy_LCM(Model):
                 K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             
             gpymf = GPy.core.Mapping(len(data.P[0][0]),1) 
-            gpymf.f = self.mf
+            gpymf.f = self.mfnorm
             gpymf.update_gradients = lambda a,b: None
 
             if (kwargs['model_sparse']):
@@ -445,9 +443,21 @@ class Model_LCM(Model):
 
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
-            _ = mpi_comm.bcast((self, data, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
+            
+            
+            import copy
+            data_tmp = copy.deepcopy(data)
+            # YL: substract the prior mean before calling the C modeling training function 
+            mf_saved=self.mf
+            if(self.mf is not None):
+                for i in range(len(data.P)):
+                    for p in range(data.P[i].shape[0]):
+                        data_tmp.O[i][p,0]=data_tmp.O[i][p,0]-self.mfnorm(data.P[i][p,:])            
+            self.mf = None
+            _ = mpi_comm.bcast((self, data_tmp, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
             tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
             mpi_comm.Disconnect()
+            self.mf = mf_saved
             res=[]
             for p in range(int(kwargs['model_restart_processes'])):
                 res = res + tmpdata[p]
@@ -466,7 +476,15 @@ class Model_LCM(Model):
                     kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                     # if (restart_iter == 0 and self.M is not None):
                     #     kern.set_param_array(self.M.kern.get_param_array())
-                    return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
+                    
+                    import copy
+                    data_O = copy.deepcopy(data.O)
+                    # YL: substract the prior mean before calling the C modeling training function 
+                    if(self.mf is not None):
+                        for i in range(len(data.P)):
+                            for p in range(data.P[i].shape[0]):
+                                data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+                    return kern.train_kernel(X = data.P, Y = data_O, computer = self.computer, kwargs = kwargs)
                 res = list(executor.map(fun, restart_iters, timeout=None, chunksize=1))
 
         else:
@@ -481,7 +499,14 @@ class Model_LCM(Model):
                             seed += len(P_)
                     np.random.seed(seed)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
-                return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
+                import copy
+                data_O = copy.deepcopy(data.O)
+                # YL: substract the prior mean before calling the C modeling training function 
+                if(self.mf is not None):
+                    for i in range(len(data.P)):
+                        for p in range(data.P[i].shape[0]):
+                            data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+                return kern.train_kernel(X = data.P, Y = data_O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))
 
         if (kwargs['distributed_memory_parallelism'] and i_am_manager == False):
@@ -508,15 +533,13 @@ class Model_LCM(Model):
         # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         import copy
-        if(self.mf is None):
-            self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
-        else:
-            # YL: GPCoregionalizedRegression initialization in GPy (unlike GPRegression) doesn't accept mean_function, so we need to subtract mean from data.O. Also, we need to add back the mean in the predict function below 
-            data_O = copy.deepcopy(data.O)
+        data_O = copy.deepcopy(data.O)
+        # YL: GPCoregionalizedRegression initialization in GPy (unlike GPRegression) doesn't accept mean_function, so we need to subtract mean from data.O for calling the prediction function later. Also, we need to add back the mean in the predict function below 
+        if(self.mf is not None):
             for i in range(len(data.P)):
                 for p in range(data.P[i].shape[0]):
-                    data_O[i][p,0]=data_O[i][p,0]-self.mf(data.P[i][p,:])
-            self.M = GPy.models.GPCoregionalizedRegression(data.P, data_O, kern, likelihoods_list = likelihoods_list)
+                    data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+        self.M = GPy.models.GPCoregionalizedRegression(data.P, data_O, kern, likelihoods_list = likelihoods_list)
 
         #print ("kernel: " + str(kern))
         #print ("bestxopt:" + str(bestxopt))
@@ -565,7 +588,7 @@ class Model_LCM(Model):
             for i in range(1, len(self.M_stacked), 1):
                 (mu_, var_) = self.M_stacked[i].predict_noiseless(x)
                 if(self.mf is not None):
-                    mu_[0][0] = mu_[0][0] + self.mf(x)
+                    mu_[0][0] = mu_[0][0] + self.mfnorm(x)
                 var_[0][0] = max(1e-18, var_[0][0])
                 num_samples_current = self.num_samples_stacked[i]
                 alpha = 1.0 # relative importance of the prior and current ones
@@ -579,7 +602,7 @@ class Model_LCM(Model):
             x[0,-1] = tid
             (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
             if(self.mf is not None):
-                mu[0][0] = mu[0][0] + self.mf(x)
+                mu[0][0] = mu[0][0] + self.mfnorm(x)
 
         return (mu, var)
 

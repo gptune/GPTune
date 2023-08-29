@@ -56,8 +56,14 @@ class Search(abc.ABC):
 
         if (tids is None):
             tids = list(range(data.NI))
+        flag=0
+        for i in range(data.NI):
+            if models[i].mf is not None:
+                flag=1
+        if flag==1:
+            print('Warning: there is currently no good way of spawning the mean_function, so distributed_memory_parallelism is disabled for the search!')
 
-        if (kwargs['distributed_memory_parallelism'] and i_am_manager):   # the pgymo install on mac os seems buggy if search is not spawned
+        if (kwargs['distributed_memory_parallelism'] and i_am_manager and flag==0):   # the pgymo install on mac os seems buggy if search is not spawned
             import mpi4py
             nproc = min(kwargs['search_multitask_processes'],data.NI)
             npernode = int(self.computer.cores/kwargs['search_multitask_threads'])
