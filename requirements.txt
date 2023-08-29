@@ -13,7 +13,7 @@ ipyparallel
 opentuner >= 0.8.8
 hpbandster
 # pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
-pygmo <= 2.16.1
+pygmo <= 2.16.1 # this doesn't seem to work for Python>3.8
 filelock 
 requests
 pymoo
