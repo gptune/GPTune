@@ -57,7 +57,7 @@ class Search(abc.ABC):
         if (tids is None):
             tids = list(range(data.NI))
         flag=0
-        for i in range(data.NI):
+        for i in range(self.problem.DO):
             if models[i].mf is not None:
                 flag=1
         if flag==1:
