@@ -4,7 +4,7 @@
 ##################################################
 cd ..
 export ModuleEnv='cleanlinux-unknown-openmpi-gnu'
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 MPIFromSource=1 # whether to build openmpi from source
 PYTHONFromSource=1 # whether to build python from source
 
@@ -22,17 +22,17 @@ export GPTUNEROOT=$PWD
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 	
-	CC=gcc-8
-	FTN=gfortran-8
-	CPP=g++-8
+	CC=gcc-13
+	FTN=gfortran-13
+	CPP=g++-13
 
 	if [[ $MPIFromSource = 1 ]]; then
-		export PATH=$PATH:$GPTUNEROOT/openmpi-4.0.1/bin
-		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
-		export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
-		export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
-		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  		
+		export PATH=$PATH:$GPTUNEROOT/openmpi-4.1.5/bin
+		export MPICC="$GPTUNEROOT/openmpi-4.1.5/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.1.5/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.1.5/bin/mpif90"
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LIBRARY_PATH  		
 	else
 
 		#######################################
@@ -51,11 +51,11 @@ if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 		fi
 	fi
 	export PATH=$GPTUNEROOT/env/bin/:$PATH
-	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.so
+	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/libscalapack.so
 	export BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
 	export LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
 	export LD_LIBRARY_PATH=$GPTUNEROOT/OpenBLAS/:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/:$LD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
 
 
@@ -79,14 +79,14 @@ export PYTHONWARNINGS=ignore
 
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
-export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/
 export METIS_DIR=$ParMETIS_DIR
 export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
-export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 
 
@@ -103,7 +103,7 @@ apt-get install dialog apt-utils -y
 apt-get install build-essential software-properties-common -y 
 add-apt-repository ppa:ubuntu-toolchain-r/test -y 
 apt-get update -y 
-apt-get install gcc-8 g++-8 gfortran-8 -y  
+apt-get install gcc-13 g++-13 gfortran-13 -y  
 # apt-get install gcc-9 g++-9 gfortran-9 -y  
 # apt-get install gcc-10 g++-10 gfortran-10 -y  
 
@@ -127,7 +127,7 @@ apt-get install jq -y
 
 cd $GPTUNEROOT
 apt purge --auto-remove cmake -y
-version=3.19
+version=3.26
 build=1
 wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
 tar -xzvf cmake-$version.$build.tar.gz
@@ -139,8 +139,8 @@ export PATH=$GPTUNEROOT/cmake-$version.$build/bin/:$PATH
 
 if [[ $PYTHONFromSource = 1 ]]; then
 	PyMAJOR=3
-	PyMINOR=7
-	PyPATCH=9
+	PyMINOR=9
+	PyPATCH=17
 	cd $GPTUNEROOT
 	rm -rf Python-$PyMAJOR.$PyMINOR.$PyPATCH
 	wget https://www.python.org/ftp/python/$PyMAJOR.$PyMINOR.$PyPATCH/Python-$PyMAJOR.$PyMINOR.$PyPATCH.tgz
@@ -188,10 +188,10 @@ make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
 
 if [[ $MPIFromSource = 1 ]]; then
 	cd $GPTUNEROOT
-	wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-	bzip2 -d openmpi-4.0.1.tar.bz2
-	tar -xvf openmpi-4.0.1.tar 
-	cd openmpi-4.0.1/ 
+	wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.bz2
+	bzip2 -d openmpi-4.1.5.tar.bz2
+	tar -xvf openmpi-4.1.5.tar 
+	cd openmpi-4.1.5/ 
 	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
 	make -j32
 	make install
@@ -200,10 +200,10 @@ fi
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 cd $GPTUNEROOT
-rm -rf scalapack-2.1.0.tgz*
-wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
-tar -xf scalapack-2.1.0.tgz
-cd scalapack-2.1.0
+rm -rf scalapack-2.2.0.tgz*
+wget http://www.netlib.org/scalapack/scalapack-2.2.0.tgz
+tar -xf scalapack-2.2.0.tgz
+cd scalapack-2.2.0
 rm -rf build
 mkdir -p build
 cd build
@@ -215,7 +215,7 @@ cmake .. \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=./install \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
 	-DLAPACK_LIBRARIES="${LAPACK_LIB}"
 make -j32
@@ -234,6 +234,7 @@ rm -rf CMakeFiles
 cmake .. \
 	-DCMAKE_CXX_FLAGS="-$OPENMPFLAG" \
 	-DCMAKE_C_FLAGS="-$OPENMPFLAG" \
+	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
 	-DBUILD_SHARED_LIBS=ON \
 	-DCMAKE_CXX_COMPILER=$MPICXX \
 	-DCMAKE_C_COMPILER=$MPICC \
@@ -256,52 +257,52 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/xiaoyeli/superlu_dist.git
 	cd superlu_dist
 
-	##### the following server is often down, so switch to the github repository 
-	# wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
-	# tar -xf parmetis_4.0.3.orig.tar.gz
-	# cd parmetis-4.0.3/
-	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	# mkdir -p install
-	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	# make install > make_parmetis_install.log 2>&1
+	#### the following server is often down, so switch to the github repository 
+	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	tar -xf parmetis_4.0.3.orig.tar.gz
+	cd parmetis-4.0.3/
+	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	mkdir -p install
+	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1
+	cd ../
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+
+	# mkdir -p $ParMETIS_DIR
+	# rm -f GKlib
+	# git clone https://github.com/KarypisLab/GKlib.git
+	# cd GKlib
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+
 	# cd ../
-	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	mkdir -p $ParMETIS_DIR
-	rm -f GKlib
-	git clone https://github.com/KarypisLab/GKlib.git
-	cd GKlib
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-
-	cd ../
-	rm -rf METIS
-	git clone https://github.com/KarypisLab/METIS.git
-	cd METIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	make -j8
-	make install	
-	cd ../
-	rm -rf ParMETIS
-	git clone https://github.com/KarypisLab/ParMETIS.git
-	cd ParMETIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	make -j8
-	make install
-	cd ..
+	# rm -rf METIS
+	# git clone https://github.com/KarypisLab/METIS.git
+	# cd METIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	# make -j8
+	# make install	
+	# cd ../
+	# rm -rf ParMETIS
+	# git clone https://github.com/KarypisLab/ParMETIS.git
+	# cd ParMETIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# cd ..
 
 	mkdir -p build
 	cd build
@@ -355,7 +356,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_INSTALL_LIBDIR=./lib \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="" \
+		-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
 		-DBLAS_LIBRARIES="${BLAS_LIB}" \
 		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DMPI=ON \
@@ -366,7 +367,7 @@ if [[ $BuildExample == 1 ]]; then
 	mkdir build
 	cd build
 	cmake .. \
-		-DCMAKE_Fortran_FLAGS="$BLAS_INC"\
+		-DCMAKE_Fortran_FLAGS="$BLAS_INC -fallow-argument-mismatch"\
 		-DCMAKE_CXX_FLAGS="" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
@@ -435,7 +436,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_ENABLE_PTSCOTCH=ON \
 		-DTPL_ENABLE_PARMETIS=ON \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB};$ParMETIS_DIR/lib/libGKlib.so" \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
 		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 
@@ -456,6 +457,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_CXX_FLAGS="-std=c++11" \
+		-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
 		-DBUILD_SHARED_LIBS=ON \
 		-DMFEM_USE_MPI=YES \
