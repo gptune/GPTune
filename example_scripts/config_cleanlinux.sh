@@ -24,7 +24,7 @@ if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 	
 	CC=gcc-13
 	FTN=gfortran-13
-	CPP=g++-13
+	CXX=g++-13
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export PATH=$PATH:$GPTUNEROOT/openmpi-4.1.5/bin
@@ -46,7 +46,7 @@ if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 		########################################
 
 		if [[ -z "$MPICC" ]]; then
-			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			echo "Line: ${LINENO} of $BASH_SOURCE: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CXX and FC=$FTN."
 			exit
 		fi
 	fi
@@ -182,8 +182,8 @@ cd $GPTUNEROOT
 cd $GPTUNEROOT
 git clone https://github.com/xianyi/OpenBLAS
 cd OpenBLAS
-make PREFIX=. CC=$CC CXX=$CPP FC=$FTN -j32
-make PREFIX=. CC=$CC CXX=$CPP FC=$FTN install -j32
+make PREFIX=. CC=$CC CXX=$CXX FC=$FTN -j32
+make PREFIX=. CC=$CC CXX=$CXX FC=$FTN install -j32
 
 
 if [[ $MPIFromSource = 1 ]]; then
@@ -192,7 +192,7 @@ if [[ $MPIFromSource = 1 ]]; then
 	bzip2 -d openmpi-4.1.5.tar.bz2
 	tar -xvf openmpi-4.1.5.tar 
 	cd openmpi-4.1.5/ 
-	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+	./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
 	make -j32
 	make install
 fi

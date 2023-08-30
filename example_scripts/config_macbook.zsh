@@ -51,7 +51,7 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	OPENMPFLAG=fopenmp
 	CC=$BREWPATH/gcc/$gccversion/bin/gcc-13
 	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-13
-	CPP=$BREWPATH/gcc/$gccversion/bin/g++-13
+	CXX=$BREWPATH/gcc/$gccversion/bin/g++-13
 
 	if [[ $MPIFromSource = 1 ]]; then
 		export MPICC="$GPTUNEROOT/openmpi-4.1.5/bin/mpicc"
@@ -75,7 +75,7 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 		########################################
 
 		if [[ -z "$MPICC" ]]; then
-			echo "Line: ${LINENO} of ${(%):-%x}: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			echo "Line: ${LINENO} of ${(%):-%x}: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CXX and FC=$FTN."
 			exit
 		fi
 	fi	
@@ -181,7 +181,7 @@ wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.bz2
 bzip2 -d openmpi-4.1.5.tar.bz2
 tar -xvf openmpi-4.1.5.tar 
 cd openmpi-4.1.5/ 
-./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
 make -j8
 make install
 
@@ -329,7 +329,6 @@ if [[ $BuildExample == 1 ]]; then
 	cp ../../hypre-driver/src/ij.c ./test/.
 	make test
 
-
 	cd $GPTUNEROOT/examples/ButterflyPACK
 	rm -rf ButterflyPACK
 	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
@@ -375,8 +374,6 @@ if [[ $BuildExample == 1 ]]; then
 	make -j8
 	make install -j8
 
-
-
 	cd $GPTUNEROOT/examples/STRUMPACK
 	rm -rf scotch_6.1.0
 	wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
@@ -410,8 +407,6 @@ if [[ $BuildExample == 1 ]]; then
 	chmod +x examples/KernelRegressionMPI.py
 	mkdir build
 	cd build
-
-
 
 	cmake ../ \
 		-DCMAKE_BUILD_TYPE=Release \
