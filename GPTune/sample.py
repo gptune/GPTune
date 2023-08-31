@@ -91,8 +91,17 @@ class Sample(abc.ABC):
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         P = []
+        targetSeed = 0
         for t in I:
             I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+            
+            """
+            Allows for multi_seed multitask learning. 
+            This will allow each task to start in a different sample region
+            """
+            if kwargs['multi_seed']:
+                kwargs['sample_random_seed'] = kwargs['multi_seed_seeds'][targetSeed]
+                targetSeed += 1
 
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)

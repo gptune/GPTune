@@ -48,7 +48,8 @@ class Options(dict):
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
         sample_random_seed = None # Specify a certain random seed for the pilot sampling phase.
-
+        multi_seed = False # Whether to use a different seed per task for generating the initial samples
+        multi_seed_seeds = None # The list of random seeds for each task when multi_seed=True
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
