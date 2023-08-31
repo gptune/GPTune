@@ -34,7 +34,7 @@ class Sample(abc.ABC):
         raise Exception("Abstract method")
 
     def sample_constrained(self, n_samples : int, repeat : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
-
+        
         if (check_constraints is None):
             S = self.sample(n_samples, space)
 
@@ -52,10 +52,13 @@ class Sample(abc.ABC):
             cpt = 0
             n_itr = 0
             while ((cpt < n_samples) and (n_itr < sample_max_iter)):
+               
                 # t1 = time.time_ns()
+               
                 S2 = self.sample(n_samples, space, n_itr+repeat, kwargs=kwargs)
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
+          
 
                 for s_norm in S2:
                     # print("jiji",s_norm)
@@ -81,7 +84,7 @@ class Sample(abc.ABC):
                         Consider increasing 'sample_max_iter', or, provide a user-defined sampling method."%(len(S), n_samples))
         # print('reqi',S,'nsample',n_samples,sample_max_iter,space)
         S = np.array(S[0:n_samples]).reshape((n_samples, len(space)))
-
+        
         return S
 
     def sample_inputs(self, n_samples : int, IS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
@@ -89,14 +92,27 @@ class Sample(abc.ABC):
         return self.sample_constrained(n_samples, 0, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
-
+        
         P = []
+        if kwargs['multi_seed']:
+                targetSeed = 0
         for t in I:
-            I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
 
+            """
+            Allows for multi_seed multitask learning. 
+            This will allow each task to start in a different search region
+            """
+            if kwargs['multi_seed']:
+                
+                kwargs['sample_random_seed'] = kwargs['multi_seed_seeds'][targetSeed]
+                targetSeed += 1
+                
+            I_orig = IS.inverse_transform(np.array(t, ndmin=2))[0]
+           
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
 
+            # print("seed: ", kwargs['sample_random_seed'])
             xs__ = self.sample_constrained(n_samples, 0, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
             xs = []
 
@@ -144,14 +160,15 @@ class SampleLHSMDU(Sample):
     def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
 
         kwargs = kwargs['kwargs']
-
+       
         #if kwargs['sample_random_seed'] != None:
         #    print ("SAMPLE RANDOM SEED: ", kwargs['sample_random_seed'])
         #    lhsmdu.setRandomSeed(kwargs['sample_random_seed'])
-
+        
         if (self.cached_n_samples is not None and self.cached_n_samples == n_samples and self.cached_space is not None and space == self.cached_space and self.cached_algo is not None and self.cached_algo == kwargs['sample_algo']):
             #lhs = lhsmdu.resample() # YC: this can fall into too clustered samples if there are many constraints
             if kwargs['sample_random_seed'] != None:
+                
                 lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
             else:
                 np.random.seed()
