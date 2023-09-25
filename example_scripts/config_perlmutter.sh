@@ -29,7 +29,7 @@ module load cmake
 ##################################################
 machine=perlmutter
 proc=milan   # milan,gpu
-mpi=openmpi    # craympich, openmpi
+mpi=craympich    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 

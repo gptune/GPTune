@@ -39,9 +39,9 @@
 ############# Perlmutter
 export machine=perlmutter
 export proc=milan   # milan,gpu
-export mpi=openmpi #openmpi  # craympich, openmpi
+export mpi=craympich #openmpi  # craympich
 export compiler=gnu   # gnu, intel
-export nodes=3  # number of nodes to be used
+export nodes=1  # number of nodes to be used
 
 # # ################ Yang's tr4 machine
 # export machine=tr4-workstation
@@ -396,6 +396,10 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
+    export MPI4PY_RC_RECV_MPROBE=false
+    export MPICH_VERSION_DISPLAY=0
+    export MPICH_SINGLE_HOST_ENABLED=0
+    export PMI_SPAWN_SRUN_ARGS="--mpi=cray_shasta --exclusive --network=single_node_vni,job_vni,def_tles=0 -u --cpu-bind=none"
     cores=64 # 1 socket of 64-core AMD EPYC 7763 (Milan)
     gpus=4 # 4 A100 per GPU node
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]},\"cuda\":{\"version_split\": [11,4]}}")
@@ -487,7 +491,11 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
-    export MPIRUN=mpirun
+    export MPIRUN=srun
+    export MPI4PY_RC_RECV_MPROBE=false
+    export MPICH_VERSION_DISPLAY=0
+    export MPICH_SINGLE_HOST_ENABLED=0
+    export PMI_SPAWN_SRUN_ARGS="--mpi=cray_shasta --exclusive --network=single_node_vni,job_vni,def_tles=0 -u --cpu-bind=none"    
     cores=128 # 2 socket2 of 64-core AMD EPYC 7763 (Milan)
     gpus=0
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,13]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
@@ -586,6 +594,14 @@ else
     exit
 fi    
 ###############
+
+if [[ -z "${GPTUNE_LITE_MODE}" ]] && [[ $ModuleEnv == *"openmpi"* ]]; then
+RUN="$MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1"
+fi
+if [[ -z "${GPTUNE_LITE_MODE}" ]] && [[ $ModuleEnv == *"craympich"* ]]; then
+RUN="$MPIRUN --network=single_node_vni,job_vni,def_tles=0 -u --exclusive -n 1"
+fi
+
 
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/

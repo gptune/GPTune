@@ -7,9 +7,7 @@ timestamp() {
   date +"%Y-%m-%d_%H-%M-%S" # current time
 }
 
-if [[ -z "${GPTUNE_LITE_MODE}" ]] && [[ $ModuleEnv == *"openmpi"* ]]; then
-RUN="$MPIRUN --oversubscribe --allow-run-as-root --mca pmix_server_max_wait 3600 --mca pmix_base_exchange_timeout 3600 --mca orte_abort_timeout 3600 --mca plm_rsh_no_tree_spawn true -n 1"
-fi
+
 
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST

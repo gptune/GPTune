@@ -372,7 +372,6 @@ def parse_args():
     parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
     parser.add_argument('-cores', type=int, default=1,help='Number of cores per machine node')
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
-    parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments
     parser.add_argument('-optimization', type=str,default='GPTune',help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')

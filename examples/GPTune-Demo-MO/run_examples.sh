@@ -3,8 +3,8 @@ cd ../../
 . run_env.sh
 cd -
 
-# the following examples only work with openmpi
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+# the following examples only work with openmpi and craympich
+if [[ $ModuleEnv == *"openmpi"* ]] || [[ $ModuleEnv == *"craympich"* ]]; then
     cd $GPTUNEROOT/examples/GPTune-Demo-MO
     tp=GPTune-Demo-MO
     app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
