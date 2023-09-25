@@ -34,7 +34,7 @@ Table of Contents
 ### What applications can be tuned?
 GPTune can work with essentially any shared-memory/distributed-memory/GPU-based applications on Linux or Mac OS systems. 
 
-Note for distributed-memory applications: If the application is OpenMPI compiled, one can trivially modify your application driver to use the MPI spawning mode, which supports all advanced features in GPTune. If the application is CrayMPICH/Spectrum-MPI/Intel-MPI compiled or even non-MPI (e.g., UPC++/CHARM++), one can use the Reverse Communication Interface(RCI) Mode, which does not require modification of the application code but may not support all GPTune features.  
+Note for distributed-memory applications: If the application is OpenMPI/CrayMPICH compiled, one can trivially modify your application driver to use the MPI spawning mode, which supports all advanced features in GPTune. If the application is CrayMPICH/Spectrum-MPI/Intel-MPI compiled or even non-MPI (e.g., UPC++/CHARM++), one can use the Reverse Communication Interface(RCI) Mode, which does not require modification of the application code but may not support all GPTune features.  
 
 ## Installation
 ### Which build script should I use to install GPTune?
@@ -78,17 +78,17 @@ edit run_examples.sh to select which applications to test
 bash run_examples.sh
 ```
 ### I also don't want to use Docker for my production run, is there an alternative?
-Yes, there is now a light-weight version of GPTune, which doesn't rely on mpi4py, openturns, pygmo and openmpi 4.0+. But you do need a working MPI (e.g. mpich or openmpi<4.0). You need set the following environment variable during the installation and use stages of GPTune:
+Yes, there is now a light-weight version of GPTune, which doesn't rely on mpi4py, openturns, pygmo and openmpi 4.0+/crayMPICH 8.1.23+. But you do need a working MPI (e.g. crayMPICH<8.1.23 or openmpi<4.0). You need set the following environment variable during the installation and use stages of GPTune:
 ```
 export GPTUNE_LITE_MODE=1
 ```
 See config_cleanlinux.sh or config_macbook.zsh as an example. Note that when the GPTune_lite mode is used, certain GPTune features cannot be used. 
 ## Usage-Spawning Mode
-The spawning mode of GPTune relies on the mpi spawning mechanism (only available in OpenMPI) to launch a parallel application from Python codes. As a mandatory requirement, both GPTune and the application need to be compiled with OpenMPI.  
+The spawning mode of GPTune relies on the mpi spawning mechanism (GPTune requires OpenMPI>=4.0 or CrayMPICH>=8.1.23 for the full support of the spawning mode) to launch a parallel application from Python codes. As a mandatory requirement, both GPTune and the application need to be compiled with the same OpenMPI/CrayMPICH version.  
 ### Do I need to modify my application code if it's not MPI-based?
 For non-distributed-memory application code, one doesn't need to modify the driver code. That said, one always need to either define a Python function that reads the tuning parameters, launch the application code, and get the code output (the Spawning mode), or use a bash script to query GPTune for next sample points, launch the application, grep the results from runlogs/data files and use jq to write the results into the GPTune database file (the RCI mode).  
 ## Usage-Reverse Communication Interface(RCI) Mode
-For non-OpenMPI-based applications, one can use the RCI mode of GPTune, which essentially relies on a bash script to query GPTune for next samples, launch the applications as one normally does from command line (e.g, using srun/jsrun/mpirun), and write back results to the GPTune database file, and query GPTune again.   
+For non-OpenMPI/CrayMPICH-based applications, one can use the RCI mode of GPTune, which essentially relies on a bash script to query GPTune for next samples, launch the applications as one normally does from command line (e.g, using srun/jsrun/mpirun), and write back results to the GPTune database file, and query GPTune again.   
 ### What is jq?
 jq is a Linux command line utility that is easily used to extract/write data from/into JSON documents. The RCI mode relies on jq to update the GPTune database. 
 
@@ -98,7 +98,7 @@ One needs to unload the craype-hugepages2M module with: module unload craype-hug
 ### Cori: runtime error: "_pmi_alps_init:alps_get_placement_info returned with error -1"
 Intead of "python xx.py", one needs "srun/mpirun -n 1 xx.py" to get the correct MPI infrastructure.
 ### Hanging at "MLA iteration:  0"
-This typically means that a wrong version of openmpi is used at runtime. Make sure to use the same openmpi version as the one for gptune installation.
+This typically means that a wrong version of openmpi/craympich is used at runtime. Make sure to use the same openmpi/craympich version as the one for gptune installation.
 ### Runtime error: "ImportError: cannot import name '_centered' from 'scipy.signal.signaltools'"
 This is due to the use of scipy-1.8.0 (or newer) and statsmodels-0.12.2 (or older). You can upgrade statsmodels to 0.13.2. 
 ### Installation error: "Could not find a version that satisfies the requirement pygmo (from versions: none)"

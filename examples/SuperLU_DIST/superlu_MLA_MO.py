@@ -47,7 +47,6 @@ from gptune import * # import all
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
 
 import math
 import subprocess
@@ -67,7 +66,7 @@ def objectives(point):                  # should always use this name for user-d
 	COLPERM = point['COLPERM']
 	LOOKAHEAD = point['LOOKAHEAD']
 	nprows = point['nprows']
-	npernode = 2**point['npernode']
+	npernode = 2**point['lg2npernode']
 	nproc = nodes*npernode
 	nthreads = int(cores / npernode)
 	NSUP = point['NSUP']
@@ -150,9 +149,9 @@ def objectives(point):                  # should always use this name for user-d
 	
 def cst1(NSUP,NREL):
 	return NSUP >= NREL
-def cst2(npernode,nprows,nodes):
-	# print(npernode, nodes * 2**npernode, nprows )
-	return nodes * 2**npernode >= nprows 
+def cst2(lg2npernode,nprows,nodes):
+	# print(lg2npernode, nodes * 2**lg2npernode, nprows )
+	return nodes * 2**lg2npernode >= nprows 
 def main():
 
 	# Parse command line arguments
@@ -181,13 +180,13 @@ def main():
 	COLPERM   = Categoricalnorm (['2', '4'], transform="onehot", name="COLPERM")
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
 	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
 	NREL      = Integer     (10, 40, transform="normalize", name="NREL")	
 	time   = Real        (float("-Inf") , float("Inf"), name="time")
 	memory    = Real        (float("-Inf") , float("Inf"), name="memory")
 	IS = Space([matrix])
-	PS = Space([COLPERM, LOOKAHEAD, npernode, nprows, NSUP, NREL])
+	PS = Space([COLPERM, LOOKAHEAD, lg2npernode, nprows, NSUP, NREL])
 	OS = Space([time, memory])
 	constraints = {"cst1" : cst1, "cst2" : cst2}
 	models = {}
@@ -236,23 +235,24 @@ def main():
 
 		NI = len(giventask)
 		NS = nrun
-		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Igiven =giventask, NS1 = max(NS//2,1))
+		(data, model,stats) = gt.MLA(NS=NS, NI=NI, Tgiven =giventask, NS1 = max(NS//2,1))
 		print("stats: ",stats)
 
 
 		""" Print all input and parameter samples """	
-		for tid in range(NI):
-			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
-			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid].tolist())
-			ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			front = ndf[0]
-			# print('front id: ',front)
-			fopts = data.O[tid][front]
-			xopts = [data.P[tid][i] for i in front]
-			print('    Popts ', xopts)		
-			print('    Oopts ', fopts.tolist())		
+        import pymoo
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    problem:%s"%(data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            front = NonDominatedSorting(method="fast_non_dominated_sort").do(data.O[tid], only_non_dominated_front=True)
+            # print('front id: ',front)
+            fopts = data.O[tid][front]
+            xopts = [data.P[tid][i] for i in front]
+            print('    Popts ', xopts)
+            print('    Oopts ', fopts.tolist())  	
 			
   
 def parse_args():

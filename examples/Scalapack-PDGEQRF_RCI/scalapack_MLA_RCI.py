@@ -61,10 +61,10 @@ def objectives(point):
 
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
-def cst2(nb,npernode,n,p,nodes,bunit):
-    return nb * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p,nodes):
-    return nodes * 2**npernode >= p
+def cst2(nb,lg2npernode,n,p,nodes,bunit):
+    return nb * bunit * nodes * 2**lg2npernode <= n * p
+def cst3(lg2npernode,p,nodes):
+    return nodes * 2**lg2npernode >= p
 
 def main():
 
@@ -121,12 +121,12 @@ def main():
     n = Integer(nmin, nmax, transform="normalize", name="n")
     mb = Integer(1, 16, transform="normalize", name="mb")
     nb = Integer(1, 16, transform="normalize", name="nb")
-    npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
     p = Integer(1, nprocmax, transform="normalize", name="p")
     r = Real(float("-Inf"), float("Inf"), name="r")
 
     IS = Space([m, n])
-    PS = Space([mb, nb, npernode, p])
+    PS = Space([mb, nb, lg2npernode, p])
     OS = Space([r])
     
     constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
@@ -171,7 +171,7 @@ def main():
         """ Building MLA with the given list of tasks """
         NI = len(giventask)
         NS = nrun
-        (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
+        (data, model, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=max(NS//2, 1))
         # print("stats: ", stats)
 
         """ Print all input and parameter samples """

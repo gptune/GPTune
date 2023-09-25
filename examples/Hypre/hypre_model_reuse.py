@@ -199,7 +199,7 @@ def main():
     data = Data(problem)
 
     gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-    (models, model_function) = gt.LoadSurrogateModel(Igiven = giventask, method = "max_evals")
+    (models, model_function) = gt.LoadSurrogateModel(Tgiven = giventask, method = "max_evals")
     " A quick validation"
     ret = model_function({
         "nx": giventask[0][0],

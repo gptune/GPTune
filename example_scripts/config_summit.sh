@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 
 if [[ $(dnsdomainname) != "summit.olcf.ornl.gov" ]]; then
 	echo "This script can only be used for Summit"
@@ -37,7 +38,7 @@ mpi=spectrummpi  # openmpi,craympich
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=0 # whether to build all examples
+BuildExample=1 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -142,8 +143,8 @@ if [[ $BuildExample == 1 ]]; then
 
 
 	##### the following server is often down, so switch to the github repository 
-	## wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	## tar -xf parmetis-4.0.3.tar.gz
+	## wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	## tar -xf parmetis_4.0.3.orig.tar.gz
 	## cd parmetis-4.0.3/
 	## cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
 	## mkdir -p install
@@ -386,65 +387,62 @@ make -j16
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 
-	cd $GPTUNEROOT
-	rm -rf oneTBB
-	git clone https://github.com/oneapi-src/oneTBB.git
-	cd oneTBB
-	mkdir build
-	cd build
-	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DTBB_ENABLE_IPO=OFF
-	make -j16
-	make install
-	rm -rf tbb
-	git clone https://github.com/wjakob/tbb.git
-	cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+	# cd $GPTUNEROOT
+	# rm -rf oneTBB
+	# git clone https://github.com/oneapi-src/oneTBB.git
+	# cd oneTBB
+	# mkdir build
+	# cd build
+	# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DTBB_ENABLE_IPO=OFF
+	# make -j16
+	# make install
+	# rm -rf tbb
+	# git clone https://github.com/wjakob/tbb.git
+	# cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
 
-	cd $GPTUNEROOT
-	rm -rf openturns
-	git clone https://github.com/openturns/openturns.git
-	cd openturns
-	git checkout v1.17
-	mkdir build
-	cd build
-	cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON 
-	make install -j16
+	# cd $GPTUNEROOT
+	# rm -rf openturns
+	# git clone https://github.com/openturns/openturns.git
+	# cd openturns
+	# git checkout v1.17
+	# mkdir build
+	# cd build
+	# cmake ../ -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DLAPACK_LIBRARIES=$LAPACK_LIB -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON 
+	# make install -j16
 
-	 module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
-	
-	
-	cd $GPTUNEROOT
-        rm -rf download
-        wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
-        tar -xvf download
-        cd boost_1_69_0/
-        ./bootstrap.sh --prefix=$PWD/build
-        ./b2 install
-        export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
-	
-	
-	
-	 cd $GPTUNEROOT
-	 rm -rf pagmo2
-	 git clone https://github.com/esa/pagmo2.git
-	 cd pagmo2
-	 git checkout 1d41b1b5f70e59db8481ff8e6213f06f3b8b51f2
-	 mkdir build
-	 cd build
-	 cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
-	 make -j16
-	 make install
+	# module swap gcc gcc/7.5.0 # loading gcc/9.1.0 causes at runtime `GLIBCXX_3.4.26' not found from pygmo
+	# cd $GPTUNEROOT
+	# rm -rf download
+	# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+	# tar -xvf download
+	# cd boost_1_69_0/
+	# ./bootstrap.sh --prefix=$PWD/build
+	# ./b2 install
+	# export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
 
-	 cd $GPTUNEROOT
-	 rm -rf pygmo2
-	 git clone https://github.com/esa/pygmo2.git
-	 cd pygmo2
-	 mkdir build
-	 cd build
-	 cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
-	 make -j16
-	 make install
-	 module swap gcc/7.5.0 gcc 
+	
+	#  cd $GPTUNEROOT
+	#  rm -rf pagmo2
+	#  git clone https://github.com/esa/pagmo2.git
+	#  cd pagmo2
+	#  git checkout 1d41b1b5f70e59db8481ff8e6213f06f3b8b51f2
+	#  mkdir build
+	#  cd build
+	#  cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+	#  make -j16
+	#  make install
+
+	#  cd $GPTUNEROOT
+	#  rm -rf pygmo2
+	#  git clone https://github.com/esa/pygmo2.git
+	#  cd pygmo2
+	#  mkdir build
+	#  cd build
+	#  cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
+	#  make -j16
+	#  make install
+	#  module swap gcc/7.5.0 gcc 
 
 	cd $GPTUNEROOT
 	rm -rf mpi4py
@@ -455,34 +453,34 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 fi
 
 
-cd $GPTUNEROOT
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH						  
+# cd $GPTUNEROOT
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# cp ../patches/scikit-optimize/space.py skopt/space/.
+# python setup.py build 
+# python setup.py install --prefix=$PREFIX_PATH						  
 
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf cGP
+# git clone https://github.com/gptune/cGP
+# cd cGP/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-# cp ../patches/autotune/problem.py autotune/.
-env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
+# cd $GPTUNEROOT
+# rm -rf autotune
+# git clone https://github.com/ytopt-team/autotune.git
+# cd autotune/
+# # cp ../patches/autotune/problem.py autotune/.
+# env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
-cd $GPTUNEROOT
-rm -rf hybridMinimization
-git clone https://github.com/gptune/hybridMinimization.git
-cd hybridMinimization/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf hybridMinimization
+# git clone https://github.com/gptune/hybridMinimization.git
+# cd hybridMinimization/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
 cd $GPTUNEROOT

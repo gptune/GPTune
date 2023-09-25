@@ -38,7 +38,7 @@ def objectives(point):
         mb = point['mb']*bunit
         nb = point['nb']*bunit
         p = point['p']
-        npernode = 2**point['npernode']
+        npernode = 2**point['lg2npernode']
         nproc = nodes*npernode
         nthreads = int(cores / npernode)  
 
@@ -60,10 +60,10 @@ def objectives(point):
 
 def cst1(mb,p,m,bunit):
     return mb*bunit * p <= m
-def cst2(nb,npernode,n,p,nodes,bunit):
-    return nb * bunit * nodes * 2**npernode <= n * p
-def cst3(npernode,p,nodes):
-    return nodes * 2**npernode >= p
+def cst2(nb,lg2npernode,n,p,nodes,bunit):
+    return nb * bunit * nodes * 2**lg2npernode <= n * p
+def cst3(lg2npernode,p,nodes):
+    return nodes * 2**lg2npernode >= p
 
 def main():
 
@@ -225,9 +225,9 @@ def main():
 
     mb = Integer(1, 16, transform="normalize", name="mb")
     nb = Integer(1, 16, transform="normalize", name="nb")
-    npernode = Integer(int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")
+    lg2npernode = Integer(int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
     p = Integer(1, nprocmax, transform="normalize", name="p")
-    PS = Space([mb, nb, npernode, p])
+    PS = Space([mb, nb, lg2npernode, p])
 
     r = Real(float("-Inf"), float("Inf"), name="r")
     OS = Space([r])
@@ -261,8 +261,8 @@ def main():
     """ Building MLA with the given list of tasks """
     NI = len(giventask)
     NS = nrun
-    (data, model, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=max(NS//2, 1))
-    #(data, model, stats) = gt.MLA_LoadModel(NS=10, Igiven=giventask)
+    (data, model, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=max(NS//2, 1))
+    #(data, model, stats) = gt.MLA_LoadModel(NS=10, Tgiven=giventask)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -284,7 +284,6 @@ def parse_args():
     parser.add_argument('-nodes', type=int, default=1,help='Number of machine nodes')
     parser.add_argument('-cores', type=int, default=1,help='Number of cores per machine node')
     parser.add_argument('-nprocmin_pernode', type=int, default=1,help='Minimum number of MPIs per machine node for the application code')
-    parser.add_argument('-machine', type=str,help='Name of the computer (not hostname)')
     # Algorithm related arguments    
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-tla', type=int, default=0, help='Whether perform TLA after MLA when optimization is GPTune')    

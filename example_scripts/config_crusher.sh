@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-
+cd ..
 
 # PY_VERSION=3.7
 # PY_TIME=2019.07
@@ -139,15 +139,15 @@ if [[ $BuildExample == 1 ]]; then
 	cd superlu_dist
 
 	#### the following server is often down, so switch to the github repository 
-	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	# tar -xf parmetis-4.0.3.tar.gz
+	# wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	# tar -xf parmetis_4.0.3.orig.tar.gz
 	# cd parmetis-4.0.3/
 	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
 	# mkdir -p install
 	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
 	# make install > make_parmetis_install.log 2>&1
 	# cd ../
-	# cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
 	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
@@ -391,35 +391,35 @@ python setup.py install --prefix=$PREFIX_PATH
 
 
 
-cd $GPTUNEROOT
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+# cd $GPTUNEROOT
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# cp ../patches/scikit-optimize/space.py skopt/space/.
+# python setup.py build 
+# python setup.py install --prefix=$PREFIX_PATH
+# # env CC=mpicc pip install --user -e .								  
 
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf cGP
+# git clone https://github.com/gptune/cGP
+# cd cGP/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-# cp ../patches/autotune/problem.py autotune/.
-env pip install --prefix=$PREFIX_PATH -e .
+# cd $GPTUNEROOT
+# rm -rf autotune
+# git clone https://github.com/ytopt-team/autotune.git
+# cd autotune/
+# # cp ../patches/autotune/problem.py autotune/.
+# env pip install --prefix=$PREFIX_PATH -e .
 
-cd $GPTUNEROOT
-rm -rf hybridMinimization
-git clone https://github.com/gptune/hybridMinimization.git
-cd hybridMinimization/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf hybridMinimization
+# git clone https://github.com/gptune/hybridMinimization.git
+# cd hybridMinimization/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
 cd $GPTUNEROOT

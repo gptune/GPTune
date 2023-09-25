@@ -78,14 +78,14 @@ matrix=${input_para[0]}
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
 COLPERM=${tuning_para[0]}
 LOOKAHEAD=${tuning_para[1]}
-npernode=${tuning_para[2]}
+lg2npernode=${tuning_para[2]}
 nprows=${tuning_para[3]}
 NSUP=${tuning_para[4]}
 NREL=${tuning_para[5]}
 
 
 # call the application
-npernode=$((2**$npernode))
+npernode=$((2**$lg2npernode))
 export OMP_NUM_THREADS=$(($cores / $npernode))
 export NREL=$NREL
 export NSUP=$NSUP
@@ -96,7 +96,11 @@ RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
 
-if [[ $ModuleEnv == *"openmpi"* ]]; then
+if [[ $ModuleEnv == *"ex3"* ]]; then
+############ ex3 mpirun doesn't work correctly
+    echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
+    srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
+elif [[ $ModuleEnv == *"openmpi"* ]]; then
 ############ openmpi
     echo "mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix"
     mpirun --allow-run-as-root -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out

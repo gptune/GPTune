@@ -1,0 +1,48 @@
+# Hypre Example.
+
+There are prepared experiment scripts for crowd-tuning of Hypre.
+
+The experiemnts assume NERSC's Cori machine using 1 Haswell node. If the user
+has no access to NERSC's Cori machine, or if the user needs to use a different
+number or a different type of compute nodes, the user should modify the related
+scripts. The user might need to update Hypre files for a different
+software configuration setting.
+
+Note that, our crowd-tuning API requires users to provide an API key. Users can
+obtain an API key here (sign-up and log-in required)
+https://gptune.lbl.gov/account/access-tokens
+
+# Experiment 1. Run a Sobol sensitivity analysis using performance data in our
+repository.
+
+Step 1. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 2. Export crowd-tuning API and GPTune package links
+
+$ source env.sh
+
+Step 3. Run the prepared script.
+
+$ python ./sensitivity_analysis.py
+
+# Experiment 2. Comparing tuning on 12 parameters (the original tuning space) and
+tuning on 3 parameters (reduced based on Sobol analysis).
+
+Step 1. Allocate a compute node to run the experiment.
+
+Step 2. Export your crowd-tuning API key to be used by the script
+
+$ source CROWDTUNING_API_KEY="your_api_key"
+
+Step 3. Run the prepared script.
+
+$ ./run_examples.sh
+
+Step 4. Generate plots to compare different tuning options.
+
+$ python analyze_tuning_result.py
+
+For more details or questions, please contact 
+Younghyun Cho <younghyun@berkeley.edu>

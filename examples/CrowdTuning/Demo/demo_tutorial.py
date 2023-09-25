@@ -80,8 +80,8 @@ def main():
 
     tuning_metadata = {
         "tuning_problem_name": "Demo-Tutorial",
-        "historydb_api_key": os.getenv("CROWDTUNING_API_KEY"),
-        "use_crowd_repo": "yes",
+        "crowdtuning_api_key": os.getenv("CROWDTUNING_API_KEY"),
+        "sync_crowd_repo": "yes",
         "load_func_eval": "no",
         "machine_configuration": {
             "machine_name": "mymachine",
@@ -112,7 +112,7 @@ def main():
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
 
     giventask = [[round(tvalue,2)]]
-    (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=nrun, NI=len(giventask), Tgiven=giventask, NS1=npilot)
 
     """ Print all input and parameter samples """
     print("stats: ", stats)

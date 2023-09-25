@@ -95,6 +95,7 @@ class Computer(object):
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None, is_pilot = False): # P and I are in the normalized space
 
         O = []
+
         for i in range(len(I)):
             T2 = I[i]
             P2 = P[i]
@@ -119,7 +120,10 @@ class Computer(object):
                         modeling = "Pilot"
                     else:
                         if options["TLA_method"] == None:
-                            modeling = "MLA_LCM"
+                            if len(I) == 1:
+                                modeling = "SLA_GP"
+                            elif len(I) > 1:
+                                modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
                         elif options["TLA_method"] == "Sum":
@@ -128,8 +132,13 @@ class Computer(object):
                             modeling = "TLA_Stacking"
                         elif options["TLA_method"] == "LCM_BF":
                             modeling = "TLA_LCM_BF"
+                        elif options["TLA_method"] == "LCM":
+                            modeling = "TLA_LCM"
                         else:
-                            modeling = "MLA_LCM"
+                            if len(I) == 1:
+                                modeling = "SLA_GP"
+                            elif len(I) > 1:
+                                modeling = "MLA_LCM"
 
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = I[i], \
@@ -178,8 +187,12 @@ class Computer(object):
                     O.append(tmp.astype(np.double))   #YL: NaN indicates that the evaluation data is needed by GPTune
 
                     if history_db is not None:
+
                         if options["TLA_method"] == None:
-                            modeling = "MLA_LCM"
+                            if len(I) == 1:
+                                modeling = "SLA_GP"
+                            elif len(I) > 1:
+                                modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
                         elif options["TLA_method"] == "Sum":
@@ -188,8 +201,13 @@ class Computer(object):
                             modeling = "TLA_Stacking"
                         elif options["TLA_method"] == "LCM_BF":
                             modeling = "TLA_LCM_BF"
+                        elif options["TLA_method"] == "LCM":
+                            modeling = "TLA_LCM"
                         else:
-                            modeling = "MLA_LCM"
+                            if len(I) == 1:
+                                modeling = "SLA_GP"
+                            elif len(I) > 1:
+                                modeling = "MLA_LCM"
 
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = I[i], \
@@ -295,7 +313,10 @@ class Computer(object):
                             modeling = "Pilot"
                         else:
                             if options["TLA_method"] == None:
-                                modeling = "MLA_LCM"
+                                if problem.DI == 1:
+                                    modeling = "SLA_GP"
+                                elif problem.DI > 1:
+                                    modeling = "MLA_LCM"
                             elif options["TLA_method"] == "Regression":
                                 modeling = "TLA_RegressionSum"
                             elif options["TLA_method"] == "Sum":
@@ -304,8 +325,13 @@ class Computer(object):
                                 modeling = "TLA_Stacking"
                             elif options["TLA_method"] == "LCM_BF":
                                 modeling = "TLA_LCM_BF"
+                            elif options["TLA_method"] == "LCM":
+                                modeling = "TLA_LCM"
                             else:
-                                modeling = "MLA_LCM"
+                                if problem.DI == 1:
+                                    modeling = "SLA_GP"
+                                elif problem.DI > 1:
+                                    modeling = "MLA_LCM"
 
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = T2, \
@@ -365,7 +391,10 @@ class Computer(object):
                         modeling = "Pilot"
                     else:
                         if options["TLA_method"] == None:
-                            modeling = "MLA_LCM"
+                            if problem.DI == 1:
+                                modeling = "SLA_GP"
+                            elif problem.DI > 1:
+                                modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
                         elif options["TLA_method"] == "Sum":
@@ -374,8 +403,13 @@ class Computer(object):
                             modeling = "TLA_Stacking"
                         elif options["TLA_method"] == "LCM_BF":
                             modeling = "TLA_LCM_BF"
+                        elif options["TLA_method"] == "LCM":
+                            modeling = "TLA_LCM"
                         else:
-                            modeling = "MLA_LCM"
+                            if problem.DI == 1:
+                                modeling = "SLA_GP"
+                            elif problem.DI > 1:
+                                modeling = "MLA_LCM"
 
                     history_db.store_func_eval(problem = problem,\
                             task_parameter = T2, \
@@ -454,7 +488,10 @@ class Computer(object):
                     if history_db is not None:
 
                         if options["TLA_method"] == None:
-                            modeling = "MLA_LCM"
+                            if problem.DI == 1:
+                                modeling = "SLA_GP"
+                            elif problem.DI > 1:
+                                modeling = "MLA_LCM"
                         elif options["TLA_method"] == "Regression":
                             modeling = "TLA_RegressionSum"
                         elif options["TLA_method"] == "Sum":
@@ -463,8 +500,13 @@ class Computer(object):
                             modeling = "TLA_Stacking"
                         elif options["TLA_method"] == "LCM_BF":
                             modeling = "TLA_LCM_BF"
+                        elif options["TLA_method"] == "LCM":
+                            modeling = "TLA_LCM"
                         else:
-                            modeling = "MLA_LCM"
+                            if problem.DI == 1:
+                                modeling = "SLA_GP"
+                            elif problem.DI > 1:
+                                modeling = "MLA_LCM"
 
                         history_db.store_func_eval(problem = problem,\
                                 task_parameter = T2, \

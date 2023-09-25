@@ -82,7 +82,7 @@ def main():
 
 	# Tuning parameters
 	# sp_reordering_method   = Categoricalnorm (['metis','parmetis','scotch'], transform="onehot", name="sp_reordering_method")
-	npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="npernode")	
+	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")	
 	sp_blr_min_sep_size     = Integer     (1, 10, transform="normalize", name="sp_blr_min_sep_size")
 	sp_hodlr_min_sep_size     = Integer     (10, 40, transform="normalize", name="sp_hodlr_min_sep_size")
 	hodlr_leaf_size     = Integer     (5, 9, transform="normalize", name="hodlr_leaf_size")
@@ -93,7 +93,7 @@ def main():
 		result   = Real        (float("-Inf") , float("Inf"),name="memory")
 
 	IS = Space([mesh,omega])
-	PS = Space([npernode, sp_blr_min_sep_size,sp_hodlr_min_sep_size,blr_leaf_size,hodlr_leaf_size])
+	PS = Space([lg2npernode, sp_blr_min_sep_size,sp_hodlr_min_sep_size,blr_leaf_size,hodlr_leaf_size])
 	OS = Space([result])
 	constraints = {}
 	models = {}
@@ -135,7 +135,7 @@ def main():
 		
 		NI = len(giventask)
 		NS = nrun
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
 		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	

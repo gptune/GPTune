@@ -41,17 +41,21 @@ class Options(dict):
         objective_nprocmax = None # Maximum number of cores for each application call, default to computer.cores*computer.nodes-1
         objective_nospawn = False # Whether the application code is launched via MPI spawn. If True, self['objective_nprocmax'] cores are used per function evaluation, otherwise self['objective_nprocmax']+1 cores are used. 
 
+        BO_objective_evaluation_parallelism = False #True
+
         """ Options for the sampling phase """
         sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
         sample_random_seed = None # Specify a certain random seed for the pilot sampling phase.
-
+        multi_seed = False # Whether to use a different seed per task for generating the initial samples
+        multi_seed_seeds = None # The list of random seeds for each task when multi_seed=True
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
         model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52'
         model_output_constraint = None # Check output range constraints and disregard out-of-range outputs. Supported options: 'LargeNum': Put a large number, 'Ignore': Ignore those configurations, None: do not check out-of-range outputs.
+        model_bigval_LargeNum = 1000000000.0  # Specify the big value to be used in model_output_constraint='LargeNum' (see above)
         model_input_separation = False # Set true if you want to ensure to use samples from the same modeling scheme
         model_peeking_level = 1 # Peeking level in the model peeking-based TLA (peeking level > 1 for the peeking-based TLA)
         model_threads = None  # Number of threads used for building one GP model in Model_LCM
@@ -60,6 +64,7 @@ class Options(dict):
         model_restarts = 1 # Number of random starts each building one initial GP model
         model_restart_processes = None  # Number of MPIs each handling one random start
         model_restart_threads = None   # Number of threads each handling one random start
+        model_optimizer = "lbfgs" # Choosing model optimzer -- 'scg', 'fmin_tnc', 'simplex', 'lbfgsb', 'lbfgs', 'sgd' -- this is called by the paramz module (see https://github.com/sods/paramz/blob/master/paramz/model.py)
         model_max_iters = 15000   # Number of maximum iterations for the optimizers
         model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
@@ -90,9 +95,11 @@ class Options(dict):
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
         search_random_seed = None # Specify a certain random seed for the search phase
+        search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO  
+        search_ucb_beta=0.01 #hyperparameter beta in UCB and UCB-HVI
 
         """ Options for transfer learning """
-        TLA_method = None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
+        TLA_method = 'LCM' #None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'
         TLA_ensemble_exploration_rate = 0
         regression_logging = False
         regression_log_name = 'models_weights.log'
@@ -185,7 +192,7 @@ class Options(dict):
 
             # set the default search algorithm in 'SearchSciPy'
             if(self['search_class']=='SearchSciPy' and not (self["search_algo"] == 'trust-constr' or self["search_algo"] == 'l-bfgs-b' or self["search_algo"] == 'dual_annealing')):
-                self["search_algo"]='trust-constr'
+                self["search_algo"]='dual_annealing'
 
             ## set the default search algorithm in 'SearchPyMoo'
             #if(self['search_class']=='SearchPyMoo' and not (self["search_algo"] == 'nsga2' or self["search_algo"] == 'moead')):
@@ -193,10 +200,8 @@ class Options(dict):
 
         else:
             if((self['search_class']=='SearchPyGMO' or self['search_class']=='SearchCMO')):
-                try:
-                    import pygmo as pg 
-                except:
-                    print("pygmo cannot be used. Use pymoo instead. ")
+                if importlib.util.find_spec("pygmo") is None:
+                    print ("PyGMO module cannot be loaded properly. Use PyMoo (SearchPyMoo) instead.")
                     self['search_class']='SearchPyMoo'
                     self['search_gen']=5      # needs to be smaller than default, otherwise pymoo is very slow
                     self['search_pop_size']=100                    

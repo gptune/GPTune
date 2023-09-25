@@ -83,7 +83,7 @@ def main():
     #tuning_metadata = {
     #    "tuning_problem_name": "DGELS",
     #    "tuning_problem_category": "PLASMA",
-    #    "use_crowd_repo": "no",
+    #    "sync_crowd_repo": "no",
     #    "machine_configuration": {
     #        "machine_name": "Cori",
     #        "haswell": { "nodes": 1, "cores": 32 }
@@ -94,8 +94,8 @@ def main():
     tuning_metadata = {
         "tuning_problem_name": "PLASMA-DGELS-TUNING-1",
         "tuning_problem_category": "PLASMA",
-        "historydb_api_key":os.getenv("HISTORYDB_API_KEY",""),
-        "use_crowd_repo": "yes",
+        "crowdtuning_api_key":os.getenv("CROWDTUNING_API_KEY",""),
+        "sync_crowd_repo": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
             "haswell": { "nodes": 1, "cores": 32 }
@@ -159,7 +159,7 @@ def main():
 
     data = Data(problem)
     gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-    (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
+    (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """

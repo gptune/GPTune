@@ -29,14 +29,18 @@ import concurrent
 from concurrent import futures
 class Model(abc.ABC):
 
-    def __init__(self, problem : Problem, computer : Computer, **kwargs):
+    def __init__(self, problem : Problem, computer : Computer, mf=None, **kwargs):
 
         self.problem = problem
         self.computer = computer
+        self.mf=mf
         self.M = None
         self.M_last = None # used for TLA with model regression
         self.M_stacked = [] # used for TLA with model stacking
         self.num_samples_stacked = [] # number of samples used for models in model stacking
+
+    def mfnorm(self,xnorm):
+        return self.mf(self.problem.PS.inverse_transform(np.array(xnorm, ndmin=2))[0])
 
     @abc.abstractmethod
     def train(self, data : Data, **kwargs):
@@ -54,7 +58,7 @@ class Model(abc.ABC):
         raise Exception("Abstract method")
 
     @abc.abstractmethod
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         raise Exception("Abstract method")
 
@@ -80,7 +84,11 @@ class Model_GPy_LCM(Model):
 
     def train(self, data : Data, **kwargs):
         if kwargs['model_random_seed'] != None:
-            np.random.seed(kwargs['model_random_seed'])
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
 
         import copy
         self.M_last = copy.deepcopy(self.M)
@@ -102,6 +110,9 @@ class Model_GPy_LCM(Model):
         GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
 
         if (multitask):
+            if(self.mf is not None):
+                raise Exception("Model_GPy_LCM cannot yet handle prior mean functions in LCM")
+                
             kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
             K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
@@ -123,16 +134,21 @@ class Model_GPy_LCM(Model):
                 K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             else:
                 K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+            
+            gpymf = GPy.core.Mapping(len(data.P[0][0]),1) 
+            gpymf.f = self.mfnorm
+            gpymf.update_gradients = lambda a,b: None
+
             if (kwargs['model_sparse']):
-                self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
+                self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing, mean_function=gpymf)
             else:
-                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
+                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K, mean_function=gpymf)
             self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
 
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
 
-        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+        resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = kwargs['model_optimizer'], start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
 
 #        self.M.param_array[:] = allreduce_best(self.M.param_array[:], resopt)[:]
         self.M.parameters_changed()
@@ -215,6 +231,7 @@ class Model_GPy_LCM(Model):
                 print("lengthscale: ", hyperparameters["lengthscale"])
                 print("variance: ", hyperparameters["variance"])
                 print("noise_variance: ", hyperparameters["noise_variance"])
+            print ("modeler: ", kwargs['model_class'])
             print ("M: ", self.M)
 
         return (hyperparameters, modeling_options, model_stats)
@@ -242,7 +259,7 @@ class Model_GPy_LCM(Model):
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -263,10 +280,12 @@ class Model_GPy_LCM(Model):
                 var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
                 num_samples_prior = num_samples_current
         else:
-            x = np.empty((1, points.shape[0] + 1))
-            x[0,:-1] = points
-            x[0,-1] = tid
-            (mu, var) = self.M.predict_noiseless(x)
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x,full_cov=full_cov)
 
         return (mu, var)
 
@@ -304,7 +323,11 @@ class Model_GPy_LCM(Model):
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
 
         if kwargs['model_random_seed'] != None:
-            np.random.seed(kwargs['model_random_seed'])
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
 
         if modeling_options["multitask"] == "yes":
             multitask = True
@@ -381,9 +404,11 @@ class Model_GPy_LCM(Model):
                 self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
             self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
 
-            self.M.kern['GPy_GP.lengthscale'][0] = hyperparameters["lengthscale"][0]
-            self.M.kern['GPy_GP.lengthscale'][1] = hyperparameters["lengthscale"][1]
-            self.M.kern['GPy_GP.lengthscale'][2] = hyperparameters["lengthscale"][2]
+            print ("len: ", len(self.M.kern['GPy_GP.lengthscale']))
+
+            for i in range(len(self.M.kern['GPy_GP.lengthscale'])):
+                self.M.kern['GPy_GP.lengthscale'][i] = hyperparameters["lengthscale"][i]
+
             self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
             self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
 
@@ -418,9 +443,21 @@ class Model_LCM(Model):
 
             if "mpi_comm" in kwargs_tmp:
                 del kwargs_tmp["mpi_comm"]   # mpi_comm is not picklable
-            _ = mpi_comm.bcast((self, data, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
+            
+            
+            import copy
+            data_tmp = copy.deepcopy(data)
+            # YL: substract the prior mean before calling the C modeling training function 
+            mf_saved=self.mf
+            if(self.mf is not None):
+                for i in range(len(data.P)):
+                    for p in range(data.P[i].shape[0]):
+                        data_tmp.O[i][p,0]=data_tmp.O[i][p,0]-self.mfnorm(data.P[i][p,:])            
+            self.mf = None
+            _ = mpi_comm.bcast((self, data_tmp, restart_iters, kwargs_tmp), root=mpi4py.MPI.ROOT)
             tmpdata = mpi_comm.gather(None, root=mpi4py.MPI.ROOT)
             mpi_comm.Disconnect()
+            self.mf = mf_saved
             res=[]
             for p in range(int(kwargs['model_restart_processes'])):
                 res = res + tmpdata[p]
@@ -439,7 +476,15 @@ class Model_LCM(Model):
                     kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
                     # if (restart_iter == 0 and self.M is not None):
                     #     kern.set_param_array(self.M.kern.get_param_array())
-                    return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
+                    
+                    import copy
+                    data_O = copy.deepcopy(data.O)
+                    # YL: substract the prior mean before calling the C modeling training function 
+                    if(self.mf is not None):
+                        for i in range(len(data.P)):
+                            for p in range(data.P[i].shape[0]):
+                                data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+                    return kern.train_kernel(X = data.P, Y = data_O, computer = self.computer, kwargs = kwargs)
                 res = list(executor.map(fun, restart_iters, timeout=None, chunksize=1))
 
         else:
@@ -448,9 +493,20 @@ class Model_LCM(Model):
                 if kwargs['model_random_seed'] == None:
                     np.random.seed()
                 else:
-                    np.random.seed(kwargs['model_random_seed'])
+                    seed = kwargs['model_random_seed']
+                    if data.P is not None:
+                        for P_ in data.P:
+                            seed += len(P_)
+                    np.random.seed(seed)
                 kern = LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, Q = Q)
-                return kern.train_kernel(X = data.P, Y = data.O, computer = self.computer, kwargs = kwargs)
+                import copy
+                data_O = copy.deepcopy(data.O)
+                # YL: substract the prior mean before calling the C modeling training function 
+                if(self.mf is not None):
+                    for i in range(len(data.P)):
+                        for p in range(data.P[i].shape[0]):
+                            data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+                return kern.train_kernel(X = data.P, Y = data_O, computer = self.computer, kwargs = kwargs)
             res = list(map(fun, restart_iters))
 
         if (kwargs['distributed_memory_parallelism'] and i_am_manager == False):
@@ -476,7 +532,14 @@ class Model_LCM(Model):
 
         # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
-        self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
+        import copy
+        data_O = copy.deepcopy(data.O)
+        # YL: GPCoregionalizedRegression initialization in GPy (unlike GPRegression) doesn't accept mean_function, so we need to subtract mean from data.O for calling the prediction function later. Also, we need to add back the mean in the predict function below 
+        if(self.mf is not None):
+            for i in range(len(data.P)):
+                for p in range(data.P[i].shape[0]):
+                    data_O[i][p,0]=data_O[i][p,0]-self.mfnorm(data.P[i][p,:])
+        self.M = GPy.models.GPCoregionalizedRegression(data.P, data_O, kern, likelihoods_list = likelihoods_list)
 
         #print ("kernel: " + str(kern))
         #print ("bestxopt:" + str(bestxopt))
@@ -511,7 +574,7 @@ class Model_LCM(Model):
         self.train(newdata, **kwargs)
 
     # make prediction on a single sample point of a specific task tid
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         if len(self.M_stacked) > 0: # stacked model
             x = np.empty((1, points.shape[0] + 1))
@@ -524,6 +587,8 @@ class Model_LCM(Model):
 
             for i in range(1, len(self.M_stacked), 1):
                 (mu_, var_) = self.M_stacked[i].predict_noiseless(x)
+                if(self.mf is not None):
+                    mu_[0][0] = mu_[0][0] + self.mfnorm(x)
                 var_[0][0] = max(1e-18, var_[0][0])
                 num_samples_current = self.num_samples_stacked[i]
                 alpha = 1.0 # relative importance of the prior and current ones
@@ -536,6 +601,8 @@ class Model_LCM(Model):
             x[0,:-1] = points
             x[0,-1] = tid
             (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
+            if(self.mf is not None):
+                mu[0][0] = mu[0][0] + self.mfnorm(x)
 
         return (mu, var)
 
@@ -613,20 +680,20 @@ class Model_DGP(Model):
             self.M.layers[i].Gaussian_noise.variance = output_var*0.01
             self.M.layers[i].Gaussian_noise.variance.fix()
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = kwargs['model_optimizer'], start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
         # Unfix noise variance now that we have initialized the model
         for i in range(len(self.M.layers)):
             self.M.layers[i].Gaussian_noise.variance.unfix()
 
-        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = 'lbfgs', start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
+        self.M.optimize_restarts(num_restarts = num_restarts, robust = True, verbose = self.verbose, parallel = (num_processes is not None), num_processes = num_processes, messages = "True", optimizer = kwargs['model_optimizer'], start = None, max_iters = max_iters, ipython_notebook = False, clear_after_finish = True)
 
     def update(self, newdata : Data, do_train: bool = False, **kwargs):
 
         #XXX TODO
         self.train(newdata, **kwargs)
 
-    def predict(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
 
         (mu, var) = self.M.predict(np.concatenate((self.I[tid], x)).reshape((1, self.DT + self.DI)))
 

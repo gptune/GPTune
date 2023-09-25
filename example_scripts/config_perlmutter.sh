@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd ..
 
 if [[ $NERSC_HOST != "perlmutter" ]]; then
 	echo "This script can only be used for perlmutter"
@@ -21,18 +22,18 @@ PREFIX_PATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/
 echo $(which python) 
 
 module unload cmake
-module load cmake/3.22.0
+module load cmake
 
 
 ##################################################
 ##################################################
 machine=perlmutter
-proc=gpu   # milan,gpu
-mpi=openmpi    # craympich, openmpi
+proc=milan   # milan,gpu
+mpi=craympich    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -46,9 +47,9 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	module load PrgEnv-gnu
 	module load cudatoolkit
 	GPTUNEROOT=$PWD
-	BLAS_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
-	LAPACK_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
-	SCALAPACK_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
+	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -63,9 +64,9 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
 	GPTUNEROOT=$PWD
-	BLAS_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
-	LAPACK_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
-	SCALAPACK_LIB="/opt/cray/pe/libsci/21.08.1.2/GNU/9.1/x86_64/lib/libsci_gnu_82_mpi_mp.so"
+	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -96,7 +97,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 	SLU_CUDA_FLAG="-I${OMPI_DIR}/include"
 	STRUMPACK_USE_CUDA=ON
 	STRUMPACK_CUDA_FLAGS="-I${OMPI_DIR}/include"
-	export UCX_NET_DEVICES=mlx5_0:1
+	# export UCX_NET_DEVICES=mlx5_0:1
 # fi 
 
 elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
@@ -119,7 +120,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 	MPIF90=mpif90
 	OPENMPFLAG=fopenmp
 	SLU_ENABLE_CUDA=FALSE
-	export UCX_NET_DEVICES=mlx5_0:1
+	# export UCX_NET_DEVICES=mlx5_0:1
 # fi 
 
 else
@@ -135,14 +136,14 @@ export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
 export SCOTCH_DIR=$GPTUNEROOT/examples/STRUMPACK/scotch_6.1.0/install
-export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-github
+export ParMETIS_DIR=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install
 export METIS_DIR=$ParMETIS_DIR
 export ButterflyPACK_DIR=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/cmake/ButterflyPACK
 export STRUMPACK_DIR=$GPTUNEROOT/examples/STRUMPACK/STRUMPACK/install
 export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
-export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
-export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so;$ParMETIS_DIR/lib/libGKlib.so"
+export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
+export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 export TBB_ROOT=$GPTUNEROOT/oneTBB/build
 export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
@@ -236,52 +237,54 @@ if [[ $BuildExample == 1 ]]; then
 	git clone https://github.com/xiaoyeli/superlu_dist.git
 	cd superlu_dist
 
-	##### the following server is often down, so switch to the github repository 
-	## wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	## tar -xf parmetis-4.0.3.tar.gz
-	## cd parmetis-4.0.3/
-	## cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	## mkdir -p install
-	## make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	## make install > make_parmetis_install.log 2>&1
-	## cd ../
-	## cp $PWD/parmetis-4.0.3/build/Linux-ppc64le/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	## cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+	#### the following server is often down, so switch to the github repository 
+	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
+	# tar -xf parmetis-4.0.3.tar.gz
+	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	tar -xf parmetis_4.0.3.orig.tar.gz
+	cd parmetis-4.0.3/
+	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	mkdir -p install
+	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	make install > make_parmetis_install.log 2>&1
+	cd ../
+	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
-	mkdir -p $ParMETIS_DIR
-	rm -f GKlib
-	git clone https://github.com/KarypisLab/GKlib.git
-	cd GKlib
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
-	sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	make config prefix=$ParMETIS_DIR
-	make -j8
-	make install
+	# mkdir -p $ParMETIS_DIR
+	# rm -f GKlib
+	# git clone https://github.com/KarypisLab/GKlib.git
+	# cd GKlib
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
+	# make config prefix=$ParMETIS_DIR
+	# make -j8
+	# make install
 
-	cd ../
-	rm -rf METIS
-	git clone https://github.com/KarypisLab/METIS.git
-	cd METIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	make -j8
-	make install	
-	cd ../
-	rm -rf ParMETIS
-	git clone https://github.com/KarypisLab/ParMETIS.git
-	cd ParMETIS
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	make -j8
-	make install
-	make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	make -j8
-	make install
-	cd ../
+	# cd ../
+	# rm -rf METIS
+	# git clone https://github.com/KarypisLab/METIS.git
+	# cd METIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
+	# make -j8
+	# make install	
+	# cd ../
+	# rm -rf ParMETIS
+	# git clone https://github.com/KarypisLab/ParMETIS.git
+	# cd ParMETIS
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
+	# make -j8
+	# make install
+	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
+	# make -j8
+	# make install
+	# cd ../
 
 	mkdir -p build
 	cd build
@@ -325,50 +328,51 @@ if [[ $BuildExample == 1 ]]; then
 	# make test
 
 
-	# cd $GPTUNEROOT/examples/ButterflyPACK
-	# rm -rf ButterflyPACK
-	# git clone https://github.com/liuyangzhuan/ButterflyPACK.git
-	# cd ButterflyPACK
-	# git clone https://github.com/opencollab/arpack-ng.git
-	# cd arpack-ng
-	# git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
-	# mkdir -p build
-	# cd build
-	# cmake .. \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
-	# 	-DBLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DMPI=ON \
-	# 	-DEXAMPLES=ON \
-	# 	-DCOVERALLS=OFF 
-	# make
-	# cd ../../
-	# mkdir build
-	# cd build
-	# cmake .. \
-	# 	-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC -fallow-argument-mismatch"\
-	# 	-DCMAKE_CXX_FLAGS="" \
-	# 	-DBUILD_SHARED_LIBS=ON \
-	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
-	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
-	# 	-DCMAKE_C_COMPILER=$MPICC \
-	# 	-DCMAKE_INSTALL_PREFIX=. \
-	# 	-DCMAKE_INSTALL_LIBDIR=./lib \
-	# 	-DCMAKE_BUILD_TYPE=Release \
-	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	# 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
-	# 	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	# make -j32
-	# make install -j32
+	cd $GPTUNEROOT/examples/ButterflyPACK
+	rm -rf ButterflyPACK
+	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+	cd ButterflyPACK
+	git clone https://github.com/opencollab/arpack-ng.git
+	cd arpack-ng
+	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+	cp ../patches/PARPACK/pzneupd.f ./PARPACK/SRC/MPI/. 
+	mkdir -p build
+	cd build
+	cmake .. \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DCMAKE_Fortran_FLAGS="-$OPENMPFLAG -fallow-argument-mismatch" \
+		-DBLAS_LIBRARIES="${BLAS_LIB}" \
+		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DMPI=ON \
+		-DEXAMPLES=ON \
+		-DCOVERALLS=OFF 
+	make
+	cd ../../
+	mkdir build
+	cd build
+	cmake .. \
+		-DCMAKE_Fortran_FLAGS="-DMPIMODULE $BLAS_INC -fallow-argument-mismatch" \
+		-DCMAKE_CXX_FLAGS="" \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_Fortran_COMPILER=$MPIF90 \
+		-DCMAKE_CXX_COMPILER=$MPICXX \
+		-DCMAKE_C_COMPILER=$MPICC \
+		-DCMAKE_INSTALL_PREFIX=. \
+		-DCMAKE_INSTALL_LIBDIR=./lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+	make -j32
+	make install -j32
 
 
 
@@ -521,7 +525,7 @@ git clone https://github.com/esa/pygmo2.git
 cd pygmo2
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
 make -j16
 make install
 
@@ -535,35 +539,35 @@ python setup.py install --prefix=$PREFIX_PATH
 
 
 
-cd $GPTUNEROOT
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-python setup.py build 
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+# cd $GPTUNEROOT
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# cp ../patches/scikit-optimize/space.py skopt/space/.
+# python setup.py build 
+# python setup.py install --prefix=$PREFIX_PATH
+# # env CC=mpicc pip install --user -e .								  
 
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf cGP
+# git clone https://github.com/gptune/cGP
+# cd cGP/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-# cp ../patches/autotune/problem.py autotune/.
-env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
+# cd $GPTUNEROOT
+# rm -rf autotune
+# git clone https://github.com/ytopt-team/autotune.git
+# cd autotune/
+# # cp ../patches/autotune/problem.py autotune/.
+# env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .
 
-cd $GPTUNEROOT
-rm -rf hybridMinimization
-git clone https://github.com/gptune/hybridMinimization.git
-cd hybridMinimization/
-python setup.py install --prefix=$PREFIX_PATH
+# cd $GPTUNEROOT
+# rm -rf hybridMinimization
+# git clone https://github.com/gptune/hybridMinimization.git
+# cd hybridMinimization/
+# python setup.py install --prefix=$PREFIX_PATH
 
 
 cd $GPTUNEROOT

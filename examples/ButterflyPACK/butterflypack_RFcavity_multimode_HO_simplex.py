@@ -115,8 +115,12 @@ def read_validdata(model):
 			eigval =float(Lines[nn].split()[1])
 			# print(freq,eigval)
 
-			P.append([freq/1e5])
-			O.append([eigval])
+			idxs=[index for (index, item) in enumerate(P) if item == [freq/1e5]]
+			if(len(idxs)>0): # if already evaluated, take the minimum 
+				O[idxs[0]]=[min(O[idxs[0]][0],freq/1e5)]
+			else:
+				P.append([freq/1e5])
+				O.append([eigval])
 
 		file.close()
 
@@ -130,51 +134,55 @@ def read_validdata(model):
 ################################################################################
 def objectives(point, nodes, cores, nthreads, model, nth):                  # should always use this name for user-defined objective function
 
-	
-	postprocess=0
-	tdplot=1
-	noport=0
-	noloss=1
-	baca_batch=64
+	tdplot=0
+	noloss=0
+	baca_batch=16
 	knn=0
 	verbosity=1
-	norm_thresh=500
 	freq = point[0]*1e5
 	# freq = 22281*1e5
 	freq_int =int(round(freq)) # rounding for the ease of looking up data. Note that the precision of the data is much higher than those used in the GPTune experiments
 
-	nproc     = nodes*cores/nthreads
-	npernode =  math.ceil(float(cores)/nthreads) 
-
-	params = [model, 'freq', freq]
-
-	BINDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
-	RUNDIR = os.path.abspath("/project/projectdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi")
-	os.system("cp %s/fdmom_eigen ."%(BINDIR))
-	os.system("cp %s/%s.inp ."%(RUNDIR,model))
-	os.system("cp %s/materials.inp ."%(RUNDIR))
-	os.system("cp %s/inputs_fd.inp ."%(RUNDIR))
-	
-
-	TUNER_NAME = os.environ['TUNER_NAME']
-	
-	""" pass some parameters through environment variables """	
-	info = MPI.Info.Create()
-	envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
-	info.Set('env',envstr)
-	info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
-    
-
-	""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
-	comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-5','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
-	# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
-
-	""" gather the return value using the inter-communicator """							
-	tmpdata = np.array([0, 0],dtype=np.float64)
-	comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
-	comm.Disconnect()	
-	# read the file to see if a new valid sample has been generated
+	# read the file to see if the frequency has already been evaluated
 	(validfreq,retval) = read_validdata_onemode(model,nth,freq_int)
+
+	if(validfreq and postprocess==0):
+		print("skip frequency %s as it has already been evaluated"%(freq))
+		retval=retval*0.99 # this tricks scikit-optimize to not terminate early, note that only the csv files (only used by scikit-optimize) use these modified values
+	else:
+		nproc     = nodes*cores/nthreads
+		npernode =  math.ceil(float(cores)/nthreads) 
+
+		params = [model, 'freq', freq]
+
+		BINDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+		RUNDIR = os.path.abspath("/global/cfs/cdirs/m2957/liuyangz/my_research/TDFDIE_HO/FDIE_HO_openmpi_arbiport")
+		os.system("cp %s/fdmom_eigen ."%(BINDIR))
+		os.system("cp %s/%s.inp ."%(RUNDIR,model))
+		os.system("cp %s/materials.inp ."%(RUNDIR))
+		os.system("cp %s/inputs_fd.inp ."%(RUNDIR))
+		
+
+		TUNER_NAME = os.environ['TUNER_NAME']
+		
+		""" pass some parameters through environment variables """	
+		info = MPI.Info.Create()
+		envstr= 'OMP_NUM_THREADS=%d\n' %(nthreads)   
+		info.Set('env',envstr)
+		info.Set('npernode','%d'%(npernode))  # YL: npernode is deprecated in openmpi 4.0, but no other parameter (e.g. 'map-by') works
+		
+		""" use MPI spawn to call the executable, and pass the other parameters and inputs through command line """
+		comm = MPI.COMM_SELF.Spawn("%s/fdmom_eigen"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LR','--norm_thresh','%s'%(norm_thresh),'--eig_thresh','%s'%(eig_thresh),'--dotproduct_thresh','%s'%(dotproduct_thresh),'--ordbasis','%s'%(order),'--nev', '%s'%(nev),'--nev_nodefault', '%s'%(nev_nodefault), '--postprocess', '%s'%(postprocess), '--tdplot', '%s'%(tdplot), '-option', '--tol_comp', '1d-4','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+		# comm = MPI.COMM_SELF.Spawn("%s/fdmom_port"%(RUNDIR), args=['-quant', '--model', '%s'%(model), '--freq', '%s'%(freq),'--si', '1', '--noport', '%s'%(noport), '--noloss', '%s'%(noloss), '--exact_mapping', '1', '--which', 'LM','--norm_thresh','%s'%(norm_thresh),'--ordbasis','%s'%(order),'--nev', '20', '--postprocess', '%s'%(postprocess), '-option', '--tol_comp', '1d-7','--reclr_leaf','5','--lrlevel', '0', '--xyzsort', '2','--nmin_leaf', '100','--format', '1','--sample_para','2d0','--baca_batch','%s'%(baca_batch),'--knn','%s'%(knn),'--level_check','100','--verbosity', '%s'%(verbosity)], maxprocs=nproc,info=info)
+
+		""" gather the return value using the inter-communicator """							
+		tmpdata = np.array([0, 0],dtype=np.float64)
+		comm.Reduce(sendbuf=None, recvbuf=[tmpdata,MPI.DOUBLE],op=MPI.MAX,root=mpi4py.MPI.ROOT) 
+		comm.Disconnect()	
+		# read the file to see if a new valid sample has been generated
+		(validfreq,retval) = read_validdata_onemode(model,nth,freq_int)
+
+
 
 	with open(model+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv", 'a') as f_object:
 		writer_object = writer(f_object)
@@ -241,6 +249,13 @@ def compareVersion(version1, version2):
 	
 def main():
 	global order
+	global norm_thresh
+	global eig_thresh
+	global dotproduct_thresh
+	global noport
+	global postprocess
+	global nev
+	global nev_nodefault
 
 
 	# Parse command line arguments
@@ -254,8 +269,59 @@ def main():
 	optimization = args.optimization
 	nrun = args.nrun
 	order = args.order
-	
-	
+	postprocess = args.postprocess
+	meshmodel = args.meshmodel
+
+	# the default
+	norm_thresh=1000
+	eig_thresh=1e-6
+	noport=0 # whether the port is treated as closed boundary or open port
+	nev=40
+	nev_nodefault=int(nev/2)
+	if(noport==0):
+		### with ports 
+		dotproduct_thresh=0.9 #0.85
+	else:
+		### without ports: modes are typically very different, so dotproduct_thresh can be small 
+		dotproduct_thresh=0.7  # you may want to use 0.9 for the final postprocessing 
+
+
+####### cavity_rec_17K_feko
+	if(meshmodel=="cavity_rec_17K_feko"):
+		norm_thresh=1000
+		eig_thresh=5e-7
+		noport=0
+		nev=40
+		nev_nodefault=int(nev/2)
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.9 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
+
+####### cavity_5cell_30K_feko
+	if(meshmodel=="cavity_5cell_30K_feko"):
+		norm_thresh=1000
+		eig_thresh=1e-6
+		noport=0
+		nev=200
+		nev_nodefault=int(nev/2)
+
+
+####### cavity_5cell_30K_feko_copy
+	if(meshmodel=="cavity_5cell_30K_feko_copy"):
+		norm_thresh=1000
+		eig_thresh=3e-7
+		noport=0
+		nev=200
+		nev_nodefault=50
+		if(noport==0):
+			### with ports 
+			dotproduct_thresh=0.75 #0.85
+		else:
+			### without ports: modes are typically very different, so dotproduct_thresh can be small 
+			dotproduct_thresh=0.7
 	TUNER_NAME = args.optimization	
 	(machine, processor, nodes, cores) = GetMachineConfiguration()
 	print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
@@ -272,8 +338,8 @@ def main():
 	# giventask = [["pillbox_4000"]]		
 	# giventask = [["pillbox_1000"]]		
 	# giventask = [["rfq_mirror_50K_feko"]]		
-	# giventask = [["cavity_5cell_30K_feko"]]		
-	giventask = [["cavity_rec_17K_feko"]]		
+	giventask = [[meshmodel]]
+	# giventask = [["cavity_rec_17K_feko"]]		
 	# giventask = [["cavity_wakefield_4K_feko"]]		
 
 	if(TUNER_NAME=='SIMPLEX'):
@@ -294,51 +360,57 @@ def main():
 			os.system("rm -rf "+giventask[0][0]+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv")
 
 			X=np.array(P)	
-			Pdefault = np.asarray(X[np.argmin(np.asarray(O))])
 			Xsort=np.sort(X,axis=0)
 
-			print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
+			if(X[np.argmin(O)]>Xsort[0] and X[np.argmin(O)]<Xsort[-1] and Xsort.size>10 and postprocess==0): # already enough samples and minimum is captured properly 
+				print("Simplex refinement is not needed for mode ", nth+1)
+			else:
+				print('min ', np.amin(X),' max ', np.amax(X), 'mean ', np.mean(X), 'best ', X[np.argmin(O)])
+				if(X[np.argmin(O)]>Xsort[0] and X[np.argmin(O)]<Xsort[-1]): # minimum will appear in between the left neighbour and the right neighour of the GPTune minimum
+					idxmin=np.argmin(abs(Xsort-X[np.argmin(O)]))
+					bounds_constraint = [(Xsort[idxmin-1],Xsort[idxmin+1])]
+				elif(X[np.argmin(O)]==Xsort[0] and Xsort.size>1 and Xsort[0]<Xsort[1]): # minimum will appear to the left of Xsort[0] or in between the leftmost two data points	
+					# bounds_constraint = [(Xsort[0] - (Xsort[-1]-Xsort[0])/2.0 ,Xsort[1])]
+					bounds_constraint = [(Xsort[0]*0.996 ,Xsort[1])]
+				elif(X[np.argmin(O)]==Xsort[-1] and Xsort.size>1 and Xsort[0]<Xsort[1]): # minimum will appear to the right of Xsort[-1] or in between the rightmost two data points						
+					# bounds_constraint = [(Xsort[-2],Xsort[-1] + (Xsort[-1]-Xsort[0])/2.0)]
+					bounds_constraint = [(Xsort[-2],Xsort[-1]*1.004)]
+				else: # only 1 GPtune sample available, enlarge the search range
+					bounds_constraint = [(Xsort[0]*0.996,Xsort[-1]*1.004)]
 
-			if(X[np.argmin(O)]>Xsort[0] and X[np.argmin(O)]<Xsort[-1]): # minimum will appear in between the left neighbour and the right neighour of the GPTune minimum
-				idxmin=np.argmin(abs(Xsort-X[np.argmin(O)]))
-				bounds_constraint = [(Xsort[idxmin-1],Xsort[idxmin+1])]
-			elif(X[np.argmin(O)]==Xsort[0] and Xsort.size>1): # minimum will appear to the left of Xsort[0] or in between the leftmost two data points	
-				bounds_constraint = [(Xsort[0]*0.997,Xsort[1])]
-			elif(X[np.argmin(O)]==Xsort[-1] and Xsort.size>1): # minimum will appear to the right of Xsort[-1] or in between the rightmost two data points						
-				bounds_constraint = [(Xsort[-2],Xsort[-1]*1.003)]
-			else: # only 1 GPtune sample available, enlarge the search range
-				bounds_constraint = [(Xsort[0]*0.997,Xsort[-1]*1.003)]
+				#### either of the following two ways of initial sample is not perfect
+				Pdefault = np.asarray(X[np.argmin(np.asarray(O))]) 
+				# Pdefault = np.asarray((bounds_constraint[0][0]+bounds_constraint[0][1])/2.0)
+				sol = sp.optimize.minimize(objectives, Pdefault, args=(nodes, cores, nthreads, giventask[0][0], nth), method='Nelder-Mead', options={'verbose': 1, 'maxfev': nrun, 'xatol': 1e-10, 'fatol': 1e-12}, bounds=bounds_constraint)    
 
-			sol = sp.optimize.minimize(objectives, Pdefault, args=(nodes, cores, nthreads, giventask[0][0], nth), method='Nelder-Mead', options={'verbose': 1, 'maxfev': nrun, 'xatol': 0.0000001, 'fatol': 0.0000001}, bounds=bounds_constraint)    
+				print('x      : ', sol.x)
+				print('fun      : ', sol.fun)
+				#print('hess_inv : ', sol.hess_inv)
+				#print('jac      : ', jac)
+				print('message  : ', sol.message)
+				print('nfev     : ', sol.nfev)
+				print('nit      : ', sol.nit)
+				print('status   : ', sol.status)
+				print('success  : ', sol.success)
 
-			print('x      : ', sol.x)
-			print('fun      : ', sol.fun)
-			#print('hess_inv : ', sol.hess_inv)
-			#print('jac      : ', jac)
-			print('message  : ', sol.message)
-			print('nfev     : ', sol.nfev)
-			print('nit      : ', sol.nit)
-			print('status   : ', sol.status)
-			print('success  : ', sol.success)
-
-			with open(giventask[0][0]+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv", mode='r') as f_object:
-				csv_reader = reader(f_object, delimiter=',')
-				Ps=[]
-				Os=[]
-				for row in csv_reader:
-					Ps.append(float(row[0]))
-					Os.append(float(row[1]))
-				Os=np.asarray(Os)	
-				print("    Simplex refined mode ", nth+1)
-				print("    bounds ", bounds_constraint)
-				print("    Ps ", Ps)
-				print("    Os ", Os.tolist())	
-				print('    Popt ', sol.x, 'Oopt ', sol.fun, 'nth ', np.argmin(Os))	
+				with open(giventask[0][0]+"_order_"+str(order)+"_SIMPLEX_freq_history_"+str(nth+1)+".csv", mode='r') as f_object:
+					csv_reader = reader(f_object, delimiter=',')
+					Ps=[]
+					Os=[]
+					for row in csv_reader:
+						Ps.append(float(row[0]))
+						Os.append(float(row[1]))
+					Os=np.asarray(Os)	
+					print("    Simplex refined mode ", nth+1)
+					print("    bounds ", bounds_constraint)
+					print("    Ps ", Ps)
+					print("    Os ", Os.tolist())	
+					print('    Popt ', sol.x, 'Oopt ', sol.fun, 'nth ', np.argmin(Os))	
 
 
 			# reload the data and Nmode as they may have been updated by other modes
 			(Pall,Oall)=read_validdata(giventask[0][0])
-			Nmode = len(Pall)
+			# Nmode = len(Pall) # this line is commented to enforce that no new mode is allowed in SIMPLEX due to the heuristic problem with dotproduct_thresh
 			nth = nth+1
 
 
@@ -357,6 +429,8 @@ def parse_args():
 	parser.add_argument('-ntask', type=int, default=-1, help='Number of tasks')
 	parser.add_argument('-nrun', type=int, help='Number of runs per task')
 	parser.add_argument('-order', type=int, default=0, help='order of the FDIE code')
+	parser.add_argument('-postprocess', type=int, default=0, help='whether postprocessing is performed')
+	parser.add_argument('-meshmodel', type=str, default='cavity_5cell_30K_feko', help='Name of the mesh file')
 
 	args   = parser.parse_args()
 	return args

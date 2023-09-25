@@ -186,7 +186,7 @@ def tuning_all(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot):
 
     tuning_metadata = {
         "tuning_problem_name": "SuperLU_DIST-pddrive_spawn-tuning_all-"+str(matname)+"-npilot"+str(npilot)+"-nbatch"+str(nbatch),
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -263,7 +263,7 @@ def tuning_all(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot):
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -278,7 +278,7 @@ def tuning_reduced_default(matname, ntask, nprocmin_pernode, nbatch, nrun, npilo
 
     tuning_metadata = {
         "tuning_problem_name": "SuperLU_DIST-pddrive_spawn-tuning_reduced_default-"+str(matname)+"-npilot"+str(npilot)+"-nbatch"+str(nbatch),
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -356,7 +356,7 @@ def tuning_reduced_default(matname, ntask, nprocmin_pernode, nbatch, nrun, npilo
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """
@@ -373,7 +373,7 @@ def tuning_reduced_random(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot
 
     tuning_metadata = {
         "tuning_problem_name": "SuperLU_DIST-pddrive_spawn-tuning_reduced_random-"+str(matname)+"-npilot"+str(npilot)+"-nbatch"+str(nbatch),
-        "use_crowd_repo": "no",
+        "sync_crowd_repo": "no",
         "no_load_check": "yes",
         "machine_configuration": {
             "machine_name": "Cori",
@@ -451,7 +451,7 @@ def tuning_reduced_random(matname, ntask, nprocmin_pernode, nbatch, nrun, npilot
     NI = len(giventask)
     NS = nrun
     NS1 = npilot
-    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=npilot)
+    (data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=npilot)
     print("stats: ", stats)
 
     """ Print all input and parameter samples """

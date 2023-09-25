@@ -1,4 +1,5 @@
-numpy
+ConfigSpace <= 0.6.0
+numpy < 1.24
 joblib
 scikit-learn 
 scipy >= 1.7.0
@@ -15,3 +16,8 @@ requests
 pymoo
 cloudpickle
 SALib
+termcolor
+scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git
+ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git
+cgp @ git+https://git@github.com/gptune/cGP.git
+hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git

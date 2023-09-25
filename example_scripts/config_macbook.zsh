@@ -1,12 +1,18 @@
 #!/bin/zsh
 
+cd ..
+
 ##################################################
 ##################################################
 #define package version numbers from homebrew, this may need to be changed according to your system 
-pythonversion=3.9.13_1
-gccversion=11.3.0_1
-openblasversion=0.3.20
-lapackversion=3.10.1
+pythonversion=3.9.18
+gccversion=13.1.0
+openblasversion=0.3.23
+lapackversion=3.11
+export BREWPATH=/usr/local/Cellar # this is where homebrew install packages
+# export BREWPATH=/opt/homebrew/Cellar # Is this for M1 chip?
+############### macbook
+
 
 export ModuleEnv='mac-intel-openmpi-gnu'
 BuildExample=0 # whether to build all examples
@@ -20,8 +26,7 @@ if [[ $(uname -s) != "Darwin" ]]; then
 fi
 
 export GPTUNEROOT=$PWD
-export BREWPATH=/usr/local/Cellar # this is where homebrew install packages
-############### macbook
+
 if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 
 	export PATH=$BREWPATH/python@3.9/$pythonversion/bin/:$PATH
@@ -37,25 +42,25 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 	export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/examples/hypre-driver/
 	export PYTHONWARNINGS=ignore
 
-	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/libscalapack.dylib
-	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+	export SCALAPACK_LIB=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/libscalapack.dylib
+	export LD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
 	export LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
-	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.1.0/build/install/lib/:$DYLD_LIBRARY_PATH
+	export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
 	OPENMPFLAG=fopenmp
-	CC=$BREWPATH/gcc/$gccversion/bin/gcc-11
-	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-11
-	CPP=$BREWPATH/gcc/$gccversion/bin/g++-11
+	CC=$BREWPATH/gcc/$gccversion/bin/gcc-13
+	FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-13
+	CXX=$BREWPATH/gcc/$gccversion/bin/g++-13
 
 	if [[ $MPIFromSource = 1 ]]; then
-		export MPICC="$GPTUNEROOT/openmpi-4.0.1/bin/mpicc"
-		export MPICXX="$GPTUNEROOT/openmpi-4.0.1/bin/mpicxx"
-		export MPIF90="$GPTUNEROOT/openmpi-4.0.1/bin/mpif90"
-		export PATH=$GPTUNEROOT/openmpi-4.0.1/bin:$PATH
-		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
-		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib:$LIBRARY_PATH  
-		export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.0.1/lib/:$DYLD_LIBRARY_PATH
+		export MPICC="$GPTUNEROOT/openmpi-4.1.5/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.1.5/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.1.5/bin/mpif90"
+		export PATH=$GPTUNEROOT/openmpi-4.1.5/bin:$PATH
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LIBRARY_PATH  
+		export DYLD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib/:$DYLD_LIBRARY_PATH
 	else 
 
 		#######################################
@@ -70,7 +75,7 @@ if [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
 		########################################
 
 		if [[ -z "$MPICC" ]]; then
-			echo "Line: ${LINENO} of ${(%):-%x}: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CPP and FC=$FTN."
+			echo "Line: ${LINENO} of ${(%):-%x}: It seems that openmpi will not be built from source, please set MPICC, MPICXX, MPIF90, PATH, LIBRARY_PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH for your OpenMPI build correctly above. Make sure OpenMPI > 4.0.0 is used and compiled with CC=$CC, CXX=$CXX and FC=$FTN."
 			exit
 		fi
 	fi	
@@ -98,6 +103,8 @@ brew upgrade wget
 brew install python@3.9
 brew upgrade python@3.9
 
+brew install cmake
+brew upgrade cmake
 
 if [ ! -d "$BREWPATH/python@3.9/$pythonversion" ] 
 then
@@ -105,8 +112,9 @@ then
     exit 
 fi
 
-alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3  # this makes sure virtualenv uses the correct python version
-alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3
+alias python=$BREWPATH/python@3.9/$pythonversion/bin/python3.9  # this makes sure virtualenv uses the correct python version
+alias pip=$BREWPATH/python@3.9/$pythonversion/bin/pip3.9
+
 
 python -m pip install virtualenv 
 rm -rf env
@@ -116,6 +124,7 @@ source env/bin/activate
 unalias pip  # this makes sure virtualenv install packages at its own site-packages directory
 unalias python
 
+pip install --upgrade pip
 pip install --force-reinstall cloudpickle
 pip install --force-reinstall filelock
 brew reinstall tbb
@@ -168,11 +177,11 @@ fi
 # manually install dependencies from cmake and make
 ###################################
 cd $GPTUNEROOT
-wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.bz2
-bzip2 -d openmpi-4.0.1.tar.bz2
-tar -xvf openmpi-4.0.1.tar 
-cd openmpi-4.0.1/ 
-./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CPP F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
+wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.bz2
+bzip2 -d openmpi-4.1.5.tar.bz2
+tar -xvf openmpi-4.1.5.tar 
+cd openmpi-4.1.5/ 
+./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
 make -j8
 make install
 
@@ -180,10 +189,10 @@ make install
 # if openmpi, scalapack needs to be built from source
 if [[ $ModuleEnv == *"openmpi"* ]]; then
 	cd $GPTUNEROOT
-	rm -rf scalapack-2.1.0.tgz*
-	wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
-	tar -xf scalapack-2.1.0.tgz
-	cd scalapack-2.1.0
+	rm -rf scalapack-2.2.0.tgz*
+	wget http://www.netlib.org/scalapack/scalapack-2.2.0.tgz
+	tar -xf scalapack-2.2.0.tgz
+	cd scalapack-2.2.0
 	rm -rf build
 	mkdir -p build
 	cd build
@@ -240,8 +249,8 @@ if [[ $BuildExample == 1 ]]; then
 	cd superlu_dist
 
 	##### the following server is often down, so switch to the github repository 
-	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	# tar -xf parmetis-4.0.3.tar.gz
+	# wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	# tar -xf parmetis_4.0.3.orig.tar.gz
 	# cd parmetis-4.0.3/
 	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
 	# mkdir -p install
@@ -320,7 +329,6 @@ if [[ $BuildExample == 1 ]]; then
 	cp ../../hypre-driver/src/ij.c ./test/.
 	make test
 
-
 	cd $GPTUNEROOT/examples/ButterflyPACK
 	rm -rf ButterflyPACK
 	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
@@ -366,8 +374,6 @@ if [[ $BuildExample == 1 ]]; then
 	make -j8
 	make install -j8
 
-
-
 	cd $GPTUNEROOT/examples/STRUMPACK
 	rm -rf scotch_6.1.0
 	wget --no-check-certificate https://gforge.inria.fr/frs/download.php/file/38352/scotch_6.1.0.tar.gz
@@ -401,8 +407,6 @@ if [[ $BuildExample == 1 ]]; then
 	chmod +x examples/KernelRegressionMPI.py
 	mkdir build
 	cd build
-
-
 
 	cmake ../ \
 		-DCMAKE_BUILD_TYPE=Release \
@@ -498,35 +502,35 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	# env CC=mpicc pip install  -e .
 fi
 
-cd $GPTUNEROOT
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-python setup.py build
-python setup.py install
-# env CC=mpicc pip install  -e .
+# cd $GPTUNEROOT
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# cp ../patches/scikit-optimize/space.py skopt/space/.
+# python setup.py build
+# python setup.py install
+# # env CC=mpicc pip install  -e .
 
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install 
+# cd $GPTUNEROOT
+# rm -rf cGP
+# git clone https://github.com/gptune/cGP
+# cd cGP/
+# python setup.py install 
 
 
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-# cp ../patches/autotune/problem.py autotune/.
-pip install -e .
+# cd $GPTUNEROOT
+# rm -rf autotune
+# git clone https://github.com/ytopt-team/autotune.git
+# cd autotune/
+# # cp ../patches/autotune/problem.py autotune/.
+# pip install -e .
 
-cd $GPTUNEROOT
-rm -rf hybridMinimization
-git clone https://github.com/gptune/hybridMinimization.git
-cd hybridMinimization/
-python setup.py install
+# cd $GPTUNEROOT
+# rm -rf hybridMinimization
+# git clone https://github.com/gptune/hybridMinimization.git
+# cd hybridMinimization/
+# python setup.py install
 
 cd $GPTUNEROOT
 rm -rf GPy

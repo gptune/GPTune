@@ -69,7 +69,7 @@ class GPTune(object):
 
         kwargs.update(self.options)
 
-        Igiven = task_parameters
+        Tgiven = task_parameters
 
         """ Load history function evaluation data """
 
@@ -77,7 +77,7 @@ class GPTune(object):
             print ("no history data has been loaded")
             return
 
-        num_tasks = len(Igiven)
+        num_tasks = len(Tgiven)
 
         PS_history = [[] for i in range(num_tasks)]
         OS_history = [[] for i in range(num_tasks)]
@@ -92,13 +92,13 @@ class GPTune(object):
                     parameter_arr.append(float(func_eval["tuning_parameter"][self.problem.PS[k].name]))
                 else:
                     parameter_arr.append(func_eval["tuning_parameter"][self.problem.PS[k].name])
-            task_id = self.historydb.search_func_eval_task_id(func_eval, self.problem, Igiven)
+            task_id = self.historydb.search_func_eval_task_id(func_eval, self.problem, Tgiven)
             if task_id >= 0:
                 PS_history[task_id].append(parameter_arr)
                 OS_history[task_id].append(\
                     [func_eval["evaluation_result"][self.problem.OS[k].name] \
                     for k in range(len(self.problem.OS))])
-        self.data.I = Igiven
+        self.data.I = Tgiven
         self.data.P = PS_history
         self.data.O=[]
         for i in range(len(OS_history)):
@@ -112,8 +112,8 @@ class GPTune(object):
 
         """ Update data space """
 
-        if(Igiven is not None and self.data.I is None):
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None:
@@ -165,20 +165,20 @@ class GPTune(object):
             #print ("tuning_parameter_names: ", tuning_parameter_names)
             #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
-            #print ("Igiven: ", Igiven)
+            #print ("Tgiven: ", Tgiven)
             #print ("point: ", point)
 
-            input_task = Igiven[tid]
+            input_task = Tgiven[tid]
 
             #input_task = []
             #for task_parameter_name in task_parameter_names:
             #    input_task.append(point[task_parameter_name])
 
             #tid = -1
-            #for i in range(len(Igiven)):
+            #for i in range(len(Tgiven)):
             #    is_equal = True
-            #    for j in range(len(Igiven[i])):
-            #        if Igiven[i][j] != input_task[j]:
+            #    for j in range(len(Tgiven[i])):
+            #        if Tgiven[i][j] != input_task[j]:
             #            is_equal = False
             #    if (is_equal):
             #        tid = i
@@ -236,17 +236,17 @@ class GPTune(object):
 
     def LoadSurrogateModel(self, model_data : dict, **kwargs):
 
-        Igiven = model_data["task_parameters"]
+        Tgiven = model_data["task_parameters"]
 
         """ Load history function evaluation data """
 
         self.historydb.load_model_func_eval(data = self.data, problem = self.problem,
-                Igiven = Igiven, model_data = model_data)
+                Tgiven = Tgiven, model_data = model_data)
 
         """ Update data space """
 
-        if(Igiven is not None and self.data.I is None):
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None:
@@ -299,17 +299,17 @@ class GPTune(object):
             #print ("tuning_parameter_names: ", tuning_parameter_names)
             #print ("tuning_parameter_types: ", tuning_parameter_types)
             #print ("output_names: ", output_names)
-            #print ("Igiven: ", Igiven)
+            #print ("Tgiven: ", Tgiven)
 
             input_task = []
             for task_parameter_name in task_parameter_names:
                 input_task.append(point[task_parameter_name])
 
             tid = -1
-            for i in range(len(Igiven)):
+            for i in range(len(Tgiven)):
                 is_equal = True
-                for j in range(len(Igiven[i])):
-                    if Igiven[i][j] != input_task[j]:
+                for j in range(len(Tgiven[i])):
+                    if Tgiven[i][j] != input_task[j]:
                         is_equal = False
                 if (is_equal):
                     tid = i
@@ -365,8 +365,8 @@ class GPTune(object):
 
         return (modelers, model_function)
 
-    def MLA_LoadModel(self, NS = 0, Igiven = None, method = "max_evals", update = 0, model_uids = None, **kwargs):
-        print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Igiven),NS))
+    def MLA_LoadModel(self, NS = 0, Tgiven = None, method = "max_evals", update = 0, model_uid = None, **kwargs):
+        print('\n\n\n------Starting MLA with Trained Model for %d tasks and %d samples each '%(len(Tgiven),NS))
         stats = {
             "time_total": 0,
             "time_fun": 0,
@@ -380,7 +380,7 @@ class GPTune(object):
         time_model=0
 
         """ Load history function evaluation data """
-        self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+        self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         if (self.data.P is not None):
@@ -398,8 +398,8 @@ class GPTune(object):
         kwargs.update(options1)
 
         """ Multi-task Learning Autotuning """
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         # normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -428,29 +428,31 @@ class GPTune(object):
             # current limitations
             # - only model LCM
             # - not considering edge cases (e.g. no model is available)
-            if model_uids == None:
+            if model_uid == None:
                 #TODO CHECK: make self.data is correct (we may need to load (or double check) func eval data based on the model data)
 
                 if method == "max_evals":
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "MLE" or method == "mle":
-                    (hyperparameters, parameter_names) = self.historydb.load_MLE_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_MLE_surrogate_model_hyperparameters(
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "AIC" or method == "aic":
-                    (hyperparameters, parameter_names) = self.historydb.load_AIC_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_AIC_surrogate_model_hyperparameters(
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 elif method == "BIC" or method == "bic":
-                    (hyperparameters, parameter_names) = self.historydb.load_BIC_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_BIC_model_hyperparameters(
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
                 else:
-                    (hyperparameters, parameter_names) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
-                            self.tuningproblem, Igiven, i, kwargs["model_class"])
+                    (hyperparameters, parameter_names, model_options) = self.historydb.load_max_evals_surrogate_model_hyperparameters(
+                            self.tuningproblem, Tgiven, i, kwargs["model_class"])
 
             else:
-                (hyperparameters, parameter_names) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uids[i])
+                (hyperparameters, parameter_names, model_options) = self.historydb.load_surrogate_model_hyperparameters_by_uid(model_uid)
+
             modelers[i].gen_model_from_hyperparameters(self.data,
                     hyperparameters,
+                    model_options,
                     **kwargs)
 
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
@@ -473,7 +475,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             model_reupdate = model_reupdate + 1
@@ -580,16 +582,42 @@ class GPTune(object):
         options = copy.deepcopy(self.options)
         kwargs.update(options)
 
-        Igiven = self.problem.IS.transform([T])[0]
+        Tgiven = self.problem.IS.transform([T])[0]
 
         for i in range(len(P)):
-            xNorm = self.problem.PS.transform([P[i]])
-            self.computer.evaluate_objective_onetask(problem=self.problem, T2=Igiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            if (options['RCI_mode'] == False):
+                xNorm = self.problem.PS.transform([P[i]])
+                self.computer.evaluate_objective_onetask(problem=self.problem, T2=Tgiven, P2=xNorm, history_db=self.historydb, options=kwargs)
+            else:
+                new_RCI_sample = False
+
+                if self.historydb is not None:
+                    # check if the sample is already in the database
+                    if not self.historydb.parameter_exists_in_db(problem=self.problem, task_parameter=T,
+                                                                 tuning_parameter = P[i]):
+                        xNorm = self.problem.PS.transform([P[i]])
+                        tmp = np.empty( shape=(len(P[i]), self.problem.DO))
+                        tmp[:] = np.NaN
+
+                        self.historydb.store_func_eval(problem = self.problem,\
+                                task_parameter = Tgiven,\
+                                tuning_parameter = xNorm,\
+                                evaluation_result = tmp,\
+                                evaluation_detail = tmp,\
+                                source = "RCI_measure",\
+                                modeling = "Manual",\
+                                model_class = "Manual")
+
+                        new_RCI_sample == True
+
+                if (new_RCI_sample == True):
+                    if (options['RCI_mode'] == True):
+                        print('RCI: GPTune returns\n')
+                        exit()
 
         return
 
-    def MLA_HistoryDB(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
-        print('\n\n\n------Starting MLA with HistoryDB with %d tasks and %d samples each '%(NI,NS))
+    def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, mfs = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -612,12 +640,12 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
 
             ## in case source function evaluation data is used for transfer learning
             #if source_function_evaluations != None:
             #    print ("DATA:P: ", self.data.P)
-            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Igiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
+            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Tgiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -635,7 +663,7 @@ class GPTune(object):
         if (self.data.P is not None):
             NS_active = [list(map(len, self.data.P))[index] for index in tids]
             NSmin = min(NS_active) # the number of samples per task in existing tuning data can be different
-            NSmax = max(NS_active) 
+            NSmax = max(NS_active)
 
         # """ Set (additional) number of samples for autotuning """
         # NS = NSmin + NS
@@ -652,13 +680,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
 ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -672,7 +695,7 @@ class GPTune(object):
             self.data.P=tmp
         if self.data.I is not None: # from a list of lists to a 2D numpy array
             self.data.I = self.problem.IS.transform(self.data.I)
-        
+
         Ptmp = copy.deepcopy(self.data.P)
         if self.data.P is not None:
             for i in range(len(Ptmp)):
@@ -718,7 +741,7 @@ class GPTune(object):
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
@@ -755,7 +778,6 @@ class GPTune(object):
         t1 = time.time_ns()
 
         if (NSmin<NS1 or run_pilot_anyway == True):
-            # print(tmpP,'dada',tmpP[0])
             tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
             if(self.data.P is None): # no existing tuning data is available
                 self.data.O = tmpO
@@ -769,7 +791,15 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            if mfs is None:
+                modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
+            else:
+                modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer, mf=mfs[i])'))
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
@@ -792,14 +822,14 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ",optiter)
+            print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -814,7 +844,7 @@ class GPTune(object):
                         if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
                             tmpdata.P[i] = copy.deepcopy(self.data.P[i])
                             tmpdata.O[i] = copy.deepcopy(self.data.O[i])
-
+                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
                     if tmpdata.I is not None: # from a list of lists to a 2D numpy array
                         tmpdata.I = self.problem.IS.transform(tmpdata.I)
                 else:
@@ -822,9 +852,10 @@ class GPTune(object):
                     tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 #print ("tmpdata.I: ", tmpdata.I)
+                # print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
                 #print ("tmpdata.P: ", tmpdata.P)
-                #print ("tmpdata.O: ", tmpdata.O)
+                # print ("tmpdata.O: ", tmpdata.O)
                 #print ("tmpdata.P: ", tmpdata.P)
 
                 if (kwargs["model_output_constraint"] != None):
@@ -845,10 +876,11 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+
+                            if out_of_range == True: # or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -866,7 +898,6 @@ class GPTune(object):
 
                 if(self.problem.models is not None):
                     for i in range(len(tmpdata.P)):
-                        points0 = tmpdata.D[i]
                         t = tmpdata.I[i]
                         I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
                         points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
@@ -876,7 +907,8 @@ class GPTune(object):
                             x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
                             points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
                             points.update(points1)
-                            points.update(points0)
+                            if(tmpdata.D is not None):
+                                points.update(tmpdata.D[i])
                             if(self.problem.constants is not None):
                                 points.update(self.problem.constants)
                             modeldata.append(self.problem.models(points))
@@ -908,6 +940,7 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
+                    # print(tmpdata.O)
                     (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
@@ -916,7 +949,8 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
-                
+
+
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
@@ -927,7 +961,6 @@ class GPTune(object):
             t2 = time.time_ns()
             stats["modeling_time"].append((t2-t1)/1e9)
             time_model = time_model + (t2-t1)/1e9
-
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, tids=tids, **kwargs)
             newdata.P=[]
@@ -976,14 +1009,466 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def MLA(self, NS, NS1 = None, NI = None, Igiven = None, T_sampleflag = None, function_evaluations = None, models_transfer = None, **kwargs):
-        if self.historydb.history_db is True:
-            if self.historydb.load_func_eval == True and self.historydb.load_surrogate_model == True:
-                return self.MLA_LoadModel(NS = NS, Igiven = Igiven)
-            else:
-                return self.MLA_HistoryDB(NS, NS1, NI, Igiven, T_sampleflag, function_evaluations, None, models_transfer)
+    def SLA(self, NS, NS1 = None, Tgiven = None, mfs=None):
 
-    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking", "SLA"], **kwargs):
+        if NS1 == None:
+            NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
+
+        print("\n\n\n------Starting SLA (%d samples)"%(NS))
+
+        print("self.options: ", self.options)
+
+        if self.options["BO_objective_evaluation_parallelism"] == False:
+            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
+        elif self.options["BO_objective_evaluation_parallelism"] == True:
+            (data, modeler, stats) = self.MLA_ParallelEval_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        else:
+            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
+
+        data.I = data.I[0]
+        data.P = data.P[0]
+        data.O = data.O[0]
+        data.D = data.D[0]
+
+        return data, modeler, stats
+
+    def MLA_ParallelEval_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
+        stats = {
+            "time_total": 0,
+            "time_sample_init": 0,
+            "time_fun": 0,
+            "time_search": 0,
+            "time_model": 0,
+            "func_eval_time":[],
+            "search_time":[],
+            "modeling_time":[],
+            "modeling_iteration":[]
+        }
+        time_fun=0
+        time_sample_init=0
+        time_search=0
+        time_model=0
+
+        options1 = copy.deepcopy(self.options)
+        kwargs.update(options1)
+
+        """ Load history function evaluation data """
+        if self.historydb.load_func_eval == True:
+            # load function evaluations regardless of the modeling scheme of the sample
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+
+            ## in case source function evaluation data is used for transfer learning
+            #if source_function_evaluations != None:
+            #    print ("DATA:P: ", self.data.P)
+            #    self.historydb.load_source_function_evaluations(self.data, self.problem, Tgiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
+
+        if (NI is None and self.data.I is not None):
+           NI = len(self.data.I)
+        if (T_sampleflag is None):
+           T_sampleflag = [ True for i in range (NI)]
+        T_bit_mask = list(map(int, T_sampleflag))
+        tids=[]
+        for i in range(NI):
+            if(T_sampleflag[i] is True):
+                tids.append(i)
+
+        np.set_printoptions(suppress=False,precision=4)
+        NSmin=0
+        NSmax=0
+        if (self.data.P is not None):
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active) # the number of samples per task in existing tuning data can be different
+            NSmax = max(NS_active)
+
+        # """ Set (additional) number of samples for autotuning """
+        # NS = NSmin + NS
+        if(NSmax>0):
+            if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
+                print('\nexisting data has at least NSmin=%d samples per task, which is no less than NS=%d, no need to run MLA. Returning...\n'%(NSmin,NS))
+                return (copy.deepcopy(self.data), None,stats)
+            else:
+                print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
+
+        t3 = time.time_ns()
+
+        t1 = time.time_ns()
+
+        """ Multi-task Learning Autotuning """
+
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
+
+        # normalize the data as the user always work in the original space
+        if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+            tmp=[]
+            for x in self.data.P:
+                if(len(x)>0):
+                    xNorm = self.problem.PS.transform(x)
+                    tmp.append(xNorm)
+                else:
+                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
+            self.data.P=tmp
+        if self.data.I is not None: # from a list of lists to a 2D numpy array
+            self.data.I = self.problem.IS.transform(self.data.I)
+
+        Ptmp = copy.deepcopy(self.data.P)
+        if self.data.P is not None:
+            for i in range(len(Ptmp)):
+                if(T_sampleflag[i] is False):
+                    Ptmp[i] = np.empty(shape=(0,self.problem.DP))
+
+        if (self.data.O is None and Ptmp is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
+            self.data.O = self.computer.evaluate_objective(self.problem, self.data.I, Ptmp, self.data.D, self.historydb, options = kwargs)
+
+        sampler = eval(f'{kwargs["sample_class"]}()')
+        if (self.data.I is None):
+
+            if (NI is None):
+                raise Exception("Number of problems to be generated (NI) is not defined")
+
+            check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = True, kwargs = kwargs)
+            self.data.I = sampler.sample_inputs(n_samples = NI, IS = self.problem.IS, check_constraints = check_constraints, **kwargs)
+            # print("riji",type(self.data.I),type(self.data.I[0]))
+            self.data.D = [{}] * NI
+        else:
+            if (self.data.D is None):
+                self.data.D = [{}] * NI
+
+        if (self.data.P is not None and len(self.data.P) !=len(self.data.I)):
+            raise Exception("len(self.data.P) !=len(self.data.I)")
+
+        print ("NS1: ", NS1)
+        is_pilot = False
+        run_pilot_anyway = False
+        if NS1 == 0 and models_transfer != None:
+            NS1 = 1
+            option_tla = copy.deepcopy(self.options)
+            option_tla["TLA_method"] = "Regression"
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = option_tla, models_transfer = models_transfer)')
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
+            tmpP = [x[1][0] for x in res]
+            #print ("tmpP: ", tmpP)
+
+            for i in range(NI):
+                if(T_sampleflag[i] is False):
+                    tmpP[i] = np.empty(shape=(0,self.problem.DP))
+
+            run_pilot_anyway = False
+            if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
+                tmpdata = Data(self.problem)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                if tmpdata.P is None:
+                    # no samples from this modeling approach
+                    run_pilot_anyway = True
+
+            if(self.data.P is not None):
+                for i in range(len(self.data.P)):
+                    if(run_pilot_anyway == False and T_sampleflag[i] is True):
+                        NSi = self.data.P[i].shape[0]
+                        tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+        else:
+            is_pilot = True
+            if NS1 == 0:
+                NS1 = 1
+            if (NSmin<NS1):
+                check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
+                tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                for i in range(NI):
+                    if(T_sampleflag[i] is False):
+                        tmpP[i] = np.empty(shape=(0,self.problem.DP))
+                # print ("tmpP: ", tmpP)
+
+                if(self.data.P is not None):
+                    for i in range(len(self.data.P)):
+                        if(T_sampleflag[i] is True):
+                            NSi = self.data.P[i].shape[0]
+                            tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
+
+        if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
+            raise Exception("len(self.data.O) !=len(self.data.I)")
+
+        t2 = time.time_ns()
+        time_sample_init = time_sample_init + (t2-t1)/1e9
+
+        t1 = time.time_ns()
+
+        if (NSmin<NS1 or run_pilot_anyway == True):
+            tmpO = self.computer.evaluate_objective(self.problem, self.data.I, tmpP, self.data.D, self.historydb, options = kwargs, is_pilot=is_pilot)
+            if(self.data.P is None): # no existing tuning data is available
+                self.data.O = tmpO
+                self.data.P = tmpP
+            else:
+                for i in range(len(self.data.P)):
+                    self.data.P[i] = np.vstack((self.data.P[i],tmpP[i]))
+                    self.data.O[i] = np.vstack((self.data.O[i],tmpO[i]))
+
+        t2 = time.time_ns()
+        stats["func_eval_time"].append((t2-t1)/1e9)
+        time_fun = time_fun + (t2-t1)/1e9
+
+        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
+        optiter = 0
+        if self.data.P != None:
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active)
+        else:
+            NSmin = 0
+
+        num_evaluation_instances = 1
+        if kwargs["distributed_memory_parallelism"] == True:
+            num_evaluation_instances = kwargs["objective_multisample_processes"]
+        elif kwargs["shared_memory_parallelism"] == True:
+            num_evaluation_instances = kwargs["objective_multisample_threads"]
+
+        while NSmin<NS:# YL: each iteration adds 1 (if single objective) or at most kwargs["search_more_samples"] (if multi-objective) sample until total #sample reaches NS
+
+            if(self.problem.models_update is not None):
+                ########## denormalize the data as the user always work in the original space
+                tmpdata = copy.deepcopy(self.data)
+                if tmpdata.I is not None:    # from 2D numpy array to a list of lists
+                    tmpdata.I = self.problem.IS.inverse_transform(tmpdata.I)
+                if tmpdata.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                    tmpdata.P = [self.problem.PS.inverse_transform(x) for x in tmpdata.P]
+                self.problem.models_update(tmpdata)
+                self.data.D = tmpdata.D
+
+            newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
+            newdata.P=[[] for i in range(NI)]
+
+            data_replica = copy.deepcopy(self.data)
+
+            if NS-NSmin < num_evaluation_instances:
+                num_evaluation_instances = NS-NSmin
+
+            for evaluation_instance in range(num_evaluation_instances):
+
+                print("Iteration: ",optiter)
+                stats["modeling_iteration"].append(0)
+
+                optiter = optiter + 1
+                t1 = time.time_ns()
+
+                for o in range(self.problem.DO):
+                    tmpdata = Data(self.problem)
+                    if evaluation_instance == 0:
+                        self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                        if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                            tmp=[]
+                            for x in tmpdata.P:
+                                if(len(x)>0):
+                                    xNorm = self.problem.PS.transform(x)
+                                    tmp.append(xNorm)
+                                else:
+                                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                            tmpdata.P=tmp
+                        if(tmpdata.P is not None):
+                            for i in range(len(tmpdata.P)):
+                                if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                                    tmpdata.P[i] = copy.deepcopy(data_replica.P[i])
+                                    tmpdata.O[i] = copy.deepcopy(data_replica.O[i])
+
+                            if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                                tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                        else:
+                            tmpdata = copy.deepcopy(data_replica)
+                            tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
+                    else:
+                        tmpdata = copy.deepcopy(data_replica)
+                        tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
+
+                    if (kwargs["model_output_constraint"] != None):
+                        tmp_tmpdata = Data(self.problem)
+                        tmp_tmpdata.I = copy.deepcopy(data_replica.I)
+                        tmp_tmpdata.P = [[] for i in range(len(data_replica.P))]
+                        tmp_tmpdata.O = [[] for i in range(len(data_replica.O))]
+                        tmp_tmpdata.D = copy.deepcopy(data_replica.D)
+
+                        for t in range(len(tmpdata.O)):
+                            for i in range(len(tmpdata.O[t])):
+                                out_of_range = False
+                                for o_ in range(self.problem.DO):
+                                    output_space = self.historydb.problem_space_to_dict(self.problem.OS)[o_]
+                                    lower_bound = output_space["lower_bound"]
+                                    upper_bound = output_space["upper_bound"]
+                                    output_result = [copy.deepcopy(data_replica.O[i][:,o_].reshape((-1,1))) for i in range(len(data_replica.I))][t][i]
+                                    if output_result < lower_bound or \
+                                       output_result > upper_bound:
+                                        out_of_range = True
+                                if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                    if (kwargs["model_output_constraint"] == 'LargeNum'):
+                                        tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                        tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
+                                    elif (kwargs["model_output_constraint"] == 'Ignore'):
+                                        pass
+                                else:
+                                    tmp_tmpdata.P[t].append(tmpdata.P[t][i])
+                                    tmp_tmpdata.O[t].append(tmpdata.O[t][i])
+
+                        for t in range(len(tmpdata.O)):
+                            tmp_tmpdata.P[t] = np.array(tmp_tmpdata.P[t])
+                            tmp_tmpdata.O[t] = np.array(tmp_tmpdata.O[t])
+
+                        for t in range(len(tmp_tmpdata.O)):
+                            if len(tmp_tmpdata.O[t]) > 0:
+                                tmpdata.P[t] = copy.deepcopy(tmp_tmpdata.P[t])
+                                tmpdata.O[t] = copy.deepcopy(tmp_tmpdata.O[t])
+
+                    if(self.problem.models is not None):
+                        for i in range(len(tmpdata.P)):
+                            t = tmpdata.I[i]
+                            I_orig = self.problem.IS.inverse_transform(np.array(t, ndmin=2))[0]
+                            points1 = {self.problem.IS[k].name: I_orig[k] for k in range(self.problem.DI)}
+                            modeldata=[]
+                            for p in range(len(tmpdata.P[i])):
+                                x = tmpdata.P[i][p]
+                                x_orig = self.problem.PS.inverse_transform(np.array(x, ndmin=2))[0]
+                                points = {self.problem.PS[k].name: x_orig[k] for k in range(self.problem.DP)}
+                                points.update(points1)
+                                if(tmpdata.D is not None):
+                                    points.update(tmpdata.D[i])
+                                if(self.problem.constants is not None):
+                                    points.update(self.problem.constants)
+                                modeldata.append(self.problem.models(points))
+                            modeldata=np.array(modeldata)
+                            tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+
+                    for i in range(len(tmpdata.P)):
+                        if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                            raise Exception("T_sampleflag[%d] is False but self.data.P[%d] has no data"%(i,i))
+
+                    # print(tmpdata.P[0])
+                    #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
+                    if (kwargs["model_class"] == "Model_LCM"):
+                        # YC: [TODO-check] NSmin checking (with updated NSmin) still necessary? In case of options['model_output_constraint']='Ignore', the updated tmpdata.P and tmpdata.O can have unequal number of samples, but seems like it's running anyways. For now, we can say options['model_output_constraint']='Ignore' is not recommended for Model_LCM mode.
+                        for i in range(len(tmpdata.P)):   # LCM requires the same number of samples per task, so use the first NSmin samples
+                            tmpdata.O[i] = tmpdata.O[i][0:NSmin,:]
+                            tmpdata.P[i] = tmpdata.P[i][0:NSmin,:]
+
+                        (bestxopt, neg_log_marginal_likelihood,
+                                gradients, iteration) = \
+                            modelers[o].train(data = tmpdata, **kwargs)
+
+                        if evaluation_instance == 0:
+                            self.historydb.store_model_LCM(
+                                    o,
+                                    self.problem,
+                                    data_replica.I,
+                                    bestxopt,
+                                    neg_log_marginal_likelihood,
+                                    gradients,
+                                    iteration)
+                        stats["modeling_iteration"][optiter-1] += iteration
+                    else:
+                        (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                        if evaluation_instance == 0:
+                            self.historydb.store_model_GPy_LCM(
+                                    o,
+                                    self.problem,
+                                    data_replica.I,
+                                    hyperparameters,
+                                    modeling_options,
+                                    model_stats)
+
+                    if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(data_replica.I)>1:
+                        C = modelers[o].M.kern.get_correlation_metric()
+                        print("The correlation matrix C is \n", C)
+                    elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(data_replica.I)>1:
+                        C = modelers[o].get_correlation_metric(len(data_replica.I))
+                        print("The correlation matrix C is \n", C)
+
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
+
+                t1 = time.time_ns()
+                res = searcher.search_multitask(data = data_replica, models = modelers, tids=tids, **kwargs)
+                i1=0
+
+                newdata_for_replica = Data(problem = self.problem, I = self.data.I, D = self.data.D)
+                newdata_for_replica.P=[]
+                for i in range(NI):
+                    if(T_sampleflag[i] is True):
+                        newdata.P[i].append(res[i1][1][0][0])
+                        #newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:] # if NSi>=NS, skip the function evaluation
+
+                        newdata_for_replica.P.append(res[i1][1][0])
+                        i1=i1+1
+                        NSi = data_replica.P[i].shape[0]
+                        newdata_for_replica.P[i] = newdata_for_replica.P[i][0:min(newdata_for_replica.P[i].shape[0],max(0,NS-NSi)),:] # if NSi>=NS, skip the function evaluation
+                    else:
+                        newdata.P.append(np.empty(shape=(0,self.problem.DP)))
+                        newdata_for_replica.P.append(np.empty(shape=(0,self.problem.DP)))
+
+                # print(more_samples,newdata.P)
+                t2 = time.time_ns()
+                stats["search_time"].append((t2-t1)/1e9)
+                time_search = time_search + (t2-t1)/1e9
+
+                newdata_for_replica.O = []
+                for i in range(NI):
+                    for o in range(self.problem.DO):
+                        (mu, var) = modelers[o].predict(np.array(newdata_for_replica.P[i][0]), i)
+                        newdata_for_replica.O.append(mu)
+
+                data_replica.merge(newdata_for_replica)
+
+            t1 = time.time_ns()
+            newdata.O = self.computer.evaluate_objective(problem = self.problem,
+                    I = newdata.I,
+                    P = newdata.P,
+                    D = newdata.D,
+                    history_db = self.historydb,
+                    options = kwargs)
+            t2 = time.time_ns()
+            time_fun = time_fun + (t2-t1)/1e9
+            self.data.merge(newdata)
+            # print(self.data.P)
+            # print(list(map(mul,T_bit_mask,list(map(len, self.data.P)))))
+            # print(tids)
+            NS_active = [list(map(len, self.data.P))[index] for index in tids]
+            NSmin = min(NS_active)
+
+        # denormalize the data as the user always work in the original space
+        if self.data.I is not None:    # from 2D numpy array to a list of lists
+            self.data.I = self.problem.IS.inverse_transform(self.data.I)
+        if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+            self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
+
+        t4 = time.time_ns()
+        stats['time_total'] = (t4-t3)/1e9
+        stats['time_fun'] = time_fun
+        stats['time_model'] = time_model
+        stats['time_search'] = time_search
+        stats['time_sample_init'] = time_sample_init
+
+        return (copy.deepcopy(self.data), modelers, stats)
+
+    def MLA(self, NS, NS1 = None, NI = None, Tgiven = None, mfs=None):
+
+        if NS1 == None:
+            NS1 = int(NS/2)
+        elif NS1 > NS:
+            raise Exception("NS1>NS")
+
+        print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
+
+        if self.options["BO_objective_evaluation_parallelism"] == False:
+            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
+        elif self.options["BO_objective_evaluation_parallelism"] == True:
+            return self.MLA_ParallelEval_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+        else:
+            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
+
+        #return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+
+    def TLA(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
+
+        return TLA_I(NS=NS, Tnew=Tnew, models_transfer=models_transfer, source_function_evaluations=source_function_evaluations, TLA_options=TLA_options)
+
+    def TLA_I(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
 
         # Unified TLA interface
         # This supports only one target task
@@ -996,17 +1481,48 @@ class GPTune(object):
             problem_space["parameter_space"] = self.historydb.problem_space_to_dict(self.problem.PS)
             problem_space["output_space"] = self.historydb.problem_space_to_dict(self.problem.OS)
 
-            for i in range(len(source_function_evaluations)):
-                input_task = []
-                for key in source_function_evaluations[i][0]["task_parameter"]:
-                    input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+            use_LCM_for_source = False
 
-                surrogate_model = BuildSurrogateModel(
-                    problem_space = problem_space,
-                    modeler = "Model_GPy_LCM",
-                    input_task = [input_task],
-                    function_evaluations = source_function_evaluations[i])
-                models_transfer.append(surrogate_model)
+            if use_LCM_for_source == True:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+
+                    input_task_ = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task_.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    input_task.append(input_task_)
+
+                    for j in range(len(source_function_evaluations)):
+                        if i != j:
+                            input_task_ = []
+                            for key in source_function_evaluations[j][0]["task_parameter"]:
+                                input_task_.append(source_function_evaluations[j][0]["task_parameter"][key])
+                            input_task.append(input_task_)
+
+                    function_evaluations_all = []
+                    for j in range(len(source_function_evaluations)):
+                        function_evaluations_all += source_function_evaluations[j]
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = input_task,
+                        function_evaluations = function_evaluations_all)
+                        #function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
+            else:
+                for i in range(len(source_function_evaluations)):
+                    input_task = []
+                    for key in source_function_evaluations[i][0]["task_parameter"]:
+                        input_task.append(source_function_evaluations[i][0]["task_parameter"][key])
+
+                    surrogate_model = BuildSurrogateModel(
+                        problem_space = problem_space,
+                        modeler = "Model_GPy_LCM",
+                        input_task = [input_task],
+                        function_evaluations = source_function_evaluations[i])
+                    models_transfer.append(surrogate_model)
 
         NS1=0
         NI=1
@@ -1024,17 +1540,17 @@ class GPTune(object):
             if type_ == "int" or type_ == "Int" or type_ == "Integer" or type_ == "integer":
                 lower_bound_ = input_space_info["lower_bound"]
                 upper_bound_ = input_space_info["upper_bound"]
-                input_space = Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Integer(lower_bound_, upper_bound_, transform=transformer_, name=name_))
             elif type_ == "real" or type_ == "Real" or type_ == "float" or type_ == "Float":
                 lower_bound_ = input_space_info["lower_bound"]
                 upper_bound_ = input_space_info["upper_bound"]
-                input_space = Real(lower_bound_, upper_bound_, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Real(lower_bound_, upper_bound_, transform=transformer_, name=name_))
             elif type_ == "categorical" or type_ == "Categorical" or type_ == "category" or type_ == "Category":
                 categories = input_space_info["categories"]
-                input_space = Categoricalnorm(categories, transform=transformer_, name=name_)
-                input_space_arr.append(input_space)
+                input_space_arr.append(Categoricalnorm(categories, transform=transformer_, name=name_))
+        # In TLA_I, tla_id is internally appended to the task parameter space.
+        # In some cases, the user can provide source data that have the same task parameter as the target task (e.g., the same task parameter but from different hardware)
+        # The internal tla_id allows us to differentiate between the source and the target tasks.
         input_space_arr.append(Integer(0, num_source_tasks+num_target_tasks, transform="normalize", name="tla_id"))
         IS = Space(input_space_arr)
 
@@ -1053,7 +1569,7 @@ class GPTune(object):
 
         if self.options['TLA_method'] == None:
             print('\n\n\n------Starting Single-task learning (no TLA method option is given) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
-            return self.MLA_HistoryDB(NS, NS1, NI, Tnew_)
+            return self.MLA_(NS, NS1, NI, Tnew_)
 
         elif self.options['TLA_method'] == 'Regression':
             print('\n\n\n------Starting TLA (Regression Weighted Sum) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(models_transfer)))
@@ -1098,11 +1614,11 @@ class GPTune(object):
             T_sampleflag = [False]*NI_
             T_sampleflag[0] = True
 
-            return self.MLA_HistoryDB(NS, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+            return self.MLA_(NS, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
 
         elif self.options['TLA_method'] == 'Stacking':
             print('\n\n\n------Starting TLA (Stacking) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
-            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations)
+            return self.TLA_Stacking(NS, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
 
         elif self.options['TLA_method'] == 'Ensemble_Toggling':
             print('\n\n\n------Starting TLA (Ensemble Toggling) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
@@ -1138,7 +1654,7 @@ class GPTune(object):
                     (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
                     Tnew__ = copy.deepcopy(Tnew_)
@@ -1156,13 +1672,13 @@ class GPTune(object):
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
             return (data, model, stats)
 
@@ -1201,7 +1717,7 @@ class GPTune(object):
                     (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
                     Tnew__ = copy.deepcopy(Tnew_)
@@ -1219,13 +1735,13 @@ class GPTune(object):
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Tnew_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
             return (data, model, stats)
 
@@ -1253,12 +1769,13 @@ class GPTune(object):
                 for i in range(len(result_vec)):
                     result_vec[i] = result_vec[i]/sum_
                 for i in range(1, len(result_vec), 1):
-                    result_vec[i] == result_vec[i-1]
+                    result_vec[i] += result_vec[i-1]
 
                 # test
                 rand_num1 = np.random.rand()
                 if rand_num1 < exploration_rate:
                     option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
                 else:
                     rand_num = np.random.rand()
                     option_idx = 0
@@ -1279,14 +1796,14 @@ class GPTune(object):
 
                 if TLA_chosen == "Regression":
                     self.options["TLA_method"] = "Regression"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "Sum":
                     self.options["TLA_method"] = "Sum"
-                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
                 elif TLA_chosen == "LCM_BF":
                     self.options["TLA_method"] = "LCM_BF"
 
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
 
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
@@ -1297,15 +1814,15 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
-                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Igiven_, models_transfer)
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
                 elif TLA_chosen == "LCM":
                     self.options["TLA_method"] = "LCM"
-                    Igiven__ = copy.deepcopy(Igiven_)
+                    Tnew__ = copy.deepcopy(Tnew_)
                     for i in range(num_source_tasks):
                         task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
                         task_parameter_vec = []
@@ -1315,32 +1832,176 @@ class GPTune(object):
                             else:
                                 task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
                         task_parameter_vec.append(i+1)
-                        Igiven__.append(task_parameter_vec)
+                        Tnew__.append(task_parameter_vec)
 
                     NI_ = NI+num_source_tasks
                     T_sampleflag = [False]*NI_
                     T_sampleflag[0] = True
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI+num_source_tasks, Igiven__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "Stacking":
                     self.options["TLA_method"] = "Stacking"
-                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Igiven_, source_function_evaluations)
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
                 elif TLA_chosen == "SLA":
                     self.options["TLA_method"] = None
-                    (data, model, stats) = self.MLA_HistoryDB(n_sample, NS1, NI, Igiven_)
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
 
-                # currently hard coded..
-                with open("gptune.db/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
-                    result = json.load(f_in)["func_eval"][-1]["evaluation_result"][objective_name]
-                    print ("recent result: ", result)
-                    if n_sample <= num_TLA_options:
-                        best_result[TLA_option] = result
-                    else:
-                        if result < best_result[TLA_option]:
-                            best_result[TLA_option] = result
+                # currently hard coded.. it will work only for single target task TLA
+                with open(self.historydb.historydb_path+"/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
 
             return (data, model, stats)
 
-    def TLA_Regression(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+        elif self.options['TLA_method'] == 'Ensemble_ProbDyn':
+            print('\n\n\n------Starting TLA (Ensemble Probability) for %d tasks and %d samples each with %d source tasks '%(NI,NS,len(source_function_evaluations)))
+
+            best_result = {}
+            for TLA_option in TLA_options:
+                best_result[TLA_option] = 1.0
+            num_TLA_options = len(TLA_options)
+
+            def sigmoid(num_samples, num_options, num_parameters):
+                x = (num_options*(num_parameters))*1.0/num_samples
+                return float(x)/(1+abs(x))
+                #return float(x)/math.sqrt(1+x**2)
+
+            def select_via_probability(exploration_rate, best_result):
+                option_vec = [k for k in best_result]
+                result_vec = np.array([best_result[k] for k in best_result])
+                best_min = np.min(result_vec)
+                if (best_min <= 0.0):
+                    diff = 1 - best_min
+                    for i in range(len(result_vec)):
+                        result_vec[i] = diff + result_vec[i]
+                for i in range(len(result_vec)):
+                    result_vec[i] = 1.0/result_vec[i]
+                sum_ = np.sum(result_vec)
+                for i in range(len(result_vec)):
+                    result_vec[i] = result_vec[i]/sum_
+                for i in range(1, len(result_vec), 1):
+                    result_vec[i] += result_vec[i-1]
+
+                # test
+                rand_num1 = np.random.rand()
+                if rand_num1 < exploration_rate:
+                    option_idx = np.random.choice(num_TLA_options)
+                    return option_vec[option_idx]
+                else:
+                    rand_num = np.random.rand()
+                    option_idx = 0
+                    for i in range(len(result_vec)):
+                        if rand_num <= result_vec[i]:
+                            option_idx = i
+                            return option_vec[option_idx]
+
+            for n_sample in range(1, NS+1, 1):
+
+                if n_sample <= num_TLA_options:
+                    TLA_chosen = TLA_options[(n_sample-1) % len(TLA_options)]
+                else:
+                    exploration_rate = sigmoid(n_sample-1, len(TLA_options), len(self.problem.PS))
+                    TLA_chosen = select_via_probability(exploration_rate, best_result)
+
+                # re-initialize the data instance; historydb will load it again
+                self.data = Data(self.problem)
+
+                if TLA_chosen == "Regression":
+                    self.options["TLA_method"] = "Regression"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "Sum":
+                    self.options["TLA_method"] = "Sum"
+                    (data, model, stats) = self.TLA_Regression(n_sample, NS1, NI, Tnew_, models_transfer)
+                elif TLA_chosen == "LCM_BF":
+                    self.options["TLA_method"] = "LCM_BF"
+
+                    Tnew__ = copy.deepcopy(Tnew_)
+
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    (data, model, stats) = self.TLA_LCM_BF(n_sample, NS1, NI+num_source_tasks, Tnew_, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+                elif TLA_chosen == "LCM":
+                    self.options["TLA_method"] = "LCM"
+                    Tnew__ = copy.deepcopy(Tnew_)
+                    for i in range(num_source_tasks):
+                        task_parameter_dict = source_function_evaluations[i][0]["task_parameter"]
+                        task_parameter_vec = []
+                        for j in range(len(self.problem.IS)):
+                            if self.problem.IS[j].name == "tla_id":
+                                continue
+                            else:
+                                task_parameter_vec.append(task_parameter_dict[self.problem.IS[j].name])
+                        task_parameter_vec.append(i+1)
+                        Tnew__.append(task_parameter_vec)
+
+                    NI_ = NI+num_source_tasks
+                    T_sampleflag = [False]*NI_
+                    T_sampleflag[0] = True
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI+num_source_tasks, Tnew__, T_sampleflag, None, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "Stacking":
+                    self.options["TLA_method"] = "Stacking"
+                    (data, model, stats) = self.TLA_Stacking(n_sample, NS1, NI, Tnew_, source_function_evaluations, models_transfer)
+                elif TLA_chosen == "SLA":
+                    self.options["TLA_method"] = None
+                    (data, model, stats) = self.MLA_(n_sample, NS1, NI, Tnew_)
+
+                # currently hard coded..
+                with open(self.historydb.historydb_path+"/"+self.historydb.tuning_problem_name+".json", "r") as f_in:
+                    loaded_function_evaluations = json.load(f_in)["func_eval"]
+
+                    for TLA_option in TLA_options:
+                        if TLA_option == "Sum":
+                            modeling_load = "TLA_Sum"
+                        elif TLA_option == "Regression":
+                            modeling_load = "TLA_RegressionSum"
+                        elif TLA_option == "LCM_BF":
+                            modeling_load = "TLA_LCM_BF"
+                        elif TLA_option == "LCM":
+                            modeling_load = "TLA_LCM"
+                        elif TLA_option == "Stacking":
+                            modeling_load = "TLA_Stacking"
+
+                        best_result_ = None
+                        for i in range(len(loaded_function_evaluations)):
+                            func_eval = loaded_function_evaluations[i]
+                            if func_eval["modeling"] == modeling_load:
+                                if best_result_ == None or func_eval["evaluation_result"][objective_name] < best_result_:
+                                    best_result_ = func_eval["evaluation_result"][objective_name]
+                                    best_result[TLA_option] = best_result_
+
+            return (data, model, stats)
+
+    def TLA_Regression(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1362,7 +2023,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
 
         print ("self.data.P: ", self.data.P)
 
@@ -1388,13 +2049,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
 ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1496,7 +2152,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -1508,7 +2164,7 @@ class GPTune(object):
                 #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -1542,10 +2198,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -1657,7 +2313,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Igiven = None, models_transfer = None, **kwargs):
+    def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1674,12 +2330,12 @@ class GPTune(object):
         time_search=0
         time_model=0
 
-        print ("Igiven")
-        print (Igiven)
+        print ("Tgiven")
+        print (Tgiven)
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven) #, function_evaluations, options=kwargs)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven) #, function_evaluations, options=kwargs)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -1705,13 +2361,8 @@ class GPTune(object):
         kwargs.update(options1)
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -1811,7 +2462,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -1838,10 +2489,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -1893,8 +2544,8 @@ class GPTune(object):
                                    output_result > upper_bound:
                                     out_of_range = True
 
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
-                                tmpdata.O[0][i][0] = 1000000000.0 #sys.float_info.max
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                                tmpdata.O[0][i][0] = kwargs['model_bigval_LargeNum'] #sys.float_info.max
 
                     (bestxopt, neg_log_marginal_likelihood,
                             gradients, iteration) = \
@@ -1969,7 +2620,7 @@ class GPTune(object):
 
         return (copy.deepcopy(self.data), modelers, stats)
 
-    def TLA_Stacking(self, NS, NS1 = None, NI = None, Igiven = None, source_function_evaluations = list, **kwargs):
+    def TLA_Stacking(self, NS, NS1 = None, NI = None, Tgiven = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
             "time_sample_init": 0,
@@ -1991,7 +2642,7 @@ class GPTune(object):
 
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -2015,13 +2666,8 @@ class GPTune(object):
 
         """ Multi-task Learning Autotuning """
 
-        if (NS1 is not None and NS1>NS):
-            raise Exception("NS1>NS")
-        if (NS1 is None):
-            NS1 = min(NS - 1, 3 * self.problem.DP) # heuristic rule in literature
-
-        if(Igiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
-            self.data.I = Igiven
+        if(Tgiven is not None and self.data.I is None):  # building the MLA model for each of the given tasks
+            self.data.I = Tgiven
 
         ########## normalize the data as the user always work in the original space
         if self.data.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -2085,10 +2731,10 @@ class GPTune(object):
                     for k in range(len(problem.OS))])
                 num_loaded_data += 1
 
-            print ("Igiven: ", Igiven)
+            print ("Tgiven: ", Tgiven)
 
             if (num_loaded_data > 0):
-                data.I = Igiven # fake task info (may change to IS_history)
+                data.I = Tgiven # fake task info (may change to IS_history)
                 #data.P = PS_history
                 data.P=[]
                 for i in range(len(PS_history)):
@@ -2108,6 +2754,18 @@ class GPTune(object):
                         if(any(ele==[None] for ele in OS_history[i])):
                             print ("history data contains null function values")
                             exit()
+
+                data.I = problem.IS.transform(data.I)
+                if data.P is not None:
+                    tmp=[]
+                    for x in data.P:
+                        if(len(x)>0):
+                            xNorm = problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    data.P=tmp
+
                 #print ("db: data.I: " + str(data.I))
                 #print ("db: data.P: " + str(data.P))
                 #print ("db: data.O: " + str(data.O))
@@ -2168,7 +2826,7 @@ class GPTune(object):
                 num_loaded_data += 1
 
             if (num_loaded_data > 0):
-                data.I = Igiven #IS_history
+                data.I = Tgiven #IS_history
                 #data.P = PS_history
                 data.P=[]
                 for i in range(len(PS_history)):
@@ -2188,6 +2846,18 @@ class GPTune(object):
                         if(any(ele==[None] for ele in OS_history[i])):
                             print ("history data contains null function values")
                             exit()
+
+                data.I = problem.IS.transform(data.I)
+                if data.P is not None:
+                    tmp=[]
+                    for x in data.P:
+                        if(len(x)>0):
+                            xNorm = problem.PS.transform(x)
+                            tmp.append(xNorm)
+                        else:
+                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                    data.P=tmp
+
                 # print ("db: data.I: " + str(data.I))
                 # print ("db: data.P: " + str(data.P))
                 # print ("db: data.O: " + str(OS_history))
@@ -2198,7 +2868,6 @@ class GPTune(object):
         # train stacking models based on residuals
         for o in range(self.problem.DO):
             for i in range(1, num_source_tasks, 1):
-                print ("train_stacked i: ", i)
                 modelers[o].train_stacked(data=load_residuals(self.problem, modelers[o], source_function_evaluations[i]), num_source_tasks=num_source_tasks, **kwargs)
 
         initial_modelers = copy.deepcopy(modelers)
@@ -2208,7 +2877,8 @@ class GPTune(object):
         run_pilot_anyway = False
         if NS1 == 0:
             NS1 = 1
-            res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
+            searcher_tla = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = models_transfer)')
+            res = searcher_tla.search_multitask(data = self.data, models = None, **kwargs)
             tmpP = [x[1][0] for x in res]
             #for i in range(len(newdata.P)):  # if NSi>=NS, skip the function evaluation
             #    NSi = self.data.P[i].shape[0]
@@ -2218,7 +2888,7 @@ class GPTune(object):
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
@@ -2275,7 +2945,7 @@ class GPTune(object):
                 self.data.D = tmpdata.D
 
             newdata = Data(problem = self.problem, I = self.data.I, D = self.data.D)
-            print("MLA iteration: ", optiter)
+            print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             t1 = time.time_ns()
@@ -2284,7 +2954,7 @@ class GPTune(object):
                 #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Igiven, options=kwargs)
+                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -2318,10 +2988,10 @@ class GPTune(object):
                                 if output_result < lower_bound or \
                                    output_result > upper_bound:
                                     out_of_range = True
-                            if out_of_range == True or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
+                            if out_of_range == True: #or self.historydb.problem_space_to_dict(self.problem.OS)[o]["optimize"] == False:
                                 if (kwargs["model_output_constraint"] == 'LargeNum'):
                                     tmp_tmpdata.P[t].append(tmpdata.P[t][i])
-                                    tmp_tmpdata.O[t].append([1000000000.0]) #sys.float_info.max
+                                    tmp_tmpdata.O[t].append([kwargs['model_bigval_LargeNum'] for i in range(len(tmpdata.O[t][i]))]) #sys.float_info.max
                                 elif (kwargs["model_output_constraint"] == 'Ignore'):
                                     pass
                             else:
@@ -2362,17 +3032,23 @@ class GPTune(object):
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
 
                 def data_to_dict(problem, data):
+                    data_ = copy.deepcopy(data)
+                    if data_.I is not None:    # from 2D numpy array to a list of lists
+                        data_.I = problem.IS.inverse_transform(data_.I)
+                    if data_.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
+                        data_.P = [problem.PS.inverse_transform(x) for x in data_.P]
+
                     task_id = 0
                     documents = []
 
-                    num_evals = len(data.P[task_id])
+                    num_evals = len(data_.P[task_id])
                     print ("num_evals: ", num_evals)
 
                     for i in range(num_evals):
                         document = {}
-                        document["task_parameter"] = { problem.IS[k].name:data.I[task_id][k] for k in range(len(problem.IS)) }
-                        document["tuning_parameter"] = { problem.PS[k].name:data.P[task_id][i][k] for k in range(len(problem.PS)) }
-                        document["evaluation_result"] = { problem.OS[k].name:data.O[task_id][i][k] for k in range(len(problem.OS)) }
+                        document["task_parameter"] = { problem.IS[k].name:data_.I[task_id][k] for k in range(len(problem.IS)) }
+                        document["tuning_parameter"] = { problem.PS[k].name:data_.P[task_id][i][k] for k in range(len(problem.PS)) }
+                        document["evaluation_result"] = { problem.OS[k].name:data_.O[task_id][i][k] for k in range(len(problem.OS)) }
 
                         print ("document: ", document)
 
@@ -2442,7 +3118,7 @@ class GPTune(object):
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
-            self.historydb.load_history_func_eval(self.data, self.problem, Igiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
+            self.historydb.load_history_func_eval(self.data, self.problem, Tgiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
 
         stats = {
             "time_total": 0,
@@ -2495,7 +3171,7 @@ class GPTune(object):
             K = GPy.kern.RBF(input_dim=self.problem.DI)
             M = GPy.models.GPRegression(INorms, PSoptNorms[k], K)
             # M.optimize_restarts(num_restarts = 10, robust=True, verbose=False, parallel=False, num_processes=None, messages="False")
-            M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = 'lbfgs', start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
+            M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust=True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = kwargs['model_optimizer'], start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
             MSopt.append(M)
 
         aprxoptsNorm=np.hstack([MSopt[k].predict_noiseless(InewNorms)[0] for k in range(self.problem.DP)])  # the index [0] is the mean value, [1] is the variance
@@ -2580,15 +3256,15 @@ class GPTune_MB(object):
         self.data     = Data(tp)
 
 
-    def MB_LCM(self, NLOOP=None, Igiven=None, Pdefault=None, **kwargs):
+    def MB_LCM(self, NLOOP=None, Tgiven=None, Pdefault=None, **kwargs):
         """
-        Igiven		 : a list of tasks 
+        Tgiven		 : a list of tasks 
         NLOOP	     : number of GPTuneBand loops 
         Pdefault     : assuming there is a default parameter configuration among all tasks
         """
 
         np.set_printoptions(suppress=False, precision=4)
-        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d loops for task' % (NS), Igiven)
+        print('\n\n\n------Starting MB_LCM (multi-arm bandit with LCM) with %d loops for task' % (NS), Tgiven)
 
         stats = {
             "time_total": 0,
@@ -2609,7 +3285,7 @@ class GPTune_MB(object):
         info = [[x, y] for x, y in zip(self.budgets, self.NSs)]
         print('total samples:', info)
                 
-        self.data.I = Igiven
+        self.data.I = Tgiven
         # self.data.D = [] 
         self.data.P = []
         self.data.O = []
@@ -2623,9 +3299,9 @@ class GPTune_MB(object):
             if(self.data.D is not None):
                 data1.D = []
             for s1 in range(0, len(self.budgets)):
-                for t in range(len(Igiven)):
+                for t in range(len(Tgiven)):
                     budget1 = self.budgets[s1]
-                    tmp = [budget1]+Igiven[t]
+                    tmp = [budget1]+Tgiven[t]
                     newtasks.append(tmp)
                     if(self.data.D is not None):
                         if(len(self.data.D)>0):
@@ -2645,16 +3321,16 @@ class GPTune_MB(object):
                     data1.P = [[Pdefault]] * len(newtasks) # as gt.MLA will load available database, Pdefault is effective only if database is empty   
                 
                 # print("Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
-                # print(f"NS={ntotal}, Igiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
+                # print(f"NS={ntotal}, Tgiven={newtasks}, NI={len(newtasks)}, NS1={min(self.NSs)}")
                 gt = GPTune(self.tp, computer=self.computer,
                             data=data1, options=self.options)
                 T_sampleflag = [False] * (len(newtasks))
-                idx = s*len(Igiven) 
+                idx = s*len(Tgiven) 
                 T_sampleflag[idx:] = [True]*(len(newtasks)-idx)
                 # print(newtasks)
                 # print(T_sampleflag)
 
-                (data1, _, stats0) = gt.MLA(NS=ntotal, Igiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
+                (data1, _, stats0) = gt.MLA_(NS=ntotal, Tgiven=newtasks, NI=len(newtasks), NS1=min(self.NSs), T_sampleflag=T_sampleflag)
                 
                 # print("Finish Calling MLA: \ndata1.I", data1.I, "\ndata1.P", data1.P, "\ndata1.O", data1.O)
                 # merge new results to history
@@ -2668,8 +3344,8 @@ class GPTune_MB(object):
 
             # bug fix: data1 will load all available data from database, the following make srue that it only contains MLA samples generated at the current loop    
             for s in range(len(self.budgets)):  # loop over the budget levels
-                idx = s*len(Igiven) 
-                for i in range(len(Igiven)):
+                idx = s*len(Tgiven) 
+                for i in range(len(Tgiven)):
                     data1.P[idx+i] = data1.P[idx+i][NSs1[s] - self.NSs[s]:NSs1[s]]
                     data1.O[idx+i] = data1.O[idx+i][NSs1[s] - self.NSs[s]:NSs1[s],:]
 
@@ -2680,10 +3356,10 @@ class GPTune_MB(object):
             # print("data1.D = ", data1.D)
 
             if Nloop == 0:
-                self.data.P = data1.P[0:len(Igiven)]  # the first 0:len(Igiven) tasks of data1 are highest budget
-                self.data.O = data1.O[0:len(Igiven)] 
+                self.data.P = data1.P[0:len(Tgiven)]  # the first 0:len(Tgiven) tasks of data1 are highest budget
+                self.data.O = data1.O[0:len(Tgiven)] 
             else:
-                # self.data.P = [np.concatenate((self.data.P[i], data1.P[0:len(Igiven)][i])) for i in range(len(self.data.P))]
+                # self.data.P = [np.concatenate((self.data.P[i], data1.P[0:len(Tgiven)][i])) for i in range(len(self.data.P))]
                 self.data.P = [self.data.P[i] + data1.P[i] for i in range(len(self.data.P))]
                 self.data.O = [np.concatenate((self.data.O[i], data1.O[i])) for i in range(len(self.data.O))]
             
@@ -2701,12 +3377,12 @@ class GPTune_MB(object):
                 # print(f'\n\n\nArm {s}, Initial budget = {budget}, number of total samples = {ns}')
                 ratio = int(ns/self.options['budget_base'])
                 # print(f'Current s = {s}, budget = {budget}, ns = {ns}')
-                idx = s*len(Igiven) 
-                temp_I = data1.I[idx:idx+len(Igiven)]
+                idx = s*len(Tgiven) 
+                temp_I = data1.I[idx:idx+len(Tgiven)]
                 # print(f'Tasks: ', temp_I)
-                temp_O = list(map(np.squeeze, data1.O[idx:idx+len(Igiven)]))
-                # temp_P = list(map(np.array, data1.P[idx:idx+len(Igiven)]))
-                temp_P = data1.P[idx:idx+len(Igiven)]
+                temp_O = list(map(np.squeeze, data1.O[idx:idx+len(Tgiven)]))
+                # temp_P = list(map(np.array, data1.P[idx:idx+len(Tgiven)]))
+                temp_P = data1.P[idx:idx+len(Tgiven)]
                 for ri in range(s):
                     idx_sort = list(map(np.argsort, temp_O))
                     temp_O = [y[x[:ratio]] for (x, y) in zip(idx_sort, temp_O)]
@@ -2765,7 +3441,7 @@ class GPTune_MB(object):
                     stats['time_total'] += timefun
                 # print(newdata.I,'jia')
                 # print(newdata.P,'dia')
-                newdata.I = Igiven
+                newdata.I = Tgiven
                 # print('newdata before merge')
                 # print('newdata.P = ', newdata.P)
                 # print('self.data.P = ', self.data.P)

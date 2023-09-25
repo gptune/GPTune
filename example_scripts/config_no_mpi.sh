@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 # Provide correct path/alias/version information for your system
 CC=gcc-9
 CXX=g++-9
@@ -25,30 +27,30 @@ source env/bin/activate
 $PIP install --upgrade -r requirements.txt
 cp ./patches/opentuner/manipulator.py  ./env/lib/python$PyMAJOR.$PyMINOR/site-packages/opentuner/search/.
 
-rm -rf scikit-optimize
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-$PY setup.py build
-$PY setup.py install
+# rm -rf scikit-optimize
+# git clone https://github.com/scikit-optimize/scikit-optimize.git
+# cd scikit-optimize/
+# cp ../patches/scikit-optimize/space.py skopt/space/.
+# $PY setup.py build
+# $PY setup.py install
 
-cd $GPTUNEROOT
-rm -rf cGP
-git clone https://github.com/gptune/cGP
-cd cGP/
-$PY setup.py install
+# cd $GPTUNEROOT
+# rm -rf cGP
+# git clone https://github.com/gptune/cGP
+# cd cGP/
+# $PY setup.py install
 
-cd $GPTUNEROOT
-rm -rf autotune
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-# cp ../patches/autotune/problem.py autotune/.
-env CC=$CC pip install  -e .
-cd $GPTUNEROOT
-rm -rf hybridMinimization
-git clone https://github.com/gptune/hybridMinimization.git
-cd hybridMinimization/
-$PY setup.py install
+# cd $GPTUNEROOT
+# rm -rf autotune
+# git clone https://github.com/ytopt-team/autotune.git
+# cd autotune/
+# # cp ../patches/autotune/problem.py autotune/.
+# env CC=$CC pip install  -e .
+# cd $GPTUNEROOT
+# rm -rf hybridMinimization
+# git clone https://github.com/gptune/hybridMinimization.git
+# cd hybridMinimization/
+# $PY setup.py install
 
 
 if [[ $(uname -s) == "Darwin" ]]; then

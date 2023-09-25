@@ -43,6 +43,7 @@ def parse_args():
     parser.add_argument('-optimization', type=str,default='GPTune', help='Optimization algorithm (opentuner, hpbandster, GPTune)')
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-npilot', type=int, default=10, help='Number of initial runs per task')
+    parser.add_argument('-constraint_mode', type=int, default=1, help='Different ways to specify constrained optimizations')
 
     args = parser.parse_args()
 
@@ -80,10 +81,11 @@ def main():
     args = parse_args()
     nrun = args.nrun
     npilot = args.npilot
-    TUNER_NAME = args.optimization
+
+    constraint_mode = args.constraint_mode
 
     database_metadata = {
-        "tuning_problem_name": "OSY_constraint",
+        "tuning_problem_name": "OSY_constraint_"+str(constraint_mode),
         "machine_configuration": {
             "machine_name": "mymachine",
             "myprocessor": {
@@ -104,83 +106,241 @@ def main():
     }
 
     (machine, processor, nodes, cores) = GetMachineConfiguration(meta_dict = database_metadata)
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
-    os.environ['MACHINE_NAME'] = machine
-    os.environ['TUNER_NAME'] = TUNER_NAME
 
-    problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
-    x1 = Real(0., 10., transform="normalize", name="x1")
-    x2 = Real(0., 10., transform="normalize", name="x2")
-    x3 = Real(1., 5., transform="normalize", name="x3")
-    x4 = Real(0., 6., transform="normalize", name="x4")
-    x5 = Real(1., 5., transform="normalize", name="x5")
-    x6 = Real(0., 10., transform="normalize", name="x6")
-    y1 = Real(float("-Inf"), -150, name="y1") #, optimize=False)
-    y2 = Real(float("-Inf"), float("Inf"), name="y2")
+    if constraint_mode == 1:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), -150, name="y1", optimize=False)
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
-    input_space = Space([problem])
-    parameter_space = Space([x1, x2, x3, x4, x5, x6])
-    output_space = Space([y1, y2])
-    constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
-    problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
 
-    historydb = HistoryDB(meta_dict=database_metadata)
+        historydb = HistoryDB(meta_dict=database_metadata)
 
-    computer = Computer(nodes=nodes, cores=cores, hosts=None)
-    options = Options()
-    options['model_restarts'] = 1
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
 
-    options['distributed_memory_parallelism'] = False
-    options['shared_memory_parallelism'] = False
+        options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+        options['search_more_samples'] = 4
+        options['model_class'] = 'Model_GPy_LCM'
+        options['model_output_constraint'] = "LargeNum" #True
+        options['model_bigval_LargeNum'] = 100
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
 
-    options['objective_evaluation_parallelism'] = False
-    options['objective_multisample_threads'] = 1
-    options['objective_multisample_processes'] = 1
-    options['objective_nprocmax'] = 1
+    elif constraint_mode == 2:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), -150, name="y1", optimize=False)
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
 
-    options['model_processes'] = 1
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
 
-    ## disable the following lines to use product of individual EIs as a single-valued acquisition function
-    options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
-    options['search_pop_size'] = 1000
-    options['search_gen'] = 50
-    #options['search_gen'] = 10
-    options['search_more_samples'] = 4
+        historydb = HistoryDB(meta_dict=database_metadata)
 
-    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
-    options['model_output_constraint'] = True
-    options['verbose'] = False
-    options['sample_class'] = 'SampleOpenTURNS'
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
 
-    options.validate(computer=computer)
+        options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+        options['search_more_samples'] = 4
+        options['model_class'] = 'Model_GPy_LCM'
+        options['model_output_constraint'] = "Ignore"
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
+
+    elif constraint_mode == 3:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), -150, name="y1")
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
+
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+
+        historydb = HistoryDB(meta_dict=database_metadata)
+
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
+
+        # options['search_algo'] = 'pso' 
+        # options['search_af']='UCB-HVI'
+        options['search_algo'] = 'nsga2' 
+        options['search_af']='EI'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+
+        options['search_more_samples'] = 1
+        options['model_class'] = 'Model_GPy_LCM'
+        options['model_output_constraint'] = "LargeNum"
+        options['model_bigval_LargeNum'] = 100
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
+
+    elif constraint_mode == 4:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), -150, name="y1")
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
+
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+
+        historydb = HistoryDB(meta_dict=database_metadata)
+
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
+
+        options['search_algo'] = 'nsga2' #'maco' #'moead' #'nsga2' #'nspso'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+
+        options['search_more_samples'] = 4
+        options['model_class'] = 'Model_GPy_LCM'
+        options['model_output_constraint'] = "Ignore"
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
+
+    elif constraint_mode == 5:
+        problem = Categoricalnorm(["OSY"], transform="onehot", name="problem")
+        x1 = Real(0., 10., transform="normalize", name="x1")
+        x2 = Real(0., 10., transform="normalize", name="x2")
+        x3 = Real(1., 5., transform="normalize", name="x3")
+        x4 = Real(0., 6., transform="normalize", name="x4")
+        x5 = Real(1., 5., transform="normalize", name="x5")
+        x6 = Real(0., 10., transform="normalize", name="x6")
+        y1 = Real(float("-Inf"), float("Inf"), name="y1")
+        y2 = Real(float("-Inf"), float("Inf"), name="y2")
+
+        input_space = Space([problem])
+        parameter_space = Space([x1, x2, x3, x4, x5, x6])
+        output_space = Space([y1, y2])
+        constraints = {"cst1": cst1, "cst2": cst2, "cst3": cst3}
+        problem = TuningProblem(input_space, parameter_space, output_space, objectives, constraints, None)
+
+        historydb = HistoryDB(meta_dict=database_metadata)
+
+        computer = Computer(nodes=nodes, cores=cores, hosts=None)
+        options = Options()
+        options['model_restarts'] = 1
+        options['distributed_memory_parallelism'] = False
+        options['shared_memory_parallelism'] = False
+        options['objective_evaluation_parallelism'] = False
+        options['objective_multisample_threads'] = 1
+        options['objective_multisample_processes'] = 1
+        options['objective_nprocmax'] = 1
+        options['model_processes'] = 1
+
+        options['search_algo'] = 'pso' 
+        options['search_af']='UCB-HVI'
+        # options['search_algo'] = 'nsga2' 
+        # options['search_af']='EI'
+        options['search_pop_size'] = 1000
+        options['search_gen'] = 50
+        options['search_more_samples'] = 1
+        options['model_class'] = 'Model_GPy_LCM'
+        options['verbose'] = False
+        options['sample_class'] = 'SampleOpenTURNS'
+        options.validate(computer=computer)
+
 
     giventask = [["OSY"]]
 
     NI=len(giventask)
     NS=nrun
 
-    TUNER_NAME = os.environ['TUNER_NAME']
+    data = Data(problem)
+    gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
+    (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=npilot)
+    print("stats: ", stats)
 
-    if(TUNER_NAME=='GPTune'):
-        data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
-        print("stats: ", stats)
-
-        """ Print all input and parameter samples """
-        import pygmo as pg
-        for tid in range(NI):
-            print("tid: %d"%(tid))
-            print("    problem:%s"%(data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-            front = ndf[0]
-            # print('front id: ',front)
-            fopts = data.O[tid][front]
-            xopts = [data.P[tid][i] for i in front]
-            print('    Popts ', xopts)
-            print('    Oopts ', fopts.tolist())
+    """ Print all input and parameter samples """
+    import pymoo
+    from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+    for tid in range(NI):
+        print("tid: %d"%(tid))
+        print("    problem:%s"%(data.I[tid][0]))
+        print("    Ps ", data.P[tid])
+        print("    Os ", data.O[tid].tolist())
+        front = NonDominatedSorting(method="fast_non_dominated_sort").do(data.O[tid], only_non_dominated_front=True)
+        # print('front id: ',front)
+        fopts = data.O[tid][front]
+        xopts = [data.P[tid][i] for i in front]
+        print('    Popts ', xopts)
+        print('    Oopts ', fopts.tolist())
 
     if True: # python plot
         from pymoo.factory import get_problem
@@ -201,7 +361,7 @@ def main():
             y1.append(o[0])
             y2.append(o[1])
 
-        plt.plot(y1, y2, 'o', color='black', label='Search')
+        plt.plot(y1, y2, 'o', color='black', label='Search (initial random samples)')
 
         '''Pareto frontier selection process'''
         sorted_list = sorted([[y1[i], y2[i]] for i in range(len(y1))], reverse=False)
@@ -228,14 +388,25 @@ def main():
 
         y1 = y1[npilot:nrun]
         y2 = y2[npilot:nrun]
-        plt.plot(y1, y2, 'o', color='red', label='Search')
+        plt.plot(y1, y2, 'o', color='red', label='Search (samples from BO)')
 
-        plt.title("Tuning on OSY (constrained LCM + NSGA2)")
+        if constraint_mode == 1:
+            plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y2 only) \n (Option: Large value)")
+        elif constraint_mode == 2:
+            plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y2 only) \n (Option: Ignore)")
+        elif constraint_mode == 3:
+            plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y1 and Y2) \n (Option: Large value)")
+        elif constraint_mode == 4:
+            plt.title("Tuning on OSY \n (Output constraint: Y1 < -150; Minimize Y1 and Y2) \n (Option: Ignore)")
+        elif constraint_mode == 5:
+            plt.title("Tuning on OSY \n (No output constraint; Minimize Y1 and Y2) \n")
+
         plt.legend(loc="upper right")
         plt.xlabel('Y1')
         plt.ylabel('Y2')
         #plt.ylim([0,100])
-        plt.show()
+        #plt.show()
+        plt.savefig("OSY_MO_Constraint_Mode"+str(constraint_mode)+".pdf")
 
         #plt.figure()
         #Or = np.array(data.O[tid][front])

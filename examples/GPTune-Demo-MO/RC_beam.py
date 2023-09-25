@@ -192,23 +192,23 @@ def main():
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
         gt = GPTune(problem, computer=computer, data=data, options=options, historydb=historydb, driverabspath=os.path.abspath(__file__))
-        (data, modeler, stats) = gt.MLA(NS=NS, Igiven=giventask, NI=NI, NS1=npilot)
+        (data, modeler, stats) = gt.MLA(NS=NS, Tgiven=giventask, NI=NI, NS1=npilot)
         print("stats: ", stats)
 
         """ Print all input and parameter samples """
-        import pygmo as pg
+        import pymoo
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
         for tid in range(NI):
             print("tid: %d"%(tid))
             print("    problem:%s"%(data.I[tid][0]))
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
-            ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-            front = ndf[0]
+            front = NonDominatedSorting(method="fast_non_dominated_sort").do(data.O[tid], only_non_dominated_front=True)
             # print('front id: ',front)
             fopts = data.O[tid][front]
             xopts = [data.P[tid][i] for i in front]
             print('    Popts ', xopts)
-            print('    Oopts ', fopts.tolist())
+            print('    Oopts ', fopts.tolist())  
 
     if True: # python plot
         PS = data.P[0]

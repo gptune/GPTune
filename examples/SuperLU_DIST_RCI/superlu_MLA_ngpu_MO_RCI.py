@@ -47,7 +47,6 @@ from gptune import * # import all
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
-import pygmo as pg
 
 # from callopentuner import OpenTuner
 # from callhpbandster import HpBandSter
@@ -152,22 +151,23 @@ def main():
 		
 		NI = len(giventask)
 		NS = nrun
-		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Igiven=giventask, NS1=max(NS//2, 1))
+		(data, model, stats) = gt.MLA(NS=NS, NI=NI, Tgiven=giventask, NS1=max(NS//2, 1))
 		# print("stats: ", stats)
 
 		""" Print all input and parameter samples """	
-		for tid in range(NI):
-			print("tid: %d"%(tid))
-			print("    matrix:%s"%(data.I[tid][0]))
-			print("    Ps ", data.P[tid])
-			print("    Os ", data.O[tid].tolist())
-			ndf, dl, dc, ndr = pg.fast_non_dominated_sorting(data.O[tid])
-			front = ndf[0]
-			# print('front id: ',front)
-			fopts = data.O[tid][front]
-			xopts = [data.P[tid][i] for i in front]
-			print('    Popts ', xopts)		
-			print('    Oopts ', fopts.tolist())	
+        import pymoo
+        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+        for tid in range(NI):
+            print("tid: %d"%(tid))
+            print("    problem:%s"%(data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            front = NonDominatedSorting(method="fast_non_dominated_sort").do(data.O[tid], only_non_dominated_front=True)
+            # print('front id: ',front)
+            fopts = data.O[tid][front]
+            xopts = [data.P[tid][i] for i in front]
+            print('    Popts ', xopts)
+            print('    Oopts ', fopts.tolist())  
 
 
 

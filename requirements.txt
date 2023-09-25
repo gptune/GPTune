@@ -1,4 +1,5 @@
-numpy
+ConfigSpace <= 0.6.0
+numpy < 1.24
 joblib
 scikit-learn 
 scipy >= 1.7.0
@@ -11,9 +12,15 @@ lhsmdu
 ipyparallel
 opentuner >= 0.8.8
 hpbandster
-pygmo
+# pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
+pygmo <= 2.16.1 # this doesn't seem to work for Python>3.8
 filelock 
 requests
 pymoo
 cloudpickle
 SALib
+termcolor
+scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git
+ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git
+cgp @ git+https://git@github.com/gptune/cGP.git
+hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git

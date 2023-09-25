@@ -22,10 +22,12 @@ except FileNotFoundError:
 
 REQUIRED=[]
 
+
 EXTRAS = {
     'all': [
         'Sphinx>=1.8.2',
         'sphinx_rtd_theme',
+        'statsmodels >= 0.13.0',
         'numpy',
         'joblib',
         'scikit-learn <= 0.22',
@@ -36,11 +38,18 @@ EXTRAS = {
         'openturns',
         'lhsmdu',
         'ipyparallel',
-        'opentuner',
+        'opentuner >= 0.8.8',
         'hpbandster',
-        'pygmo',
+        'pygmo<=2.16.1',
         'filelock', 
         'requests',           
+        'pymoo',           
+        'cloudpickle',           
+        'SALib',           
+        'scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git',           
+        'ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git',           
+        'cgp @ git+https://git@github.com/gptune/cGP.git',           
+        'hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git',           
     ],
 }
 
@@ -55,4 +64,6 @@ setup(
   url='https://github.com/gptune/GPTune',
   install_requires=REQUIRED,
   extras_require=EXTRAS,
+  include_package_data=True,
+  package_data = {'GPTune': ['lib_*']}
 )

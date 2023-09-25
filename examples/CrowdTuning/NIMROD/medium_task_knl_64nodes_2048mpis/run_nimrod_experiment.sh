@@ -61,18 +61,7 @@ do
         done
     done
 
-    for tuning_method in default_parameter
-    do
-        for npilot in 1
-        do
-            nstep=30
-            nrun=1
-
-            bash nimrod_tuning.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot -f ${tuning_method} | tee log.nimrod_${tuning_method}_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}
-        done
-    done
-
-    for tuning_method in TLA_LCM TLA_Regression TLA_LCM_BF TLA_Sum
+    for tuning_method in TLA_LCM TLA_Regression TLA_Toggling TLA_Prob TLA_ProbDyn
     do
         for npilot in 0
         do
@@ -83,3 +72,18 @@ do
         done
     done
 done
+
+for expid in 0 1 2
+do
+    for tuning_method in default_parameter
+    do
+        for npilot in 1
+        do
+            nstep=30
+            nrun=1
+
+            bash nimrod_tuning.sh -a $nstep -b $expid -c $seed -d $nrun -e $npilot -f ${tuning_method} | tee log.nimrod_${tuning_method}_nstep${nstep}_expid${expid}_seed${seed}_nrun${nrun}_npilot${npilot}
+        done
+    done
+done
+
