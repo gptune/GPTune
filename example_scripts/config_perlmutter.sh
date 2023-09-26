@@ -33,7 +33,7 @@ mpi=craympich    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=0 # whether to build all examples
+BuildExample=1 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -365,7 +365,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_C_COMPILER=$MPICC \
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
