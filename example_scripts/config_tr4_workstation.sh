@@ -7,7 +7,7 @@ cd ..
 ##################################################
 
 export ModuleEnv='tr4-workstation-AMD1950X-openmpi-gnu'
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 ##################################################
 ##################################################
@@ -22,11 +22,14 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module swap python python/gcc-9.1.0/3.8.4
-	module load cmake/3.19.2
-	shopt -s expand_aliases
-	alias python='python3.8'
-	alias pip='pip3.8'
+    module load cmake/3.19.2
+
+	module load python/gcc-9.1.0/3.7.4
+
+	# module swap python python/gcc-9.1.0/3.8.4
+	# shopt -s expand_aliases
+	# alias python='python3.8'
+	# alias pip='pip3.8'
 	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
@@ -108,7 +111,7 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf superlu_dist
 	git clone https://github.com/xiaoyeli/superlu_dist.git
 	cd superlu_dist
-
+	# git checkout gpu_trisolve_new
 
 	#### the following server is often down, so switch to the github repository 
 	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
@@ -165,7 +168,7 @@ if [[ $BuildExample == 1 ]]; then
 	rm -rf cmake_install.cmake
 	rm -rf CMakeFiles
 	cmake .. \
-		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+		-DCMAKE_CXX_FLAGS="-std=c++11 -DAdd_" \
 		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
 		-DBUILD_SHARED_LIBS=ON \
 		-DCMAKE_CXX_COMPILER=$MPICXX \

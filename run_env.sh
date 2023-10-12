@@ -36,20 +36,20 @@
 # export nodes=16  # number of nodes to be used
 
 
-############# Perlmutter
-export machine=perlmutter
-export proc=milan   # milan,gpu
-export mpi=craympich #openmpi  # craympich
-export compiler=gnu   # gnu, intel
-export nodes=1  # number of nodes to be used
+# ############# Perlmutter
+# export machine=perlmutter
+# export proc=milan   # milan,gpu
+# export mpi=craympich #openmpi  # craympich
+# export compiler=gnu   # gnu, intel
+# export nodes=1  # number of nodes to be used
 
-# # ################ Yang's tr4 machine
-# export machine=tr4-workstation
-#  export proc=AMD1950X   
-#  export mpi=openmpi  
-#  export compiler=gnu   
-#  export nodes=1  # number of nodes to be used
-# # #
+# ################ Yang's tr4 machine
+export machine=tr4-workstation
+ export proc=AMD1950X   
+ export mpi=openmpi  
+ export compiler=gnu   
+ export nodes=1  # number of nodes to be used
+# #
 
 # ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
 # export machine=cleanlinux
@@ -92,12 +92,13 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module swap python python/gcc-9.1.0/3.8.4
-    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
-    # export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/GPTune/:$PYTHONPATH
-    export PYTHONPATH=~/.local/lib/python3.8/site-packages/:$PYTHONPATH
-    shopt -s expand_aliases
-    alias python='python3.8'
+    module load python/gcc-9.1.0/3.7.4
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/GPTune/:$PYTHONPATH
+    # module swap python python/gcc-9.1.0/3.8.4
+    # export PYTHONPATH=~/.local/lib/python3.8/site-packages/:$PYTHONPATH
+    # shopt -s expand_aliases
+    # alias python='python3.8'
     export MPIRUN=mpirun 
     export MPIARG=--allow-run-as-root
     cores=16
@@ -509,9 +510,9 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
 
     if [[ $MPIFromSource = 1 ]]; then
-        export PATH=$PWD/openmpi-4.0.1/bin:$PATH
-        export MPIRUN=$PWD/openmpi-4.0.1/bin/mpirun
-        export LD_LIBRARY_PATH=$PWD/openmpi-4.0.1/lib:$LD_LIBRARY_PATH
+        export PATH=$PWD/openmpi-4.1.5/bin:$PATH
+        export MPIRUN=$PWD/openmpi-4.1.5/bin/mpirun
+        export LD_LIBRARY_PATH=$PWD/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
     else
         export PATH=$PATH
         export MPIRUN=
@@ -524,15 +525,15 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 
     export PYTHONPATH=$PWD/build/GPTune/:$PYTHONPATH
 	export PATH=$PWD/env/bin/:$PATH
-	export LD_LIBRARY_PATH=$PWD/scalapack-2.1.0/build/install/lib/:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$PWD/scalapack-2.2.0/build/install/lib/:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
 
     cores=4
     gpus=0
     
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,0,1]},\"scalapack\":{\"version_split\": [2,1,0]},\"gcc\":{\"version_split\": [8,4,0]}}")
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,5]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,5]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
 
 ############### Cori Haswell CrayMPICH+GNU
 elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then

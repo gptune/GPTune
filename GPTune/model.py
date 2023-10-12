@@ -135,9 +135,12 @@ class Model_GPy_LCM(Model):
             else:
                 K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             
-            gpymf = GPy.core.Mapping(len(data.P[0][0]),1) 
-            gpymf.f = self.mfnorm
-            gpymf.update_gradients = lambda a,b: None
+            if(self.mf is not None):
+                gpymf = GPy.core.Mapping(len(data.P[0][0]),1)         
+                gpymf.f = self.mfnorm
+                gpymf.update_gradients = lambda a,b: None
+            else:
+                gpymf = None
 
             if (kwargs['model_sparse']):
                 self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing, mean_function=gpymf)
