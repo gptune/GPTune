@@ -3902,3 +3902,73 @@ def GetSurrogateModelConfigurations(meta_path="./.gptune/model.json", meta_dict=
 
     return model_configurations
 
+# Shapley analysis plug-in
+def ShapleyAnalysis(
+        function_evaluations=None):
+
+    import shap
+    from sklearn.gaussian_process import GaussianProcessRegressor
+    from sklearn.gaussian_process.kernels import RBF
+
+    X = []
+    y = []
+
+    tuning_parameter_names = list(function_evaluations[0]["tuning_parameter"].keys())
+    print (tuning_parameter_names)
+
+    tuning_parameters = []
+    for i in range(len(tuning_parameter_names)):
+        tuning_parameters.append([])
+
+    for func_eval in function_evaluations:
+        for i in range(len(tuning_parameter_names)):
+            tuning_parameters[i].append(func_eval["tuning_parameter"][tuning_parameter_names[i]])
+
+    parameter_ranges = [[] for i in range(len(tuning_parameter_names))]
+
+    for func_eval in function_evaluations:
+        for i in range(len(tuning_parameter_names)):
+            param_val = func_eval["tuning_parameter"][tuning_parameter_names[i]]
+            if isinstance(tuning_parameters[i][0], str):
+                if param_val not in parameter_ranges[i]:
+                    parameter_ranges[i].append(param_val)
+            else:
+                if len(parameter_ranges[i]) == 0:
+                    parameter_ranges[i] = [param_val, param_val]
+                if param_val < parameter_ranges[i][0]:
+                    parameter_ranges[i][0] = param_val
+                if param_val > parameter_ranges[i][1]:
+                    parameter_ranges[i][1] = param_val
+
+    for func_eval in function_evaluations:
+        param_val_set = []
+        for i in range(len(tuning_parameter_names)):
+            param_val = func_eval["tuning_parameter"][tuning_parameter_names[i]]
+            if isinstance(tuning_parameters[i][0], str):
+                value = (1.0/float(len(parameter_ranges[i])))*float(parameter_ranges[i].index(param_val)+1)
+                param_val_set.append(value)
+            else:
+                value = float(param_val)/float(parameter_ranges[i][1])
+                param_val_set.append(value)
+        X.append(param_val_set)
+        y.append(float(func_eval["evaluation_result"]["wall_clock_time"]))
+        #y.append(float(1.0)/float(func_eval["evaluation_result"]["wall_clock_time"]))
+
+    X = np.array(X)
+    y = np.array(y)
+
+    gp_kernel = RBF(length_scale=[1. for i in range(len(tuning_parameter_names))])
+    gpr = GaussianProcessRegressor(kernel=gp_kernel)
+    gpr.fit(X, y)
+
+    #explainer = shap.explainers.Exact(gpr.predict, X, feature_names=[tuning_parameter_names[i] for i in range((len(tuning_parameter_names)))])
+
+    #Regression based: https://shap.readthedocs.io/en/latest/example_notebooks/tabular_examples/linear_models/Sentiment%20Analysis%20with%20Logistic%20Regression.html
+    explainer = shap.Explainer(gpr.predict, X, feature_names=[tuning_parameter_names[i] for i in range((len(tuning_parameter_names)))])
+
+    shapley_vals = explainer(X)
+    shap.plots.bar(shapley_vals)
+    shap.plots.beeswarm(shapley_vals)
+
+    return
+
