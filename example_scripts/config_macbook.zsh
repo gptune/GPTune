@@ -43,8 +43,8 @@ brew upgrade gcc
 brew install openblas
 brew upgrade openblas
 
-brew install lapack
-brew upgrade lapack
+#brew install lapack
+#brew upgrade lapack
 
 brew install jq
 
@@ -52,12 +52,12 @@ brew install jq
 pythonversion=$(ls ${BREWPATH}/python@3.9/)
 gccversion=$(ls ${BREWPATH}/gcc/)
 openblasversion=$(ls ${BREWPATH}/openblas/)
-lapackversion=$(ls ${BREWPATH}/lapack/)
+#lapackversion=$(ls ${BREWPATH}/lapack/)
 
 echo "Detected Python version: ${pythonversion}"
 echo "Detected GCC version: ${gccversion}"
 echo "Detected OpenBLAS version: ${openblasversion}"
-echo "Detected LAPACK version: ${lapackversion}"
+#echo "Detected LAPACK version: ${lapackversion}"
 
 # Set the environment variables required for the installation
 
@@ -68,7 +68,8 @@ if [[ ${ModuleEnv} == 'mac-intel-openmpi-gnu' || ${ModuleEnv} == 'mac-mchip-open
     export PATH=$BREWPATH/python@3.9/$pythonversion/bin/:$PATH
     export PATH=$GPTUNEROOT/env/bin/:$PATH
     export BLAS_LIB=$BREWPATH/openblas/$openblasversion/lib/libblas.dylib
-    export LAPACK_LIB=$BREWPATH/lapack/$lapackversion/lib/liblapack.dylib
+    #export LAPACK_LIB=$BREWPATH/lapack/$lapackversion/lib/liblapack.dylib
+    export LAPACK_LIB=$BREWPATH/openblas/$openblasversion/lib/liblapack.dylib  # As of December 4, for complete installation, this LAPACK link should indicate the liblapack.dylib in OpenBLAS.
     export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/pygmo2/build/pygmo/
     export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/autotune/
     export PYTHONPATH=$PYTHONPATH:$GPTUNEROOT/scikit-optimize/
