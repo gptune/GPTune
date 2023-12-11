@@ -549,7 +549,8 @@ class SurrogateProblem(object):
             else:
                 return [1e12]* self.problem.DO
     
-
+    def obj_scipy(self, x):
+        return self.fitness(x)[0]
 
 
 from pymoo.core.problem import ElementwiseProblem
@@ -843,7 +844,9 @@ class SurrogateProblemCMO(object):
                 return [1e12]
             else:
                 return [1e12]* self.problem.DO
-
+            
+    def obj_scipy(self, x):
+        return self.fitness(x)[0]
 
 class SearchCMO(Search):
 
