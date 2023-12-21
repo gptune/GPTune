@@ -857,9 +857,9 @@ class GPTune(object):
 
                 #print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
-                print ("tmpdata.I: ", tmpdata.I)
-                print ("tmpdata.P: ", tmpdata.P)
-                print ("tmpdata.O: ", tmpdata.O)
+                #print ("tmpdata.I: ", tmpdata.I)
+                #print ("tmpdata.P: ", tmpdata.P)
+                #print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -952,7 +952,6 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
-
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
