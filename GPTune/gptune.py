@@ -827,36 +827,39 @@ class GPTune(object):
             optiter = optiter + 1
             t1 = time.time_ns()
             for o in range(self.problem.DO):
-
-                tmpdata = Data(self.problem)
-                self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
-                if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
-                    tmp=[]
-                    for x in tmpdata.P:
-                        if(len(x)>0):
-                            xNorm = self.problem.PS.transform(x)
-                            tmp.append(xNorm)
-                        else:
-                            tmp.append(np.empty( shape=(0, self.problem.DP) ))
-                    tmpdata.P=tmp
-                if(tmpdata.P is not None):
-                    for i in range(len(tmpdata.P)):
-                        if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
-                            tmpdata.P[i] = copy.deepcopy(self.data.P[i])
-                            tmpdata.O[i] = copy.deepcopy(self.data.O[i])
-                        tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
-                    if tmpdata.I is not None: # from a list of lists to a 2D numpy array
-                        tmpdata.I = self.problem.IS.transform(tmpdata.I)
-                else:
+                if (self.options['RCI_mode'] == False):
+                    tmpdata = Data(self.problem)
                     tmpdata = copy.deepcopy(self.data)
-                    tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                    #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] ## YC - TODO check: I don't think this is necessary, but left this as a comment for future reference.
+                else:
+                    tmpdata = Data(self.problem)
+                    self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                    if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                        tmp=[]
+                        for x in tmpdata.P:
+                            if(len(x)>0):
+                                xNorm = self.problem.PS.transform(x)
+                                tmp.append(xNorm)
+                            else:
+                                tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                        tmpdata.P=tmp
+                    if(tmpdata.P is not None):
+                        for i in range(len(tmpdata.P)):
+                            if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                                tmpdata.P[i] = copy.deepcopy(self.data.P[i])
+                                tmpdata.O[i] = copy.deepcopy(self.data.O[i])
+                            tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
+                        if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                            tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                    else:
+                        tmpdata = copy.deepcopy(self.data)
+                        tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
-                #print ("tmpdata.I: ", tmpdata.I)
-                # print ("self data O: ", self.data.O[0][:,o])
+                #print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
-                #print ("tmpdata.P: ", tmpdata.P)
-                # print ("tmpdata.O: ", tmpdata.O)
-                #print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.I: ", tmpdata.I)
+                print ("tmpdata.P: ", tmpdata.P)
+                print ("tmpdata.O: ", tmpdata.O)
 
                 if (kwargs["model_output_constraint"] != None):
                     tmp_tmpdata = Data(self.problem)
@@ -1254,27 +1257,31 @@ class GPTune(object):
                 for o in range(self.problem.DO):
                     tmpdata = Data(self.problem)
                     if evaluation_instance == 0:
-                        self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
-                        if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
-                            tmp=[]
-                            for x in tmpdata.P:
-                                if(len(x)>0):
-                                    xNorm = self.problem.PS.transform(x)
-                                    tmp.append(xNorm)
-                                else:
-                                    tmp.append(np.empty( shape=(0, self.problem.DP) ))
-                            tmpdata.P=tmp
-                        if(tmpdata.P is not None):
-                            for i in range(len(tmpdata.P)):
-                                if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
-                                    tmpdata.P[i] = copy.deepcopy(data_replica.P[i])
-                                    tmpdata.O[i] = copy.deepcopy(data_replica.O[i])
-
-                            if tmpdata.I is not None: # from a list of lists to a 2D numpy array
-                                tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                        if (self.options['RCI_mode'] == False):
+                            tmpdata = copy.deepcopy(self.data)
+                            #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] ## YC - TODO check: I don't think this is necessary, but left this as a comment for future reference.
                         else:
-                            tmpdata = copy.deepcopy(data_replica)
-                            tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
+                            self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                            if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
+                                tmp=[]
+                                for x in tmpdata.P:
+                                    if(len(x)>0):
+                                        xNorm = self.problem.PS.transform(x)
+                                        tmp.append(xNorm)
+                                    else:
+                                        tmp.append(np.empty( shape=(0, self.problem.DP) ))
+                                tmpdata.P=tmp
+                            if(tmpdata.P is not None):
+                                for i in range(len(tmpdata.P)):
+                                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                                        tmpdata.P[i] = copy.deepcopy(data_replica.P[i])
+                                        tmpdata.O[i] = copy.deepcopy(data_replica.O[i])
+
+                                if tmpdata.I is not None: # from a list of lists to a 2D numpy array
+                                    tmpdata.I = self.problem.IS.transform(tmpdata.I)
+                            else:
+                                tmpdata = copy.deepcopy(data_replica)
+                                tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
                     else:
                         tmpdata = copy.deepcopy(data_replica)
                         tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
