@@ -58,7 +58,7 @@ class Search(abc.ABC):
             tids = list(range(data.NI))
         flag=0
         for i in range(self.problem.DO):
-            if models[i].mf is not None:
+            if models is not None and models[i].mf is not None:
                 flag=1
         if flag==1:
             print('Warning: there is currently no good way of spawning the mean_function, so distributed_memory_parallelism is disabled for the search!')
@@ -162,31 +162,30 @@ class SurrogateProblem(object):
                     f_out.write("\n")
 
         #### precompute the adjusted bounds and Pereto Front given all the existing samples
-        dataO = copy.deepcopy(self.data.O)
-        A = []
-        B = []
-        for o in range(self.problem.DO):
-            lower_bound, upper_bound = self.problem.OS.bounds[o]
-            if(math.isinf(upper_bound)):
-                upper_bound=dataO[self.tid][:,o].max()
-            else:
-                dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
+        if self.options['search_af'] == 'UCB-HVI': # YC: the following computation is needed only for UCB-HVI.
+        # YC: Note: Using UCB-HVI in TLA_I can cause an error, because TLA_I can fall into this with 0 samples for the target task, so it can't compute the upper bound below.
+            dataO = copy.deepcopy(self.data.O)
+            A = []
+            B = []
+            for o in range(self.problem.DO):
+                lower_bound, upper_bound = self.problem.OS.bounds[o]
+                if(math.isinf(upper_bound)):
+                    upper_bound=dataO[self.tid][:,o].max()
+                else:
+                    dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
 
-            if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
-                dataO[self.tid][:,o]=upper_bound
+                if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                    dataO[self.tid][:,o]=upper_bound
 
+                A.append(lower_bound)
+                B.append(upper_bound)
 
-
-            A.append(lower_bound)
-            B.append(upper_bound)
-        self.A=np.array(A).reshape(self.problem.DO,)
-        self.B=np.array(B).reshape(self.problem.DO,)
-        from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
-        PF_idx = NonDominatedSorting(method="fast_non_dominated_sort").do(dataO[self.tid], only_non_dominated_front=True)            
-        PF = [dataO[self.tid][i,:] for i in PF_idx]
-        self.PF=np.array(PF).reshape(len(PF_idx),self.problem.DO)
-
-
+            self.A=np.array(A).reshape(self.problem.DO,)
+            self.B=np.array(B).reshape(self.problem.DO,)
+            from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+            PF_idx = NonDominatedSorting(method="fast_non_dominated_sort").do(dataO[self.tid], only_non_dominated_front=True)
+            PF = [dataO[self.tid][i,:] for i in PF_idx]
+            self.PF=np.array(PF).reshape(len(PF_idx),self.problem.DO)
 
     def compute_weights(self):
         #This function computes the weights for surrogate models to be combined.
