@@ -600,12 +600,15 @@ class Model_LCM(Model):
                 var[0][0] = math.pow(var_[0][0], beta) * math.pow(var[0][0], (1.0-beta))
                 num_samples_prior = num_samples_current
         else:
-            x = np.empty((1, points.shape[0] + 1))
-            x[0,:-1] = points
-            x[0,-1] = tid
-            (mu, var) = self.M.predict_noiseless(x)   # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid
+            (mu, var) = self.M.predict_noiseless(x,full_cov=full_cov) # predict_noiseless ueses precomputed Kinv and Kinv*y (generated at GPCoregionalizedRegression init, which calls inference in GPy/inference/latent_function_inference/exact_gaussian_inference.py) to compute mu and var, with O(N^2) complexity, see "class PosteriorExact(Posterior): _raw_predict" of GPy/inference/latent_function_inference/posterior.py.
             if(self.mf is not None):
-                mu[0][0] = mu[0][0] + self.mfnorm(x)
+                for i in range(points.shape[0]):
+                    mu[i] = mu[i] + self.mfnorm(x[i,:])
 
         return (mu, var)
 

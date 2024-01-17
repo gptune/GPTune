@@ -423,7 +423,12 @@ class GPTune(object):
         if (self.data.O is not None and len(self.data.O) !=len(self.data.I)):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
         for i in range(self.problem.DO):
             # current limitations
             # - only model LCM
@@ -830,7 +835,7 @@ class GPTune(object):
                 if (self.options['RCI_mode'] == False):
                     tmpdata = Data(self.problem)
                     tmpdata = copy.deepcopy(self.data)
-                    #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] ## YC - TODO check: I don't think this is necessary, but left this as a comment for future reference.
+                    tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] 
                 else:
                     tmpdata = Data(self.problem)
                     self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
@@ -1210,7 +1215,12 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options)')
         optiter = 0
         if self.data.P != None:
@@ -1258,7 +1268,7 @@ class GPTune(object):
                     if evaluation_instance == 0:
                         if (self.options['RCI_mode'] == False):
                             tmpdata = copy.deepcopy(self.data)
-                            #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] ## YC - TODO check: I don't think this is necessary, but left this as a comment for future reference.
+                            tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))] 
                         else:
                             self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
                             if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
@@ -2140,7 +2150,12 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
         self.models_transfer = models_transfer
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = self.models_transfer)')
         optiter = 0
@@ -2450,7 +2465,12 @@ class GPTune(object):
         stats["func_eval_time"].append((t2-t1)/1e9)
         time_fun = time_fun + (t2-t1)/1e9
 
-        modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following way of initializing modelers was wrong, as it repeats the same object for DO times 
+        # modelers  = [eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)')]*self.problem.DO
+        #### YL: the following is the correct one
+        modelers = []
+        for i in range(self.problem.DO):
+            modelers.append(eval(f'{kwargs["model_class"]} (problem = self.problem, computer = self.computer)'))
         self.models_transfer = models_transfer
         searcher = eval(f'{kwargs["search_class"]}(problem = self.problem, computer = self.computer, options = self.options, models_transfer = self.models_transfer)')
         optiter = 0

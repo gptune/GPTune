@@ -209,6 +209,11 @@ def main():
     # options['search_class'] = 'SearchSciPy'
     # options['search_algo'] = 'l-bfgs-b'
 
+    options['search_more_samples'] = 4
+    options['search_af']='q-UCB'
+    # options['search_pop_size']=1000
+    # options['search_ucb_beta']=0.01
+
     options['verbose'] = False
     options.validate(computer=computer)
 
