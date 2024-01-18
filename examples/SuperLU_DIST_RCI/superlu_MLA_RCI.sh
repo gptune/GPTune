@@ -1,5 +1,4 @@
 #!/bin/bash
-start=`date +%s`
 
 # Get nrun, nprocmin_pernode, objecitve(memory or time) from command line
 while getopts "a:b:c:" opt
@@ -38,6 +37,8 @@ cores=${machine_info[3]}
 database="gptune.db/SuperLU_DIST.json"  # the phrase SuperLU_DIST should match the application name defined in .gptune/meta.jason
 # rm -rf $database
 
+start=`date +%s.%N`
+
 # start the main loop
 more=1
 while [ $more -eq 1 ]
@@ -60,11 +61,15 @@ do
 echo " $idx"    # idx indexes the record that has null objective function values
 # write a large value to the database. This becomes useful in case the application crashes. 
 bigval=1e30
-jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 
+
+start2=`date +%s.%N`
+jq --arg v0 $obj --argjson v1 $idx --argjson v2 $bigval '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 declare -a input_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].task_parameter' $database | jq -r '.[]'))
 declare -a tuning_para=($( jq -r --argjson v1 $idx '.func_eval[$v1].tuning_parameter' $database | jq -r '.[]'))
-
+end2=`date +%s.%N`
+time_loaddata=$( echo "$end2 - $start2" | bc -l )
+echo "time_loaddata: $time_loaddata"
 
 
 #############################################################################
@@ -95,7 +100,7 @@ npcols=$(($nproc / $nprows))
 RUNDIR="../SuperLU_DIST/superlu_dist/build/EXAMPLE"
 INPUTDIR="../SuperLU_DIST/superlu_dist/EXAMPLE/"
 
-
+start1=`date +%s.%N`
 if [[ $ModuleEnv == *"ex3"* ]]; then
 ############ ex3 mpirun doesn't work correctly
     echo "srun -n $nproc $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
@@ -126,8 +131,11 @@ elif [[ $ModuleEnv == *"spectrummpi"* ]]; then
     echo "jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out"
     jsrun -b packed:$OMP_NUM_THREADS -d packed --nrs $RS_VAL --tasks_per_rs $RANK_PER_RS -c $TH_PER_RS --gpu_per_rs $GPU_PER_RS  --rs_per_host $RS_PER_HOST '--smpiargs=-x PAMI_DISABLE_CUDA_HOOK=1 -disable_gpu_hooks' $RUNDIR/pddrive_spawn -c $npcols -r $nprows -l $LOOKAHEAD -p $COLPERM $INPUTDIR/$matrix | tee a.out
 fi
+end1=`date +%s.%N`
+time_fun=$( echo "$end1 - $start1" | bc -l )
+echo "time_fun: $time_fun"
 
-
+start2=`date +%s.%N`
 # get the result (for this example: search the runlog)
 time=$(grep 'Factor time' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
 mem=$(grep 'Total MEM' a.out | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
@@ -141,7 +149,9 @@ fi
 # write the data back to the database file
 jq --arg v0 $obj --argjson v1 $idx --argjson v2 $result '.func_eval[$v1].evaluation_result[$v0]=$v2' $database > tmp.json && mv tmp.json $database
 idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | index(true) ' $database )
-
+end2=`date +%s.%N`
+time_loaddata=$( echo "$end2 - $start2" | bc -l )
+echo "time_loaddata: $time_loaddata"
 #############################################################################
 #############################################################################
 
@@ -150,8 +160,8 @@ idx=$( jq -r --arg v0 $obj '.func_eval | map(.evaluation_result[$v0] == null) | 
 done
 done
 
-end=`date +%s`
+end=`date +%s.%N`
 
-runtime=$((end-start))
+runtime=$( echo "$end - $start" | bc -l )
 echo "Total tuning time: $runtime"
 

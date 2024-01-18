@@ -372,27 +372,33 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "modeling_time":[],
             "modeling_iteration":[]
         }
         time_fun=0
         time_search=0
         time_model=0
+        time_loaddata=0
+
+        T0 = time.time_ns()
 
         """ Load history function evaluation data """
+        t3 = time.time_ns()
         self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
         if (self.data.P is not None):
             NSmin = min(map(len, self.data.P)) # the number of samples per task in existing tuning data can be different
 
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
+
         #if (self.data.P is not None and NSmin>=NS and self.data.O is not None):
         #    print('NSmin>=NS, no need to run MLA. Returning...')
         #    return (copy.deepcopy(self.data), None,stats)
         """ Set (additional) number of samples for autotuning """
         NS = NSmin + NS
-
-        t3 = time.time_ns()
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
@@ -484,8 +490,8 @@ class GPTune(object):
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
             model_reupdate = model_reupdate + 1
-            t1 = time.time_ns()
             for o in range(self.problem.DO):
+                t1 = time.time_ns()
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
                 if(self.problem.models is not None):
@@ -539,9 +545,9 @@ class GPTune(object):
                     if (kwargs["model_class"] == "Model_LCM"):
                         stats["modeling_iteration"][optiter-1] += 0
 
-            t2 = time.time_ns()
-            stats["modeling_time"].append((t2-t1)/1e9)
-            time_model = time_model + (t2-t1)/1e9
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -572,11 +578,12 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
         stats['time_search'] = time_search
+        stats['time_loaddata'] = time_loaddata
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -629,6 +636,7 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "func_eval_time":[],
             "search_time":[],
             "modeling_time":[],
@@ -638,10 +646,13 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
 
+        T0 = time.time_ns()
+        t3 = time.time_ns()
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
@@ -651,6 +662,10 @@ class GPTune(object):
             #if source_function_evaluations != None:
             #    print ("DATA:P: ", self.data.P)
             #    self.historydb.load_source_function_evaluations(self.data, self.problem, Tgiven, num_target_task=NI-len(source_function_evaluations), source_function_evaluations=source_function_evaluations)
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
+        if (self.options['RCI_mode'] == True):
+            print('time_loaddata:',(t4-t3)/1e9)
 
         if (NI is None and self.data.I is not None):
            NI = len(self.data.I)
@@ -679,7 +694,7 @@ class GPTune(object):
             else:
                 print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        t3 = time.time_ns()
+        
 
         t1 = time.time_ns()
 
@@ -743,6 +758,8 @@ class GPTune(object):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
 
+            
+            t3 = time.time_ns()
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
@@ -750,7 +767,10 @@ class GPTune(object):
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
-
+            t4 = time.time_ns()
+            time_loaddata = time_loaddata + (t4-t3)/1e9
+            if (self.options['RCI_mode'] == True):
+                print('time_loaddata:',(t4-t3)/1e9)
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
                     if(run_pilot_anyway == False and T_sampleflag[i] is True):
@@ -830,8 +850,10 @@ class GPTune(object):
             print("Iteration: ",optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
-            t1 = time.time_ns()
+            
             for o in range(self.problem.DO):
+                t1 = time.time_ns()
+                t3 = time.time_ns()
                 if (self.options['RCI_mode'] == False):
                     tmpdata = Data(self.problem)
                     tmpdata = copy.deepcopy(self.data)
@@ -859,6 +881,10 @@ class GPTune(object):
                     else:
                         tmpdata = copy.deepcopy(self.data)
                         tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
+                t4 = time.time_ns()
+                time_loaddata = time_loaddata + (t4-t3)/1e9
+                if (self.options['RCI_mode'] == True):
+                    print('time_loaddata:',(t4-t3)/1e9)
 
                 #print ("self data O: ", self.data.O[0][:,o])
                 #print ("self data P: ", self.data.P)
@@ -965,9 +991,12 @@ class GPTune(object):
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
-            t2 = time.time_ns()
-            stats["modeling_time"].append((t2-t1)/1e9)
-            time_model = time_model + (t2-t1)/1e9
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
+                if (self.options['RCI_mode'] == True):
+                    print('time_model:',(t2-t1)/1e9)
+
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, tids=tids, **kwargs)
             newdata.P=[]
@@ -984,6 +1013,8 @@ class GPTune(object):
             t2 = time.time_ns()
             stats["search_time"].append((t2-t1)/1e9)
             time_search = time_search + (t2-t1)/1e9
+            if (self.options['RCI_mode'] == True):
+                print('time_search:',(t2-t1)/1e9)
 
             t1 = time.time_ns()
             newdata.O = self.computer.evaluate_objective(problem = self.problem,
@@ -1007,10 +1038,11 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
+        stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
 
@@ -1027,12 +1059,10 @@ class GPTune(object):
 
         print("self.options: ", self.options)
 
-        if self.options["BO_objective_evaluation_parallelism"] == False:
+        if self.options["objective_evaluation_parallelism_liar"] == False:
             (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
-        elif self.options["BO_objective_evaluation_parallelism"] == True:
-            (data, modeler, stats) = self.MLA_ParallelEval_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
-            (data, modeler, stats) = self.MLA_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None, mfs=mfs)
+            (data, modeler, stats) = self.MLA_ParallelEval_(NS, NS1, 1, [Tgiven], T_sampleflag=[True], function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
         data.I = data.I[0]
         data.P = data.P[0]
@@ -1048,6 +1078,7 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "func_eval_time":[],
             "search_time":[],
             "modeling_time":[],
@@ -1057,14 +1088,20 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
 
+        T0 = time.time_ns()
+
         """ Load history function evaluation data """
+        t3 = time.time_ns()
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
             self.historydb.load_history_func_eval(self.data, self.problem, Tgiven, function_evaluations, source_function_evaluations=source_function_evaluations, options=None)
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
 
             ## in case source function evaluation data is used for transfer learning
             #if source_function_evaluations != None:
@@ -1098,7 +1135,7 @@ class GPTune(object):
             else:
                 print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        t3 = time.time_ns()
+        
 
         t1 = time.time_ns()
 
@@ -1162,6 +1199,7 @@ class GPTune(object):
                 if(T_sampleflag[i] is False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
 
+            t3 = time.time_ns()
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
@@ -1169,6 +1207,8 @@ class GPTune(object):
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
+            t4 = time.time_ns()
+            time_loaddata = time_loaddata + (t4-t3)/1e9
 
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
@@ -1261,9 +1301,11 @@ class GPTune(object):
                 stats["modeling_iteration"].append(0)
 
                 optiter = optiter + 1
-                t1 = time.time_ns()
+                
 
                 for o in range(self.problem.DO):
+                    t1 = time.time_ns()
+                    t3 = time.time_ns()
                     tmpdata = Data(self.problem)
                     if evaluation_instance == 0:
                         if (self.options['RCI_mode'] == False):
@@ -1294,6 +1336,8 @@ class GPTune(object):
                     else:
                         tmpdata = copy.deepcopy(data_replica)
                         tmpdata.O = [copy.deepcopy(data_replica.O[i][:,o].reshape((-1,1))) for i in range(len(data_replica.I))]
+                    t4 = time.time_ns()
+                    time_loaddata = time_loaddata + (t4-t3)/1e9
 
                     if (kwargs["model_output_constraint"] != None):
                         tmp_tmpdata = Data(self.problem)
@@ -1395,9 +1439,9 @@ class GPTune(object):
                         C = modelers[o].get_correlation_metric(len(data_replica.I))
                         print("The correlation matrix C is \n", C)
 
-                t2 = time.time_ns()
-                stats["modeling_time"].append((t2-t1)/1e9)
-                time_model = time_model + (t2-t1)/1e9
+                    t2 = time.time_ns()
+                    stats["modeling_time"].append((t2-t1)/1e9)
+                    time_model = time_model + (t2-t1)/1e9
 
                 t1 = time.time_ns()
                 res = searcher.search_multitask(data = data_replica, models = modelers, tids=tids, **kwargs)
@@ -1453,11 +1497,12 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
         stats['time_search'] = time_search
+        stats['time_loaddata'] = time_loaddata
         stats['time_sample_init'] = time_sample_init
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -1471,14 +1516,10 @@ class GPTune(object):
 
         print("\n\n\n------Starting MLA with %d tasks and %d samples each "%(NI,NS))
 
-        if self.options["BO_objective_evaluation_parallelism"] == False:
+        if self.options["objective_evaluation_parallelism_liar"] == False:
             return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
-        elif self.options["BO_objective_evaluation_parallelism"] == True:
-            return self.MLA_ParallelEval_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
         else:
-            return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None,mfs=mfs)
-
-        #return self.MLA_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
+            return self.MLA_ParallelEval_(NS, NS1, NI, Tgiven, T_sampleflag=[True]*NI, function_evaluations=None, source_function_evaluations=None, models_transfer=None)
 
     def TLA(self, NS, Tnew=None, models_transfer=None, source_function_evaluations=None, TLA_options = ["Regression", "LCM", "Stacking"], **kwargs):
 
@@ -2024,6 +2065,7 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "func_eval_time":[],
             "search_time":[],
             "modeling_time":[],
@@ -2033,14 +2075,17 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
-
+        T0 = time.time_ns()
+        t3 = time.time_ns()
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
-
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
         print ("self.data.P: ", self.data.P)
 
         np.set_printoptions(suppress=False,precision=4)
@@ -2059,7 +2104,7 @@ class GPTune(object):
             else:
                 print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        t3 = time.time_ns()
+        
 
         t1 = time.time_ns()
 
@@ -2176,8 +2221,9 @@ class GPTune(object):
             print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
-            t1 = time.time_ns()
             for o in range(self.problem.DO):
+                t1 = time.time_ns()
+                t3 = time.time_ns()
                 #tmpdata = copy.deepcopy(self.data)
                 #print ("tmpdata.I: ", tmpdata.I)
                 #print ("tmpdata.P: ", tmpdata.P)
@@ -2186,6 +2232,9 @@ class GPTune(object):
 
                 tmpdata = Data(self.problem)
                 self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                t4 = time.time_ns()
+                time_loaddata = time_loaddata + (t4-t3)/1e9
+
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -2291,9 +2340,9 @@ class GPTune(object):
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
-            t2 = time.time_ns()
-            stats["modeling_time"].append((t2-t1)/1e9)
-            time_model = time_model + (t2-t1)/1e9
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -2325,10 +2374,11 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
+        stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
 
@@ -2341,6 +2391,7 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "func_eval_time":[],
             "search_time":[],
             "modeling_time":[],
@@ -2350,13 +2401,18 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         print ("Tgiven")
         print (Tgiven)
+        T0 = time.time_ns()
 
+        t3 = time.time_ns()
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Tgiven) #, function_evaluations, options=kwargs)
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -2374,7 +2430,6 @@ class GPTune(object):
             else:
                 print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        t3 = time.time_ns()
 
         t1 = time.time_ns()
 
@@ -2491,9 +2546,9 @@ class GPTune(object):
             print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
-            t1 = time.time_ns()
+            
             for o in range(self.problem.DO):
-
+                t1 = time.time_ns()    
                 tmpdata = copy.deepcopy(self.data)
                 tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
@@ -2602,9 +2657,9 @@ class GPTune(object):
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
-            t2 = time.time_ns()
-            stats["modeling_time"].append((t2-t1)/1e9)
-            time_model = time_model + (t2-t1)/1e9
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -2637,11 +2692,12 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
         stats['time_search'] = time_search
+        stats['time_loaddata'] = time_loaddata
         stats['time_sample_init'] = time_sample_init
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -2653,6 +2709,7 @@ class GPTune(object):
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
+            "time_loaddata": 0,
             "func_eval_time":[],
             "search_time":[],
             "modeling_time":[],
@@ -2662,13 +2719,18 @@ class GPTune(object):
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         options1 = copy.deepcopy(self.options)
         kwargs.update(options1)
 
+        T0 = time.time_ns()
+        t3 = time.time_ns()
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             self.historydb.load_history_func_eval(self.data, self.problem, Tgiven)
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
 
         np.set_printoptions(suppress=False,precision=4)
         NSmin=0
@@ -2686,7 +2748,7 @@ class GPTune(object):
             else:
                 print('\nexisting data has at least NSmin=%d samples per task, GPTune will generate at most NS-NSmin=%d additional samples.\n'%(NSmin,NS-NSmin))
 
-        t3 = time.time_ns()
+        
 
         t1 = time.time_ns()
 
@@ -2911,6 +2973,7 @@ class GPTune(object):
             #    newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:]
             ## print(more_samples,newdata.P)
 
+            t3 = time.time_ns()
             run_pilot_anyway = False
             if (kwargs["model_input_separation"] == True or kwargs["model_peeking_level"] > 1):
                 tmpdata = Data(self.problem)
@@ -2918,7 +2981,9 @@ class GPTune(object):
                 if tmpdata.P is None:
                     # no samples from this modeling approach
                     run_pilot_anyway = True
-
+            t4 = time.time_ns()
+            time_loaddata = time_loaddata + (t4-t3)/1e9
+            
             #tmpP = [(self.problem.PS.transform([[128,24]]))]
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
@@ -2974,13 +3039,17 @@ class GPTune(object):
             print("Iteration: ", optiter)
             stats["modeling_iteration"].append(0)
             optiter = optiter + 1
-            t1 = time.time_ns()
+            
             for o in range(self.problem.DO):
+                t1 = time.time_ns()
+                t3 = time.time_ns()
                 #tmpdata = copy.deepcopy(self.data)
                 #tmpdata.O = [copy.deepcopy(self.data.O[i][:,o].reshape((-1,1))) for i in range(len(self.data.I))]
 
                 tmpdata = Data(self.problem)
                 self.historydb.load_history_func_eval(tmpdata, self.problem, Tgiven, options=kwargs)
+                t4 = time.time_ns()
+                time_loaddata = time_loaddata + (t4-t3)/1e9     
                 if tmpdata.P is not None: # from a list of (list of lists) to a list of 2D numpy arrays
                     tmp=[]
                     for x in tmpdata.P:
@@ -3083,9 +3152,9 @@ class GPTune(object):
                     return documents
                 modelers[o].train_stacked(data = load_residuals(self.problem, initial_modelers[o], data_to_dict(self.problem, self.data)), num_source_tasks=num_source_tasks, **kwargs)
 
-            t2 = time.time_ns()
-            stats["modeling_time"].append((t2-t1)/1e9)
-            time_model = time_model + (t2-t1)/1e9
+                t2 = time.time_ns()
+                stats["modeling_time"].append((t2-t1)/1e9)
+                time_model = time_model + (t2-t1)/1e9
 
             t1 = time.time_ns()
             res = searcher.search_multitask(data = self.data, models = modelers, **kwargs)
@@ -3117,10 +3186,11 @@ class GPTune(object):
         if self.data.P is not None:    # from a collection of 2D numpy arrays to a list of (list of lists)
             self.data.P = [self.problem.PS.inverse_transform(x) for x in self.data.P]
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
         stats['time_model'] = time_model
+        stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
 
@@ -3129,6 +3199,14 @@ class GPTune(object):
     def TLA_II(self, Tnew, Tsrc = None, source_function_evaluations = None):
 
         print('\n\n\n------Starting TLA_II for task: ',Tnew)
+        stats = {
+            "time_total": 0,
+            "time_fun": 0,
+            "time_loaddata": 0
+        }
+        time_fun=0
+        time_loaddata=0
+        T0=time.time_ns()
 
         if Tsrc == None and source_function_evaluations == None:
             raise Exception("No historical data is given for TLA_II")
@@ -3141,18 +3219,17 @@ class GPTune(object):
                     source_task_parameter.append(source_function_evaluations[source_task_id][0]["task_parameter"][key])
                 Tsrc.append(source_task_parameter)
 
+        t3 = time.time_ns()
         """ Load history function evaluation data """
         if self.historydb.load_func_eval == True:
             # load function evaluations regardless of the modeling scheme of the sample
             self.historydb.load_history_func_eval(self.data, self.problem, Tgiven=Tsrc, function_evaluations=None, source_function_evaluations=source_function_evaluations, options=None)
+        t4 = time.time_ns()
+        time_loaddata = time_loaddata + (t4-t3)/1e9
 
-        stats = {
-            "time_total": 0,
-            "time_fun": 0
-        }
-        time_fun=0
 
-        t3=time.time_ns()
+
+        
         # Initialization
         kwargs = copy.deepcopy(self.options)
         ntso = len(self.data.I)
@@ -3221,9 +3298,10 @@ class GPTune(object):
         #        print(aprxopts)
         #        pickle.dump(aprxopts, open('TLA_II.pkl', 'w'))
 
-        t4 = time.time_ns()
-        stats['time_total'] = (t4-t3)/1e9
+        T1 = time.time_ns()
+        stats['time_total'] = (T1-T0)/1e9
         stats['time_fun'] = time_fun
+        stats['time_loaddata'] = time_loaddata
 
         return (aprxopts, O, stats)
 
@@ -3297,12 +3375,14 @@ class GPTune_MB(object):
             "time_sample_init": 0,
             "time_fun": 0,
             "time_search": 0,
-            "time_model": 0
+            "time_model": 0,
+            "time_loaddata": 0
         }
         time_fun=0
         time_sample_init=0
         time_search=0
         time_model=0
+        time_loaddata=0
 
         # self.NSs = [int(self.options['budget_max']/x*NS) for x in self.budgets] # so that the highest fidelity has NS samples
         self.NSs = [int((self.smax+1)/(s+1))*self.options['budget_base']**s for s in range(self.smax+1)] # consistent with hyperband
@@ -3364,6 +3444,7 @@ class GPTune_MB(object):
                 stats['time_total'] += stats0['time_total']
                 stats['time_fun'] += stats0['time_fun']
                 stats['time_model'] += stats0['time_model']
+                stats['time_loaddata'] += stats0['time_loaddata']
                 stats['time_search'] += stats0['time_search']
                 stats['time_sample_init'] += stats0['time_sample_init']
 
@@ -3421,8 +3502,10 @@ class GPTune_MB(object):
                     newdata = Data(problem=self.tp, I=temp_I, P=temp_P)
                     gt = GPTune(self.tp, computer=self.computer, data=newdata, options=self.options)
 
+                    t3 = time.time_ns()
                     gt.historydb.load_history_func_eval(newdata, gt.problem, temp_I)
-
+                    t4 = time.time_ns()
+                    time_loaddata = time_loaddata + (t4-t3)/1e9
 
                     t1 = time.time_ns()
                     done=0

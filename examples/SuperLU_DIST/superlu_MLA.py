@@ -218,7 +218,7 @@ def main():
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-	giventask = [["big.rua"], ["g20.rua"]]
+	giventask = [["big.rua"]]
 	# giventask = [["big.rua"]]	
 	data = Data(problem)
 

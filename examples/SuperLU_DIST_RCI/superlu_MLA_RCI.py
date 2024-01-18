@@ -95,8 +95,8 @@ def main():
 	LOOKAHEAD = Integer     (5, 20, transform="normalize", name="LOOKAHEAD")
 	nprows    = Integer     (1, nprocmax, transform="normalize", name="nprows")
 	lg2npernode     = Integer     (int(math.log2(nprocmin_pernode)), int(math.log2(cores)), transform="normalize", name="lg2npernode")
-	NSUP      = Integer     (30, 300, transform="normalize", name="NSUP")
-	NREL      = Integer     (10, 40, transform="normalize", name="NREL")
+	NSUP      = Integer     (30, 1000, transform="normalize", name="NSUP")
+	NREL      = Integer     (10, 60, transform="normalize", name="NREL")
 
 	if(target=='time'):			
 		result   = Real        (float("-Inf") , float("Inf"),name="time")
@@ -137,15 +137,20 @@ def main():
 	
 	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]
-	giventask = [["big.rua"],["g20.rua"]]		
+	giventask = [["big.rua"]]		
+	# giventask = [["big.rua"],["g20.rua"]]		
 	# giventask = [["matrix-A-kei-1178508.bin"]]		
 	# giventask = [["Si2.bin"]]	
 	# giventask = [["Si2.bin"],["SiH4.bin"], ["SiNa.bin"], ["Na5.bin"], ["benzene.bin"], ["Si10H16.bin"], ["Si5H12.bin"]]	
 	data = Data(problem)
-
+	# Pdefault = ['4',10,7,8,256,60]
+	NI=len(giventask)
 
 
 	if(TUNER_NAME=='GPTune'):
+		data.I = giventask
+		# data.P = [[Pdefault]] * NI
+
 		gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))        
 		
 		NI = len(giventask)
