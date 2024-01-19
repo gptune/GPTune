@@ -1867,7 +1867,7 @@ class HistoryDB(dict):
             gradients : np.ndarray,\
             iteration : int):
 
-        if (self.save_model is True and self.tuning_problem_name is not None):
+        if (self.save_model== True and self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             new_surrogate_models = []
@@ -1975,7 +1975,7 @@ class HistoryDB(dict):
             modeling_options : dict,\
             model_stats : dict):
 
-        if (self.save_model is True and self.tuning_problem_name is not None):
+        if (self.save_model== True and self.tuning_problem_name is not None):
             json_data_path = self.historydb_path+"/"+self.tuning_problem_name+".json"
 
             new_surrogate_models = []

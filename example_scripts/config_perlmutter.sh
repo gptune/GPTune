@@ -7,6 +7,7 @@ if [[ $NERSC_HOST != "perlmutter" ]]; then
 	exit
 fi
 
+module load cpe/23.03 
 
 PY_VERSION=3.9
 PY_TIME=2021.11
@@ -29,7 +30,7 @@ module load cmake
 ##################################################
 machine=perlmutter
 proc=milan   # milan,gpu
-mpi=craympich    # craympich, openmpi
+mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 

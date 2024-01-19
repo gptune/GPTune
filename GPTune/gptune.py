@@ -674,7 +674,7 @@ class GPTune(object):
         T_bit_mask = list(map(int, T_sampleflag)) 
         tids=[]
         for i in range(NI):
-            if(T_sampleflag[i] is True):
+            if(T_sampleflag[i]== True):
                 tids.append(i)
 
         np.set_printoptions(suppress=False,precision=4)
@@ -719,7 +719,7 @@ class GPTune(object):
         Ptmp = copy.deepcopy(self.data.P)
         if self.data.P is not None:
             for i in range(len(Ptmp)):
-                if(T_sampleflag[i] is False):
+                if(T_sampleflag[i]== False):
                     Ptmp[i] = np.empty(shape=(0,self.problem.DP))
 
         if (self.data.O is None and Ptmp is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
@@ -755,7 +755,7 @@ class GPTune(object):
             #print ("tmpP: ", tmpP)
 
             for i in range(NI):
-                if(T_sampleflag[i] is False):
+                if(T_sampleflag[i]== False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
 
             
@@ -773,7 +773,7 @@ class GPTune(object):
                 print('time_loaddata:',(t4-t3)/1e9)
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    if(run_pilot_anyway == False and T_sampleflag[i] is True):
+                    if(run_pilot_anyway == False and T_sampleflag[i]== True):
                         NSi = self.data.P[i].shape[0]
                         tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
@@ -784,13 +784,13 @@ class GPTune(object):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 for i in range(NI):
-                    if(T_sampleflag[i] is False):
+                    if(T_sampleflag[i]== False):
                         tmpP[i] = np.empty(shape=(0,self.problem.DP))
                 # print ("tmpP: ", tmpP)
 
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
-                        if(T_sampleflag[i] is True):
+                        if(T_sampleflag[i]== True):
                             NSi = self.data.P[i].shape[0]
                             tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
@@ -872,7 +872,7 @@ class GPTune(object):
                         tmpdata.P=tmp
                     if(tmpdata.P is not None):
                         for i in range(len(tmpdata.P)):
-                            if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                            if(T_sampleflag[i]== False and tmpdata.P[i].shape[0]==0):
                                 tmpdata.P[i] = copy.deepcopy(self.data.P[i])
                                 tmpdata.O[i] = copy.deepcopy(self.data.O[i])
                             tmpdata.O[i] = copy.deepcopy(tmpdata.O[i][:,o].reshape((-1,1))) #YL: I added this for multi-objective optimization, similarly to the else branch of "if(tmpdata.P is not None):"
@@ -950,8 +950,8 @@ class GPTune(object):
                         tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
 
                 for i in range(len(tmpdata.P)):
-                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
-                        raise Exception("T_sampleflag[%d] is False but self.data.P[%d] has no data"%(i,i))
+                    if(T_sampleflag[i]== False and tmpdata.P[i].shape[0]==0):
+                        raise Exception("T_sampleflag[%d]== False but self.data.P[%d] has no data"%(i,i))
 
                 # print(tmpdata.P[0])
                 #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
@@ -1002,7 +1002,7 @@ class GPTune(object):
             newdata.P=[]
             i1=0
             for i in range(NI):
-                if(T_sampleflag[i] is True):
+                if(T_sampleflag[i]== True):
                     newdata.P.append(res[i1][1][0])
                     i1=i1+1
                     NSi = self.data.P[i].shape[0]
@@ -1115,7 +1115,7 @@ class GPTune(object):
         T_bit_mask = list(map(int, T_sampleflag))
         tids=[]
         for i in range(NI):
-            if(T_sampleflag[i] is True):
+            if(T_sampleflag[i]== True):
                 tids.append(i)
 
         np.set_printoptions(suppress=False,precision=4)
@@ -1160,7 +1160,7 @@ class GPTune(object):
         Ptmp = copy.deepcopy(self.data.P)
         if self.data.P is not None:
             for i in range(len(Ptmp)):
-                if(T_sampleflag[i] is False):
+                if(T_sampleflag[i]== False):
                     Ptmp[i] = np.empty(shape=(0,self.problem.DP))
 
         if (self.data.O is None and Ptmp is not None and self.data.I is not None): # tuning parameters and task parameters are given, but the output is none
@@ -1196,7 +1196,7 @@ class GPTune(object):
             #print ("tmpP: ", tmpP)
 
             for i in range(NI):
-                if(T_sampleflag[i] is False):
+                if(T_sampleflag[i]== False):
                     tmpP[i] = np.empty(shape=(0,self.problem.DP))
 
             t3 = time.time_ns()
@@ -1212,7 +1212,7 @@ class GPTune(object):
 
             if(self.data.P is not None):
                 for i in range(len(self.data.P)):
-                    if(run_pilot_anyway == False and T_sampleflag[i] is True):
+                    if(run_pilot_anyway == False and T_sampleflag[i]== True):
                         NSi = self.data.P[i].shape[0]
                         tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
         else:
@@ -1223,13 +1223,13 @@ class GPTune(object):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 for i in range(NI):
-                    if(T_sampleflag[i] is False):
+                    if(T_sampleflag[i]== False):
                         tmpP[i] = np.empty(shape=(0,self.problem.DP))
                 # print ("tmpP: ", tmpP)
 
                 if(self.data.P is not None):
                     for i in range(len(self.data.P)):
-                        if(T_sampleflag[i] is True):
+                        if(T_sampleflag[i]== True):
                             NSi = self.data.P[i].shape[0]
                             tmpP[i] = tmpP[i][0:max(NS1-NSi,0),:] # if NSi>=NS1, no need to generate new random data
 
@@ -1324,7 +1324,7 @@ class GPTune(object):
                                 tmpdata.P=tmp
                             if(tmpdata.P is not None):
                                 for i in range(len(tmpdata.P)):
-                                    if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
+                                    if(T_sampleflag[i]== False and tmpdata.P[i].shape[0]==0):
                                         tmpdata.P[i] = copy.deepcopy(data_replica.P[i])
                                         tmpdata.O[i] = copy.deepcopy(data_replica.O[i])
 
@@ -1396,8 +1396,8 @@ class GPTune(object):
                             tmpdata.P[i] = np.hstack((tmpdata.P[i],modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
 
                     for i in range(len(tmpdata.P)):
-                        if(T_sampleflag[i] is False and tmpdata.P[i].shape[0]==0):
-                            raise Exception("T_sampleflag[%d] is False but self.data.P[%d] has no data"%(i,i))
+                        if(T_sampleflag[i]== False and tmpdata.P[i].shape[0]==0):
+                            raise Exception("T_sampleflag[%d]== False but self.data.P[%d] has no data"%(i,i))
 
                     # print(tmpdata.P[0])
                     #print ("[bestxopt]: len: " + str(len(bestxopt)) + " val: " + str(bestxopt))
@@ -1450,7 +1450,7 @@ class GPTune(object):
                 newdata_for_replica = Data(problem = self.problem, I = self.data.I, D = self.data.D)
                 newdata_for_replica.P=[]
                 for i in range(NI):
-                    if(T_sampleflag[i] is True):
+                    if(T_sampleflag[i]== True):
                         newdata.P[i].append(res[i1][1][0][0])
                         #newdata.P[i] = newdata.P[i][0:min(newdata.P[i].shape[0],max(0,NS-NSi)),:] # if NSi>=NS, skip the function evaluation
 

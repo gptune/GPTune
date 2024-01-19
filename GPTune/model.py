@@ -430,7 +430,7 @@ class Model_LCM(Model):
         return self.train_mpi(data, i_am_manager = True, restart_iters=list(range(kwargs['model_restarts'])), **kwargs)
 
     def train_mpi(self, data : Data, i_am_manager : bool, restart_iters : Collection[int] = None, **kwargs):
-        if (kwargs['RCI_mode'] is False):
+        if (kwargs['RCI_mode']== False):
             import mpi4py
             from lcm import LCM
 
@@ -626,7 +626,7 @@ class Model_LCM(Model):
         return (mu, var)
 
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
-        if (kwargs['RCI_mode'] is False):
+        if (kwargs['RCI_mode']== False):
             from lcm import LCM
 
         if (kwargs['model_latent'] is None):

@@ -212,9 +212,10 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 	options.validate(computer = computer)
+	print(options)
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]

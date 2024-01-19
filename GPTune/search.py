@@ -174,7 +174,7 @@ class SurrogateProblem(object):
                 else:
                     dataO[self.tid][:,o] = np.where(dataO[self.tid][:,o] < upper_bound, dataO[self.tid][:,o], upper_bound)
 
-                if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                if(self.problem.OS[o].optimize== False): # if not optimized, set the data on that dimension to be constant
                     dataO[self.tid][:,o]=upper_bound
 
                 A.append(lower_bound)
@@ -315,7 +315,7 @@ class SurrogateProblem(object):
                 uhvi_pt[o] = (mu - np.sqrt(self.options['search_ucb_beta']* var))
             uhvi_pt = np.where(uhvi_pt > self.A, uhvi_pt, self.A)
             for o in range(self.problem.DO):
-                if(self.problem.OS[o].optimize is False): # if not optimized, set the data on that dimension to be constant
+                if(self.problem.OS[o].optimize== False): # if not optimized, set the data on that dimension to be constant
                     uhvi_pt[o]=self.B[o]
             if self.is_dominated(uhvi_pt, self.PF) or np.any(uhvi_pt > self.B):
                 uhvi = 0
@@ -598,12 +598,12 @@ class SurrogateProblem(object):
                 point.update(point2)
                 # print("point", point)
                 cond = self.computer.evaluate_constraints(self.problem, point)
-                if(cond is False):
+                if(cond == False):
                     CND = False
 
             if (cond):
                 if(self.problem.models is not None):    
-                    if(self.options['distributed_memory_parallelism'] is True):                
+                    if(self.options['distributed_memory_parallelism']== True):                
                         if(self.problem.driverabspath is not None):
                             modulename = Path(self.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
                             sys.path.append(self.problem.driverabspath) # add path to sys

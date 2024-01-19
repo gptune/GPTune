@@ -19,7 +19,7 @@ timestamp() {
 
 
  cd $GPTUNEROOT/examples/SuperLU_DIST
- rm -rf gptune.db/*.json # do not load any database 
+#  rm -rf gptune.db/*.json # do not load any database 
  tp=SuperLU_DIST
  tuner=GPTune #cgp 
  app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
