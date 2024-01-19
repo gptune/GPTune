@@ -373,6 +373,7 @@ class GPTune(object):
             "time_search": 0,
             "time_model": 0,
             "time_loaddata": 0,
+            "func_eval_time":[],
             "modeling_time":[],
             "modeling_iteration":[]
         }
@@ -569,6 +570,7 @@ class GPTune(object):
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             NSmin = min(map(len, self.data.P))
 
@@ -1025,6 +1027,7 @@ class GPTune(object):
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             # print(self.data.P)
             # print(list(map(mul,T_bit_mask,list(map(len, self.data.P)))))
@@ -1484,6 +1487,7 @@ class GPTune(object):
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             # print(self.data.P)
             # print(list(map(mul,T_bit_mask,list(map(len, self.data.P)))))
@@ -2365,6 +2369,7 @@ class GPTune(object):
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             NSmin = min(map(len, self.data.P))
 
@@ -2683,6 +2688,7 @@ class GPTune(object):
                     models_transfer = models_transfer)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             NSmin = min(map(len, self.data.P))
 
@@ -3177,6 +3183,7 @@ class GPTune(object):
                     options = kwargs)
             t2 = time.time_ns()
             time_fun = time_fun + (t2-t1)/1e9
+            stats["func_eval_time"].append((t2-t1)/1e9)
             self.data.merge(newdata)
             NSmin = min(map(len, self.data.P))
 
@@ -3294,6 +3301,7 @@ class GPTune(object):
         O = self.computer.evaluate_objective(problem = self.problem, I = InewNorms, P =aprxoptsNormList, history_db = self.historydb, options = kwargs)
         t2 = time.time_ns()
         time_fun = time_fun + (t2-t1)/1e9
+        stats["func_eval_time"].append((t2-t1)/1e9)
 
         #        print(aprxopts)
         #        pickle.dump(aprxopts, open('TLA_II.pkl', 'w'))
