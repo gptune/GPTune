@@ -598,6 +598,8 @@ class SurrogateProblem(object):
                 point.update(point2)
                 # print("point", point)
                 cond = self.computer.evaluate_constraints(self.problem, point)
+                if(cond is False):
+                    CND = False
 
             if (cond):
                 if(self.problem.models is not None):    

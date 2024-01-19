@@ -52,7 +52,7 @@ else
   app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
   echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
   logfile=log.superlu
-  bash superlu_MLA_RCI.sh -a 20 -b 2 -c time | tee ${logfile} #a: nrun b: nprocmin_pernode c: objective
+  bash superlu_MLA_RCI.sh -a 20 -b 1 -c time | tee ${logfile} #a: nrun b: nprocmin_pernode c: objective
   cp gptune.db/SuperLU_DIST.json  gptune.db/SuperLU_DIST.json_$(timestamp)
 
   # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
@@ -77,25 +77,25 @@ else
 fi
 
 
-grep time_model log.superlu | tee tmp.out
+grep time_model log.superlu > tmp.out
 time_model=$(python -c "import numpy as np;
 data=np.loadtxt('tmp.out',dtype='str');
 time=np.sum(data[:,1].astype(np.float32))
 print(time)")
 
-grep time_search log.superlu | tee tmp.out
+grep time_search log.superlu > tmp.out
 time_search=$(python -c "import numpy as np;
 data=np.loadtxt('tmp.out',dtype='str');
 time=np.sum(data[:,1].astype(np.float32))
 print(time)")
 
-grep time_loaddata log.superlu | tee tmp.out
+grep time_loaddata log.superlu > tmp.out
 time_loaddata=$(python -c "import numpy as np;
 data=np.loadtxt('tmp.out',dtype='str');
 time=np.sum(data[:,1].astype(np.float32))
 print(time)")
 
-grep time_fun log.superlu | tee tmp.out
+grep time_fun log.superlu > tmp.out
 time_fun=$(python -c "import numpy as np;
 data=np.loadtxt('tmp.out',dtype='str');
 time=np.sum(data[:,1].astype(np.float32))
