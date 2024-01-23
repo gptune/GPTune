@@ -95,8 +95,8 @@ class Options(dict):
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
         search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
         search_random_seed = None # Specify a certain random seed for the search phase
-        search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO. q-UCB: multi-point UCB function in the paper "The reparameterization trick for acquisition functions", 2017. q-EI: multi-point EI function in the paper "The reparameterization trick for acquisition functions", 2017 
-        search_ucb_beta=0.01 #hyperparameter beta in UCB, UCB-HVI and q-UCB
+        search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO.
+        search_ucb_beta=0.01 #hyperparameter beta in UCB, UCB-HVI 
         search_ei_alpha=0.0  #hyperparameter beta in EI, q-EI
 
         """ Options for transfer learning """
