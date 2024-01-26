@@ -483,15 +483,15 @@ if [[ $BuildExample == 1 ]]; then
 	# make
 	# # mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
 
-	cd $GPTUNEROOT/examples/heffte_RCI
-	rm -rf heffte
-	git clone https://bitbucket.org/icl/heffte.git
-	cd heffte
-	mkdir build
-	cd build
-	# ignoring the MKL, FFTW, and CUDA dependencies for now
-	cmake -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_C_COMPILER=$MPICC -DCMAKE_Fortran_COMPILER=$MPIF90 -DHeffte_ENABLE_MKL=OFF -DHeffte_ENABLE_FFTW=OFF -DHeffte_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE="-O3" ..
-	make -j8
+    cd $GPTUNEROOT/examples/heffte_RCI
+    rm -rf heffte
+    git clone https://github.com/icl-utk-edu/heffte.git
+    cd heffte
+    mkdir build
+    cd build
+    # ignoring the MKL, FFTW, and CUDA dependencies for now
+    cmake -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_C_COMPILER=$MPICC -DCMAKE_Fortran_COMPILER=$MPIF90 -DHeffte_ENABLE_MKL=OFF -DHeffte_ENABLE_FFTW=OFF -DHeffte_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE="-O3" ..
+    make -j8
 fi
 
 
