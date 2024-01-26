@@ -483,6 +483,15 @@ if [[ $BuildExample == 1 ]]; then
 	# make
 	# # mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
 
+	cd $GPTUNEROOT/examples/heffte_RCI
+	rm -rf heffte
+	git clone https://bitbucket.org/icl/heffte.git
+	cd heffte
+	mkdir build
+	cd build
+	# ignoring the MKL, FFTW, and CUDA dependencies for now
+	cmake -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_C_COMPILER=$MPICC -DCMAKE_Fortran_COMPILER=$MPIF90 -DHeffte_ENABLE_MKL=OFF -DHeffte_ENABLE_FFTW=OFF -DHeffte_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE="-O3" ..
+	make -j8
 fi
 
 
@@ -500,14 +509,14 @@ make install
 git clone https://github.com/wjakob/tbb.git
 cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
-# cd $GPTUNEROOT
-# rm -rf download
-# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
-# tar -xvf download
-# cd boost_1_69_0/
-# ./bootstrap.sh --prefix=$PWD/build
-# ./b2 install
-# export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+cd $GPTUNEROOT
+rm -rf download
+wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+tar -xvf download
+cd boost_1_69_0/
+./bootstrap.sh --prefix=$PWD/build
+./b2 install
+export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
 
 cd $GPTUNEROOT
 rm -rf pagmo2
@@ -526,7 +535,7 @@ git clone https://github.com/esa/pygmo2.git
 cd pygmo2
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
 make -j16
 make install
 
