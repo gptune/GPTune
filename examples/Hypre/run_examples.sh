@@ -17,7 +17,11 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
   tuner=GPTune
   app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
   echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json                  
-  $RUN python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 10 -nxmax 40 -nymax 40 -nzmax 40 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+  $RUN python ./hypre_2d_dimmerge.py  -nprocmin_pernode 1 -ntask 1 -nrun 40 -nxmax 20 -nymax 20 -nzmax 20 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+  # $RUN python ./hypre_2d.py  -nprocmin_pernode 1 -ntask 1 -nrun 40 -nxmax 20 -nymax 20 -nzmax 20 -optimization ${tuner} | tee a.out_hypre_${tuner} 
+  
+  
+  # $RUN python ./hypre.py  -nprocmin_pernode 1 -ntask 1 -nrun 40 -nxmax 20 -nymax 20 -nzmax 20 -optimization ${tuner} | tee a.out_hypre_${tuner} 
 
 
   # cd $GPTUNEROOT/examples/Hypre

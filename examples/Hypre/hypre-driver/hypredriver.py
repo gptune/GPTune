@@ -68,12 +68,16 @@ def execute(params, RUNDIR, niter = 1):
                 if 'Setup phase times' in line:
                     outputfile.readline()
                     outputfile.readline()
+                    outputfile.readline() # YL: adding the skip of two more lines to use cpu clock time instead of wall clock time, wall clock time only has two decimal digits 
+                    outputfile.readline()
                     setup_wallclocktime_str = outputfile.readline()
                     time_str = re.findall("\d+\.\d+", setup_wallclocktime_str)
                     if time_str:
                         setup_time = float(time_str[0])
                 if 'Solve phase times' in line:
                     outputfile.readline()
+                    outputfile.readline()
+                    outputfile.readline() # YL: adding the skip of two more lines to use cpu clock time instead of wall clock time, wall clock time only has two decimal digits 
                     outputfile.readline()
                     solve_wallclocktime_str = outputfile.readline()
                     time_str = re.findall("\d+\.\d+", solve_wallclocktime_str)
