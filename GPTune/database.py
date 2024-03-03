@@ -187,13 +187,16 @@ def search_item_by_uid(dict_arr, uid):
 
 class HistoryDB(dict):
 
-    def __init__(self, meta_path=None, meta_dict=None, **kwargs):
+    def __init__(self, meta_path=None, meta_dict=None, history_db=True, **kwargs):
 
+        """ Mode """
+        self.history_db = history_db ## if False, it uses no database
+
+        """ Tuning problem information """
         self.tuning_problem_name = None
         self.tuning_problem_category = None
 
         """ Options """
-        self.history_db = True
         self.save_func_eval = True
         self.save_model = True
         self.load_func_eval = True
@@ -236,6 +239,10 @@ class HistoryDB(dict):
 
         """ Check machine and software configurations when loading historical data"""
         self.load_check = True
+
+        if self.history_db == False:
+            ## No DB mode
+            return
 
         # if history database is requested by CK-GPTune
         if (os.environ.get('CKGPTUNE_HISTORY_DB') == 'yes'):
@@ -295,7 +302,9 @@ class HistoryDB(dict):
                     metadata = json.load(f_in)
             else:
                 self.history_db = False
-                raise Exception("History database initialization failed")
+                ## NO DB mode
+                return
+                #raise Exception("History database initialization failed")
 
             if "tuning_problem_name" in metadata:
                 self.tuning_problem_name = metadata["tuning_problem_name"]

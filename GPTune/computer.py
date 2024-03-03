@@ -96,7 +96,10 @@ class Computer(object):
     def evaluate_objective(self, problem : Problem, I : np.ndarray = None, P : Collection[np.ndarray] = None, D: Collection[dict] = None, history_db : HistoryDB = None, options: dict=None, is_pilot = False): # P and I are in the normalized space
 
         O = []
-        tt1 = time.time_ns()
+
+        if (options['verbose'] == True):
+            tt1 = time.time_ns()
+
         for i in range(len(I)):
             T2 = I[i]
             P2 = P[i]
@@ -150,9 +153,10 @@ class Computer(object):
                             modeling = modeling,\
                             model_class = options["model_class"])
 
-        tt2 = time.time_ns()
-        time_mla = (tt2-tt1)/1e9
-        print('time_mla',time_mla)
+        if (options['verbose'] == True):
+            tt2 = time.time_ns()
+            time_mla = (tt2-tt1)/1e9
+            print('time_mla',time_mla)
 
         if(options['RCI_mode']==True):
             print('RCI: GPTune returns\n')

@@ -139,8 +139,6 @@ def models(point):
 
     return [f*(1+np.random.uniform()*0.1)]
 
-
-
 def main():
 
     import matplotlib.pyplot as plt
@@ -194,9 +192,8 @@ def main():
     # options['search_multitask_threads'] = 1
     # options['search_threads'] = 16
 
-    # options['sample_algo'] = 'MCS'
-
     # Use the following two lines if you want to specify a certain random seed for the random pilot sampling
+    # options['sample_algo'] = 'MCS'
     options['sample_class'] = 'SampleLHSMDU'
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
@@ -210,7 +207,7 @@ def main():
     # options['search_algo'] = 'l-bfgs-b'
 
     options['search_more_samples'] = 4
-    options['search_af']='q-UCB'
+    options['search_af']='EI'
     # options['search_pop_size']=1000
     # options['search_ucb_beta']=0.01
 
@@ -233,7 +230,10 @@ def main():
 
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
-        gt = GPTune(problem, computer=computer, data=data, options=options,driverabspath=os.path.abspath(__file__))
+
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
+        # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
+
         (data, modeler, stats) = gt.MLA(NS=NS, NS1=int(NS/2), NI=NI, Tgiven=giventask)
         print("stats: ", stats)
         """ Print all input and parameter samples """

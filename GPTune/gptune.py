@@ -59,8 +59,10 @@ class GPTune(object):
         if (options is None):
             options = Options()
         self.options  = options
+        if (historydb is False):
+            historydb = HistoryDB(history_db=False) # no DB mode
         if (historydb is None):
-            historydb = HistoryDB()
+            historydb = HistoryDB() # initialize DB (using meta description file)
         self.historydb = historydb
         self.models_transfer = None
 
