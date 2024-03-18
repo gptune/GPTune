@@ -98,6 +98,7 @@ class Options(dict):
         search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO.
         search_ucb_beta=0.01 #hyperparameter beta in UCB, UCB-HVI 
         search_ei_alpha=0.0  #hyperparameter beta in EI, q-EI
+        search_bigval=1e12 # return this value when the input constraint is not respected during the search phase
 
         """ Options for transfer learning """
         TLA_method = 'LCM' #None #'Regression' #"LCM_BF" #'Sum' #'Stacking' #'regression_weights_no_scale'

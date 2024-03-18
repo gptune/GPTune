@@ -548,11 +548,11 @@ class SurrogateProblem(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [1e12]
+                return [self.options['search_bigval']]
             elif(self.options['search_algo']=='pso' or self.options['search_algo']=='cmaes'): 
-                return [1e12]
+                return [self.options['search_bigval']]
             else:
-                return [1e12]* self.problem.DO
+                return [self.options['search_bigval']]* self.problem.DO
     
     def obj_scipy(self, x):
         return self.fitness(x)[0]
@@ -683,7 +683,7 @@ class SearchPyGMO(Search):
                 indexes = list(range(len(champions_f)))
                 indexes.sort(key=champions_f.__getitem__)
                 for idx in indexes:
-                    if (champions_f[idx] < float('Inf')):
+                    if (champions_f[idx] < self.options['search_bigval']):
                         cond = True
                         # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
                         bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
@@ -721,7 +721,7 @@ class SearchPyGMO(Search):
                 # print('firstn',firstn,int(kwargs['search_more_samples']),np.shape(pop.get_f()),xss)
 
 
-                if(np.max(fss)< float('Inf')):
+                if(np.max(fss)< self.options['search_bigval']):
                     cond = True
                     bestX.append(xss)
                     break
@@ -846,9 +846,9 @@ class SurrogateProblemCMO(object):
         else:
             # print("cond",cond,float("Inf"),'x',x,'xi',xi)
             if(self.problem.DO==1): # single objective optimizer
-                return [1e12]
+                return [self.options['search_bigval']]
             else:
-                return [1e12]* self.problem.DO
+                return [self.options['search_bigval']]* self.problem.DO
             
     def obj_scipy(self, x):
         return self.fitness(x)[0]
@@ -892,7 +892,7 @@ class SearchCMO(Search):
                 indexes = list(range(len(champions_f)))
                 indexes.sort(key=champions_f.__getitem__)
                 for idx in indexes:
-                    if (champions_f[idx] < float('Inf')):
+                    if (champions_f[idx] < self.options['search_bigval']):
                         cond = True
                         # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
                         bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
@@ -915,7 +915,7 @@ class SearchCMO(Search):
                 xss = pop.get_x()[0:firstn]
                 # print('firstn',firstn,int(kwargs['search_more_samples']),np.shape(pop.get_f()),xss)
 
-                if(np.max(fss)< float('Inf')):
+                if(np.max(fss)< self.options['search_bigval']):
                     cond = True
                     bestX.append(xss)
                     break
