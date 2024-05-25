@@ -8,8 +8,8 @@ BuildExample=0 # whether to build all examples
 MPIFromSource=1 # whether to build openmpi from source
 PYTHONFromSource=1 # whether to build python from source
 
-if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
-	echo "This script can only be used for Ubuntu or Debian systems"
+if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Mint"* ]]; then
+	echo "This script can only be used for Ubuntu or Debian or Mint systems"
 	exit
 fi
 
