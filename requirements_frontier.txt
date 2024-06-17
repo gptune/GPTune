@@ -1,0 +1,25 @@
+ConfigSpace <= 0.6.0
+numpy < 1.24
+joblib
+scikit-learn 
+scipy >= 1.7.0
+statsmodels >= 0.13.0
+pyaml
+# GPy uses get_cmap of matplotlib, which is depreciated in matplotlib==3.9
+matplotlib < 3.9
+GPy
+openturns
+lhsmdu
+ipyparallel
+opentuner >= 0.8.8
+hpbandster
+filelock 
+requests
+pymoo
+cloudpickle
+SALib
+termcolor
+scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git
+ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git
+cgp @ git+https://git@github.com/gptune/cGP.git
+hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git

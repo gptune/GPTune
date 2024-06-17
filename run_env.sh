@@ -4,6 +4,15 @@
 ##################################################
 ##################################################
 
+################ frontier
+export machine=frontier
+export proc=EPYC   # knl,haswell,gpu
+export mpi=craympich    # craympich
+export compiler=gnu   # gnu, intel	
+export nodes=1  # number of nodes to be used
+
+
+
 # ################ crusher
 # export machine=crusher
 # export proc=EPYC   # knl,haswell,gpu
@@ -43,13 +52,13 @@
 # export compiler=gnu   # gnu, intel
 # export nodes=1  # number of nodes to be used
 
-# ################ Yang's tr4 machine
-export machine=tr4-workstation
- export proc=AMD1950X   
- export mpi=openmpi  
- export compiler=gnu   
- export nodes=1  # number of nodes to be used
-# #
+# # ################ Yang's tr4 machine
+# export machine=tr4-workstation
+#  export proc=AMD1950X   
+#  export mpi=openmpi  
+#  export compiler=gnu   
+#  export nodes=1  # number of nodes to be used
+# # #
 
 # ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
 # export machine=cleanlinux
@@ -587,6 +596,29 @@ elif [ $ModuleEnv = 'crusher-EPYC-craympich-gnu' ]; then
     gpus=8 # 8 Graphics Compute Dies (GCDs), or 4 AMD MI250X per node
     software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,16]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
     loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [8,1,16]},\"libsci\":{\"version_split\": [21,8,1]},\"gcc\":{\"version_split\": [11,2,0]}}")
+
+############### frontier EPYC CrayMPICH+GNU
+elif [ $ModuleEnv = 'frontier-EPYC-craympich-gnu' ]; then
+    PY_VERSION_FULL=3.9.13.1
+    PY_VERSION=3.9
+    module load cray-python/$PY_VERSION_FULL
+    module load cmake
+    module load PrgEnv-gnu
+
+    PREFIX_PATH=~/.local/
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
+    export PATH=$PATH:$PWD/jq-1.6
+    # export PYTHONPATH=$PYTHONPATH:$PWD/openturns/build/share/gdb/auto-load/$PWD
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
+     
+    export MPIRUN=srun
+    cores=32
+    gpus=8 # 8 Graphics Compute Dies (GCDs), or 4 AMD MI250X per node
+    software_json=$(echo ",\"software_configuration\":{\"cray-mpich\":{\"version_split\": [8,1,23]},\"libsci\":{\"version_split\": [22,12,1]},\"gcc\":{\"version_split\": [12,2,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"cray-mpich\":{\"version_split\": [8,1,23]},\"libsci\":{\"version_split\": [22,12,1]},\"gcc\":{\"version_split\": [12,2,0]}}")
 
 # fi
 
