@@ -348,39 +348,39 @@ def main():
     search_time_george_hodlr = []
 
 
-    #NS = [50, 100, 200, 400, 800, 1600]
-    NS = [400]
+    NS = [50, 100, 200, 400, 800, 1600, 3200]
+    # NS = [400]
     for elem in NS:
         hodlr_stats = model_runtime(model = "Model_George_HODLR_LCM", obj_func = objective, NS_input = elem, objtype=objtype)
         model_time_george_hodlr.append(hodlr_stats.get("time_model"))
         search_time_george_hodlr.append(hodlr_stats.get("time_search"))
 
-        # george_basic_stats = model_runtime(model = "Model_George_Basic_LCM", obj_func = objective, NS_input = elem, objtype=objtype)
-        # model_time_george_basic.append(george_basic_stats.get("time_model"))
-        # search_time_george_basic.append(george_basic_stats.get("time_search"))
+        george_basic_stats = model_runtime(model = "Model_George_Basic_LCM", obj_func = objective, NS_input = elem, objtype=objtype)
+        model_time_george_basic.append(george_basic_stats.get("time_model"))
+        search_time_george_basic.append(george_basic_stats.get("time_search"))
 
-        # gpy_stats = model_runtime(model = "Model_GPy_LCM", obj_func = objective, NS_input = elem, objtype=objtype) 
-        # model_time_gpy.append(gpy_stats.get("time_model"))
-        # search_time_gpy.append(gpy_stats.get("time_search"))
+        gpy_stats = model_runtime(model = "Model_GPy_LCM", obj_func = objective, NS_input = elem, objtype=objtype) 
+        model_time_gpy.append(gpy_stats.get("time_model"))
+        search_time_gpy.append(gpy_stats.get("time_search"))
 
     #plotting
     figure, axis = plt.subplots(1,2) 
     axis[0].loglog(NS, model_time_george_basic,label = "george_basic", color = "blue")
-    # axis[0].loglog(NS, model_time_george_hodlr,label = "george_hodlr", color = "red")
-    # axis[0].loglog(NS, model_time_gpy,label = "GPy", color = "green")
+    axis[0].loglog(NS, model_time_george_hodlr,label = "george_hodlr", color = "red")
+    axis[0].loglog(NS, model_time_gpy,label = "GPy", color = "green")
     axis[0].legend()
     axis[0].set_title("Model Time Comparison")
-    # axis[0].xlabel("Number of Samples")
-    # axis[0].ylabel("Time (sec)")
+    axis[0].set_xlabel("Number of Samples")
+    axis[0].set_ylabel("Time (sec)")
 
 
     axis[1].loglog(NS, search_time_george_basic,label = "george_basic", color = "blue")
-    # axis[1].loglog(NS, search_time_george_hodlr,label = "george_hodlr", color = "red")
-    # axis[1].loglog(NS, search_time_gpy,label = "GPy", color = "green")
+    axis[1].loglog(NS, search_time_george_hodlr,label = "george_hodlr", color = "red")
+    axis[1].loglog(NS, search_time_gpy,label = "GPy", color = "green")
     axis[1].legend()
     axis[1].set_title("Search Time Comparison")
-    # axis[1].xlabel("Number of Samples")
-    # axis[1].ylabel("Time (sec)")
+    axis[1].set_xlabel("Number of Samples")
+    axis[1].set_ylabel("Time (sec)")
 
     plt.show()
 
