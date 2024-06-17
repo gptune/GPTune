@@ -197,14 +197,14 @@ def main():
     options['sample_class'] = 'SampleLHSMDU'
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
-    options['model_class'] = 'Model_GPy_LCM' #'Model_LCM'
+    options['model_class'] = 'Model_George_HODLR_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
     options['search_random_seed'] = 0
 
-    # options['search_class'] = 'SearchSciPy'
-    # options['search_algo'] = 'l-bfgs-b'
+    #options['search_class'] = 'SearchSciPy'
+    #options['search_algo'] = 'l-bfgs-b'
 
     options['search_more_samples'] = 4
     options['search_af']='EI'
@@ -235,6 +235,8 @@ def main():
         # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
 
         (data, modeler, stats) = gt.MLA(NS=NS, NS1=int(NS/2), NI=NI, Tgiven=giventask)
+        # print("stats type", type(stats))
+        # print("stats keys", stats.keys())
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):

@@ -33,7 +33,7 @@ where:
 ################################################################################
 import sys
 import os
-import mpi4py
+# import mpi4py
 import logging
 sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -45,7 +45,7 @@ from autotune.problem import *
 from gptune import * # import all
 
 import argparse
-from mpi4py import MPI
+# from mpi4py import MPI
 import numpy as np
 import time
 from callopentuner import OpenTuner
@@ -238,7 +238,7 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_LCM' #'Model_GPy_LCM'
+    options['model_class'] = 'Model_George_HODLR_LCM'#'Model_GPy_LCM' #'Model_LCM' 
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'
@@ -294,6 +294,7 @@ def main():
 
 
     if plot==1:
+        print("yes")
         # fig = plt.figure(figsize=[12.8, 9.6])
         x = np.arange(0., 1., 0.0001)
         for tid in range(len(data.I)):

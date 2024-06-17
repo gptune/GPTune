@@ -16,12 +16,17 @@
 #
 
 import abc
+import copy
 from typing import Collection, Tuple
 import numpy as np
+import george
 
 from problem import Problem
 from computer import Computer
 from data import Data
+from george import *
+import scipy.optimize as op
+
 
 import math
 
@@ -289,7 +294,7 @@ class Model_GPy_LCM(Model):
             x[:,:-1] = points
             x[:,-1] = tid
             (mu, var) = self.M.predict_noiseless(x,full_cov=full_cov)
-
+            # print(mu, var, 'gpy')
         return (mu, var)
 
     def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
@@ -530,9 +535,6 @@ class Model_LCM(Model):
             print('sigma:',kern.sigma)
             print('WS:',kern.WS)
 
-
-
-
         # YL: likelihoods needs to be provided, since K operator doesn't take into account sigma/jittering, but Kinv does. The GPCoregionalizedRegression intialization will call inference in GPy/interence/latent_function_inference/exact_gaussian_inference.py, and add to diagonals of the K operator with sigma+1e-8
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         import copy
@@ -642,6 +644,600 @@ class Model_LCM(Model):
         self.M = GPy.models.GPCoregionalizedRegression(data.P, data.O, kern, likelihoods_list = likelihoods_list)
 
         return
+
+class Model_George_HODLR_LCM(Model):
+    # look at mutli threading
+    # vector instructions 
+
+#model_threads=1
+#model_processes=1
+#model_groups=1
+#model_restarts=1
+#model_max_iters=15000
+#model_latent=0
+#model_sparse=False
+#model_inducing=None
+#model_layers=2
+
+    y = []
+
+
+    def _initialize_kernel(self, input_dim, length_scales):
+        if self.kernel_type == 'RBF':
+            metric = length_scales
+            kernel = kernels.ExpSquaredKernel(metric=metric, ndim=input_dim)
+
+        # Add other kernels 
+        else:
+            raise ValueError(f"Unsupported kernel type: {self.kernel_type}")
+        return kernel
+
+
+    def nll(self, params):
+        self.M.set_parameter_vector(params)
+        g = self.M.grad_log_likelihood(np.ravel(self.y), quiet=True)
+        return -self.M.log_likelihood(np.ravel(self.y), quiet=True), -g
+
+    def extract_hyperparameters(self, kernel):
+        params = kernel.get_parameter_vector()
+        log_amplitude_squared = params[0]
+        log_lengthscales = params[1:]
+
+        amplitude = np.exp(log_amplitude_squared / 2) * (np.sqrt(kernel.ndim))
+        lengthscales = np.exp(log_lengthscales)
+        # print("amplitude: ", amplitude, "lengthscale ", lengthscales)
+
+        return amplitude, lengthscales
+
+    def train(self, data, **kwargs):
+        if 'model_random_seed' in kwargs and kwargs['model_random_seed'] is not None:
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
+
+        self.M_last = copy.deepcopy(self.M)
+
+        multitask = len(data.I) > 1 if data.I else False
+
+        if 'model_latent' not in kwargs or kwargs['model_latent'] is None:
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if 'model_sparse' in kwargs and kwargs['model_sparse'] and kwargs['model_inducing'] is None:
+            if multitask:
+                print("TODO - IMPLEMENT MULTITASK TRAIN")
+            else:
+                lenx = len(data.P)
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+
+        if multitask:
+            print("TODO - IMPLEMENT MULTITASK TRAIN")
+        else:
+            if kwargs['model_kern'] == 'RBF':
+                x = data.P[0]
+                self.y = data.O[0]
+                input_dim = len(x[0])
+                K = kernels.ExpSquaredKernel(metric=np.ones(input_dim), ndim=input_dim)
+                amplitude = np.var(self.y)
+                K *= amplitude
+            else:
+                K = kernels.ExpSquaredKernel(metric=np.ones(len(data.P[0][0])), ndim=len(data.P[0][0]))
+
+        # Initialize GP Model 
+        
+        if 'model_sparse' in kwargs and kwargs['model_sparse']:
+            print("TODO - IMPLEMENT SPARSE GP TRAIN")
+        else:
+            self.M = george.GP(K, solver=george.solvers.HODLRSolver)
+
+            #solver_modified = george.HODLRSolver(K, min_size=2, tol=0.1)
+            #self.M = george.GP(K, solver=solver_modified)            
+
+        self.M.compute(x)
+        # print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)))
+        p0 = self.M.get_parameter_vector()
+        resopt = op.minimize(self.nll, p0, jac=True, method="L-BFGS-B")
+        self.M.set_parameter_vector(resopt.x)
+        # print("Updated Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)))
+
+        # Dump the hyperparameters
+        if multitask:
+            print("TODO - IMPLEMENT MULTITASK TRAIN")
+        else:
+            hyperparameters = {
+                "lengthscale": [],
+                "variance": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M.log_likelihood(np.ravel(self.y))
+            }
+            modeling_options = {}
+            modeling_options["model_kern"] = kwargs["model_kern"]
+            if 'model_sparse' in kwargs and kwargs["model_sparse"]:
+                modeling_options["model_method"] = "SparseGPRegression"
+                modeling_options["model_sparse"] = "yes"
+            else:
+                modeling_options["model_method"] = "GPRegression"
+                modeling_options["model_sparse"] = "no"
+            modeling_options["multitask"] = "no"
+
+            amplitude, lengthscale = self.extract_hyperparameters(self.M.kernel)
+
+            hyperparameters["lengthscale"] = lengthscale.tolist()
+            hyperparameters["variance"] = [amplitude]
+
+            if kwargs.get('verbose', True):
+                print("lengthscale:", hyperparameters["lengthscale"])
+                print("variance:", hyperparameters["variance"])
+            print("modeler:", kwargs['model_class'])
+            print("M:", self.M)
+
+        return (hyperparameters, modeling_options, model_stats)
+
+    def train_stacked(self, data : Data, num_source_tasks, **kwargs):
+
+        print("TODO- TRAIN STACKED")
+
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
+
+        #XXX TODO
+        self.train(newdata, **kwargs)
+
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
+
+        if len(self.M_stacked) > 0: # stacked model
+            print("TO DO - Implment stacked predict function")
+        else:
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = points
+            # x = np.empty((points.shape[0], points.shape[1] + 1))
+            # x[:,:-1] = points
+            #  x[:,-1] = tid Add multitask later
+            mu, var = self.M.predict(np.ravel(self.y), x, return_var=not full_cov)
+            mu =[mu]
+            var = [var]
+            # print(mu, var, 'george')
+
+            return (mu, var)
+
+    def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+        # compare george basic solver, gpy solver and george HODLR 
+        x = np.empty((1, points.shape[0] + 1))
+        x[0,:-1] = points
+        x[0,-1] = tid
+        if self.M_last != None:
+            (mu, var) = self.M_last.predict_noiseless(x)
+        else:
+            (mu, var) = self.M.predict_noiseless(x)
+
+        return (mu, var)
+
+    def get_correlation_metric(self, delta):
+        print("In model.py, delta = ", delta)
+        Q = delta # number of latent processes 
+        B = np.zeros((delta, delta, Q))
+        for i in range(Q):
+            currentLCM = getattr(self.M.sum, f"GPy_LCM{i}")
+            Wq = currentLCM.B.W.values
+            Kappa_q = currentLCM.B.kappa.values
+            B[:, :, i] = np.outer(Wq, Wq) + np.diag(Kappa_q)
+            # print("In model.py, i = ", i)
+            # print(B[:, :, i])
+            
+        # return C_{i, i'}
+        C = np.zeros((delta, delta))
+        for i in range(delta):
+            for ip in range(i, delta):
+                C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
+        return C
+
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
+
+        #hyperarameters for variance should be multiplied by ndim (len of hyperparameters - 1)
+        # noise varaince is not treated as hyperparam
+
+
+        if kwargs['model_random_seed'] != None:
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
+
+        if modeling_options["multitask"] == "yes":
+            multitask = True
+        else:
+            multitask = False
+
+        if modeling_options["model_sparse"] == "yes":
+            model_sparse = True
+        else:
+            model_sparse = False
+
+        if (kwargs['model_latent'] is None):
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if (model_sparse and kwargs['model_inducing'] is None):
+            if (multitask):
+                lenx = sum([len(P) for P in data.P])
+            else:
+                lenx = len(data.P)
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+
+        # GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
+
+        # if (multitask):
+        #     kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
+        #     K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
+        #     K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
+        #     # print(K)
+        #     if modeling_options["model_sparse"] == "SparseGPCoregionalizedRegression":
+        #         self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
+        #     elif modeling_options["model_method"] == "GPCoregionalizedRegression":
+        #         self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+        #     else:
+        #         print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPCoregionalizedRegression")
+        #         self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+
+        #         for qq in range(model_latent):
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][0] = hyperparameters["rbf_lengthscale"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][1] = hyperparameters["rbf_lengthscale"][qq][1]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][2] = hyperparameters["rbf_lengthscale"][qq][2]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq] = hyperparameters["variance"][qq]
+        #             self.M.kern['sum.GPy_LCM%s.B.W'%qq][0][0] = hyperparameters["B_W"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.B.W'%qq][1][0] = hyperparameters["B_W"][qq][1]
+        #             self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][0] = hyperparameters["B_kappa"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][1] = hyperparameters["B_kappa"][qq][1]
+        #             self.M.kern['mixed_noise.Gaussian_noise_%s.variance'%qq] = hyperparameters["noise_variance"][qq][0]
+
+        #         for qq in range(model_latent):
+        #             self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
+
+        #         self.M.parameters_changed()
+
+        #         print ("reproduced model: ", self.M)
+
+        # else:
+        if modeling_options['model_kern'] == 'RBF':
+            input_dim = data.P.shape[1] if data.P.ndim > 1 else 1
+            K = kernels.ExpSquaredKernel(metrics = np.ones(input_dim), ndim = input_dim)
+            amplitude = np.var(data.O)
+            K *= amplitude
+        # elif modeling_options['model_kern'] == 'Exponential' or modeling_options['model_kern'] == 'Matern12':
+        #     K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # elif modeling_options['model_kern'] == 'Matern32':
+        #     K = GPy.kern.Matern32(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # elif modeling_options['model_kern'] == 'Matern52':
+        #     K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # else:
+        #     K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # if modeling_options['model_method'] == 'SparseGPRegression':
+        #     self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
+        if modeling_options['model_method'] == 'GPRegression':
+            self.M = george.GP(K, solver = george.solvers.HODLRSolver)
+        else:
+            print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPRegression")
+            self.M = george.GP(K, solver = george.solvers.HODLRSolver)
+        # self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
+
+        print ("len: ", len(self.M.get_parameter_vector()[1:]))
+
+        
+        #To - Do
+        for i in range(len(self.M.get_parameter_vector()[1:])):
+            self.M.kern['GPy_GP.lengthscale'][i] = hyperparameters["lengthscale"][i]
+
+        self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
+        self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
+
+        self.M.parameters_changed()
+
+        print ("reproduced model: ", self.M)
+
+        return
+    
+class Model_George_Basic_LCM(Model):
+    # look at mutli threading
+    # vector instructions 
+
+#model_threads=1
+#model_processes=1
+#model_groups=1
+#model_restarts=1
+#model_max_iters=15000
+#model_latent=0
+#model_sparse=False
+#model_inducing=None
+#model_layers=2
+
+    y = []
+
+
+    def _initialize_kernel(self, input_dim, length_scales):
+        if self.kernel_type == 'RBF':
+            metric = length_scales
+            kernel = kernels.ExpSquaredKernel(metric=metric, ndim=input_dim)
+
+        # Add other kernels 
+        else:
+            raise ValueError(f"Unsupported kernel type: {self.kernel_type}")
+        return kernel
+
+
+    def nll(self, params):
+        self.M.set_parameter_vector(params)
+        g = self.M.grad_log_likelihood(np.ravel(self.y), quiet=True)
+        return -self.M.log_likelihood(np.ravel(self.y), quiet=True), -g
+    
+    def extract_hyperparameters(self, kernel):
+        params = kernel.get_parameter_vector()
+        log_amplitude_squared = params[0]
+        log_lengthscales = params[1:]
+
+        amplitude = np.exp(log_amplitude_squared / 2) * (np.sqrt(kernel.ndim))
+        lengthscales = np.exp(log_lengthscales)
+
+        return amplitude, lengthscales
+
+
+    def train(self, data, **kwargs):
+        if 'model_random_seed' in kwargs and kwargs['model_random_seed'] is not None:
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
+
+        self.M_last = copy.deepcopy(self.M)
+
+        multitask = len(data.I) > 1 if data.I else False
+
+        if 'model_latent' not in kwargs or kwargs['model_latent'] is None:
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if 'model_sparse' in kwargs and kwargs['model_sparse'] and kwargs['model_inducing'] is None:
+            if multitask:
+                print("TODO - IMPLEMENT MULTITASK TRAIN")
+            else:
+                lenx = len(data.P)
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+
+        if multitask:
+            print("TODO - IMPLEMENT MULTITASK TRAIN")
+        else:
+            if kwargs['model_kern'] == 'RBF':
+                x = data.P[0]
+                self.y = data.O[0]
+                input_dim = len(x[0])
+                K = kernels.ExpSquaredKernel(metric=np.ones(input_dim), ndim=input_dim)
+                amplitude = np.var(self.y)
+                K *= amplitude
+            else:
+                K = kernels.ExpSquaredKernel(metric=np.ones(len(data.P[0][0])), ndim=len(data.P[0][0]))
+
+        # Initialize GP Model 
+        
+        if 'model_sparse' in kwargs and kwargs['model_sparse']:
+            print("TODO - IMPLEMENT SPARSE GP TRAIN")
+        else:
+            self.M = george.GP(K, solver=george.solvers.BasicSolver)
+
+        self.M.compute(x)
+        # print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)))
+        p0 = self.M.get_parameter_vector()
+        resopt = op.minimize(self.nll, p0, jac=True, method="L-BFGS-B")
+        self.M.set_parameter_vector(resopt.x)
+        # print("Updated Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)))
+
+        # Dump the hyperparameters
+        if multitask:
+            print("TODO - IMPLEMENT MULTITASK TRAIN")
+        else:
+            hyperparameters = {
+                "lengthscale": [],
+                "variance": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M.log_likelihood(np.ravel(self.y))
+            }
+            modeling_options = {}
+            modeling_options["model_kern"] = kwargs["model_kern"]
+            if 'model_sparse' in kwargs and kwargs["model_sparse"]:
+                modeling_options["model_method"] = "SparseGPRegression"
+                modeling_options["model_sparse"] = "yes"
+            else:
+                modeling_options["model_method"] = "GPRegression"
+                modeling_options["model_sparse"] = "no"
+            modeling_options["multitask"] = "no"
+
+            amplitude, lengthscale = self.extract_hyperparameters(self.M.kernel)
+
+            hyperparameters["lengthscale"] = lengthscale.tolist()
+            hyperparameters["variance"] = [amplitude]
+
+            if kwargs.get('verbose', True):
+                print("lengthscale:", hyperparameters["lengthscale"])
+                print("variance:", hyperparameters["variance"])
+            print("modeler:", kwargs['model_class'])
+            print("M:", self.M)
+
+        return (hyperparameters, modeling_options, model_stats)
+
+    def train_stacked(self, data : Data, num_source_tasks, **kwargs):
+
+        print("TODO- TRAIN STACKED")
+
+    def update(self, newdata : Data, do_train: bool = False, **kwargs):
+
+        #XXX TODO
+        self.train(newdata, **kwargs)
+
+    def predict(self, points : Collection[np.ndarray], tid : int, full_cov : bool=False, **kwargs) -> Collection[Tuple[float, float]]:
+
+        if len(self.M_stacked) > 0: # stacked model
+            print("TO DO - Implment stacked predict function")
+        else:
+            if not len(points.shape) == 2:
+                points = np.atleast_2d(points)
+            x = points
+            # x = np.empty((points.shape[0], points.shape[1] + 1))
+            # x[:,:-1] = points
+            #  x[:,-1] = tid Add multitask later
+            mu, var = self.M.predict(np.ravel(self.y), x, return_var=not full_cov)
+            mu =[mu]
+            var = [var]
+            # print(mu, var, 'george')
+
+            return (mu, var)
+
+    def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
+        # compare george basic solver, gpy solver and george HODLR 
+        x = np.empty((1, points.shape[0] + 1))
+        x[0,:-1] = points
+        x[0,-1] = tid
+        if self.M_last != None:
+            (mu, var) = self.M_last.predict_noiseless(x)
+        else:
+            (mu, var) = self.M.predict_noiseless(x)
+
+        return (mu, var)
+
+    def get_correlation_metric(self, delta):
+        print("In model.py, delta = ", delta)
+        Q = delta # number of latent processes 
+        B = np.zeros((delta, delta, Q))
+        for i in range(Q):
+            currentLCM = getattr(self.M.sum, f"GPy_LCM{i}")
+            Wq = currentLCM.B.W.values
+            Kappa_q = currentLCM.B.kappa.values
+            B[:, :, i] = np.outer(Wq, Wq) + np.diag(Kappa_q)
+            # print("In model.py, i = ", i)
+            # print(B[:, :, i])
+            
+        # return C_{i, i'}
+        C = np.zeros((delta, delta))
+        for i in range(delta):
+            for ip in range(i, delta):
+                C[i, ip] = np.linalg.norm(B[i, ip, :]) / np.sqrt(np.linalg.norm(B[i, i, :]) * np.linalg.norm(B[ip, ip, :]))
+        return C
+
+    def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
+
+        #hyperarameters for variance should be multiplied by ndim (len of hyperparameters - 1)
+        # noise varaince is not treated as hyperparam
+
+
+        if kwargs['model_random_seed'] != None:
+            seed = kwargs['model_random_seed']
+            if data.P is not None:
+                for P_ in data.P:
+                    seed += len(P_)
+            np.random.seed(seed)
+
+        if modeling_options["multitask"] == "yes":
+            multitask = True
+        else:
+            multitask = False
+
+        if modeling_options["model_sparse"] == "yes":
+            model_sparse = True
+        else:
+            model_sparse = False
+
+        if (kwargs['model_latent'] is None):
+            model_latent = data.NI
+        else:
+            model_latent = kwargs['model_latent']
+
+        if (model_sparse and kwargs['model_inducing'] is None):
+            if (multitask):
+                lenx = sum([len(P) for P in data.P])
+            else:
+                lenx = len(data.P)
+            model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
+
+        # GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
+
+        # if (multitask):
+        #     kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
+        #     K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
+        #     K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
+        #     # print(K)
+        #     if modeling_options["model_sparse"] == "SparseGPCoregionalizedRegression":
+        #         self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
+        #     elif modeling_options["model_method"] == "GPCoregionalizedRegression":
+        #         self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+        #     else:
+        #         print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPCoregionalizedRegression")
+        #         self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+
+        #         for qq in range(model_latent):
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][0] = hyperparameters["rbf_lengthscale"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][1] = hyperparameters["rbf_lengthscale"][qq][1]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][2] = hyperparameters["rbf_lengthscale"][qq][2]
+        #             self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq] = hyperparameters["variance"][qq]
+        #             self.M.kern['sum.GPy_LCM%s.B.W'%qq][0][0] = hyperparameters["B_W"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.B.W'%qq][1][0] = hyperparameters["B_W"][qq][1]
+        #             self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][0] = hyperparameters["B_kappa"][qq][0]
+        #             self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][1] = hyperparameters["B_kappa"][qq][1]
+        #             self.M.kern['mixed_noise.Gaussian_noise_%s.variance'%qq] = hyperparameters["noise_variance"][qq][0]
+
+        #         for qq in range(model_latent):
+        #             self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
+
+        #         self.M.parameters_changed()
+
+        #         print ("reproduced model: ", self.M)
+
+        # else:
+        if modeling_options['model_kern'] == 'RBF':
+            input_dim = data.P.shape[1] if data.P.ndim > 1 else 1
+            K = kernels.ExpSquaredKernel(metrics = np.ones(input_dim), ndim = input_dim)
+            amplitude = np.var(data.O)
+            K *= amplitude
+        # elif modeling_options['model_kern'] == 'Exponential' or modeling_options['model_kern'] == 'Matern12':
+        #     K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # elif modeling_options['model_kern'] == 'Matern32':
+        #     K = GPy.kern.Matern32(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # elif modeling_options['model_kern'] == 'Matern52':
+        #     K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # else:
+        #     K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+        # if modeling_options['model_method'] == 'SparseGPRegression':
+        #     self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
+        if modeling_options['model_method'] == 'GPRegression':
+            self.M = george.GP(K, solver = george.solvers.HODLRSolver)
+        else:
+            print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPRegression")
+            self.M = george.GP(K, solver = george.solvers.HODLRSolver)
+        # self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
+
+        print ("len: ", len(self.M.get_parameter_vector()[1:]))
+
+        
+        #To - Do
+        for i in range(len(self.M.get_parameter_vector()[1:])):
+            self.M.kern['GPy_GP.lengthscale'][i] = hyperparameters["lengthscale"][i]
+
+        self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
+        self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
+
+        self.M.parameters_changed()
+
+        print ("reproduced model: ", self.M)
+
+        return
+
 
 class Model_DGP(Model):
 
