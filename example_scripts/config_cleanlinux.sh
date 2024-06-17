@@ -8,8 +8,8 @@ BuildExample=0 # whether to build all examples
 MPIFromSource=1 # whether to build openmpi from source
 PYTHONFromSource=1 # whether to build python from source
 
-if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Mint"* ]]; then
-	echo "This script can only be used for Ubuntu or Debian or Mint systems"
+if [[ $(cat /etc/os-release | grep "PRETTY_NAME") != *"Ubuntu"* && $(cat /etc/os-release | grep "PRETTY_NAME") != *"Debian"* ]]; then
+	echo "This script can only be used for Ubuntu or Debian systems"
 	exit
 fi
 
@@ -182,8 +182,8 @@ cd $GPTUNEROOT
 cd $GPTUNEROOT
 git clone https://github.com/xianyi/OpenBLAS
 cd OpenBLAS
-make PREFIX=. CC=$CC CXX=$CXX FC=$FTN -j32
-make PREFIX=. CC=$CC CXX=$CXX FC=$FTN install -j32
+make PREFIX=. CC=$CC CXX=$CXX FC=$FTN USE_OPENMP=1 -j32
+make PREFIX=. CC=$CC CXX=$CXX FC=$FTN USE_OPENMP=1 install -j32
 
 
 if [[ $MPIFromSource = 1 ]]; then
