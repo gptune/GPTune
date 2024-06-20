@@ -497,47 +497,47 @@ fi
 
 
 
-cd $GPTUNEROOT
-rm -rf oneTBB
-git clone https://github.com/oneapi-src/oneTBB.git
-cd oneTBB
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-make -j16
-make install
-git clone https://github.com/wjakob/tbb.git
-cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+# cd $GPTUNEROOT
+# rm -rf oneTBB
+# git clone https://github.com/oneapi-src/oneTBB.git
+# cd oneTBB
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+# make -j16
+# make install
+# git clone https://github.com/wjakob/tbb.git
+# cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
-cd $GPTUNEROOT
-rm -rf download
-wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
-tar -xvf download
-cd boost_1_69_0/
-./bootstrap.sh --prefix=$PWD/build
-./b2 install
-export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+# cd $GPTUNEROOT
+# rm -rf download
+# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+# tar -xvf download
+# cd boost_1_69_0/
+# ./bootstrap.sh --prefix=$PWD/build
+# ./b2 install
+# export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
 
-cd $GPTUNEROOT
-rm -rf pagmo2
-git clone https://github.com/esa/pagmo2.git
-cd pagmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
-make -j16
-make install
-cp lib/cmake/pagmo/*.cmake . 
+# cd $GPTUNEROOT
+# rm -rf pagmo2
+# git clone https://github.com/esa/pagmo2.git
+# cd pagmo2
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+# make -j16
+# make install
+# cp lib/cmake/pagmo/*.cmake . 
 
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
-make -j16
-make install
+# cd $GPTUNEROOT
+# rm -rf pygmo2
+# git clone https://github.com/esa/pygmo2.git
+# cd pygmo2
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+# make -j16
+# make install
 
 cd $GPTUNEROOT
 rm -rf mpi4py

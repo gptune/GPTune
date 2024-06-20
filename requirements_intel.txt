@@ -11,8 +11,9 @@ lhsmdu
 ipyparallel
 opentuner >= 0.8.8
 hpbandster
-# pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
-pygmo <= 2.16.1
+#### pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
+pygmo <= 2.16.1; python_version <= '3.8'
+pybind11
 filelock 
 requests
 pymoo

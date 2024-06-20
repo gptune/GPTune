@@ -13,6 +13,8 @@ lhsmdu
 ipyparallel
 opentuner >= 0.8.8
 hpbandster
+pygmo <= 2.16.1; python_version <= '3.8'
+pygmo >= 2.19.5; python_version > '3.9'
 filelock 
 requests
 pybind11 >= 2.10
