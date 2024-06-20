@@ -1073,7 +1073,8 @@ class GPTune(object):
         data.I = data.I[0]
         data.P = data.P[0]
         data.O = data.O[0]
-        data.D = data.D[0]
+        if (data.D is not None):
+            data.D = data.D[0]
 
         return data, modeler, stats
 
