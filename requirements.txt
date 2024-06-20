@@ -5,15 +5,17 @@ scikit-learn
 scipy >= 1.7.0
 statsmodels >= 0.13.0
 pyaml
-matplotlib
+# GPy uses get_cmap of matplotlib, which is depreciated in matplotlib==3.9
+matplotlib < 3.9
 GPy
 openturns
 lhsmdu
 ipyparallel
 opentuner >= 0.8.8
 hpbandster
-# pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
-pygmo <= 2.16.1 # this doesn't seem to work for Python>3.8
+#### pygmo 2.19.0 (Jan 19, 2023) of pip doesn't work 
+pygmo <= 2.16.1; python_version <= '3.8'
+pybind11
 filelock 
 requests
 pymoo

@@ -126,7 +126,7 @@ def objectives3(point):
     x4 = point["x4"]
     x5 = point["x5"]
     x6 = point["x6"]
-    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2)
+    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2 + (x6-1)**2)
     return [y]
 
 
@@ -157,7 +157,7 @@ def objectives3(point):
 #     return [f*(1+np.random.uniform()*0.1)]
 
 
-def model_runtime(model, obj_func, NS_input,objtype):
+def model_runtime(model, obj_func, NS_input,objtype,lowrank):
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -228,10 +228,18 @@ def model_runtime(model, obj_func, NS_input,objtype):
 
     # Use the following two lines if you want to specify a certain random seed for the random pilot sampling
     # options['sample_algo'] = 'MCS'
-    options['sample_class'] = 'SampleOpenTURNS'
+    options['sample_class'] = 'SampleOpenTURNS' #'SampleLHSMDU' 
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
+    options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
+    if(lowrank==1):
+        options['model_lowrank'] = True
+        options['model_hodlrleaf'] = 200
+        options['model_hodlrtol'] = 1e-3
+        options['model_grad'] = False
+        
+
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
@@ -245,7 +253,10 @@ def model_runtime(model, obj_func, NS_input,objtype):
     # options['search_pop_size']=1000
     # options['search_ucb_beta']=0.01
 
-    options['verbose'] = True
+
+
+
+    options['verbose'] = False
     options.validate(computer=computer)
 
     print(options)
@@ -348,21 +359,22 @@ def main():
     search_time_george_hodlr = []
 
 
-    NS = [50, 100, 200, 400, 800, 1600, 3200]
-    # NS = [400]
+    # NS = [51, 101, 201, 401, 801, 1601]
+    NS = [51]
     for elem in NS:
-        hodlr_stats = model_runtime(model = "Model_George_HODLR_LCM", obj_func = objective, NS_input = elem, objtype=objtype)
+        hodlr_stats = model_runtime(model = "Model_George", obj_func = objective, NS_input = elem, objtype=objtype, lowrank=1)
         model_time_george_hodlr.append(hodlr_stats.get("time_model"))
         search_time_george_hodlr.append(hodlr_stats.get("time_search"))
 
-        george_basic_stats = model_runtime(model = "Model_George_Basic_LCM", obj_func = objective, NS_input = elem, objtype=objtype)
-        model_time_george_basic.append(george_basic_stats.get("time_model"))
-        search_time_george_basic.append(george_basic_stats.get("time_search"))
+        hodlr_stats = model_runtime(model = "Model_George", obj_func = objective, NS_input = elem, objtype=objtype, lowrank=0)
+        model_time_george_basic.append(hodlr_stats.get("time_model"))
+        search_time_george_basic.append(hodlr_stats.get("time_search"))
 
-        gpy_stats = model_runtime(model = "Model_GPy_LCM", obj_func = objective, NS_input = elem, objtype=objtype) 
+
+        gpy_stats = model_runtime(model = "Model_GPy_LCM", obj_func = objective, NS_input = elem, objtype=objtype,lowrank=0) 
         model_time_gpy.append(gpy_stats.get("time_model"))
         search_time_gpy.append(gpy_stats.get("time_search"))
-
+        
     #plotting
     figure, axis = plt.subplots(1,2) 
     axis[0].loglog(NS, model_time_george_basic,label = "george_basic", color = "blue")
@@ -383,6 +395,7 @@ def main():
     axis[1].set_ylabel("Time (sec)")
 
     plt.show()
+    plt.savefig('model_search_compare.pdf')
 
 
 
@@ -394,14 +407,6 @@ def main():
     # print("Time-Model GPy: ", model_time_gpy)
     # print("Time-Search GPy: ", search_time_gpy)
 
-    
-    
-
-    
-
-
-
-    
 
 if __name__ == "__main__":
     main()

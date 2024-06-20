@@ -289,6 +289,7 @@ class LCM(GPy.kern.Kern):
             iteration[0] += 1
 
             gradients[:] = g[:]
+            # print('grad',gradients[0],gradients[1],gradients[3])
             if (kwargs['verbose']):
                 sys.stdout.flush()
             if (neg_log_marginal_likelihood < min(history_fs)):
@@ -342,7 +343,8 @@ class LCM(GPy.kern.Kern):
             print('nit      : ', sol.nit)
             print('status   : ', sol.status)
             print('success  : ', sol.success)
-            #print('x        : ', x)
+            # print('x        : ', x)
+            # print('history_fs        : ', history_fs)
     #            xopt = transform_x(sol.x)
     #            fopt = sol.fun
         xopt = history_xs[history_fs.index(min(history_fs))] # history_xs is already transformed

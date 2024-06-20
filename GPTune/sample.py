@@ -179,11 +179,10 @@ class SampleLHSMDU(Sample):
                     lhs = lhsmdu.sample(len(space), n_samples)
             elif (kwargs['sample_algo'] == 'MCS'):
                 lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)
+                lhs = np.matrix(lhs)
             else:
                 raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
-
         lhs = np.array(list(zip(*[np.array(lhs[k])[0] for k in range(len(lhs))])))
-        # print(lhs,'normalized',n_samples)
 
         return lhs
 

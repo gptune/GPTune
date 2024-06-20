@@ -43,20 +43,20 @@
 # export compiler=gnu   # gnu, intel
 # export nodes=1  # number of nodes to be used
 
-# ################ Yang's tr4 machine
-export machine=tr4-workstation
- export proc=AMD1950X   
- export mpi=openmpi  
- export compiler=gnu   
- export nodes=1  # number of nodes to be used
-# #
+# # ################ Yang's tr4 machine
+# export machine=tr4-workstation
+#  export proc=AMD1950X   
+#  export mpi=openmpi  
+#  export compiler=gnu   
+#  export nodes=1  # number of nodes to be used
+# # #
 
-# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-# export machine=cleanlinux
-# export proc=unknown
-# export mpi=openmpi
-# export compiler=gnu
-# export nodes=1  # number of nodes to be used
+################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+export machine=cleanlinux
+export proc=unknown
+export mpi=openmpi
+export compiler=gnu
+export nodes=1  # number of nodes to be used
 
 
 # # ################ ex3 simula
@@ -528,7 +528,9 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.2.0/build/install/lib/:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
-
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_69_0/build/lib
+    
     cores=4
     gpus=0
     
@@ -609,7 +611,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 # export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPy/
-export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/
+# export PYTHONPATH=$PYTHONPATH:$PWD/pygmo2/
 export PYTHONWARNINGS=ignore
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/STRUMPACK/STRUMPACK/install/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/ButterflyPACK/ButterflyPACK/build/lib   # needed by strumpack_MLA_KRR.py

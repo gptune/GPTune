@@ -238,7 +238,12 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_George_HODLR_LCM'#'Model_GPy_LCM' #'Model_LCM' 
+    options['model_class'] = 'Model_George'#'Model_GPy_LCM' #'Model_LCM' 
+    options['model_lowrank'] = False
+    options['model_hodlrleaf'] = 200
+    options['model_hodlrtol'] = 1e-3
+    options['model_grad'] = True
+
     options['verbose'] = False
     # options['sample_algo'] = 'MCS'
     # options['sample_class'] = 'SampleLHSMDU'

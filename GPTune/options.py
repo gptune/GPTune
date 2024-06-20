@@ -69,6 +69,10 @@ class Options(dict):
         model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
+        model_lowrank = False # Whether to use HODLR solver from george or not
+        model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
+        model_hodlrleaf = 100 # Leafsize of HODLR
+        model_hodlrtol = 1e-1 # Compression tolerance of HODLR
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 
