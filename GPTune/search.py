@@ -289,7 +289,10 @@ class SurrogateProblem(object):
             return self.problem.DO
 
     def get_bounds(self):
-        DP = self.problem.DP
+        if(self.options['search_af']=='q-UCB' or self.options['search_af']=='q-EI'): # To the fitness function, input dimension is DP*search_more_samples instead of DP to use the evolutionary algorithm
+            DP = self.problem.DP*self.options['search_more_samples']
+        else:
+            DP = self.problem.DP
         return ([0. for i in range(DP)], [1. for  i in range(DP)])
 
     def is_dominated(self, x, S):
@@ -378,6 +381,79 @@ class SurrogateProblem(object):
                                 sigma_cross = sigma_cross.reshape(-1,1).T                            
                                 mspe = (sigma - sigma_cross @ sigma_obs @ sigma_cross.T)/(X_joint.shape[0]-1)
                                 AF.append(mspe[0][0])
+                            elif self.options['search_af'] == 'q-UCB': #multi-point UCB function in the paper "The reparameterization trick for acquisition functions", 2017
+                                (mu_cross, sigma_cross) = self.models[o].predict(x, tid=self.tid, full_cov=True)
+                                # print(mu_cross,sigma_cross,x.shape[0])
+                                
+                                if(x.shape[0]==1):
+                                    tmp = mu_cross-np.sqrt(sigma_cross*self.options['search_ucb_beta'] * np.pi/2)
+                                    tmp = tmp[0][0]
+                                else:
+                                    n=1000*self.options['search_more_samples'] # number of Monte Carlo samples, this is from heuristics
+                                    tmp=0
+                                    sigma_cross0 = sigma_cross *self.options['search_ucb_beta'] * np.pi/2                                    
+                                    
+                                    jitter=self.options['model_jitter']
+                                    flag=0
+                                    for i in range(self.options['model_max_jitter_try']):
+                                        try:
+                                            sigma_cross = np.linalg.cholesky(sigma_cross0+np.diag(np.ones((1,self.options['search_more_samples']))*jitter))
+                                            flag=1
+                                            break
+                                        except:
+                                            jitter=jitter*10
+                                    if(flag==0):
+                                        raise Exception("sigma_cross not SPD after jittering")
+
+                                    if(True):
+                                        zk0 = np.random.randn(x.shape[0],n)
+                                        mat=- np.absolute(sigma_cross @ zk0)
+                                        mat+=mu_cross
+                                        tmp = np.amax(mat,axis = 0)
+                                        tmp =np.sum(tmp)
+                                    else:
+                                        for i in range(n):
+                                            zk = np.random.randn(x.shape[0])
+                                            uaL = np.amax(mu_cross - np.absolute(sigma_cross @ zk))/n
+                                            tmp = tmp + uaL
+                                            # print(i,uaL,np.absolute(sigma_cross @ zk))
+                                # print(tmp)
+                                # sys.exit()
+                                AF.append(tmp)
+                            elif self.options['search_af'] == 'q-EI': #multi-point EI function in the paper "The reparameterization trick for acquisition functions", 2017
+                                ymin = self.data.O[self.tid][:,o].min()
+                                (mu_cross, sigma_cross0) = self.models[o].predict(x, tid=self.tid, full_cov=True)
+                                
+                                n=1000*self.options['search_more_samples'] # number of Monte Carlo samples, this is heuristics
+                                tmp=0
+
+                                jitter=self.options['model_jitter']
+                                flag=0
+                                for i in range(self.options['model_max_jitter_try']):
+                                    try:
+                                        sigma_cross = np.linalg.cholesky(sigma_cross0+np.diag(np.ones((1,self.options['search_more_samples']))*jitter))
+                                        flag=1
+                                        break
+                                    except:
+                                        jitter=jitter*10
+                                if(flag==0):
+                                    raise Exception("sigma_cross not SPD after jittering")
+                                
+                                if(True):
+                                    zk0 = np.random.randn(x.shape[0],n)
+                                    mat = sigma_cross @ zk0
+                                    tmpcol = ymin - mu_cross -self.options['search_ei_alpha']
+                                    mat += tmpcol
+                                    tmp = np.amax(mat,axis = 0)
+                                    tmp =np.sum(x for x in tmp if x>0)
+                                else:
+                                    for i in range(n):
+                                        zk = np.random.randn(x.shape[0])
+                                        uaL = max(0.0,np.amax(ymin - mu_cross -self.options['search_ei_alpha'] + sigma_cross @ zk )/n)
+                                        tmp = tmp + uaL
+                                        # print(i,uaL,np.absolute(sigma_cross @ zk))
+
+                                AF.append(-tmp)
                             else:
                                 raise Exception("unknown aquicision function %s"%(self.options['search_af']))
                             # AF.append(mu)
@@ -503,6 +579,8 @@ class SurrogateProblem(object):
             #     return AF
 
     def fitness(self, x):   # x is the normalized space
+        if(self.options['search_af']=='q-UCB' or self.options['search_af']=='q-EI'):
+            x=np.array(x, ndmin=2).reshape(self.options['search_more_samples'],-1)
 
         xi0 = self.problem.PS.inverse_transform(np.array(x, ndmin=2))
         xNorm = self.problem.PS.transform(xi0)
@@ -686,7 +764,10 @@ class SearchPyGMO(Search):
                     if (champions_f[idx] < self.options['search_bigval']):
                         cond = True
                         # bestX.append(np.array(self.problem.PS.inverse_transform(np.array(champions_x[idx], ndmin=2))[0]).reshape(1, self.problem.DP))
-                        bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
+                        if(self.options['search_af']=='q-UCB' or self.options['search_af']=='q-EI'):
+                            bestX.append(np.array(champions_x[idx]).reshape(self.options['search_more_samples'], self.problem.DP))
+                        else:
+                            bestX.append(np.array(champions_x[idx]).reshape(1, self.problem.DP))
                         break
                 cpt += 1
         else:                   # multi objective
