@@ -233,11 +233,11 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
-    if(lowrank==1):
+    if(lowrank==True):
         options['model_lowrank'] = True
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-3
-        options['model_grad'] = False
+        options['model_grad'] = True
         
 
     options['model_random_seed'] = 0
@@ -343,69 +343,92 @@ def objective_selection():
     else:
         raise Exception("Invalid objective selection")
     
+import matplotlib.pyplot as plt
 
-
-
-def main():
-    objective, objtype = objective_selection()
-
+def plotting(objective, objtype):
     model_time_gpy = []
+    model_time_per_likelihoodeval_gpy = []
     search_time_gpy = []
 
     model_time_george_basic = []
+    model_time_per_likelihoodeval_george_basic = []
     search_time_george_basic = []
 
     model_time_george_hodlr = []
+    model_time_per_likelihoodeval_george_hodlr = []
     search_time_george_hodlr = []
 
-
-    # NS = [51, 101, 201, 401, 801, 1601]
-    NS = [51]
+    NS = [51, 201, 401, 801, 1601, 3201]
+    
     for elem in NS:
-        hodlr_stats = model_runtime(model = "Model_George", obj_func = objective, NS_input = elem, objtype=objtype, lowrank=1)
+        hodlr_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True)
         model_time_george_hodlr.append(hodlr_stats.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr.append(hodlr_stats.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr.append(hodlr_stats.get("time_search"))
 
-        hodlr_stats = model_runtime(model = "Model_George", obj_func = objective, NS_input = elem, objtype=objtype, lowrank=0)
-        model_time_george_basic.append(hodlr_stats.get("time_model"))
-        search_time_george_basic.append(hodlr_stats.get("time_search"))
+        basic_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False)
+        model_time_george_basic.append(basic_stats.get("time_model"))
+        model_time_per_likelihoodeval_george_basic.append(basic_stats.get("time_model_per_likelihoodeval"))
+        search_time_george_basic.append(basic_stats.get("time_search"))
 
-
-        gpy_stats = model_runtime(model = "Model_GPy_LCM", obj_func = objective, NS_input = elem, objtype=objtype,lowrank=0) 
+        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False) 
         model_time_gpy.append(gpy_stats.get("time_model"))
+        model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
         search_time_gpy.append(gpy_stats.get("time_search"))
-        
-    #plotting
-    figure, axis = plt.subplots(1,2) 
-    axis[0].loglog(NS, model_time_george_basic,label = "george_basic", color = "blue")
-    axis[0].loglog(NS, model_time_george_hodlr,label = "george_hodlr", color = "red")
-    axis[0].loglog(NS, model_time_gpy,label = "GPy", color = "green")
+     
+    print("Time-Model HODLR: ", model_time_george_hodlr)
+    print("Time-Search HODLR: ", search_time_george_hodlr)
+    print("inversion time HODLR" , model_time_per_likelihoodeval_george_hodlr)
+    print("Time-Model Basic: ", model_time_george_basic)
+    print("Time-Search Basic: ", search_time_george_basic)
+    print("inversion time Basic" , model_time_per_likelihoodeval_george_basic)
+    print("Time-Model GPy: ", model_time_gpy)
+    print("Time-Search GPy: ", search_time_gpy)
+    print("inversion time GPy" , model_time_per_likelihoodeval_gpy)
+
+    # Plotting
+    figure, axis = plt.subplots(1, 3, figsize=(15, 5))
+    figure.suptitle("Model_grad = True, 6D")
+
+    axis[0].loglog(NS, model_time_george_basic, label="george_basic", color="blue", marker='o')
+    axis[0].loglog(NS, model_time_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
     axis[0].legend()
     axis[0].set_title("Model Time Comparison")
     axis[0].set_xlabel("Number of Samples")
     axis[0].set_ylabel("Time (sec)")
 
-
-    axis[1].loglog(NS, search_time_george_basic,label = "george_basic", color = "blue")
-    axis[1].loglog(NS, search_time_george_hodlr,label = "george_hodlr", color = "red")
-    axis[1].loglog(NS, search_time_gpy,label = "GPy", color = "green")
+    axis[1].loglog(NS, search_time_george_basic, label="george_basic", color="blue", marker='o')
+    axis[1].loglog(NS, search_time_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
     axis[1].legend()
     axis[1].set_title("Search Time Comparison")
     axis[1].set_xlabel("Number of Samples")
     axis[1].set_ylabel("Time (sec)")
 
+    axis[2].loglog(NS, model_time_per_likelihoodeval_george_basic, label="george_basic", color="blue", marker='o')
+    axis[2].loglog(NS, model_time_per_likelihoodeval_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[2].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+    axis[2].legend()
+    axis[2].set_title("Model Covariance Inversion Time Comparison")
+    axis[2].set_xlabel("Number of Samples")
+    axis[2].set_ylabel("Time (sec)")
+
+    plt.tight_layout()
     plt.show()
     plt.savefig('model_search_compare.pdf')
 
+def main():
+    objective, objtype = objective_selection()
+    plotting(objective=objective, objtype=objtype)
+
+
+    
 
 
 
-    # print("Time-Model HODLR: ", model_time_george_hodlr)
-    # print("Time-Search HODLR: ", search_time_george_hodlr)
-    # print("Time-Model Basic: ", model_time_george_basic)
-    # print("Time-Search Basic: ", search_time_george_basic)
-    # print("Time-Model GPy: ", model_time_gpy)
-    # print("Time-Search GPy: ", search_time_gpy)
+
+    
 
 
 if __name__ == "__main__":
