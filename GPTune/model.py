@@ -24,6 +24,8 @@ from computer import Computer
 from data import Data
 
 import scipy.optimize as op
+import emcee
+from scipy.stats import truncnorm, gamma, invgamma
 
 
 import math
@@ -658,6 +660,94 @@ class Model_LCM(Model):
 class Model_George(Model):
     y = []
 
+    def gelman_rubin(self, samples):
+        """
+        Compute the Gelman-Rubin diagnostic statistic (R-hat) for convergence.
+        
+        Parameters:
+        samples (np.ndarray): MCMC samples of shape (nsteps, nwalkers, ndim)
+        
+        Returns:
+        np.ndarray: Gelman-Rubin statistic for each dimension
+        """
+        nsteps, nwalkers, ndim = samples.shape
+        
+        # Calculate the within-chain variance for each dimension
+        within_chain_var = np.var(samples, axis=0, ddof=1)
+        
+        # Calculate the mean of the samples for each step and dimension
+        chain_means = np.mean(samples, axis=0)
+        
+        # Calculate the mean of the means for each dimension
+        mean_of_means = np.mean(chain_means, axis=0)
+        
+        # Calculate the between-chain variance for each dimension
+        between_chain_var = np.mean((chain_means - mean_of_means) ** 2, axis=0)
+        
+        # Calculate the mean within-chain variance for each dimension
+        mean_within_chain_var = np.mean(within_chain_var, axis=0)
+        
+        # Calculate the variance estimate
+        var_estimate = ((nsteps - 1) / nsteps) * mean_within_chain_var + (1 / nsteps) * between_chain_var
+        
+        # Calculate the Gelman-Rubin statistic
+        gelman_rubin_stat = np.sqrt(var_estimate / mean_within_chain_var)
+        
+        return gelman_rubin_stat
+
+    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, check_interval=100, r_hat_threshold=1.01):
+        nwalkers, ndim = initial_state.shape
+        samples = np.zeros((n_steps, nwalkers, ndim))
+        
+        for i in range(0, n_steps, check_interval):
+            sampler.run_mcmc(initial_state, check_interval, progress=True)
+            initial_state = sampler.get_last_sample().coords
+            
+            current_samples = sampler.get_chain(discard=100, thin=1, flat=False)
+            
+            # Print shapes for debugging
+            print(f"Iteration {i}: current_samples shape = {current_samples.shape}")
+            
+            end_index = i + check_interval
+            if end_index > n_steps:
+                end_index = n_steps
+                
+            # Check if the slice is valid
+            if current_samples.shape[0] < (end_index - i):
+                print(f"Warning: Not enough samples to fill the required slice. Current samples shape: {current_samples.shape}")
+                continue
+            
+            samples[i:end_index, :, :] = current_samples[-(end_index - i):, :, :]
+            
+            if i >= check_interval:
+                r_hat = self.gelman_rubin(samples[:i+check_interval, : , :])
+                print(f"Step {i + check_interval}: R-hat = {r_hat}")
+                if np.all(r_hat < r_hat_threshold):
+                    print("Chains have converged.")
+                    return samples[:i+check_interval, :, :]
+        
+        print("Reached maximum steps without full convergence.")
+        return samples
+
+
+    
+    def log_posterior(self, params):
+        log_likelihood = -self.nll(params)
+        log_prior = 0
+        
+        length_scale = np.exp(params[2:])
+        signal_variance = np.exp(params[1])
+        noise_variance = np.exp(params[0])
+        
+        a, b = (np.log(0.1), np.log(10))
+        log_prior_length_scale = np.sum(truncnorm.logpdf(np.log(length_scale), (a - np.mean([a, b])) / np.std([a, b]), (b - np.mean([a, b])) / np.std([a, b])))
+        log_prior_signal_variance = invgamma.logpdf(signal_variance, a=1, scale=0.01)
+        log_prior_noise_variance = invgamma.logpdf(noise_variance, a=1, scale=0.001)
+        
+        log_prior = log_prior_length_scale + log_prior_signal_variance + log_prior_noise_variance
+        
+        return log_likelihood + log_prior
+
     def nll(self, params):
         self.M.set_parameter_vector(params)
         return -self.M.log_likelihood(np.ravel(self.y), quiet=True)
@@ -747,12 +837,31 @@ class Model_George(Model):
         
         
         bounds = [(-15, -10)] + [(None, None)] + [(-23, 19)] * input_dim
-        if kwargs['model_grad'] == True:
-            resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
-        else:
-            # use finite difference, jac could be None, '2-point', '3-point', or 'cs'
-            resopt = op.minimize(self.nll, p0, jac='2-point', method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
         
+        
+        if kwargs['mcmc']:
+                # Initialize MCMC walkers around the initial guess
+                ndim = len(p0)
+                nwalkers = kwargs.get('nwalkers', 32)
+                initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
+                
+                sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_posterior)
+                n_steps = kwargs.get('n_steps', 1000)
+                samples = self.run_mcmc_with_convergence(sampler, initial_state, n_steps)
+                
+                # Get the best parameter estimate
+                best_params = np.median(samples[:, -1, :], axis=0)
+                resopt = type('Result', (object,), {'x': best_params, 'success': True, 'message': 'MCMC converged', 'fun': -self.log_posterior(best_params), 'nfev': samples.shape[1] * samples.shape[0]})()
+        else:
+            if kwargs['model_grad'] == True:
+                resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
+            else:
+                # use finite difference, jac could be None, '2-point', '3-point', or 'cs'
+                resopt = op.minimize(self.nll, p0, jac='2-point', method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
+        
+
+        
+
         self.M.set_parameter_vector(resopt.x)
         if (kwargs['verbose']):
             print("Updated Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)))
