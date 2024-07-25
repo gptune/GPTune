@@ -25,7 +25,7 @@ from data import Data
 
 import scipy.optimize as op
 import emcee
-from scipy.stats import truncnorm, gamma, invgamma
+from scipy.stats import truncnorm, gamma, invgamma, norm
 
 
 import math
@@ -731,22 +731,64 @@ class Model_George(Model):
 
 
     
+
+
+
     def log_posterior(self, params):
+
+        def log_prior_truncnorm(log_param, lower_bound, upper_bound):
+            if lower_bound is None or upper_bound is None:
+                # Unbounded case: use standard normal prior
+                return norm.logpdf(log_param)
+            else:
+                # Bounded case: use truncated normal prior
+                mean = (lower_bound + upper_bound) / 2
+                std = (upper_bound - lower_bound) / 6  # Rough approximation
+                a = (lower_bound - mean) / std
+                b = (upper_bound - mean) / std
+                return truncnorm.logpdf(log_param, a, b, loc=mean, scale=std)
+            
+        # Extract parameters
+        log_noisevariance = params[0]
+        log_amplitude_squared = params[1]
+        log_lengthscales = params[2:]
+
+        # Define bounds for the parameters
+        noisevariance_bounds = (-15, -10)
+        amplitude_squared_bounds = None  # Unbounded
+        lengthscales_bounds = (-23, 19)
+
+        # Check if parameters are within bounds for bounded parameters
+        if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
+                (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
+                all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
+            return -np.inf  # Return a very low log posterior if out of bounds
+
+        # Convert to original scale
+        noisevariance = np.exp(log_noisevariance)
+        amplitude_squared = np.exp(log_amplitude_squared)
+        lengthscales = np.exp(log_lengthscales)
+
+        # Calculate log likelihood
         log_likelihood = -self.nll(params)
+        
+        # Calculate log prior
         log_prior = 0
+
+        # Log prior for noise variance
+        log_prior_noisevariance = log_prior_truncnorm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1])
+
+        # Log prior for amplitude squared (unbounded case)
+        log_prior_amplitude_squared = log_prior_truncnorm(log_amplitude_squared, amplitude_squared_bounds, amplitude_squared_bounds)
+
+        # Log prior for length scales
+        log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
         
-        length_scale = np.exp(params[2:])
-        signal_variance = np.exp(params[1])
-        noise_variance = np.exp(params[0])
-        
-        a, b = (np.log(0.1), np.log(10))
-        log_prior_length_scale = np.sum(truncnorm.logpdf(np.log(length_scale), (a - np.mean([a, b])) / np.std([a, b]), (b - np.mean([a, b])) / np.std([a, b])))
-        log_prior_signal_variance = invgamma.logpdf(signal_variance, a=1, scale=0.01)
-        log_prior_noise_variance = invgamma.logpdf(noise_variance, a=1, scale=0.001)
-        
-        log_prior = log_prior_length_scale + log_prior_signal_variance + log_prior_noise_variance
+        log_prior += log_prior_noisevariance + log_prior_amplitude_squared + log_prior_lengthscales
         
         return log_likelihood + log_prior
+
+
 
     def nll(self, params):
         self.M.set_parameter_vector(params)

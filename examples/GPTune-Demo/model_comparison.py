@@ -392,7 +392,7 @@ def plotting(objective, objtype):
 
     # axis[0].loglog(NS, model_time_george_basic, label="george_basic", color="blue", marker='o')
     axis[0].loglog(NS, model_time_george_hodlr, label="george_hodlr", color="red", marker='o')
-    # axis[0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
+    axis[0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
     axis[0].legend()
     axis[0].set_title("Model Time Comparison")
     axis[0].set_xlabel("Number of Samples")
@@ -400,7 +400,7 @@ def plotting(objective, objtype):
 
     # axis[1].loglog(NS, search_time_george_basic, label="george_basic", color="blue", marker='o')
     axis[1].loglog(NS, search_time_george_hodlr, label="george_hodlr", color="red", marker='o')
-    # axis[1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
+    axis[1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
     axis[1].legend()
     axis[1].set_title("Search Time Comparison")
     axis[1].set_xlabel("Number of Samples")
@@ -408,7 +408,7 @@ def plotting(objective, objtype):
 
     # axis[2].loglog(NS, model_time_per_likelihoodeval_george_basic, label="george_basic", color="blue", marker='o')
     axis[2].loglog(NS, model_time_per_likelihoodeval_george_hodlr, label="george_hodlr", color="red", marker='o')
-    # axis[2].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+    axis[2].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
     axis[2].legend()
     axis[2].set_title("Model Covariance Inversion Time Comparison")
     axis[2].set_xlabel("Number of Samples")
