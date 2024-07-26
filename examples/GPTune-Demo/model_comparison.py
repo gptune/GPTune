@@ -231,7 +231,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
     options['verbose'] = False
     options.validate(computer=computer)
 
-    print(options)
+    # print(options)
 
     if ntask == 1:
         giventask = [[round(tvalue,1)]]

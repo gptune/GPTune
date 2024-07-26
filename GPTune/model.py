@@ -682,7 +682,7 @@ class Model_George(Model):
         mean_of_means = np.mean(chain_means, axis=0)
         
         # Calculate the between-chain variance for each dimension
-        between_chain_var = np.mean((chain_means - mean_of_means) ** 2, axis=0)
+        between_chain_var = np.mean((chain_means - mean_of_means) ** 2, axis=0)*nsteps
         
         # Calculate the mean within-chain variance for each dimension
         mean_within_chain_var = np.mean(within_chain_var, axis=0)
@@ -690,23 +690,27 @@ class Model_George(Model):
         # Calculate the variance estimate
         var_estimate = ((nsteps - 1) / nsteps) * mean_within_chain_var + (1 / nsteps) * between_chain_var
         
+        # print(var_estimate[2],mean_within_chain_var[2],between_chain_var[2],nsteps,chain_means.shape)
         # Calculate the Gelman-Rubin statistic
         gelman_rubin_stat = np.sqrt(var_estimate / mean_within_chain_var)
         
         return gelman_rubin_stat
 
-    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, check_interval=1, r_hat_threshold=1.01):
+    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, discard=10, thin=1, check_interval=1, r_hat_threshold=1.01):
         nwalkers, ndim = initial_state.shape
         samples = np.zeros((n_steps, nwalkers, ndim))
+        log_posteriors = np.zeros((n_steps, nwalkers))
         
         for i in range(0, n_steps, check_interval):
-            sampler.run_mcmc(initial_state, check_interval, progress=True)
+            sampler.run_mcmc(initial_state, check_interval, progress=False)
             initial_state = sampler.get_last_sample().coords
-            
-            current_samples = sampler.get_chain(discard=50, thin=1, flat=False)
-            
+            current_samples = sampler.get_chain(discard=discard, thin=thin, flat=False)
+            current_log_prob = sampler.get_log_prob(discard=discard, thin=thin, flat=False)
+            # if current_samples.shape[0]>0:
+            #     current_samples = sampler.get_chain(discard=0, thin=1, flat=False)
             # Print shapes for debugging
-            print(f"Iteration {i}: current_samples shape = {current_samples.shape}")
+            # print(f"Iteration {i}: current_samples shape = {current_samples.shape}")
+            # print(current_samples[:,:,2])
             
             end_index = i + check_interval
             if end_index > n_steps:
@@ -714,20 +718,21 @@ class Model_George(Model):
                 
             # Check if the slice is valid
             if current_samples.shape[0] < (end_index - i):
-                print(f"Warning: Not enough samples to fill the required slice. Current samples shape: {current_samples.shape}")
+                # print(f"Warning: Not enough samples to fill the required slice. Current samples shape: {current_samples.shape}")
                 continue
             
             samples[i:end_index, :, :] = current_samples[-(end_index - i):, :, :]
+            log_posteriors[i:end_index, :] = current_log_prob[-(end_index - i):, :]
             
             if i >= check_interval:
                 r_hat = self.gelman_rubin(samples[:i+check_interval, : , :])
-                print(f"Step {i + check_interval}: R-hat = {r_hat}")
+                print(f"MCMC Step {i + check_interval}: R-hat = {r_hat}")
                 if np.all(r_hat < r_hat_threshold):
-                    print("Chains have converged.")
-                    return samples[:i+check_interval, :, :]
+                    print("MCMC Chains have converged.")
+                    return samples[:i+check_interval, :, :], log_posteriors[:i+check_interval, :]
         
         print("Reached maximum steps without full convergence.")
-        return samples
+        return samples, log_posteriors
 
 
     def log_posterior(self, params):
@@ -873,10 +878,10 @@ class Model_George(Model):
         bounds = [(-15, -10)] + [(None, None)] + [(-23, 19)] * input_dim
         
         
-        if kwargs['mcmc']:
+        if kwargs['model_mcmc']:
                 # Initialize MCMC walkers around the initial guess
                 ndim = len(p0)
-                nwalkers = kwargs.get('nwalkers', 10)
+                nwalkers = kwargs.get('nwalkers', max(kwargs['model_mcmc_nchain'],2*ndim)) # set number of chains to at least 2*#hyperparameters according to emcee user guide
                 initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
                 for i in range(1,nwalkers):
                     for j in range(0,ndim):
@@ -884,15 +889,22 @@ class Model_George(Model):
                             initial_state[i,1] = 0 
                         else:
                             initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
-                print(initial_state)
+                # print(initial_state[:,:])
    
                 
                 sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_posterior)
-                n_steps = kwargs.get('n_steps', 1000)
-                samples = self.run_mcmc_with_convergence(sampler, initial_state, n_steps)
+                n_steps = kwargs.get('n_steps', 1000) # max number of MCMC iterations
+                samples,log_posteriors = self.run_mcmc_with_convergence(sampler, initial_state, n_steps, discard=kwargs['model_mcmc_burnin'])
+                flat_samples = samples.reshape(-1, ndim)
+                flat_log_posteriors = log_posteriors.reshape(-1, 1)
                 
-                # Get the best parameter estimate
-                best_params = np.median(samples[:, -1, :], axis=0)
+                # ####### Get the best parameter estimate
+                # best_params = np.mean(flat_samples, axis=0)
+                # print("Mean of samples:", best_params)
+                map_index = np.argmax(flat_log_posteriors)
+                best_params = flat_samples[map_index]
+                # print("MAP sample:", best_params)
+
                 resopt = type('Result', (object,), {'x': best_params, 'success': True, 'message': 'MCMC converged', 'fun': -self.log_posterior(best_params), 'nfev': samples.shape[1] * samples.shape[0]})()
         else:
             if kwargs['model_grad'] == True:

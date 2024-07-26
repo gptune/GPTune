@@ -216,12 +216,12 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
     
     # Temporary hardcode 
     if(optimizer == "gradient"):
-        options['mcmc'] = False
+        options['model_mcmc'] = False
         options['model_grad'] = True
     elif (optimizer == "mcmc"):
-        options['mcmc'] = True
+        options['model_mcmc'] = True
     elif (optimizer == "finite difference"):
-        options['mcmc'] = False
+        options['model_mcmc'] = False
         options['model_grad'] = False
     else:
         pass
@@ -244,7 +244,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
     options['verbose'] = False
     options.validate(computer=computer)
 
-    print(options)
+    # print(options)
 
     if ntask == 1:
         giventask = [[round(tvalue,1)]]
@@ -264,15 +264,15 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
         # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__)) # run GPTune with database 
         gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
 
-        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input/2.0), NI=NI, Tgiven=giventask)
-#        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input - 1), NI=NI, Tgiven=giventask)
+        # (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input/2.0), NI=NI, Tgiven=giventask)
+        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input - 1), NI=NI, Tgiven=giventask)
         print("stats: ", stats)
         """ Print all input and parameter samples """
         for tid in range(NI):
             print("tid: %d" % (tid))
             print("    t:%f " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
+            # print("    Ps ", data.P[tid])
+            # print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='opentuner'):
@@ -366,21 +366,21 @@ def plotting(objective, objtype):
 
 
 
-    NS = [201]
+    NS = [51, 201, 401, 801, 1601, 3201]
     
     for elem in NS:
-        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient")
-        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient")
+        model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
-        # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference")
-        # model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
-        # model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
+        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference")
+        model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
+        model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
         hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc")
         model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
@@ -454,10 +454,10 @@ def plotting(objective, objtype):
     axis[1,0].set_xlabel("Number of Samples")
     axis[1,0].set_ylabel("Time (sec)")
 
-    axis[1,1].plot(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
-    axis[1,1].plot(NS, model_iterations_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
-    axis[1,1].plot(NS, model_iterations_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
-    axis[1,1].plot(NS, model_iterations_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
+    axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
+    axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
+    axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
+    axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
     axis[1,1].legend()
     axis[1,1].set_title("Model Iterations Comparison")
     axis[1,1].set_xlabel("Number of Samples")

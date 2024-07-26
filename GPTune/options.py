@@ -71,7 +71,9 @@ class Options(dict):
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
         model_lowrank = False # Whether to use HODLR solver from george or not
         model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
-        model_mcmc = False # Whether to use MCMC instead of scikit-optimize 
+        model_mcmc = False # Whether to use Fully BAYESIAN (MCMC) instead of FREQUENTIST (LBFGS)
+        model_mcmc_burnin = 10 # number of first MCMC samples to be discarded 
+        model_mcmc_nchain = 5 # number of MCMC chains 
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
@@ -157,7 +159,7 @@ class Options(dict):
 
 
     def validate(self, computer, **kwargs):
-
+        import pprint
         """  modify the options as needed """
 
         if (os.environ.get('GPTUNE_LITE_MODE') is not None):
@@ -358,4 +360,5 @@ class Options(dict):
                     raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")
                 if ((computer.cores*computer.nodes)<ncore_obj):
                     raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
-
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint('options:', self)

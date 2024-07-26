@@ -214,7 +214,7 @@ def main():
     options['verbose'] = False
     options.validate(computer=computer)
 
-    print(options)
+    # print(options)
 
     if ntask == 1:
         giventask = [[round(tvalue,1)]]
