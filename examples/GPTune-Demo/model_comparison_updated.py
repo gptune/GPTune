@@ -130,7 +130,10 @@ def objectives3(point):
     return [y]
 
 
-def model_runtime(model, obj_func, NS_input,objtype,lowrank):
+
+
+
+def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -210,8 +213,18 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
         options['model_lowrank'] = True
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-3
+    
+    # Temporary hardcode 
+    if(optimizer == "gradient"):
+        options['mcmc'] = False
+        options['model_grad'] = True
+    elif (optimizer == "mcmc"):
+        options['mcmc'] = True
+    elif (optimizer == "finite difference"):
+        options['mcmc'] = False
         options['model_grad'] = False
-    options['mcmc'] = True 
+    else:
+        pass
         
 
     options['model_random_seed'] = 0
@@ -251,15 +264,16 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
         # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__)) # run GPTune with database 
         gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
 
-        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input - 1), NI=NI, Tgiven=giventask)
+        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input/2.0), NI=NI, Tgiven=giventask)
+#        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input - 1), NI=NI, Tgiven=giventask)
         print("stats: ", stats)
-        # """ Print all input and parameter samples """
-        # for tid in range(NI):
-        #     print("tid: %d" % (tid))
-        #     print("    t:%f " % (data.I[tid][0]))
-        #     print("    Ps ", data.P[tid])
-        #     print("    Os ", data.O[tid].tolist())
-        #     print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        """ Print all input and parameter samples """
+        for tid in range(NI):
+            print("tid: %d" % (tid))
+            print("    t:%f " % (data.I[tid][0]))
+            print("    Ps ", data.P[tid])
+            print("    Os ", data.O[tid].tolist())
+            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -314,6 +328,18 @@ def objective_selection():
         return objectives3, objtype
     else:
         raise Exception("Invalid objective selection")
+
+    
+# def setup():
+#     # setup cases base off input
+
+#     # Have the option to select the kernel for each 
+
+#     objective = input("How many many cases would you like compare?")
+
+
+
+    
     
 import matplotlib.pyplot as plt
 
@@ -321,87 +347,136 @@ def plotting(objective, objtype):
     model_time_gpy = []
     model_time_per_likelihoodeval_gpy = []
     search_time_gpy = []
+    model_iterations_gpy = []
 
-    model_time_george_basic = []
-    model_time_per_likelihoodeval_george_basic = []
-    search_time_george_basic = []
+    model_time_george_hodlr_gradient = []
+    model_time_per_likelihoodeval_george_hodlr_gradient = []
+    search_time_george_hodlr_gradient = []
+    model_iterations_hodlr_gradient = []
 
-    model_time_george_hodlr = []
-    model_time_per_likelihoodeval_george_hodlr = []
-    search_time_george_hodlr = []
+    model_time_george_hodlr_finite_difference = []
+    model_time_per_likelihoodeval_george_hodlr_finite_difference = []
+    search_time_george_hodlr_finite_difference = []
+    model_iterations_hodlr_finite_difference = []
 
-    NS = [51, 201, 401, 801, 1601, 3201]
+    model_time_george_hodlr_mcmc = []
+    model_time_per_likelihoodeval_george_hodlr_mcmc = []
+    search_time_george_hodlr_mcmc = []
+    model_iterations_hodlr_mcmc = []
+
+
+
+    NS = [201]
     
     for elem in NS:
-        hodlr_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True)
-        model_time_george_hodlr.append(hodlr_stats.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr.append(hodlr_stats.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr.append(hodlr_stats.get("time_search"))
+        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient")
+        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        
 
-        # basic_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False)
-        # model_time_george_basic.append(basic_stats.get("time_model"))
-        # model_time_per_likelihoodeval_george_basic.append(basic_stats.get("time_model_per_likelihoodeval"))
-        # search_time_george_basic.append(basic_stats.get("time_search"))
+        # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference")
+        # model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
+        # model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False) 
+        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc")
+        model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
+        search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
+        model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
+
+
+        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer") 
         model_time_gpy.append(gpy_stats.get("time_model"))
         model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
         search_time_gpy.append(gpy_stats.get("time_search"))
+        model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
      
     
-    print("Time-Model HODLR: ", model_time_george_hodlr)
-    print("Time-Search HODLR: ", search_time_george_hodlr)
-    print("inversion time HODLR" , model_time_per_likelihoodeval_george_hodlr)
-    # print("Time-Model Basic: ", model_time_george_basic)
-    # print("Time-Search Basic: ", search_time_george_basic)
-    # print("inversion time Basic" , model_time_per_likelihoodeval_george_basic)
+
+
+    # Model Time
+    print("Time-Model George HODLR Gradient: ", model_time_george_hodlr_gradient)
+    print("Time-Model George HODLR Finite Difference: ", model_time_george_hodlr_finite_difference)
+    print("Time-Model George HODLR MCMC: ", model_time_george_hodlr_mcmc)
     print("Time-Model GPy: ", model_time_gpy)
+
+    # Search Time
+    print("Time-Search George HODLR Gradient: ", search_time_george_hodlr_gradient)
+    print("Time-Search George HODLR Finite Difference: ", search_time_george_hodlr_finite_difference)
+    print("Time-Search George HODLR MCMC: ", search_time_george_hodlr_mcmc)
     print("Time-Search GPy: ", search_time_gpy)
-    print("inversion time GPy" , model_time_per_likelihoodeval_gpy)
 
-    # Plotting
-    figure, axis = plt.subplots(1, 3, figsize=(15, 5))
-    figure.suptitle("Model_grad = False, 2D")
+    # Inversion Time
+    print("Inversion Time George HODLR Gradient: ", model_time_per_likelihoodeval_george_hodlr_gradient)
+    print("Inversion Time George HODLR Finite Difference: ", model_time_per_likelihoodeval_george_hodlr_finite_difference)
+    print("Inversion Time George HODLR MCMC: ", model_time_per_likelihoodeval_george_hodlr_mcmc)
+    print("Inversion Time GPy: ", model_time_per_likelihoodeval_gpy)
 
-    # axis[0].loglog(NS, model_time_george_basic, label="george_basic", color="blue", marker='o')
-    axis[0].loglog(NS, model_time_george_hodlr, label="george_hodlr", color="red", marker='o')
-    axis[0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
-    axis[0].legend()
-    axis[0].set_title("Model Time Comparison")
-    axis[0].set_xlabel("Number of Samples")
-    axis[0].set_ylabel("Time (sec)")
+    # Modeling Iterations
+    print("Modeling Iterations George HODLR Gradient: ", model_iterations_hodlr_gradient)
+    print("Modeling Iterations George HODLR Finite Difference: ", model_iterations_hodlr_finite_difference)
+    print("Modeling Iterations George HODLR MCMC: ", model_iterations_hodlr_mcmc)
+    print("Modeling Iterations GPy: ", model_iterations_gpy)
 
-    # axis[1].loglog(NS, search_time_george_basic, label="george_basic", color="blue", marker='o')
-    axis[1].loglog(NS, search_time_george_hodlr, label="george_hodlr", color="red", marker='o')
-    axis[1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
-    axis[1].legend()
-    axis[1].set_title("Search Time Comparison")
-    axis[1].set_xlabel("Number of Samples")
-    axis[1].set_ylabel("Time (sec)")
 
-    # axis[2].loglog(NS, model_time_per_likelihoodeval_george_basic, label="george_basic", color="blue", marker='o')
-    axis[2].loglog(NS, model_time_per_likelihoodeval_george_hodlr, label="george_hodlr", color="red", marker='o')
-    axis[2].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
-    axis[2].legend()
-    axis[2].set_title("Model Covariance Inversion Time Comparison")
-    axis[2].set_xlabel("Number of Samples")
-    axis[2].set_ylabel("Time (sec)")
+
+    figure, axis = plt.subplots(2,2)
+    figure.suptitle("Optimizer Comparison 1D")
+
+    axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
+    axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
+    axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
+    axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
+    axis[0,0].legend()
+    axis[0,0].set_title("Model Time Comparison")
+    axis[0,0].set_xlabel("Number of Samples")
+    axis[0,0].set_ylabel("Time (sec)")
+
+    axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
+    axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
+    axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
+    axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
+    axis[0,1].legend()
+    axis[0,1].set_title("Search Time Comparison")
+    axis[0,1].set_xlabel("Number of Samples")
+    axis[0,1].set_ylabel("Time (sec)")
+
+    axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
+    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
+    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
+    axis[1,0].legend()
+    axis[1,0].set_title("Model Covariance Inversion Time Comparison")
+    axis[1,0].set_xlabel("Number of Samples")
+    axis[1,0].set_ylabel("Time (sec)")
+
+    axis[1,1].plot(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
+    axis[1,1].plot(NS, model_iterations_hodlr_gradient, label="george_hodlr_gradient", color="blue", marker='o')
+    axis[1,1].plot(NS, model_iterations_hodlr_finite_difference, label="george_hodlr_finite_difference", color="red", marker='o')
+    axis[1,1].plot(NS, model_iterations_hodlr_mcmc, label="george_hodlr_mcmc", color="purple", marker='o')
+    axis[1,1].legend()
+    axis[1,1].set_title("Model Iterations Comparison")
+    axis[1,1].set_xlabel("Number of Samples")
+    axis[1,1].set_ylabel("Iterations")
+
+
+
+
+
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('model_search_compare.pdf')
+    plt.savefig('opttimizer_compare.pdf')
 
 def main():
     objective, objtype = objective_selection()
     plotting(objective=objective, objtype=objtype)
 
 
-    
-
-
-
-
-    
 
 
 if __name__ == "__main__":

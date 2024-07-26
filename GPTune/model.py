@@ -695,7 +695,7 @@ class Model_George(Model):
         
         return gelman_rubin_stat
 
-    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, check_interval=100, r_hat_threshold=1.01):
+    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, check_interval=1, r_hat_threshold=1.01):
         nwalkers, ndim = initial_state.shape
         samples = np.zeros((n_steps, nwalkers, ndim))
         
@@ -703,7 +703,7 @@ class Model_George(Model):
             sampler.run_mcmc(initial_state, check_interval, progress=True)
             initial_state = sampler.get_last_sample().coords
             
-            current_samples = sampler.get_chain(discard=100, thin=1, flat=False)
+            current_samples = sampler.get_chain(discard=50, thin=1, flat=False)
             
             # Print shapes for debugging
             print(f"Iteration {i}: current_samples shape = {current_samples.shape}")
@@ -876,8 +876,16 @@ class Model_George(Model):
         if kwargs['mcmc']:
                 # Initialize MCMC walkers around the initial guess
                 ndim = len(p0)
-                nwalkers = kwargs.get('nwalkers', 32)
+                nwalkers = kwargs.get('nwalkers', 10)
                 initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
+                for i in range(1,nwalkers):
+                    for j in range(0,ndim):
+                        if(j==1):
+                            initial_state[i,1] = 0 
+                        else:
+                            initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
+                print(initial_state)
+   
                 
                 sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_posterior)
                 n_steps = kwargs.get('n_steps', 1000)
