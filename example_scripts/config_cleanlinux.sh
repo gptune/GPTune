@@ -151,13 +151,16 @@ if [[ $PYTHONFromSource = 1 ]]; then
 	make altinstall
 	PY=$PWD/bin/python$PyMAJOR.$PyMINOR  # this makes sure virtualenv uses the correct python version
 	PIP=$PWD/bin/pip$PyMAJOR.$PyMINOR
+	export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
 else
 	PyMAJOR=3 # set the correct python versions and path according to your system
 	PyMINOR=8
 	PyPATCH=5
 	PY=PATH-TO-PYTHON  # this makes sure virtualenv uses the correct python version
 	PIP=PATH-TO-PIP
+	export SITE_PACKAGE_DIR=PATH-TO-SITE-PACKAGES	
 fi
+
 
 cd $GPTUNEROOT
 $PIP install virtualenv 
@@ -491,14 +494,12 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	# env CC=mpicc pip install  -e .
 
 
-	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet  
+	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions  
 	cd $GPTUNEROOT
 	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
-	export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
 	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
 	export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
 	export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
-
 	cd $GPTUNEROOT
 	rm -rf oneTBB
 	git clone https://github.com/oneapi-src/oneTBB.git
@@ -537,7 +538,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cd pygmo2
 	mkdir build
 	cd build
-	cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
+	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
 	make -j
 	make install
 

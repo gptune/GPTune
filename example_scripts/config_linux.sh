@@ -52,6 +52,16 @@ CXX=g++-13
 FTN=gfortran-13
 
 ##
+## CHECKLIST 4.
+##
+## If you have python installed (e.g., with virtualenv), set the following accordingly
+
+PyMAJOR=3
+PyMINOR=9
+export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
+
+
+##
 ## INSTALLATION BEGINS
 ##
 
@@ -78,7 +88,6 @@ export PARMETIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
 export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
-export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
 cd $GPTUNEROOT
 
@@ -160,6 +169,19 @@ make install
 # cp pdqrdriver ../
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
+
+	cd $GPTUNEROOT
+	rm -rf mpi4py
+	git clone https://github.com/mpi4py/mpi4py.git
+	cd mpi4py/
+	python setup.py build --mpicc="$MPICC -shared"
+	python setup.py install 
+	# env CC=mpicc pip install  -e .
+	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions 
+	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
+	export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+	export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
     cd $GPTUNEROOT
     rm -rf oneTBB
     git clone https://github.com/oneapi-src/oneTBB.git
@@ -172,14 +194,14 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
     git clone https://github.com/wjakob/tbb.git
     cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
-    # cd $GPTUNEROOT
-    # rm -rf download
-    # wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
-    # tar -xvf download
-    # cd boost_1_69_0/
-    # ./bootstrap.sh --prefix=$PWD/build
-    # ./b2 install
-    # export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+    cd $GPTUNEROOT
+    rm -rf download
+    wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+    tar -xvf download
+    cd boost_1_69_0/
+    ./bootstrap.sh --prefix=$PWD/build
+    ./b2 install
+
 
     cd $GPTUNEROOT
     rm -rf pagmo2
@@ -198,45 +220,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
     cd pygmo2
     mkdir build
     cd build
-    cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
     make -j16
     make install
 fi
-
-if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
-	cd $GPTUNEROOT
-	rm -rf mpi4py
-	git clone https://github.com/mpi4py/mpi4py.git
-	cd mpi4py/
-	python setup.py build --mpicc="$MPICC -shared"
-	python setup.py install 
-	# env CC=mpicc pip install  -e .
-fi
-
-# cd $GPTUNEROOT
-# rm -rf scikit-optimize
-# git clone https://github.com/scikit-optimize/scikit-optimize.git
-# cd scikit-optimize/
-# cp ../patches/scikit-optimize/space.py skopt/space/.
-# python setup.py build 
-# python setup.py install 
-# # env CC=mpicc pip install  -e .
-
-# cd $GPTUNEROOT
-# rm -rf cGP
-# git clone https://github.com/gptune/cGP
-# cd cGP/
-# python setup.py install 
-
-# cd $GPTUNEROOT
-# rm -rf autotune
-# git clone https://github.com/ytopt-team/autotune.git
-# cd autotune/
-# # cp ../patches/autotune/problem.py autotune/.
-# env CC=$MPICC pip install  -e .
-
-# cd $GPTUNEROOT
-# rm -rf hybridMinimization
-# git clone https://github.com/gptune/hybridMinimization.git
-# cd hybridMinimization/
-# python setup.py install
