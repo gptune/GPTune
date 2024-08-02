@@ -494,7 +494,10 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	# env CC=mpicc pip install  -e .
 
 
-	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions  
+
+if [ "$PyMINOR" -gt 8 ]; then
+	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo.   
+	
 	cd $GPTUNEROOT
 	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
 	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
@@ -541,8 +544,7 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
 	make -j
 	make install
-
-
+fi
 
 fi
 
