@@ -19,18 +19,42 @@ fi
 
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
+	
+	module purge
 	module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
     module load cmake/3.19.2
-
 	module load python/gcc-9.1.0/3.7.4
+	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 
-	# module swap python python/gcc-9.1.0/3.8.4
+
+	# module purge
+	# module load gcc/9.1.0
+    # module load openmpi/gcc-9.1.0/4.0.1
+    # module load scalapack-netlib/gcc-9.1.0/2.0.2
+    # module load cmake/3.19.2	
+	# module load python/gcc-9.1.0/3.8.4
 	# shopt -s expand_aliases
 	# alias python='python3.8'
 	# alias pip='pip3.8'
-	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
+	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
+
+
+    # ################### the tr4 ubuntu system (18.04) seems to be too old for python3.12
+	# module purge
+	# module load gcc/13.1.0
+    # module load openmpi/gcc-13.1.0/4.0.1
+    # module load scalapack-netlib/gcc-13.1.0/2.2.0
+    # module load cmake/3.19.2	
+	# module load python/gcc-13.1.0/3.12.4
+	# shopt -s expand_aliases
+	# alias python='python3.12'
+	# alias pip='pip3.12'
+	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.2.0/build/lib/libscalapack.so
+
+
+	
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
 	MPICC=mpicc
