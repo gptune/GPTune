@@ -97,17 +97,31 @@ fi
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 ############### Yang's tr4 machine
-if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
-    module load gcc/9.1.0
-    module load openmpi/gcc-9.1.0/4.0.1
-    module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module load python/gcc-9.1.0/3.7.4
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
-    export PYTHONPATH=/home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/GPTune/:$PYTHONPATH
+if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then    
+    # module load gcc/9.1.0
+    # module load openmpi/gcc-9.1.0/4.0.1
+    # module load scalapack-netlib/gcc-9.1.0/2.0.2
+    # module load python/gcc-9.1.0/3.7.4
+
+
     # module swap python python/gcc-9.1.0/3.8.4
     # export PYTHONPATH=~/.local/lib/python3.8/site-packages/:$PYTHONPATH
     # shopt -s expand_aliases
     # alias python='python3.8'
+
+    module purge
+	module load gcc/13.1.0
+    module load openmpi/gcc-13.1.0/4.0.1
+    module load scalapack-netlib/gcc-13.1.0/2.2.0
+    module load cmake/3.19.2	
+	module load python/gcc-13.1.0/3.12.4   
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_78_0/build/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
+    export PYTHONPATH=${SITE_PACKAGE_DIR}/GPTune/:$PYTHONPATH
+
     export MPIRUN=mpirun 
     export MPIARG=--allow-run-as-root
     cores=16
@@ -174,9 +188,9 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     export LIBRARY_PATH=$PWD/scalapack-2.2.0/build/install/lib/:$LIBRARY_PATH
     export DYLD_LIBRARY_PATH=$PWD/scalapack-2.2.0/build/install/lib/:$DYLD_LIBRARY_PATH
 	
-    export LD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/:$LD_LIBRARY_PATH
-    export LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/:$LIBRARY_PATH
-    export DYLD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/:$DYLD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LD_LIBRARY_PATH
+    export LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
     cores=8
     gpus=0
     
@@ -190,7 +204,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-gnu' ]; then
     module load python/$PY_VERSION-anaconda-$PY_TIME
     module swap PrgEnv-intel PrgEnv-gnu
     module swap gcc gcc/8.3.0
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
@@ -206,7 +220,7 @@ elif [ $ModuleEnv = 'cori-haswell-craympich-intel' ]; then
     module load python/$PY_VERSION-anaconda-$PY_TIME
     module swap PrgEnv-gnu PrgEnv-intel 
     module swap intel intel/19.0.3.199 
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
@@ -234,7 +248,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
     module load python/$PY_VERSION-anaconda-$PY_TIME
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
 
@@ -247,7 +261,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-gnu' ]; then
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"
 	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
-    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     # export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
 
 
@@ -281,7 +295,7 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
 
@@ -294,7 +308,7 @@ elif [ $ModuleEnv = 'cori-gpu-openmpi-gnu' ]; then
 	# export MKLROOT=$PREFIX_PATH
 	# BLAS_INC="-I${MKLROOT}/include"
 	# export LD_LIBRARY_PATH=$PREFIX_PATH/lib:$LD_LIBRARY_PATH
-    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     # export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
 
 
@@ -316,7 +330,7 @@ elif [ $ModuleEnv = 'cori-haswell-openmpi-intel' ]; then
     module load openmpi/4.1.2
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=mpirun
@@ -340,7 +354,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-gnu' ]; then
     export OMPI_MCA_btl_ugni_virtual_device_count=1
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=mpirun
@@ -357,7 +371,7 @@ elif [ $ModuleEnv = 'cori-knl-craympich-gnu' ]; then
     module unload darshan
     module swap craype-haswell craype-mic-knl
     module swap PrgEnv-intel PrgEnv-gnu
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
@@ -383,7 +397,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
     export OMPI_MCA_btl_ugni_virtual_device_count=1
     export MKLROOT=/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries_$MKL_TIME/linux/mkl/lib/intel64
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/cori/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     cores=64
@@ -401,7 +415,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
@@ -436,7 +450,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
@@ -473,7 +487,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
@@ -498,7 +512,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
@@ -536,9 +550,9 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 	export PATH=$PWD/env/bin/:$PATH
 	export LD_LIBRARY_PATH=$PWD/scalapack-2.2.0/build/install/lib/:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$PWD/OpenBLAS:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_69_0/build/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_78_0/build/lib
     
     cores=4
     gpus=0
@@ -561,13 +575,13 @@ elif [ $ModuleEnv = 'summit-power9-spectrummpi-gnu' ]; then
 
     PREFIX_PATH=$PYTHONUSERBASE
 
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export PATH=$PATH:$PWD/jq-1.6
     export PYTHONPATH=$PYTHONPATH:$PWD/openturns/build/share/gdb/auto-load/$PWD
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_69_0/build/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/boost_1_78_0/build/lib
      
     export MPIRUN=jsrun
     cores=42
@@ -586,7 +600,7 @@ elif [ $ModuleEnv = 'crusher-EPYC-craympich-gnu' ]; then
 
     PREFIX_PATH=~/.local/
 
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export PATH=$PATH:$PWD/jq-1.6
@@ -609,7 +623,7 @@ elif [ $ModuleEnv = 'frontier-EPYC-craympich-gnu' ]; then
 
     PREFIX_PATH=~/.local/
 
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-github/lib/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
     export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export PATH=$PATH:$PWD/jq-1.6

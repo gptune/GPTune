@@ -511,12 +511,12 @@ fi
 
 # cd $GPTUNEROOT
 # rm -rf download
-# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.bz2/download'
 # tar -xvf download
-# cd boost_1_69_0/
+# cd boost_1_78_0/
 # ./bootstrap.sh --prefix=$PWD/build
 # ./b2 install
-# export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+# export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
 
 # cd $GPTUNEROOT
 # rm -rf pagmo2

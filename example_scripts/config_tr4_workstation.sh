@@ -20,13 +20,13 @@ fi
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	
-	module purge
-	module load gcc/9.1.0
-    module load openmpi/gcc-9.1.0/4.0.1
-    module load scalapack-netlib/gcc-9.1.0/2.0.2
-    module load cmake/3.19.2
-	module load python/gcc-9.1.0/3.7.4
-	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
+	# module purge
+	# module load gcc/9.1.0
+    # module load openmpi/gcc-9.1.0/4.0.1
+    # module load scalapack-netlib/gcc-9.1.0/2.0.2
+    # module load cmake/3.19.2
+	# module load python/gcc-9.1.0/3.7.4
+	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 
 
 	# module purge
@@ -38,23 +38,17 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	# shopt -s expand_aliases
 	# alias python='python3.8'
 	# alias pip='pip3.8'
-	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 
 
-    # ################### the tr4 ubuntu system (18.04) seems to be too old for python3.12
-	# module purge
-	# module load gcc/13.1.0
-    # module load openmpi/gcc-13.1.0/4.0.1
-    # module load scalapack-netlib/gcc-13.1.0/2.2.0
-    # module load cmake/3.19.2	
-	# module load python/gcc-13.1.0/3.12.4
-	# shopt -s expand_aliases
-	# alias python='python3.12'
-	# alias pip='pip3.12'
-	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.2.0/build/lib/libscalapack.so
-
-
+	module purge
+	module load gcc/13.1.0
+    module load openmpi/gcc-13.1.0/4.0.1
+    module load scalapack-netlib/gcc-13.1.0/2.2.0
+    module load cmake/3.19.2	
+	module load python/gcc-13.1.0/3.12.4
 	
+
+	SCALAPACK_LIB=${SCALAPACK_LIB_DIR}/libscalapack.so
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
 	MPICC=mpicc
@@ -99,7 +93,6 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --upgrade --user -r requirements_lite.txt
 fi
-# cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
 
 
 cd $GPTUNEROOT
@@ -123,7 +116,8 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DGPTUNE_INSTALL_PATH="${SITE_PACKAGE_DIR}"
 make -j32
 make install
 
@@ -379,37 +373,64 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cd mpi4py/
 	python setup.py build --mpicc="$MPICC -shared"
 	python setup.py install --user
-	# env CC=mpicc pip install --user -e .								  
+	# env CC=mpicc pip install --user -e .		
+
+
+	version=$(python --version 2>&1)
+	PyMINOR=$(echo "$version" | grep -oP 'Python \K[0-9]+\.[0-9]+' | cut -d. -f2)
+
+	if [ "$PyMINOR" -gt 8 ]; then
+		#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo.   
+		
+		cd $GPTUNEROOT
+		export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+		export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
+		export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
+		export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
+		cd $GPTUNEROOT
+		rm -rf oneTBB
+		git clone https://github.com/oneapi-src/oneTBB.git
+		cd oneTBB
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+		make -j
+		make install
+		git clone https://github.com/wjakob/tbb.git
+		cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+
+		cd $GPTUNEROOT
+		rm -rf download
+		wget -c 'http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.bz2/download'
+		tar -xvf download
+		cd boost_1_78_0/
+		./bootstrap.sh --prefix=$PWD/build
+		./b2 install
+
+		cd $GPTUNEROOT
+		rm -rf pagmo2
+		git clone https://github.com/esa/pagmo2.git
+		cd pagmo2
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+		make -j
+		make install
+		cp lib/cmake/pagmo/*.cmake . 
+
+		cd $GPTUNEROOT
+		rm -rf pygmo2
+		git clone https://github.com/esa/pygmo2.git
+		cd pygmo2
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
+		make -j
+		make install
+	fi
+
+
 fi
-
-
-# cd $GPTUNEROOT
-# rm -rf scikit-optimize
-# git clone https://github.com/scikit-optimize/scikit-optimize.git
-# cd scikit-optimize/
-# cp ../patches/scikit-optimize/space.py skopt/space/.
-# python setup.py build 
-# python setup.py install --user
-# # env CC=mpicc pip install --user -e .								  
-
-# cd $GPTUNEROOT
-# rm -rf cGP
-# git clone https://github.com/gptune/cGP
-# cd cGP/
-# python setup.py install --user
-
-
-# cd $GPTUNEROOT
-# rm -rf autotune
-# git clone https://github.com/ytopt-team/autotune.git
-# cd autotune/
-# env CC=$MPICC pip install --user -e .
-
-# cd $GPTUNEROOT
-# rm -rf hybridMinimization
-# git clone https://github.com/gptune/hybridMinimization.git
-# cd hybridMinimization/
-# python setup.py install --user
 
 
 

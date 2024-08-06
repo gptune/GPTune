@@ -181,7 +181,7 @@ if [ "$PyMINOR" -gt 8 ]; then
 	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo. 
 	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
 	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
-	export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+	export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
 	export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
     cd $GPTUNEROOT
     rm -rf oneTBB
@@ -197,9 +197,9 @@ if [ "$PyMINOR" -gt 8 ]; then
 
     cd $GPTUNEROOT
     rm -rf download
-    wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
+    wget -c 'http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.bz2/download'
     tar -xvf download
-    cd boost_1_69_0/
+    cd boost_1_78_0/
     ./bootstrap.sh --prefix=$PWD/build
     ./b2 install
 

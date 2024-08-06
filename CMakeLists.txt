@@ -222,6 +222,7 @@ endif()
 
 
 # python.
+set(Python3_FIND_STRATEGY LOCATION) # Prioritize finding Python based on its location
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 message(STATUS "Python3 interpreter: ${Python3_EXECUTABLE}")
 message(STATUS "Python3 installation directory: ${Python3_SITEARCH}")
