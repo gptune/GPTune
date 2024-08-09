@@ -13,20 +13,18 @@ Table of Contents
 * [Table of Contents](#table-of-contents)
    * [Features](#features)
    * [Installation](#installation)
+      * [Installation of the lite version](#installation-of-the-lite-version)
       * [Installation using example scripts](#installation-using-example-scripts)
          * [Ubuntu/Debian-like systems supporting apt-get](#ubuntudebian-like-systems-supporting-apt-get)
          * [Mac OS supporting homebrew](#mac-os-supporting-homebrew)
-         * [NERSC Cori](#nersc-cori)
          * [NERSC Perlmutter](#nersc-perlmutter)
          * [OLCF Summit](#olcf-summit)
+         * [OLCF Frontier](#olcf-frontier)
       * [Installation using spack](#installation-using-spack)
-      * [Installation from scratch](#installation-from-scratch)
-      * [Install OpenMPI](#install-openmpi)
+      * [Installation of the full version from scratch](#installation-of-the-full-version-from-scratch)
+         * [Install OpenMPI](#install-openmpi)
          * [Install SCALAPACK](#install-scalapack)
          * [Install mpi4py](#install-mpi4py)
-         * [Install scikit-optimize](#install-scikit-optimize)
-         * [Install autotune](#install-autotune)
-         * [Install cGP](#install-cgp)
          * [Install GPTune](#install-gptune)
       * [Using prebuilt docker images](#using-prebuilt-docker-images)
    * [Examples](#examples)
@@ -69,6 +67,27 @@ GPTune is part of the xSDK4ECP effort supported by the Exascale Computing Projec
 Our GPTune website at https://gptune.lbl.gov provides a shared database repository where the user can share their tuning performance data with other users.
 
 ## Installation
+
+To best support the various needs of different users, we provide several
+GPTune installation modes, as detailed below. Users may choose an installation mode in the decision tree depending
+on their needs.
+![Install_decision_tree](./Install_decision_tree.png)
+
+
+### Installation of the lite version
+The easiest way to install GPTune is to install the lite version of GPTune, which skips many software dependencies required by advanced GPTune features. As a result, the lite version only supports the basic functionalities and the tuning performance can be compromised. The lite version is what we highly recommend to try out first before you decide to use GPTune for more serious tasks.    
+
+GPTune lite version can be installed simply by:
+```
+git clone https://github.com/gptune/GPTune
+cd GPTune 
+pip install --user -r requirements.txt
+```
+In case some packages (particularly openturns or pygmo) in requirements.txt fail to be installed, try:
+```
+export GPTUNE_LITE_MODE=1
+pip install --user -r requirements_lite.txt
+```
 
 ### Installation using nix (for single-node systems)
 
@@ -152,12 +171,6 @@ The following script installs everything from scratch and can take up to 2 hours
 config_macbook.zsh
 ```
 
-#### NERSC Cori
-The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and "compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface (RCI) mode can be used, please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.
-```
-config_cori.sh
-```
-
 #### NERSC Perlmutter
 The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
 ```
@@ -170,6 +183,12 @@ The following script installs GPTune with mpi, python, compiler, cuda and cmake 
 config_summit.sh
 ```
 
+#### OLCF Frontier
+The following script installs GPTune with the PrgEnv-gnu module on Frontier. Note that you can set "proc=EPYC", "mpi=craympich" and "compiler=gnu". Currently, only the RCI mode can be used on Frontier.
+```
+config_frontier.sh
+```
+
 
 ### Installation using spack
 One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
@@ -178,9 +197,12 @@ spack install gptune@master
 spack load gptune@master
 ```
 
-### Installation from scratch
-GPTune relies on OpenMPI (4.0 or higher) or CrayMPICH (8.1.23 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
+### Installation of the full version from scratch
+GPTune full version relies on OpenMPI (4.0 or higher) or CrayMPICH (8.1.23 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher) and mpi4py, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
+git clone https://github.com/gptune/GPTune
+cd GPTune # this is the GPTUNEROOT directory
+
 export MPICC=path-to-c-compiler-wrapper  # see next subsection to install OpenMPI from source if one doesn't yet have one installed. 
 export MPICXX=path-to-cxx-compiler-wrapper
 export MPIF90=path-to-f90-compiler-wrapper
@@ -244,34 +266,6 @@ cd mpi4py/
 python setup.py build --mpicc="$MPICC -shared"
 python setup.py install --user
 export PYTHONPATH=$PYTHONPATH:$PWD
-```
-
-#### Install scikit-optimize
-```
-cd $GPTUNEROOT
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-pip install --user -e .
-export PYTHONPATH=$PYTHONPATH:$PWD
-```
-
-#### Install autotune
-autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
-```
-cd $GPTUNEROOT
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-pip install --user -e .
-export PYTHONPATH=$PYTHONPATH:$PWD
-```
-
-#### Install cGP
-```
-cd $GPTUNEROOT
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install 
 ```
 
 #### Install GPTune
@@ -458,7 +452,7 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 ## References
 ### Publications
-Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234–246. DOI:https://doi.org/10.1145/3437801.3441621
+Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234-246. DOI:https://doi.org/10.1145/3437801.3441621
 
 ### BibTeX citation
 ```
