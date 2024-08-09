@@ -74,7 +74,7 @@ GPTune installation modes, as detailed below. Users may choose an installation m
 on their needs.
 
 <p align="center">
-  <img src="./Install_decision_tree.png" alt="Installation Decision Tree" width="400"/>
+  <img src="./Install_decision_tree.png" alt="Installation Decision Tree" width="100%"/>
   <br>
   <em>Figure 1: Installation Decision Tree.</em>
 </p>
