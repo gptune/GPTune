@@ -325,7 +325,7 @@ The file `demo.py` in the `examples/GPTune-Demo` folder shows how to describe th
 cd $GPTUNEROOT/examples/GPTune-Demo
 
 edit .gptune/meta.json
-$MPIRUN -n 1 python ./demo.py
+python ./demo.py
 
 or 
 edit ../../run_env.sh
