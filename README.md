@@ -21,6 +21,7 @@ Table of Contents
          * [OLCF Summit](#olcf-summit)
          * [OLCF Frontier](#olcf-frontier)
       * [Installation using spack](#installation-using-spack)
+      * [Installation using nix](#installation-using-nix)
       * [Installation of the full version from scratch](#installation-of-the-full-version-from-scratch)
          * [Install OpenMPI](#install-openmpi)
          * [Install SCALAPACK](#install-scalapack)
@@ -71,7 +72,12 @@ Our GPTune website at https://gptune.lbl.gov provides a shared database reposito
 To best support the various needs of different users, we provide several
 GPTune installation modes, as detailed below. Users may choose an installation mode in the decision tree depending
 on their needs.
-![Install_decision_tree](./Install_decision_tree.png)
+
+<p align="center">
+  <img src="./Install_decision_tree.png" alt="Installation Decision Tree" width="400"/>
+  <br>
+  <em>Figure 1: Installation Decision Tree.</em>
+</p>
 
 
 ### Installation of the lite version
@@ -89,9 +95,53 @@ export GPTUNE_LITE_MODE=1
 pip install --user -r requirements_lite.txt
 ```
 
-### Installation using nix (for single-node systems)
+### Installation using example scripts
+The following example build scripts are available for a collection of tested systems. 
 
-Nix may be used to install GPTune and all its dependencies on single-node systems, including personal computers and cloud servers (both with and without root access). Nix pulls in independent copies of GPTune's dependencies, and as a result it will neither affect nor be affected by the state of your system's packages.
+#### Ubuntu/Debian-like systems supporting apt-get
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
+```
+config_cleanlinux.sh
+```
+Note that this would require superuser (sudo) account of the system. If this is not the case, one can use 
+```
+config_linux.sh
+``` 
+
+#### Mac OS supporting homebrew
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
+```
+config_macbook.zsh
+```
+
+#### NERSC Perlmutter
+The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
+```
+config_perlmutter.sh
+```
+
+#### OLCF Summit
+The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
+```
+config_summit.sh
+```
+
+#### OLCF Frontier
+The following script installs GPTune with the PrgEnv-gnu module on Frontier. Note that you can set "proc=EPYC", "mpi=craympich" and "compiler=gnu". Currently, only the RCI mode can be used on Frontier.
+```
+config_frontier.sh
+```
+
+
+### Installation using spack
+One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
+```
+spack install gptune@master
+spack load gptune@master
+```
+
+### Installation using nix
+For single-node systems, Nix may be used to install GPTune and all its dependencies on single-node systems, including personal computers and cloud servers (both with and without root access). Nix pulls in independent copies of GPTune's dependencies, and as a result it will neither affect nor be affected by the state of your system's packages.
 #### 1. Install Nix
 
 **If you have root access,** run this command to automatically install Nix, then immediately proceed to step 2:
@@ -156,46 +206,6 @@ then run
 to enter an environment where the `python` executable has all the dependencies needed.
 
 Alternatively, if you just want the C++ libraries for GPTune (e.g. to link with), run `nix build .#gptune-libs`, which will put the librarires in `result/gptune`.
-### Installation using example scripts
-The following example build scripts are available for a collection of tested systems. 
-
-#### Ubuntu/Debian-like systems supporting apt-get
-The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
-```
-config_cleanlinux.sh
-```
-
-#### Mac OS supporting homebrew
-The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
-```
-config_macbook.zsh
-```
-
-#### NERSC Perlmutter
-The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
-```
-config_perlmutter.sh
-```
-
-#### OLCF Summit
-The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
-```
-config_summit.sh
-```
-
-#### OLCF Frontier
-The following script installs GPTune with the PrgEnv-gnu module on Frontier. Note that you can set "proc=EPYC", "mpi=craympich" and "compiler=gnu". Currently, only the RCI mode can be used on Frontier.
-```
-config_frontier.sh
-```
-
-
-### Installation using spack
-One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
-```
-spack install gptune@master
-spack load gptune@master
-```
 
 ### Installation of the full version from scratch
 GPTune full version relies on OpenMPI (4.0 or higher) or CrayMPICH (8.1.23 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher) and mpi4py, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
