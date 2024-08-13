@@ -361,4 +361,4 @@ class Options(dict):
                 if ((computer.cores*computer.nodes)<ncore_obj):
                     raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
         pp = pprint.PrettyPrinter(indent=2)
-        pp.pprint('options:', self)
+        pp.pprint(self)
