@@ -130,10 +130,38 @@ def objectives3(point):
     return [y]
 
 
+def predict_aug(modeler, gt, point,tid):   # point is the orginal space
+    x =point['x']
+    xNorm = gt.problem.PS.transform([[x]])
+    xi0 = gt.problem.PS.inverse_transform(np.array(xNorm, ndmin=2))
+    xi=xi0[0]
+
+    IOrig = gt.data.I[tid]
+
+    # point0 = gt.data.D
+    point2 = {gt.problem.IS[k].name: IOrig[k] for k in range(gt.problem.DI)}
+    point  = {gt.problem.PS[k].name: xi[k] for k in range(gt.problem.DP)}
+    # point.update(point0)
+    point.update(point2)
+    # print("point", point)
+
+    xNorm = gt.problem.PS.transform(xi0)[0]
+    if(gt.problem.models is not None):
+        if(gt.problem.driverabspath is not None):
+            modulename = Path(gt.problem.driverabspath).stem  # get the driver name excluding all directories and extensions
+            sys.path.append(gt.problem.driverabspath) # add path to sys
+            module = importlib.import_module(modulename) # import driver name as a module
+        else:
+            raise Exception('performance models require passing driverabspath to GPTune')
+        # modeldata= self.problem.models(point)
+        modeldata= module.models(point)
+        xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
+        # print(xNorm)
+    (mu, var) = modeler[0].predict(xNorm, tid=tid)
+    return (mu, var)
 
 
-
-def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
+def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -148,7 +176,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
     perfmodel = args.perfmodel
 
     (machine, processor, nodes, cores) = GetMachineConfiguration()
-    print ("machine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
+    print ("\nmachine: " + machine + " processor: " + processor + " num_nodes: " + str(nodes) + " num_cores: " + str(cores))
     os.environ['MACHINE_NAME'] = machine
     os.environ['TUNER_NAME'] = TUNER_NAME
 
@@ -220,6 +248,8 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
         options['model_grad'] = True
     elif (optimizer == "mcmc"):
         options['model_mcmc'] = True
+        options['model_mcmc_sampler'] = 'MetropolisHastings' # 'Ensemble_emcee', 'MetropolisHastings'
+        options['model_mcmc_nchain'] = 2
     elif (optimizer == "finite difference"):
         options['model_mcmc'] = False
         options['model_grad'] = False
@@ -235,13 +265,13 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
     #options['search_class'] = 'SearchSciPy'
     #options['search_algo'] = 'l-bfgs-b'
 
-    options['search_more_samples'] = 4
+    options['search_more_samples'] = 1
     options['search_af']='EI'
     # options['search_pop_size']=1000
     # options['search_ucb_beta']=0.01
 
 
-    options['verbose'] = False
+    options['verbose'] = True
     options.validate(computer=computer)
 
     # print(options)
@@ -274,6 +304,55 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer):
             # print("    Ps ", data.P[tid])
             # print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+
+        if objtype==1 and plotgp==True:
+            # fig = plt.figure(figsize=[12.8, 9.6])
+            x = np.arange(0., 1., 0.0001)
+            for tid in range(len(data.I)):
+                fig = plt.figure(figsize=[12.8, 9.6])
+                p = data.I[tid]
+                t = p[0]
+                I_orig=p
+                kwargst = {input_space[k].name: I_orig[k] for k in range(len(input_space))}
+                y=np.zeros([len(x),1])
+                y_mean=np.zeros([len(x)])
+                y_std=np.zeros([len(x)])
+                for i in range(len(x)):
+                    P_orig=[x[i]]
+                    kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
+                    kwargs.update(kwargst)
+                    y[i]=objectives1(kwargs)
+                    if(TUNER_NAME=='GPTune'):
+                        (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid)
+                        y_std[i]=np.sqrt(var)
+                        # print(y_mean[i],y_std[i],y[i])
+                fontsize=40
+                plt.rcParams.update({'font.size': 40})
+                plt.plot(x, y, 'b',lw=2,label='true')
+
+                plt.plot(x, y_mean, 'k', lw=3, zorder=9, label='prediction')
+                plt.fill_between(x, y_mean - y_std, y_mean + y_std,alpha=0.2, color='k')
+                # print(data.P[tid])
+                plt.scatter(data.P[tid], data.O[tid], c='r', s=50, zorder=10, edgecolors=(0, 0, 0),label='sample')
+
+                plt.xlabel('x',fontsize=fontsize+2)
+                plt.ylabel('y(t,x)',fontsize=fontsize+2)
+                plt.title('t=%f'%t,fontsize=fontsize+2)
+                print('t:',t,'x:',x[np.argmin(y)],'ymin:',y.min())
+                # legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+                legend = plt.legend(loc='upper right', shadow=False, fontsize=fontsize)
+                # annot_min(x,y)
+                # plt.show()
+                plt.show(block=False)
+                plt.pause(0.5)
+                # input("Press [enter] to continue.")
+                fig.savefig('obj_%s.pdf'%optimizer)
+
+
+
+
+
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -364,32 +443,33 @@ def plotting(objective, objtype):
     search_time_george_hodlr_mcmc = []
     model_iterations_hodlr_mcmc = []
 
+    plotgp=True
 
-
-    NS = [51, 201, 401, 801, 1601, 3201]
+    # NS = [51, 201, 401, 801, 1601, 3201]
+    NS = [101]
     
     for elem in NS:
-        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient")
+        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
         model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
         model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
-        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference")
+        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference",plotgp=plotgp)
         model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
         model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
-        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc")
+        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc",plotgp=plotgp)
         model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
         model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer") 
+        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
         model_time_gpy.append(gpy_stats.get("time_model"))
         model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
         search_time_gpy.append(gpy_stats.get("time_search"))

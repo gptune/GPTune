@@ -22,10 +22,10 @@ import numpy as np
 from problem import Problem
 from computer import Computer
 from data import Data
+from mcmc import MCMC
 
 import scipy.optimize as op
-import emcee
-from scipy.stats import truncnorm, gamma, invgamma, norm
+from scipy.stats import truncnorm, gamma, invgamma, norm, uniform
 
 
 import math
@@ -660,81 +660,6 @@ class Model_LCM(Model):
 class Model_George(Model):
     y = []
 
-    def gelman_rubin(self, samples):
-        """
-        Compute the Gelman-Rubin diagnostic statistic (R-hat) for convergence.
-        
-        Parameters:
-        samples (np.ndarray): MCMC samples of shape (nsteps, nwalkers, ndim)
-        
-        Returns:
-        np.ndarray: Gelman-Rubin statistic for each dimension
-        """
-        nsteps, nwalkers, ndim = samples.shape
-        
-        # Calculate the within-chain variance for each dimension
-        within_chain_var = np.var(samples, axis=0, ddof=1)
-        
-        # Calculate the mean of the samples for each step and dimension
-        chain_means = np.mean(samples, axis=0)
-        
-        # Calculate the mean of the means for each dimension
-        mean_of_means = np.mean(chain_means, axis=0)
-        
-        # Calculate the between-chain variance for each dimension
-        between_chain_var = np.mean((chain_means - mean_of_means) ** 2, axis=0)*nsteps
-        
-        # Calculate the mean within-chain variance for each dimension
-        mean_within_chain_var = np.mean(within_chain_var, axis=0)
-        
-        # Calculate the variance estimate
-        var_estimate = ((nsteps - 1) / nsteps) * mean_within_chain_var + (1 / nsteps) * between_chain_var
-        
-        # print(var_estimate[2],mean_within_chain_var[2],between_chain_var[2],nsteps,chain_means.shape)
-        # Calculate the Gelman-Rubin statistic
-        gelman_rubin_stat = np.sqrt(var_estimate / mean_within_chain_var)
-        
-        return gelman_rubin_stat
-
-    def run_mcmc_with_convergence(self, sampler, initial_state, n_steps, discard=10, thin=1, check_interval=1, r_hat_threshold=1.01):
-        nwalkers, ndim = initial_state.shape
-        samples = np.zeros((n_steps, nwalkers, ndim))
-        log_posteriors = np.zeros((n_steps, nwalkers))
-        
-        for i in range(0, n_steps, check_interval):
-            sampler.run_mcmc(initial_state, check_interval, progress=False)
-            initial_state = sampler.get_last_sample().coords
-            current_samples = sampler.get_chain(discard=discard, thin=thin, flat=False)
-            current_log_prob = sampler.get_log_prob(discard=discard, thin=thin, flat=False)
-            # if current_samples.shape[0]>0:
-            #     current_samples = sampler.get_chain(discard=0, thin=1, flat=False)
-            # Print shapes for debugging
-            # print(f"Iteration {i}: current_samples shape = {current_samples.shape}")
-            # print(current_samples[:,:,2])
-            
-            end_index = i + check_interval
-            if end_index > n_steps:
-                end_index = n_steps
-                
-            # Check if the slice is valid
-            if current_samples.shape[0] < (end_index - i):
-                # print(f"Warning: Not enough samples to fill the required slice. Current samples shape: {current_samples.shape}")
-                continue
-            
-            samples[i:end_index, :, :] = current_samples[-(end_index - i):, :, :]
-            log_posteriors[i:end_index, :] = current_log_prob[-(end_index - i):, :]
-            
-            if i >= check_interval:
-                r_hat = self.gelman_rubin(samples[:i+check_interval, : , :])
-                print(f"MCMC Step {i + check_interval}: R-hat = {r_hat}")
-                if np.all(r_hat < r_hat_threshold):
-                    print("MCMC Chains have converged.")
-                    return samples[:i+check_interval, :, :], log_posteriors[:i+check_interval, :]
-        
-        print("Reached maximum steps without full convergence.")
-        return samples, log_posteriors
-
-
     def log_posterior(self, params):
         # Extract parameters
         log_noisevariance = params[0]
@@ -742,15 +667,16 @@ class Model_George(Model):
         log_lengthscales = params[2:]
 
         # Define bounds for the parameters
-        noisevariance_bounds = (-15, -10)
-        amplitude_squared_bounds = None  # Unbounded
+        # noisevariance_bounds = (-15, -6)
+        # amplitude_squared_bounds = None  # Unbounded
         lengthscales_bounds = (-23, 19)
 
-        # Check if parameters are within bounds for bounded parameters
-        if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
-                (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
-                all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
-            return -np.inf  # Return a very low log posterior if out of bounds
+        # # Check if parameters are within bounds for bounded parameters
+        # if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
+        #         (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
+        #         all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
+        #     # print('parameters out of bounds in log_posterior')
+        #     return -np.inf  # Return a very low log posterior if out of bounds
 
         # Convert to original scale
         noisevariance = np.exp(log_noisevariance)
@@ -764,24 +690,38 @@ class Model_George(Model):
         log_prior = 0
 
         # Define priors
-        # Log prior for noise variance (Inverse Gamma)
-        log_prior_noisevariance = invgamma.logpdf(noisevariance, a=1, scale=0.001)
-
-        # Log prior for amplitude squared (Gamma)
-        log_prior_amplitude_squared = gamma.logpdf(amplitude_squared, a=1, scale=0.01)
-
-        # Log prior for length scales (Truncated Normal)
+        
         def log_prior_truncnorm(log_param, lower_bound, upper_bound):
             mean = (lower_bound + upper_bound) / 2
             std = (upper_bound - lower_bound) / 6  # Rough approximation
             a = (lower_bound - mean) / std
             b = (upper_bound - mean) / std
             return truncnorm.logpdf(log_param, a, b, loc=mean, scale=std)
-        
-        log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+
+        def log_prior_norm(log_param, lower_bound, upper_bound):
+            mean = (lower_bound + upper_bound) / 2
+            std = (upper_bound - lower_bound) / 6  # Rough approximation
+            a = (lower_bound - mean) / std
+            b = (upper_bound - mean) / std
+            return norm.logpdf(log_param, loc=mean, scale=std)
+
+        # Log prior for noise variance (Inverse Gamma)
+        # print(log_noisevariance,noisevariance_bounds[0], noisevariance_bounds[1],'ggg')
+        # log_prior_noisevariance =  log_prior_truncnorm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1]) #   invgamma.logpdf(noisevariance, a=1, scale=0.001)
+        log_prior_noisevariance =  gamma.logpdf(noisevariance, a=1, scale=0.001)
+        # log_prior_noisevariance = log_prior_norm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1])
+
+        # Log prior for amplitude squared (Gamma)
+        log_prior_amplitude_squared = gamma.logpdf(amplitude_squared, a=1, scale=0.1)
+
+        # Log prior for length scales 
+        log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+        # log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+        # log_prior_lengthscales = sum(uniform.logpdf(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]-lengthscales_bounds[0]) for log_lengthscale in log_lengthscales)
+        # log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
         
         log_prior += log_prior_noisevariance + log_prior_amplitude_squared + log_prior_lengthscales
-        
+        # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
         return log_likelihood + log_prior
 
 
@@ -856,6 +796,7 @@ class Model_George(Model):
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
+                    'tol_abs': 1e-4, # YL: need to change this
                     'seed': 42
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
@@ -879,33 +820,23 @@ class Model_George(Model):
         
         
         if kwargs['model_mcmc']:
-                # Initialize MCMC walkers around the initial guess
-                ndim = len(p0)
-                nwalkers = kwargs.get('nwalkers', max(kwargs['model_mcmc_nchain'],2*ndim)) # set number of chains to at least 2*#hyperparameters according to emcee user guide
-                initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
-                for i in range(1,nwalkers):
-                    for j in range(0,ndim):
-                        if(j==1):
-                            initial_state[i,1] = 0 
-                        else:
-                            initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
-                # print(initial_state[:,:])
-   
+            # Initialize MCMC walkers around the initial guess
+            ndim = len(p0)
+            if(kwargs['model_mcmc_sampler'] == 'Ensemble_emcee'):
+                nwalkers = max(kwargs['model_mcmc_nchain'],2*ndim) # set number of chains to at least 2*#hyperparameters according to emcee user guide
+            else:
+                nwalkers = kwargs['model_mcmc_nchain']
                 
-                sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_posterior)
-                n_steps = kwargs.get('n_steps', 1000) # max number of MCMC iterations
-                samples,log_posteriors = self.run_mcmc_with_convergence(sampler, initial_state, n_steps, discard=kwargs['model_mcmc_burnin'])
-                flat_samples = samples.reshape(-1, ndim)
-                flat_log_posteriors = log_posteriors.reshape(-1, 1)
-                
-                # ####### Get the best parameter estimate
-                # best_params = np.mean(flat_samples, axis=0)
-                # print("Mean of samples:", best_params)
-                map_index = np.argmax(flat_log_posteriors)
-                best_params = flat_samples[map_index]
-                # print("MAP sample:", best_params)
-
-                resopt = type('Result', (object,), {'x': best_params, 'success': True, 'message': 'MCMC converged', 'fun': -self.log_posterior(best_params), 'nfev': samples.shape[1] * samples.shape[0]})()
+            initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
+            for i in range(1,nwalkers):
+                for j in range(0,ndim):
+                    if(j==1):
+                        initial_state[i,1] = 0 
+                    else:
+                        initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
+                        
+            mcmc = MCMC(self.log_posterior, ndim=ndim, nchain=nwalkers, mcmcsampler=kwargs['model_mcmc_sampler'])
+            resopt= mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'],verbose=kwargs['verbose'])
         else:
             if kwargs['model_grad'] == True:
                 resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})

@@ -72,8 +72,10 @@ class Options(dict):
         model_lowrank = False # Whether to use HODLR solver from george or not
         model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
         model_mcmc = False # Whether to use Fully BAYESIAN (MCMC) instead of FREQUENTIST (LBFGS)
-        model_mcmc_burnin = 10 # number of first MCMC samples to be discarded 
-        model_mcmc_nchain = 5 # number of MCMC chains 
+        model_mcmc_sampler = 'Ensemble_emcee' # 'Ensemble_emcee': the ensemble sampling from emcee, 'MetropolisHastings', customized MetropolisHastings
+        model_mcmc_burnin = 100 # number of first MCMC samples to be discarded 
+        model_mcmc_nchain = 2 # number of MCMC chains 
+        model_mcmc_maxiter = 500 # max number of samples per chain
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
