@@ -4,8 +4,8 @@ joblib
 scikit-learn 
 scipy >= 1.7.0
 statsmodels >= 0.13.0
-# GPy uses get_cmap of matplotlib, which is depreciated in matplotlib==3.9
-matplotlib < 3.9
+matplotlib
+gpflow 
 openturns
 lhsmdu
 ipyparallel
