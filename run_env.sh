@@ -52,20 +52,20 @@
 # export compiler=gnu   # gnu, intel
 # export nodes=1  # number of nodes to be used
 
-# # ################ Yang's tr4 machine
-# export machine=tr4-workstation
-#  export proc=AMD1950X   
-#  export mpi=openmpi  
-#  export compiler=gnu   
-#  export nodes=1  # number of nodes to be used
-# # #
+# ################ Yang's tr4 machine
+ export machine=tr4-workstation
+ export proc=AMD1950X   
+ export mpi=openmpi  
+ export compiler=gnu   
+ export nodes=1  # number of nodes to be used
+# #
 
-################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-export machine=cleanlinux
-export proc=unknown
-export mpi=openmpi
-export compiler=gnu
-export nodes=1  # number of nodes to be used
+# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+# export machine=cleanlinux
+# export proc=unknown
+# export mpi=openmpi
+# export compiler=gnu
+# export nodes=1  # number of nodes to be used
 
 
 # # ################ ex3 simula
@@ -98,10 +98,11 @@ fi
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then    
-    # module load gcc/9.1.0
-    # module load openmpi/gcc-9.1.0/4.0.1
-    # module load scalapack-netlib/gcc-9.1.0/2.0.2
-    # module load python/gcc-9.1.0/3.7.4
+    module purge
+    module load gcc/9.1.0
+    module load openmpi/gcc-9.1.0/4.0.1
+    module load scalapack-netlib/gcc-9.1.0/2.0.2
+    module load python/gcc-9.1.0/3.7.4
 
 
     # module swap python python/gcc-9.1.0/3.8.4
@@ -109,12 +110,12 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
     # shopt -s expand_aliases
     # alias python='python3.8'
 
-    module purge
-	module load gcc/13.1.0
-    module load openmpi/gcc-13.1.0/4.0.1
-    module load scalapack-netlib/gcc-13.1.0/2.2.0
-    module load cmake/3.19.2	
-	module load python/gcc-13.1.0/3.12.4   
+    # module purge
+	# module load gcc/13.1.0
+    # module load openmpi/gcc-13.1.0/4.0.1
+    # module load scalapack-netlib/gcc-13.1.0/2.2.0
+    # module load cmake/3.19.2	
+	# module load python/gcc-13.1.0/3.12.4   
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/pagmo2/build/lib/

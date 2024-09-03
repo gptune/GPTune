@@ -552,7 +552,7 @@ class Model_GPFlow_LCM(Model):
 
                 for i in range(data.NI):    
                     # Create a Gaussian likelihood for each kernel
-                    noise_variance = self.bounded_parameter(1e-10, 1e-5, 1e-5/2)
+                    noise_variance = self.bounded_parameter(1e-6, 1e-5, 1e-5) # this is a dummy line as the range is set later by self.M.likelihood.likelihoods[qq].variance
                     likelihood = gpflow.likelihoods.Gaussian(variance=noise_variance)
                     likelihoods.append(gpflow.likelihoods.Gaussian())
 
@@ -568,7 +568,12 @@ class Model_GPFlow_LCM(Model):
                 self.M = gpflow.models.VGP((datapad_P, datapad_O), kernel=kern, likelihood=lik)
 
                 for qq in range(model_latent):
-                    self.M.likelihood.likelihoods[i].variance.assign(tf.clip_by_value(self.M.likelihood.likelihoods[i].variance, 1e-10, 1e-5))
+                    self.M.kernel.kernels[qq].kernels[0].lengthscales = self.bounded_parameter_sig(1e-5, 1e3, [1.0]*len(data.P[0][0]),1)
+                    self.M.kernel.kernels[qq].kernels[1].W = self.bounded_parameter_sig(1e-5, 1e3, np.array([1.0]*data.NI).reshape(-1,1), 1)
+                    self.M.kernel.kernels[qq].kernels[1].kappa = self.bounded_parameter_sig(1e-5, 1e-3, [1e-4]*data.NI, 1)
+                    
+                for qq in range(data.NI):
+                    self.M.likelihood.likelihoods[qq].variance = self.bounded_parameter(1e-6, 1e-3, 1e-4)
 
         else:
             input_dim = len(data.P[0][0])
@@ -594,15 +599,20 @@ class Model_GPFlow_LCM(Model):
             else:
                 gpflow_mf = None
 
-            noise_variance = self.bounded_parameter(1e-10, 1e-5, 1e-5/2)
-            likelihood = gpflow.likelihoods.Gaussian(variance=noise_variance)
+            # noise_variance = self.bounded_parameter(1e-10, 1e-5, 1e-6)
+            # likelihood = gpflow.likelihoods.Gaussian(variance=noise_variance)
             
             if (kwargs['model_sparse']):
                 inducing_points = data.P[0][:model_inducing]
-                self.M = gpflow.models.SGPR(data=(data.P[0], data.O[0]), kernel=K, inducing_variable=inducing_points, likelihood=likelihood, mean_function=gpflow_mf)
+                self.M = gpflow.models.SGPR(data=(data.P[0], data.O[0]), kernel=K, inducing_variable=inducing_points, mean_function=gpflow_mf)
             else:
-                self.M = gpflow.models.GPR(data=(data.P[0], data.O[0]), kernel=K, likelihood=likelihood, mean_function=gpflow_mf)            
+                self.M = gpflow.models.GPR(data=(data.P[0], data.O[0]), kernel=K, mean_function=gpflow_mf)            
             
+            self.M.likelihood.variance = self.bounded_parameter(1e-6, 1e-3, 1e-4)
+            # self.M.kernel.variance = self.bounded_parameter(1.23, 2.34, 1.5)
+            self.M.kernel.lengthscales = self.bounded_parameter_sig(1e-5, 1e3, [1.0]*len(data.P[0][0]),1)
+
+
 #        np.random.seed(mpi_rank)
 #        num_restarts = max(1, model_n_restarts // mpi_size)
 
@@ -614,23 +624,21 @@ class Model_GPFlow_LCM(Model):
         # resopt = self.M.optimize_restarts(num_restarts = kwargs['model_restarts'], robust = True, verbose = kwargs['verbose'], parallel = (kwargs['model_threads'] > 1), num_processes = kwargs['model_threads'], messages = kwargs['verbose'], optimizer = kwargs['model_optimizer'], start = None, max_iters = kwargs['model_max_iters'], ipython_notebook = False, clear_after_finish = True)
         # iteration = resopt[0].funct_eval
         
-        # opt_options = {
-        #     'maxiter': kwargs['model_max_iters'],
-        #     'gtol': 1e-05,
-        #     'eps': 1e-08,
-        #     'disp': kwargs['verbose'],
-        #     'maxcor': 10,
-        #     'ftol': 1e-32,
-        #     'maxfun': 1000,
-        #     'iprint': -1,
-        #     'maxls': 100
-        # }
-
-
         opt_options = {
             'maxiter': kwargs['model_max_iters'],
+            'gtol': 1e-05,
+            'eps': 1e-08,
             'disp': kwargs['verbose'],
-        }        
+            'maxcor': 10,
+            'ftol': 1e-32,
+            'maxfun': 1000,
+            'iprint': -1,
+            'maxls': 100
+        }
+        # opt_options = {
+        #     'maxiter': kwargs['model_max_iters'],
+        #     'disp': kwargs['verbose'],
+        # }        
         
         opt = gpflow.optimizers.Scipy()
         resopt = opt.minimize(self.M.training_loss, self.M.trainable_variables, options=opt_options,method="L-BFGS-B")
@@ -721,7 +729,7 @@ class Model_GPFlow_LCM(Model):
             print ("modeler: ", kwargs['model_class'])
             print ("M: ", self.M)
 
-        print(model_stats)
+        # print(model_stats)
         return (hyperparameters, modeling_options, model_stats)
 
     def train_stacked(self, data : Data, num_source_tasks, **kwargs):
@@ -786,13 +794,17 @@ class Model_GPFlow_LCM(Model):
 
     def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
 
-        x = np.empty((1, points.shape[0] + 1))
-        x[0,:-1] = points
-        x[0,-1] = tid
-        if self.M_last != None:
-            (mu, var) = self.M_last.predict_noiseless(x)
+        if(self.contains_coregion_kernel(self.M.kernel)):
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid
         else:
-            (mu, var) = self.M.predict_noiseless(x)
+            x = points
+
+        if self.M_last != None:
+            (mu, var) = self.M_last.predict_f(x)
+        else:
+            (mu, var) = self.M.predict_f(x)
 
         return (mu, var)
 
@@ -800,10 +812,10 @@ class Model_GPFlow_LCM(Model):
         print("In model.py, delta = ", delta)
         Q = delta # number of latent processes 
         B = np.zeros((delta, delta, Q))
+        params = parameter_dict(self.M)
         for i in range(Q):
-            currentLCM = getattr(self.M.sum, f"GPy_LCM{i}")
-            Wq = currentLCM.B.W.values
-            Kappa_q = currentLCM.B.kappa.values
+            Wq = np.atleast_1d(params['.kernel.kernels[%s].kernels[1].W'%i].numpy()) 
+            Kappa_q = np.atleast_1d(params['.kernel.kernels[%s].kernels[1].kappa'%i].numpy()) 
             B[:, :, i] = np.outer(Wq, Wq) + np.diag(Kappa_q)
             # print("In model.py, i = ", i)
             # print(B[:, :, i])
@@ -846,71 +858,123 @@ class Model_GPFlow_LCM(Model):
                 lenx = len(data.P)
             model_inducing = int(min(lenx, 3 * np.sqrt(lenx)))
 
-        GPy.util.linalg.jitchol.__defaults__ = (kwargs['model_max_jitter_try'],)
-
         if (multitask):
-            kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
-            K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
-            K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
-            # print(K)
-            if modeling_options["model_sparse"] == "SparseGPCoregionalizedRegression":
-                self.M = GPy.models.SparseGPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K, num_inducing = model_inducing)
-            elif modeling_options["model_method"] == "GPCoregionalizedRegression":
-                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+            
+            if(self.mf is not None):
+                raise Exception("Model_GPFlow_LCM cannot yet handle prior mean functions in LCM")
+
+            if (kwargs['model_sparse']):
+                raise Exception("model_sparse not supported in Model_GPFlow_LCM")
             else:
-                print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPCoregionalizedRegression")
-                self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
+
+                datapad_P = copy.deepcopy(data.P)
+                datapad_O = copy.deepcopy(data.O)
+                for i in range(data.NI):
+                    tid = i
+                    datapad_P[i] = np.hstack((datapad_P[i], tid*np.ones((datapad_P[i].shape[0], 1))))
+                    datapad_O[i] = np.hstack((datapad_O[i], tid*np.ones((datapad_O[i].shape[0], 1))))
+
+                datapad_P = np.vstack(datapad_P)
+                datapad_O = np.vstack(datapad_O)
+
+                # Lists to store the individual kernels and likelihoods
+                kernels = []
+                likelihoods = []
+
+                # Loop to create the kernels and likelihoods
+                for i in range(model_latent):
+
+                    input_dim = len(data.P[0][0])
+                    if kwargs['model_kern'] == 'RBF':
+                        k = gpflow.kernels.SquaredExponential(lengthscales=[1.0] * input_dim, active_dims=list(range(input_dim)), variance=1.0, name='GPFlow_GP')
+                    elif kwargs['model_kern'] == 'Exponential' or kwargs['model_kern'] == 'Matern12':
+                        k = gpflow.kernels.Matern12(lengthscales=[1.0] * input_dim, active_dims=list(range(input_dim)), variance=1.0, name='GPFlow_GP')
+                    elif kwargs['model_kern'] == 'Matern32':
+                        k = gpflow.kernels.Matern32(lengthscales=[1.0] * input_dim, active_dims=list(range(input_dim)), variance=1.0, name='GPFlow_GP')
+                    elif kwargs['model_kern'] == 'Matern52':
+                        k = gpflow.kernels.Matern52(lengthscales=[1.0] * input_dim, active_dims=list(range(input_dim)), variance=1.0, name='GPFlow_GP')
+                    else:
+                        k = gpflow.kernels.SquaredExponential(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
+
+                    gpflow.set_trainable(k.variance, False) #K.*.B.kappa and B.W encode the variance now.
+                    coreg = gpflow.kernels.Coregion(output_dim=data.NI, rank=1, active_dims=[len(data.P[0][0])])
+                    
+                    # Multiply Matern32 and Coregion kernels
+                    kern = k * coreg
+                    kernels.append(kern)
+
+                for i in range(data.NI):    
+                    # Create a Gaussian likelihood for each kernel
+                    noise_variance = self.bounded_parameter(1e-6, 1e-5, 1e-5)
+                    likelihood = gpflow.likelihoods.Gaussian(variance=noise_variance)
+                    likelihoods.append(gpflow.likelihoods.Gaussian())
+
+                # Sum the kernels to create the final kernel
+                kern = kernels[0]
+                for i in range(model_latent-1):
+                    kern += kernels[i+1]
+
+                # Create the SwitchedLikelihood with the list of Gaussian likelihoods
+                lik = gpflow.likelihoods.SwitchedLikelihood(likelihoods)
+
+                # Now build the GP model
+                self.M = gpflow.models.VGP((datapad_P, datapad_O), kernel=kern, likelihood=lik)
 
                 for qq in range(model_latent):
-                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][0] = hyperparameters["rbf_lengthscale"][qq][0]
-                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][1] = hyperparameters["rbf_lengthscale"][qq][1]
-                    self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][2] = hyperparameters["rbf_lengthscale"][qq][2]
-                    self.M.kern['sum.GPy_LCM%s.rbf.variance'%qq] = hyperparameters["variance"][qq]
-                    self.M.kern['sum.GPy_LCM%s.B.W'%qq][0][0] = hyperparameters["B_W"][qq][0]
-                    self.M.kern['sum.GPy_LCM%s.B.W'%qq][1][0] = hyperparameters["B_W"][qq][1]
-                    self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][0] = hyperparameters["B_kappa"][qq][0]
-                    self.M.kern['sum.GPy_LCM%s.B.kappa'%qq][1] = hyperparameters["B_kappa"][qq][1]
-                    self.M.kern['mixed_noise.Gaussian_noise_%s.variance'%qq] = hyperparameters["noise_variance"][qq][0]
+                    self.M.kernel.kernels[qq].kernels[0].lengthscales = self.bounded_parameter_sig(1e-5, 1e3, [1.0]*len(data.P[0][0]),1)
+                    self.M.kernel.kernels[qq].kernels[1].W = self.bounded_parameter_sig(1e-5, 1e3, np.array([1.0]*data.NI).reshape(-1,1), 1)
+                    self.M.kernel.kernels[qq].kernels[1].kappa = self.bounded_parameter_sig(1e-5, 1e-3, [1e-4]*data.NI, 1)
+                    
+                    self.M.kernel.kernels[qq].kernels[0].lengthscales.assign(hyperparameters["lengthscale"][qq])
+                    self.M.kernel.kernels[qq].kernels[1].W.assign(hyperparameters["B_W"][qq])
+                    self.M.kernel.kernels[qq].kernels[1].kappa.assign(hyperparameters["B_kappa"][qq])
 
-                for qq in range(model_latent):
-                    self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
-
-                self.M.parameters_changed()
-
-                print ("reproduced model: ", self.M)
+                for qq in range(data.NI):
+                    self.M.likelihood.likelihoods[qq].variance = self.bounded_parameter(1e-6, 1e-3, 1e-4)
+                    self.M.likelihood.likelihoods[qq].variance.assign(hyperparameters["noise_variance"][qq][0])
 
         else:
+            input_dim = len(data.P[0][0])
+
             if modeling_options['model_kern'] == 'RBF':
-                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+                K = gpflow.kernels.SquaredExponential(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
             elif modeling_options['model_kern'] == 'Exponential' or modeling_options['model_kern'] == 'Matern12':
-                K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+                K = gpflow.kernels.Matern12(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
             elif modeling_options['model_kern'] == 'Matern32':
-                K = GPy.kern.Matern32(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+                K = gpflow.kernels.Matern32(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
             elif modeling_options['model_kern'] == 'Matern52':
-                K = GPy.kern.Matern52(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
+                K = gpflow.kernels.Matern52(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
             else:
-                K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
-            if modeling_options['model_method'] == 'SparseGPRegression':
-                self.M = GPy.models.SparseGPRegression(data.P[0], data.O[0], kernel = K, num_inducing = model_inducing)
-            elif modeling_options['model_method'] == 'GPRegression':
-                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
+                K = gpflow.kernels.SquaredExponential(lengthscales=[1.0] * input_dim, variance=1.0, name='GPFlow_GP')
+                        
+            if self.mf is not None:
+                def gpflow_mf(X):
+                    xnorm = X.numpy()  # Convert TensorFlow tensor to NumPy array
+                    transformed_x = self.problem.PS.inverse_transform(np.array(xnorm, ndmin=2))
+                    return tf.convert_to_tensor(self.mf(transformed_x[0]), dtype=tf.float64)
+                
+                gpflow_mf = gpflow.mean_functions.Lambda(gpflow_mf)
             else:
-                print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPRegression")
-                self.M = GPy.models.GPRegression(data.P[0], data.O[0], kernel = K)
-            self.M['.*Gaussian_noise.variance'].constrain_bounded(1e-10,1e-5)
+                gpflow_mf = None
 
-            print ("len: ", len(self.M.kern['GPy_GP.lengthscale']))
+            # noise_variance = self.bounded_parameter(1e-10, 1e-5, 1e-6)
+            # likelihood = gpflow.likelihoods.Gaussian(variance=noise_variance)
+            
+            if (kwargs['model_sparse']):
+                inducing_points = data.P[0][:model_inducing]
+                self.M = gpflow.models.SGPR(data=(data.P[0], data.O[0]), kernel=K, inducing_variable=inducing_points, mean_function=gpflow_mf)
+            else:
+                self.M = gpflow.models.GPR(data=(data.P[0], data.O[0]), kernel=K, mean_function=gpflow_mf)            
+            
+            self.M.likelihood.variance = self.bounded_parameter(1e-6, 1e-3, 1e-4)
+            # self.M.kernel.variance = self.bounded_parameter(1.23, 2.34, 1.5)
+            self.M.kernel.lengthscales = self.bounded_parameter_sig(1e-5, 1e3, [1.0]*len(data.P[0][0]),1)
 
-            for i in range(len(self.M.kern['GPy_GP.lengthscale'])):
-                self.M.kern['GPy_GP.lengthscale'][i] = hyperparameters["lengthscale"][i]
-
-            self.M.kern['GPy_GP.variance'] = hyperparameters["variance"][0]
-            self.M['Gaussian_noise.variance'] = hyperparameters["noise_variance"][0]
-
-            self.M.parameters_changed()
+            self.M.kernel.lengthscales.assign(hyperparameters["lengthscale"])
+            self.M.kernel.variance.assign(hyperparameters["variance"][0])
+            self.M.likelihood.variance.assign(hyperparameters["noise_variance"][0])
 
             print ("reproduced model: ", self.M)
-
         return
 
 

@@ -20,13 +20,13 @@ fi
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	
-	# module purge
-	# module load gcc/9.1.0
-    # module load openmpi/gcc-9.1.0/4.0.1
-    # module load scalapack-netlib/gcc-9.1.0/2.0.2
-    # module load cmake/3.19.2
-	# module load python/gcc-9.1.0/3.7.4
-	# SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
+	module purge
+	module load gcc/9.1.0
+    module load openmpi/gcc-9.1.0/4.0.1
+    module load scalapack-netlib/gcc-9.1.0/2.0.2
+    module load cmake/3.19.2
+	module load python/gcc-9.1.0/3.7.4
+	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 
 
 	# module purge
@@ -40,12 +40,13 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 	# alias pip='pip3.8'
 
 
-	module purge
-	module load gcc/13.1.0
-    module load openmpi/gcc-13.1.0/4.0.1
-    module load scalapack-netlib/gcc-13.1.0/2.2.0
-    module load cmake/3.19.2	
-	module load python/gcc-13.1.0/3.12.4
+    ################## the following works for the instalation, but at runtime mpi spawn failed, maybe the openmpi installation is not correct
+	# module purge
+	# module load gcc/13.1.0
+    # module load openmpi/gcc-13.1.0/4.0.1
+    # module load scalapack-netlib/gcc-13.1.0/2.2.0
+    # module load cmake/3.19.2	
+	# module load python/gcc-13.1.0/3.12.4
 	
 
 	SCALAPACK_LIB=${SCALAPACK_LIB_DIR}/libscalapack.so

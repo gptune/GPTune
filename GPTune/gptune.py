@@ -988,11 +988,10 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
-
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
-                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                elif self.options['verbose'] == True and (self.options['model_class'] == 'Model_GPy_LCM' or self.options['model_class'] == 'Model_GPFlow_LCM') and len(self.data.I)>1:
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
@@ -2348,7 +2347,7 @@ class GPTune(object):
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
-                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                elif self.options['verbose'] == True and (self.options['model_class'] == 'Model_GPy_LCM' or self.options['model_class'] == 'Model_GPFlow_LCM') and len(self.data.I)>1:
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
@@ -2666,7 +2665,7 @@ class GPTune(object):
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
-                elif self.options['verbose'] == True and self.options['model_class'] == 'Model_GPy_LCM' and len(self.data.I)>1:
+                elif self.options['verbose'] == True and (self.options['model_class'] == 'Model_GPy_LCM' or self.options['model_class'] == 'Model_GPFlow_LCM') and len(self.data.I)>1:
                     C = modelers[o].get_correlation_metric(len(self.data.I))
                     print("The correlation matrix C is \n", C)
 
