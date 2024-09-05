@@ -660,6 +660,46 @@ class Model_LCM(Model):
 class Model_George(Model):
     y = []
 
+    class Node:
+        def __init__(self, point, index, left=None, right=None):
+            self.point = point
+            self.index = index
+            self.left = left
+            self.right = right
+
+    def build_kd_tree(self,points, depth=0):
+        if not points:
+            return None
+
+        k = len(points[0][0])  # Assumes all points have the same dimension
+        axis = depth % k
+        
+        points.sort(key=lambda x: x[0][axis])  # Sort based on the current axis
+        median = len(points) // 2
+
+        return self.Node(
+            point=points[median][0],
+            index=points[median][1],
+            left=self.build_kd_tree(points[:median], depth + 1),
+            right=self.build_kd_tree(points[median + 1:], depth + 1)
+        )
+
+    def in_order_traversal(self,node, result=None):
+        if result is None:
+            result = []
+        if node:
+            self.in_order_traversal(node.left, result)
+            result.append(node.index)
+            self.in_order_traversal(node.right, result)
+        return result
+
+    def generate_kd_tree(self,points):
+        indexed_points = [(point, i) for i, point in enumerate(points)]
+        kd_tree = self.build_kd_tree(indexed_points)
+        permutation_vector = self.in_order_traversal(kd_tree)
+        return np.array(permutation_vector)
+
+
     def log_posterior(self, params):
         # Extract parameters
         log_noisevariance = params[0]
@@ -669,7 +709,7 @@ class Model_George(Model):
         # Define bounds for the parameters
         # noisevariance_bounds = (-15, -6)
         # amplitude_squared_bounds = None  # Unbounded
-        lengthscales_bounds = (-23, 19)
+        lengthscales_bounds = (-23, 2)
 
         # # Check if parameters are within bounds for bounded parameters
         # if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
@@ -770,9 +810,7 @@ class Model_George(Model):
         if multitask:
             raise Exception("TODO: IMPLEMENT MULTITASK TRAIN")
         else:
-            x = data.P[0]
-            self.y = data.O[0]
-            input_dim = len(x[0])
+            input_dim = len(data.P[0][0])
             # set initial guess
             intialguess=[5e-6, 1] + [1]*input_dim
             # intialguess=[np.power(10,np.random.randn(1)), np.power(10,np.random.randn(1))] + [np.power(10,np.random.randn(1))]*input_dim
@@ -796,13 +834,22 @@ class Model_George(Model):
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
-                    'tol_abs': 1e-4, # YL: need to change this
+                    'tol_abs': kwargs['model_hodlrtol_abs'], # YL: do we need some randomized norm estimator to calculate tol_abs? 
+                    'verbose': int(kwargs['verbose']), 
                     'seed': 42
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
             else:
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver)
 
+        x = copy.deepcopy(data.P[0])
+        self.y = copy.deepcopy(data.O[0])
+
+        if kwargs['model_lowrank'] == True:
+            print(x.shape)
+            perm = self.generate_kd_tree(x)
+            x = x[perm]
+            self.y = self.y[perm]
 
         self.M.compute(x)
         
@@ -816,7 +863,7 @@ class Model_George(Model):
         # exit(1)
         
         
-        bounds = [(-15, -10)] + [(None, None)] + [(-23, 19)] * input_dim
+        bounds = [(-15, -10)] + [(-30, 30)] + [(-23, 2)] * input_dim
         
         
         if kwargs['model_mcmc']:
@@ -839,10 +886,10 @@ class Model_George(Model):
             resopt= mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'],verbose=kwargs['verbose'])
         else:
             if kwargs['model_grad'] == True:
-                resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
+                resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-02, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
             else:
                 # use finite difference, jac could be None, '2-point', '3-point', or 'cs'
-                resopt = op.minimize(self.nll, p0, jac='2-point', method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-05, 'eps': 1e-08, 'finite_diff_rel_step': 1e-08, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
+                resopt = op.minimize(self.nll, p0, jac='3-point', method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'disp': None, 'maxcor': 10, 'ftol': 1e-32, 'gtol': 1e-10, 'eps': 1e-12, 'finite_diff_rel_step': 1e-02, 'maxfun': 1000, 'maxiter': 1000, 'iprint': -1, 'maxls': 100})
         
 
         

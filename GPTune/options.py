@@ -44,7 +44,7 @@ class Options(dict):
 
 
         """ Options for the sampling phase """
-        sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
+        sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS', 'SampleNUMPY'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
         sample_random_seed = None # Specify a certain random seed for the pilot sampling phase.
@@ -78,6 +78,7 @@ class Options(dict):
         model_mcmc_maxiter = 500 # max number of samples per chain
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR
+        model_hodlrtol_abs = 1e-10 # Absolute compression tolerance of HODLR
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 

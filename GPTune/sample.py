@@ -88,6 +88,15 @@ class Sample(abc.ABC):
 
         return self.sample_constrained(n_samples, 0, IS, check_constraints = check_constraints, check_constraints_kwargs = check_constraints_kwargs, **kwargs)
 
+    def make_hashable(self,obj):
+        """Recursively convert lists to tuples to ensure hashability."""
+        if isinstance(obj, list):
+            return tuple(self.make_hashable(e) for e in obj)
+        if isinstance(obj, dict):
+            # For dictionaries, we can convert to a tuple of sorted (key, value) pairs
+            return tuple(sorted((self.make_hashable(k), self.make_hashable(v)) for k, v in obj.items()))
+        return obj
+
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         P = []
@@ -105,26 +114,39 @@ class Sample(abc.ABC):
 
             kwargs2 = {d.name: I_orig[i] for (i, d) in enumerate(IS)}
             kwargs2.update(check_constraints_kwargs)
+            
 
-            xs__ = self.sample_constrained(n_samples, 0, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
-            xs = []
-
+            xs = np.empty((0,0))
             repeat = 0
             while (len(xs) < n_samples):
                 gen_samples = n_samples - len(xs)
                 xs_ = self.sample_constrained(gen_samples, repeat, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
-                for elem_xs_ in xs_: # remove any duplicates
-                    duplicate = False
-                    for elem_xs in xs:
-                        elem_xs_orig_ = problem.PS.inverse_transform(np.array([elem_xs_], ndmin=2))
-                        elem_xs_orig = problem.PS.inverse_transform(np.array([elem_xs], ndmin=2))
-                        if elem_xs_orig_ == elem_xs_orig:
-                            duplicate = True
-                            break
-                    if duplicate == False:
-                        xs.append(list(elem_xs_))
+                
+                xs_orig = [problem.PS.inverse_transform(np.array([x], ndmin=2)) for x in xs]
+                xs_orig_ = [problem.PS.inverse_transform(np.array([x], ndmin=2)) for x in xs_]
+                xs_origs = xs_orig + xs_orig_
+                if(xs.shape[0]==0):
+                    xs = xs_
+                else:
+                    xs = np.vstack((xs, xs_))
+
+                seen_elements = set()
+                # List to store the indices of duplicates
+                duplicate_indices = []
+                for i, element in enumerate(xs_origs):
+                    # Convert lists to tuples to make them hashable
+                    hashable_element = self.make_hashable(element)
+                    
+                    # If the element is already seen, record its index as duplicate
+                    if hashable_element in seen_elements:
+                        duplicate_indices.append(i)
+                    else:
+                        # Add the element to the set
+                        seen_elements.add(hashable_element)
+
+                xs = np.delete(xs, duplicate_indices, axis=0)
+
                 repeat += 1
-            xs = np.array(xs)
 
             ##xs_orig = problem.PS.inverse_transform(np.array(xs, ndmin=2))
             ##print ("xs_orig: ", xs_orig)
@@ -227,3 +249,23 @@ class SampleOpenTURNS(Sample):
 
         return S
 
+class SampleNUMPY(Sample):
+
+    def __init__(self):
+
+        super().__init__()
+
+    def sample(self, n_samples : int, space : Space, n_itr : int, **kwargs):
+
+        kwargs = kwargs['kwargs']
+
+        import openturns as ot
+        if kwargs['sample_random_seed'] != None:
+            np.random.seed(kwargs['sample_random_seed']+n_itr)
+
+        # t1 = time.time_ns()
+        S = np.random.rand(n_samples, len(space))
+        # t2 = time.time_ns()
+        # print('sample time:',(t2-t1)/1e9)
+
+        return S

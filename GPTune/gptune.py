@@ -791,7 +791,7 @@ class GPTune(object):
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
                 t10 = time.time_ns()
-                # print("time temp ",t10-t9 )
+                # print("time temp ",(t10-t9)/1e9 )
 
                 for i in range(NI):
                     if(T_sampleflag[i]== False):
