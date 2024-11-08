@@ -33,6 +33,7 @@ class Problem(object):
         self.models_update   = models_update
         self.constraints = tp.constraints
         self.models      = tp.models
+        self.input_var      = tp.input_var
         self.constants      = tp.constants        
 
     @property

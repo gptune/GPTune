@@ -78,6 +78,98 @@ class Model(abc.ABC):
         raise Exception("Abstract method")
 
 
+import GPy
+from GPy.kern import Kern
+class WGPKernel(Kern):
+    def __init__(self, problem,input_dim, variance=1.0, lengthscale=None, active_dims=None, input_var=None, name='GPy_GP'):
+        from GPy.core.parameterization.param import Param
+        from paramz.transformations import Logexp        
+        super(WGPKernel, self).__init__(input_dim, active_dims, name=name)
+        
+        # Define kernel parameters, with lengthscale as a vector if input_dim > 1
+        self.variance = Param('variance', variance, Logexp())
+        if lengthscale is None:
+            lengthscale = np.ones(input_dim)  # Default lengthscale for each dimension
+        self.lengthscale = Param('lengthscale', lengthscale, Logexp())
+        self.input_var = input_var
+        self.problem = problem
+
+        # Link parameters to the kernel for optimization
+        self.link_parameter(self.variance)
+        self.link_parameter(self.lengthscale)
+
+    def wasserstein2_distance(self, mu1, sigma1, mu2, sigma2):
+        sqrt_sigma1 = np.sqrt(sigma1)
+        sqrt_sigma2 = np.sqrt(sigma2)
+        return np.sqrt((mu1[:, None, :] - mu2[None, :, :])**2 + (sqrt_sigma1[:, None, :] - sqrt_sigma2[None, :, :])**2).squeeze()
+
+    def K_W(self, X, X_var, X2, X2_var, variance, lengthscale):
+        K = np.ones([X.shape[0],X2.shape[0]])*variance
+        for i in range(self.input_dim):
+            dist = self.wasserstein2_distance(X[:,i].reshape([X.shape[0],1]),X_var[:,i].reshape([X.shape[0],1]),X2[:,i].reshape([X2.shape[0],1]),X2_var[:,i].reshape([X2.shape[0],1]))
+            K= K* np.exp(-0.5 * (dist / lengthscale[i])**2)
+        return K
+
+    # Covariance function
+    def K(self, X, X2=None):
+        if X2 is None:
+            X2 = X 
+
+        X_orig = np.array(self.problem.PS.inverse_transform(np.array(X.view(np.ndarray), ndmin=2)))
+        X2_orig = np.array(self.problem.PS.inverse_transform(np.array(X2.view(np.ndarray), ndmin=2)))
+        X_var = self.input_var(X_orig)
+        X2_var = self.input_var(X2_orig)
+        return self.K_W(X_orig,X_var,X2_orig,X2_var,self.variance,self.lengthscale)
+
+    # Diagonal of the covariance matrix
+    def Kdiag(self, X):
+        return self.variance * np.ones(X.shape[0])
+
+    # Finite-difference approximation of gradients for full covariance matrix
+    def update_gradients_full(self, dL_dK, X, X2=None):
+        epsilon = 1e-5  # Small perturbation for finite difference
+
+        if X2 is None:
+            X2 = X
+
+        X_orig = np.array(self.problem.PS.inverse_transform(np.array(X.view(np.ndarray), ndmin=2)))
+        X2_orig = np.array(self.problem.PS.inverse_transform(np.array(X2.view(np.ndarray), ndmin=2)))
+        X_var = self.input_var(X_orig)
+        X2_var = self.input_var(X2_orig)
+
+        # Gradient with respect to variance
+        original_variance = self.variance.values[0]
+        variance_plus = original_variance + epsilon
+        variance_minus = original_variance - epsilon
+
+        K_plus = self.K_W(X_orig,X_var,X2_orig,X2_var,variance_plus,self.lengthscale)
+        K_minus = self.K_W(X_orig,X_var,X2_orig,X2_var,variance_minus,self.lengthscale)
+        self.variance.gradient = np.sum(dL_dK * (K_plus - K_minus) / (2 * epsilon))
+
+        # Gradient with respect to each lengthscale component
+        for i in range(self.input_dim):
+            original_lengthscale_i = self.lengthscale[i]
+            lengthscale_plus = self.lengthscale.copy()
+            lengthscale_plus[i] = original_lengthscale_i + epsilon
+            lengthscale_minus = self.lengthscale.copy()
+            lengthscale_minus[i] = original_lengthscale_i - epsilon
+
+            K_plus = self.K_W(X_orig,X_var,X2_orig,X2_var,self.variance,lengthscale_plus)
+            K_minus = self.K_W(X_orig,X_var,X2_orig,X2_var,self.variance,lengthscale_minus)
+            self.lengthscale.gradient[i] = np.sum(dL_dK * (K_plus - K_minus) / (2 * epsilon))
+
+    # Finite-difference approximation of gradients for diagonal of covariance matrix
+    def update_gradients_diag(self, dL_dKdiag, X):
+        epsilon = 1e-5  # Small perturbation for finite difference
+
+        # Gradient with respect to variance
+        original_variance = self.variance.values[0]
+        Kdiag_plus = (original_variance + epsilon) * np.ones(X.shape[0])
+        Kdiag_minus = (original_variance - epsilon) * np.ones(X.shape[0])
+        self.variance.gradient = np.sum(dL_dKdiag * (Kdiag_plus - Kdiag_minus) / (2 * epsilon))
+
+        # Lengthscale has no effect on the diagonal in this kernel, so we set its gradient to zero
+        self.lengthscale.gradient[:] = 0.0
 
 class Model_GPy_LCM(Model):
     
@@ -90,7 +182,6 @@ class Model_GPy_LCM(Model):
 #model_sparse=False
 #model_inducing=None
 #model_layers=2
-
     def train(self, data : Data, **kwargs):
         import GPy
         if kwargs['model_random_seed'] != None:
@@ -123,7 +214,11 @@ class Model_GPy_LCM(Model):
             if(self.mf is not None):
                 raise Exception("Model_GPy_LCM cannot yet handle prior mean functions in LCM")
                 
-            kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]
+            if kwargs['model_kern'] == 'WGP':
+                kernels_list = [WGPKernel(self.problem,input_dim=len(data.P[0][0]),input_var=self.problem.input_var, name='rbf') for k in range(model_latent)]
+            else:
+                kernels_list = [GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True) for k in range(model_latent)]        
+            
             K = GPy.util.multioutput.LCM(input_dim = len(data.P[0][0]), num_outputs = data.NI, kernels_list = kernels_list, W_rank = 1, name='GPy_LCM')
             K['.*rbf.variance'].constrain_fixed(1.) #For this kernel, K.*.B.kappa and B.W encode the variance now.
             # print(K)
@@ -134,7 +229,9 @@ class Model_GPy_LCM(Model):
             for qq in range(model_latent):
                 self.M['.*mixed_noise.Gaussian_noise_%s.variance'%qq].constrain_bounded(1e-10,1e-5)
         else:
-            if kwargs['model_kern'] == 'RBF':
+            if kwargs['model_kern'] == 'WGP':
+                K = WGPKernel(self.problem,input_dim=len(data.P[0][0]),input_var=self.problem.input_var, name='GPy_GP')
+            elif kwargs['model_kern'] == 'RBF':
                 K = GPy.kern.RBF(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')
             elif kwargs['model_kern'] == 'Exponential' or kwargs['model_kern'] == 'Matern12':
                 K = GPy.kern.Exponential(input_dim = len(data.P[0][0]), ARD=True, name='GPy_GP')

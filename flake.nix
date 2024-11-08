@@ -139,7 +139,7 @@
             pname = "autotune";
             version = "2022.08.31";
             src = builtins.fetchGit{
-              url = "https://github.com/ytopt-team/autotune";
+              url = "https://github.com/gptune/autotune";
               ref = "master";
               rev = "58f5d9a39106e3b2dbdea9ebcbe928a1b65bea6a";
             };

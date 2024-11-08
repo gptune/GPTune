@@ -425,7 +425,7 @@ python setup.py install --prefix=$PREFIX_PATH
 
 # cd $GPTUNEROOT
 # rm -rf autotune
-# git clone https://github.com/ytopt-team/autotune.git
+# git clone https://github.com/gptune/autotune.git
 # cd autotune/
 # # cp ../patches/autotune/problem.py autotune/.
 # env pip install --prefix=$PREFIX_PATH -e .

@@ -216,6 +216,19 @@ if [[ $BuildExample == 1 ]]; then
 	make test
 
 
+	cd $GPTUNEROOT/examples/IMPACT-Z
+	rm -rf IMPACT-Z
+	git clone https://github.com/impact-lbl/IMPACT-Z.git
+	cd IMPACT-Z
+	git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
+	cp ../impact-z-driver/*.f90 ./src/Contrl/.
+	mkdir -p build 
+	cd build
+	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release 
+	make
+	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
+
+
 	# cd $GPTUNEROOT/examples/ButterflyPACK
 	# rm -rf ButterflyPACK
 	# git clone https://github.com/liuyangzhuan/ButterflyPACK.git

@@ -24,13 +24,13 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
   app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
   echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
   
-  # tuner=GPTune
-  # # # $RUN  python ./impact-z_single1D.py -ntask 1 -nrun 200 -optimization $tuner | tee a.out1D_${tuner}
-  # $RUN  python ./impact-z_single.py -ntask 1 -nrun 20 -optimization $tuner | tee a.out_${tuner}
+  tuner=GPTune
+  # # $RUN  python ./impact-z_single1D.py -ntask 1 -nrun 200 -optimization $tuner | tee a.out1D_${tuner}
+  $RUN  python ./impact-z_single.py -ntask 1 -nrun 20 -optimization $tuner | tee a.out_${tuner}
 
 
-  tuner=SIMPLEX
-  $RUN python ./impact-z_single_simplex.py -ntask 1 -nrun 100 -optimization $tuner | tee a.out_${tuner}
+  # tuner=SIMPLEX
+  # $RUN python ./impact-z_single_simplex.py -ntask 1 -nrun 100 -optimization $tuner | tee a.out_${tuner}
 else
     echo "GPTUNE_LITE_MODE cannot run MPI_spawn invoked applications"
 fi  
