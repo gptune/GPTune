@@ -475,7 +475,22 @@ Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li.
 }
 ```
 
-### Copyright
+## More Techniques of GPTune
+There are multiple extensions/variants of GPTune tuning techniques, extending the techniques in the first GPTune PPoPP 2021 paper. They are incorporated into this GPTune package or callable from the GPTune interface.
+
+### GPTuneBand (most relevant GPTune function: MB_LCM in gptune.py)
+Xinran Zhu, Yang Liu, Pieter Ghysels, David Bindel, and Xiaoye S. Li. "GPTuneBand: Multi-task and Multi-fidelity Autotuning for Large-scale High Performance Computing Applications", in SIAM Conference on Parallel Processing for Scientific Computing, 2022.
+
+### GPTuneCrowd (most relevant GPTune function: TLA_I in gptune.py)
+Younghyun Cho, James W. Demmel, Jacob King, Xiaoye S. Li, Yang Liu, and Hengrui Luo. "Harnessing the Crowd for Autotuning High-Performance Computing Applications", in IEEE International Parallel and Distributed Processing Symposium (IPDPS), 2023.
+
+### GPTuneHybrid: callable from GPTune interface
+Hengrui Luo, Younghyun Cho, James W Demmel, Xiaoye S Li, Yang Liu. "Hybrid Parameter Search and Dynamic Model Selection for Mixed-Variable Bayesian Optimization", in Journal of Computational and Graphical Statistics, 2024.
+
+### clustered GP (cGP): callable from GPTune interface
+Hengrui Luo, Younghyun Cho, James W Demmel, Igor Kozachenko, Xiaoye S Li, and Yang Liu. "Non-smooth Bayesian optimization in tuning scientific applications", The International Journal of High Performance Computing Applications, 2024.
+
+## Copyright
 GPTune Copyright (c) 2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S.Dept. of Energy) and the University of California, Berkeley.
 All rights reserved.
 
