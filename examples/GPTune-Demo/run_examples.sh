@@ -15,8 +15,8 @@ echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_softwa
 tuner=GPTune
 rm -rf gptune.db/*.json # do not load any database
 #$RUN
-# python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
-python ./demo_wgp.py -optimization ${tuner} -ntask 1 -nrun 20
+python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
+# python ./demo_wgp.py -optimization ${tuner} -ntask 1 -nrun 20
 ###########################################################################################
 
 ## ###########################################################################################

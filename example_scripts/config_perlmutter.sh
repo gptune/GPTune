@@ -7,11 +7,19 @@ if [[ $NERSC_HOST != "perlmutter" ]]; then
 	exit
 fi
 
+source /opt/cray/pe/cpe/23.12/restore_lmod_system_defaults.sh
 module load cpe/23.03 
 
+#################
+# Note that the following module versions need to be updated over time 
+#################
 PY_VERSION=3.9
 PY_TIME=2021.11
-
+GCC_VERSION=11.2.0
+LIBSCI_VERSION=23.02.1.1
+MPICH_VERSION=8.1.25
+OPENMPI_VERSION=5.0.3
+CUDA_VERSION=11.7
 
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/perlmutter/
@@ -34,7 +42,7 @@ mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -46,7 +54,10 @@ echo "The ModuleEnv is $ModuleEnv"
 if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
-	module load cudatoolkit
+	module load gcc/${GCC_VERSION}
+	module load cray-libsci/${LIBSCI_VERSION}
+	module load cray-mpich/${MPICH_VERSION}	
+	module load cudatoolkit/${CUDA_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
@@ -64,6 +75,9 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
+	module load cray-libsci/${LIBSCI_VERSION}
+	module load cray-mpich/${MPICH_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
@@ -79,12 +93,14 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
 	module unload cray-libsci
 	module unload cray-mpich
 	module unload openmpi
-	module load openmpi
+	module load openmpi/${OPENMPI_VERSION}
 	module unload darshan
-	module load cudatoolkit
+	module load cudatoolkit/${CUDA_VERSION}
+
 
 	GPTUNEROOT=$PWD
     BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
@@ -105,10 +121,11 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
 	module unload cray-libsci
 	module unload cray-mpich
 	module unload openmpi
-	module load openmpi
+	module load openmpi/${OPENMPI_VERSION}
 	module unload darshan
 
 	GPTUNEROOT=$PWD
@@ -169,9 +186,9 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_intel.txt
+	env CC=$MPICC pip install --user -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_perlmutter.txt
+	env CC=$MPICC pip install --user -r requirements_perlmutter.txt
 fi
 # cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 

@@ -25,12 +25,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from problem import Problem
 from computer import Computer
 from data import Data
-import gpflow
-from gpflow.utilities import parameter_dict
-import tensorflow as tf
-import tensorflow_probability as tfp
-from tensorflow_probability import bijectors as tfb
-from tensorflow_probability import distributions as tfd
 
 
 import math
@@ -543,6 +537,10 @@ class Model_GPFlow_LCM(Model):
 
 
     def bounded_parameter(self,low, high, default):
+        import gpflow
+        import tensorflow as tf
+        from tensorflow_probability import bijectors as tfb
+
         """Make noise tfp Parameter with optimization bounds. (From Hengrui Luo)"""
         #affine = tfb.AffineScalar(shift=tf.cast(low, tf.float64),
         #                          scale=tf.cast(high-low, tf.float64))
@@ -554,6 +552,9 @@ class Model_GPFlow_LCM(Model):
         return parameter
 
     def bounded_parameter_sig(self,low, high, default, n_tuple=1):
+        import gpflow
+        import tensorflow as tf
+        from tensorflow_probability import bijectors as tfb        
         """Make lengthscale tfp Parameter with optimization bounds. (From Hengrui Luo)"""
         sigmoid = tfb.Sigmoid(tf.cast(low, tf.float64), tf.cast(high, tf.float64))
         if n_tuple>1:
@@ -564,6 +565,7 @@ class Model_GPFlow_LCM(Model):
         return parameter
 
     def contains_coregion_kernel(self,kernel):
+        import gpflow    
         """
         Recursively checks if a kernel or any of its sub-kernels is a Coregion kernel.
         """
@@ -577,6 +579,9 @@ class Model_GPFlow_LCM(Model):
 
 
     def train(self, data : Data, **kwargs):
+        import gpflow
+        from gpflow.utilities import parameter_dict
+        import tensorflow as tf       
         if kwargs['model_random_seed'] != None:
             seed = kwargs['model_random_seed']
             if data.P is not None:
@@ -830,7 +835,6 @@ class Model_GPFlow_LCM(Model):
         return (hyperparameters, modeling_options, model_stats)
 
     def train_stacked(self, data : Data, num_source_tasks, **kwargs):
-
         # note: model stacking works only for single task tuning
         # each source task model is a single-task model, and target model is also a single-task model
 
@@ -906,6 +910,7 @@ class Model_GPFlow_LCM(Model):
         return (mu, var)
 
     def get_correlation_metric(self, delta):
+        from gpflow.utilities import parameter_dict     
         print("In model.py, delta = ", delta)
         Q = delta # number of latent processes 
         B = np.zeros((delta, delta, Q))
@@ -925,7 +930,8 @@ class Model_GPFlow_LCM(Model):
         return C
 
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : dict, modeling_options : dict, **kwargs):
-
+        import gpflow
+        import tensorflow as tf
         if kwargs['model_random_seed'] != None:
             seed = kwargs['model_random_seed']
             if data.P is not None:
