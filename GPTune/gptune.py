@@ -3216,6 +3216,7 @@ class GPTune(object):
         stats = {
             "time_total": 0,
             "time_fun": 0,
+            "func_eval_time":[],
             "time_loaddata": 0
         }
         time_fun=0
