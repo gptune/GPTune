@@ -162,6 +162,8 @@ def predict_aug(modeler, gt, point,tid):   # point is the orginal space
 
 
 def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
+    import matplotlib
+    matplotlib.use('Agg')    
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -240,7 +242,10 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
     if(lowrank==True):
         options['model_lowrank'] = True
         options['model_hodlrleaf'] = 200
-        options['model_hodlrtol'] = 1e-7
+        options['model_hodlrtol'] = 1e-10
+        options['model_hodlr_sym'] = 0
+        options['model_hodlr_knn'] = 0
+        options['model_jitter'] = 0 # 1e-5 # 1e-3
     
     # Temporary hardcode 
     if(optimizer == "gradient"):
@@ -272,6 +277,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
 
 
     options['verbose'] = True
+    options['debug'] = False
     options.validate(computer=computer)
 
     # print(options)
@@ -447,8 +453,10 @@ def plotting(objective, objtype):
 
     plotgp=True
 
-    NS = [51, 201, 401, 801, 1601, 3201, 6401]
-    # NS = [51]
+    # NS = [201, 401, 801, 1601, 3201, 6401]
+    # NS = [1601, 3201, 6401, 12801]
+    # NS = [25601, 51201, 102401]
+    NS = [6401]
     
     for elem in NS:
         hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
@@ -471,11 +479,11 @@ def plotting(objective, objtype):
         model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
-        model_time_gpy.append(gpy_stats.get("time_model"))
-        model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
-        search_time_gpy.append(gpy_stats.get("time_search"))
-        model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
+        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
+        # model_time_gpy.append(gpy_stats.get("time_model"))
+        # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
+        # search_time_gpy.append(gpy_stats.get("time_search"))
+        # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
      
     
 
@@ -509,7 +517,7 @@ def plotting(objective, objtype):
     figure, axis = plt.subplots(2,2)
     figure.suptitle("Optimizer Comparison 1D",fontsize=fontsize)
 
-    axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
+    # axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
     axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
     axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
@@ -518,7 +526,7 @@ def plotting(objective, objtype):
     axis[0,0].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[0,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
+    # axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
     axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
     axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
@@ -527,7 +535,7 @@ def plotting(objective, objtype):
     axis[0,1].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[0,1].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+    # axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
@@ -536,7 +544,7 @@ def plotting(objective, objtype):
     axis[1,0].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[1,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
+    # axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
     axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
     axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')

@@ -31,6 +31,7 @@ class Options(dict):
         shared_memory_parallelism      = False   # Using shared_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
         constraints_evaluation_parallelism = False  # Reserved option
         verbose = False     # Control the verbosity level
+        debug = False     # Control the debug level
         oversubscribe = False     # Set this to True when the physical core count is less than computer.nodes*computer.cores and the --oversubscribe MPI runtime option is used
 
 
@@ -79,6 +80,8 @@ class Options(dict):
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR
         model_hodlrtol_abs = 1e-10 # Absolute compression tolerance of HODLR
+        model_hodlr_sym = 0 # Symmetric factorization of HODLR
+        model_hodlr_knn = 0 # KNN in low-rank compression
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 

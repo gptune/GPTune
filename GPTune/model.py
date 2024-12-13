@@ -385,7 +385,7 @@ class Model_GPy_LCM(Model):
             else:
                 print ("unsupported modeling method: ", modeling_options['model_method'], " will use GPCoregionalizedRegression")
                 self.M = GPy.models.GPCoregionalizedRegression(X_list = data.P, Y_list = data.O, kernel = K)
-
+                ##### YL: the following seems to only apply to 2 tasks of 3D functions. Need to double check. 
                 for qq in range(model_latent):
                     self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][0] = hyperparameters["rbf_lengthscale"][qq][0]
                     self.M.kern['sum.GPy_LCM%s.rbf.lengthscale'%qq][1] = hyperparameters["rbf_lengthscale"][qq][1]
@@ -661,11 +661,12 @@ class Model_George(Model):
     y = []
 
     class Node:
-        def __init__(self, point, index, left=None, right=None):
+        def __init__(self, point, index, dim, left=None, right=None):
             self.point = point
             self.index = index
             self.left = left
             self.right = right
+            self.dim = dim
 
     def build_kd_tree(self,points, depth=0):
         if not points:
@@ -680,6 +681,7 @@ class Model_George(Model):
         return self.Node(
             point=points[median][0],
             index=points[median][1],
+            dim=k,
             left=self.build_kd_tree(points[:median], depth + 1),
             right=self.build_kd_tree(points[median + 1:], depth + 1)
         )
@@ -697,7 +699,61 @@ class Model_George(Model):
         indexed_points = [(point, i) for i, point in enumerate(points)]
         kd_tree = self.build_kd_tree(indexed_points)
         permutation_vector = self.in_order_traversal(kd_tree)
-        return np.array(permutation_vector)
+        return np.array(permutation_vector), kd_tree
+
+
+    def k_nearest_neighbors(self, node, query, k):
+        import heapq
+        # We'll search the KD-tree for the k nearest neighbors to 'query'
+        # Use a max-heap to store the neighbors: (negative_distance, index)
+        # We store negative_distance because Python's heapq is a min-heap, and we want easy access to the largest distance.
+
+        best = []  # this will be a list of (negative_distance, index, point)
+        def search(node, depth=0):
+            if node is None:
+                return
+            axis = depth % node.dim
+
+            # Distance from query to current node's point
+            dist = np.linalg.norm(query - node.point)
+            
+            # If we have fewer than k points, push this one
+            # If we have k and this one is closer than the worst one in best, replace it
+            if len(best) < k:
+                heapq.heappush(best, (-dist, node.index, node.point))
+            else:
+                # Check if this node is closer than the farthest in our current best heap
+                if dist < -best[0][0]:
+                    heapq.heapreplace(best, (-dist, node.index, node.point))
+            
+            # Determine which side of the tree to search first
+            # If query[axis] < node.point[axis], go left first, else right
+            diff = query[axis] - node.point[axis]
+            if diff < 0:
+                # search left branch first
+                search(node.left, depth + 1)
+                # Check if we should also search the right branch
+                # We do this if the absolute difference along the axis
+                # might still contain closer points than our current worst.
+                if len(best) < k or abs(diff) < -best[0][0]:
+                    search(node.right, depth + 1)
+            else:
+                # search right branch first
+                search(node.right, depth + 1)
+                # Maybe search left branch
+                if len(best) < k or abs(diff) < -best[0][0]:
+                    search(node.left, depth + 1)
+
+        # Initiate the recursive search
+        search(node, 0)
+
+        # 'best' now contains up to k nearest neighbors
+        # They are stored as (-dist, index, point), so let's format them:
+        neighbors = [(idx, p, -d) for (d, idx, p) in best]
+        # Sort them by actual distance (just to output in nearest-first order)
+        neighbors.sort(key=lambda x: x[2])
+        return neighbors
+
 
 
     def log_posterior(self, params):
@@ -796,12 +852,13 @@ class Model_George(Model):
 
     def train(self, data, **kwargs):
         import george
+        seed=42
         if 'model_random_seed' in kwargs and kwargs['model_random_seed'] is not None:
             seed = kwargs['model_random_seed']
             if data.P is not None:
                 for P_ in data.P:
                     seed += len(P_)
-            np.random.seed(seed)
+        np.random.seed(seed)
 
         self.M_last = copy.deepcopy(self.M)
 
@@ -836,7 +893,11 @@ class Model_George(Model):
                     'tol': kwargs['model_hodlrtol'],
                     'tol_abs': kwargs['model_hodlrtol_abs'], # YL: do we need some randomized norm estimator to calculate tol_abs? 
                     'verbose': int(kwargs['verbose']), 
-                    'seed': 42
+                    'debug': int(kwargs['debug']), 
+                    'sym': kwargs['model_hodlr_sym'],
+                    'knn': kwargs['model_hodlr_knn'],
+                    'compress_grad': int(kwargs['model_grad']),
+                    'seed': seed
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
             else:
@@ -847,11 +908,28 @@ class Model_George(Model):
 
         if kwargs['model_lowrank'] == True:
             print(x.shape)
-            perm = self.generate_kd_tree(x)
+            perm,root = self.generate_kd_tree(x)
+            inv_perm = np.empty_like(perm)  
             x = x[perm]
             self.y = self.y[perm]
 
-        self.M.compute(x)
+            for i in range(len(perm)):
+                inv_perm[perm[i]] = i       
+
+            knn = kwargs['model_hodlr_knn']   
+            nns = np.zeros((len(perm),knn)).astype(int)
+            if(knn>0):
+                for i in range(len(perm)):
+                    query_point = x[i]
+                    nn = self.k_nearest_neighbors(root, query_point, knn)
+                    k=0
+                    for idx, p, dist in nn:
+                        nns[i,k] = inv_perm[idx]
+                        k = k+1
+                # print(nns)
+
+
+        self.M.compute(x, nns, yerr=kwargs['model_jitter'])
         
         p0 = self.M.get_parameter_vector()
         # p0[0]=1
@@ -862,9 +940,10 @@ class Model_George(Model):
         # print(noise_variance, amplitude, lengthscale)
         # exit(1)
         
+        ## YL: Note that I'm not setting a large range for variance [(-30, 5)], otherwise it's hard for jittering to take effect 
+        bounds = [(-15, -10)] + [(-30, 5)] + [(-23, 2)] * input_dim
         
-        bounds = [(-15, -10)] + [(-30, 30)] + [(-23, 2)] * input_dim
-        
+
         
         if kwargs['model_mcmc']:
             # Initialize MCMC walkers around the initial guess

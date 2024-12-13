@@ -140,15 +140,15 @@ class SurrogateProblem(object):
 
         self.D     = self.data.D[tid]
         self.IOrig = self.problem.IS.inverse_transform(np.array(self.data.I[tid], ndmin=2))[0]
-        if (self.options['verbose']):
-            print ("self.IOrig: ", self.IOrig)
+        # if (self.options['verbose']):
+        #     print ("self.IOrig: ", self.IOrig)
 
         if self.data.P is not None and len(self.data.P[tid]) > 0:
             self.POrig = self.problem.PS.inverse_transform(np.array(self.data.P[tid], ndmin=2))
         else:
             self.POrig = [] # self.POrig = [[]]
-        if (self.options['verbose']):
-            print ("self.POrig: ", self.POrig)
+        # if (self.options['verbose']):
+        #     print ("self.POrig: ", self.POrig)
 
         self.models_transfer = models_transfer
         if (self.models != None and self.models_transfer != None and self.options['TLA_method'] == 'Regression'):
