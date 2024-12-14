@@ -243,6 +243,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
         options['model_lowrank'] = True
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-10
+        options['model_hodlrtol_abs'] = 1e-20
         options['model_hodlr_sym'] = 0
         options['model_hodlr_knn'] = 0
         options['model_jitter'] = 0 # 1e-5 # 1e-3
@@ -456,7 +457,7 @@ def plotting(objective, objtype):
     # NS = [201, 401, 801, 1601, 3201, 6401]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [6401]
+    NS = [3201]
     
     for elem in NS:
         hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
