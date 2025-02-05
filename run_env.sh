@@ -408,13 +408,12 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 
 ############### Perlmutter Milan with GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
-    PY_VERSION=3.9
-    PY_TIME=2021.11
+    PY_VERSION=3.11
     GCC_VERSION=11.2.0
     LIBSCI_VERSION=23.02.1.1
     MPICH_VERSION=8.1.25
     CUDA_VERSION=11.7
-    module load python/$PY_VERSION-anaconda-$PY_TIME
+    module load python/$PY_VERSION
 	module load PrgEnv-gnu
 	module load gcc/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
@@ -426,8 +425,8 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
     export MPI4PY_RC_RECV_MPROBE=false
     export MPICH_VERSION_DISPLAY=0
@@ -443,12 +442,12 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 
 ############### Perlmutter Milan with GPU OpenMPI+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
-    PY_VERSION=3.9
-    PY_TIME=2021.11
+    PY_VERSION=3.11
+    # PY_TIME=2021.11
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
     CUDA_VERSION=11.7
-    module load python/$PY_VERSION-anaconda-$PY_TIME
+    module load python/$PY_VERSION
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -465,8 +464,8 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     
     # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
     # export UCX_NET_DEVICES=mlx5_0:1
@@ -483,11 +482,11 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 
 ############### Perlmutter Milan with no GPU OpenMPI+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
-    PY_VERSION=3.9
-    PY_TIME=2021.11
+    PY_VERSION=3.11
+    # PY_TIME=2021.11
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
-    module load python/$PY_VERSION-anaconda-$PY_TIME
+    module load python/$PY_VERSION
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -505,8 +504,8 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
     # export UCX_NET_DEVICES=mlx5_0:1
     # export UCX_TLS=rc
@@ -521,12 +520,11 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 
 ############### Perlmutter Milan with no GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
-    PY_VERSION=3.9
-    PY_TIME=2021.11
+    PY_VERSION=3.11
     GCC_VERSION=11.2.0
     LIBSCI_VERSION=23.02.1.1
     MPICH_VERSION=8.1.25
-    module load python/$PY_VERSION-anaconda-$PY_TIME
+    module load python/$PY_VERSION
 	module load PrgEnv-gnu
 	module load gcc/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
@@ -538,8 +536,8 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
-    export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages/GPTune/:$PYTHONPATH
     export MPIRUN=srun
     export MPI4PY_RC_RECV_MPROBE=false
     export MPICH_VERSION_DISPLAY=0

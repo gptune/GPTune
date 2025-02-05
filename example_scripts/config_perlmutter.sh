@@ -13,8 +13,8 @@ module load cpe/23.03
 #################
 # Note that the following module versions need to be updated over time 
 #################
-PY_VERSION=3.9
-PY_TIME=2021.11
+PY_VERSION=3.11
+# PY_TIME=2021.11
 GCC_VERSION=11.2.0
 LIBSCI_VERSION=23.02.1.1
 MPICH_VERSION=8.1.25
@@ -24,8 +24,8 @@ CUDA_VERSION=11.7
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/perlmutter/
 rm -rf ~/.local/lib/python$PY_VERSION
-module load python/$PY_VERSION-anaconda-$PY_TIME
-PREFIX_PATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/
+module load python/$PY_VERSION
+PREFIX_PATH=~/.local/perlmutter/python-$PY_VERSION/
 
 
 echo $(which python) 
@@ -146,7 +146,8 @@ else
     exit
 fi 
 
-export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+# export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
