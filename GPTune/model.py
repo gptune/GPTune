@@ -757,36 +757,7 @@ class Model_George(Model):
 
 
     def log_posterior(self, params):
-        # Extract parameters
-        log_noisevariance = params[0]
-        log_amplitude_squared = params[1]
-        log_lengthscales = params[2:]
 
-        # Define bounds for the parameters
-        # noisevariance_bounds = (-15, -6)
-        # amplitude_squared_bounds = None  # Unbounded
-        lengthscales_bounds = (-23, 2)
-
-        # # Check if parameters are within bounds for bounded parameters
-        # if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
-        #         (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
-        #         all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
-        #     # print('parameters out of bounds in log_posterior')
-        #     return -np.inf  # Return a very low log posterior if out of bounds
-
-        # Convert to original scale
-        noisevariance = np.exp(log_noisevariance)
-        amplitude_squared = np.exp(log_amplitude_squared)
-        lengthscales = np.exp(log_lengthscales)
-
-        # Calculate log likelihood
-        log_likelihood = -self.nll(params)
-        
-        # Calculate log prior
-        log_prior = 0
-
-        # Define priors
-        
         def log_prior_truncnorm(log_param, lower_bound, upper_bound):
             mean = (lower_bound + upper_bound) / 2
             std = (upper_bound - lower_bound) / 6  # Rough approximation
@@ -801,23 +772,85 @@ class Model_George(Model):
             b = (upper_bound - mean) / std
             return norm.logpdf(log_param, loc=mean, scale=std)
 
-        # Log prior for noise variance (Inverse Gamma)
-        # print(log_noisevariance,noisevariance_bounds[0], noisevariance_bounds[1],'ggg')
-        # log_prior_noisevariance =  log_prior_truncnorm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1]) #   invgamma.logpdf(noisevariance, a=1, scale=0.001)
-        log_prior_noisevariance =  gamma.logpdf(noisevariance, a=1, scale=0.001)
-        # log_prior_noisevariance = log_prior_norm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1])
-
-        # Log prior for amplitude squared (Gamma)
-        log_prior_amplitude_squared = gamma.logpdf(amplitude_squared, a=1, scale=0.1)
-
-        # Log prior for length scales 
-        log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
-        # log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
-        # log_prior_lengthscales = sum(uniform.logpdf(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]-lengthscales_bounds[0]) for log_lengthscale in log_lengthscales)
-        # log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
         
-        log_prior += log_prior_noisevariance + log_prior_amplitude_squared + log_prior_lengthscales
-        # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
+        if(self.M.kernel.kernel_type==13):
+
+            # Extract parameters
+            noisevariance, B, K, lengthscales = self.extract_hyperparameters(self.M,'RBF')   
+            # print(noisevariance, B, K, lengthscales, 'log_posterior') 
+            log_lengthscales = np.log(lengthscales)
+
+            # Define bounds for the parameters
+            lengthscales_bounds = (-23, 2)
+
+            # Calculate log likelihood
+            log_likelihood = -self.nll(params)
+            
+            # Calculate log prior
+            log_prior = 0
+
+            # Log prior for noise variance (Gamma)
+            log_prior_noisevariance =  gamma.logpdf(noisevariance, a=1, scale=0.001)
+
+            # Log prior for B (Gamma)
+            log_prior_B = sum(gamma.logpdf(B, a=1, scale=0.1))
+
+            # Log prior for K (Gamma)
+            log_prior_K =  sum(gamma.logpdf(K, a=1, scale=0.001))
+
+            # Log prior for length scales 
+            log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+
+            log_prior += log_prior_noisevariance + log_prior_B + log_prior_K + log_prior_lengthscales
+            # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
+
+        else:    
+            # Extract parameters
+            log_noisevariance = params[0]
+            log_amplitude_squared = params[1]
+            log_lengthscales = params[2:]
+
+            # Define bounds for the parameters
+            # noisevariance_bounds = (-15, -6)
+            # amplitude_squared_bounds = None  # Unbounded
+            lengthscales_bounds = (-23, 2)
+
+            # # Check if parameters are within bounds for bounded parameters
+            # if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
+            #         (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
+            #         all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
+            #     # print('parameters out of bounds in log_posterior')
+            #     return -np.inf  # Return a very low log posterior if out of bounds
+
+            # Convert to original scale
+            noisevariance = np.exp(log_noisevariance)
+            amplitude_squared = np.exp(log_amplitude_squared)
+            lengthscales = np.exp(log_lengthscales)
+
+            # Calculate log likelihood
+            log_likelihood = -self.nll(params)
+            
+            
+            # Calculate log prior
+            log_prior = 0
+
+            # Log prior for noise variance (Inverse Gamma)
+            # print(log_noisevariance,noisevariance_bounds[0], noisevariance_bounds[1],'ggg')
+            # log_prior_noisevariance =  log_prior_truncnorm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1]) #   invgamma.logpdf(noisevariance, a=1, scale=0.001)
+            log_prior_noisevariance =  gamma.logpdf(noisevariance, a=1, scale=0.001)
+            # log_prior_noisevariance = log_prior_norm(log_noisevariance, noisevariance_bounds[0], noisevariance_bounds[1])
+
+            # Log prior for amplitude squared (Gamma)
+            log_prior_amplitude_squared = gamma.logpdf(amplitude_squared, a=1, scale=0.1)
+
+            # Log prior for length scales 
+            log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+            # log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+            # log_prior_lengthscales = sum(uniform.logpdf(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]-lengthscales_bounds[0]) for log_lengthscale in log_lengthscales)
+            # log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
+            
+            log_prior += log_prior_noisevariance + log_prior_amplitude_squared + log_prior_lengthscales
+            # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
         return log_likelihood + log_prior
 
 
@@ -835,20 +868,38 @@ class Model_George(Model):
 
     def extract_hyperparameters(self, model, kernel_type):
         params = model.get_parameter_vector()
-        if kernel_type == 'RBF' or kernel_type == 'Matern32' or kernel_type == 'Matern52':
-        
+        if(model.kernel.kernel_type==13):
+            T=model.kernel.T
+            Q=model.kernel.Q
             log_noisevariance = params[0]
-            log_amplitude_squared = params[1]
-            log_lengthscales = params[2:]
-
+            log_B = params[1:1+T*Q]
+            log_K = params[1+T*Q:1+T*Q*2]
             noisevariance = np.exp(log_noisevariance)
-            amplitude = np.exp(log_amplitude_squared ) * model.kernel.ndim
-            lengthscales = np.exp(log_lengthscales)
-            # print("amplitude: ", amplitude, "lengthscale ", lengthscales)
-        else:
-            raise Exception("TODO: IMPLEMENT OTHER KERNEL THAN RBF")
+            B = np.exp(log_B)
+            K = np.exp(log_K)
 
-        return noisevariance, amplitude, lengthscales
+            if kernel_type == 'RBF' or kernel_type == 'Matern32' or kernel_type == 'Matern52':
+                log_lengthscales = params[1+T*Q*2:] #### Note that this is log(theta^2)
+                lengthscales = np.sqrt(np.exp(log_lengthscales))
+            else:
+                raise Exception("TODO: IMPLEMENT OTHER KERNEL THAN RBF")
+            return noisevariance, B, K, lengthscales             
+
+        else:
+            if kernel_type == 'RBF' or kernel_type == 'Matern32' or kernel_type == 'Matern52':
+            
+                log_noisevariance = params[0]
+                log_amplitude_squared = params[1]
+                log_lengthscales = params[2:] #### Note that this is log(theta^2)
+
+                noisevariance = np.exp(log_noisevariance)
+                amplitude = np.exp(log_amplitude_squared ) * model.kernel.ndim
+                lengthscales = np.sqrt(np.exp(log_lengthscales))
+                # print("amplitude: ", amplitude, "lengthscale ", lengthscales)
+            else:
+                raise Exception("TODO: IMPLEMENT OTHER KERNEL THAN RBF")
+
+            return noisevariance, amplitude, lengthscales
 
     def train(self, data, **kwargs):
         import george
@@ -863,9 +914,99 @@ class Model_George(Model):
         self.M_last = copy.deepcopy(self.M)
 
         multitask = len(data.I) > 1 
-
+        # multitask =  True
         if multitask:
-            raise Exception("TODO: IMPLEMENT MULTITASK TRAIN")
+
+            if (kwargs['model_latent'] is None):
+                model_latent = data.NI
+            else:
+                model_latent = kwargs['model_latent']
+
+            input_dim = len(data.P[0][0]) 
+            intialguess=[5e-6] + [1]*data.NI*model_latent  +  [5e-6]*data.NI*model_latent + [1]*model_latent*input_dim  
+            
+            intialguess=np.power(10,np.random.randn(1)).tolist() + np.power(10,np.random.randn(data.NI*model_latent)).tolist()  +  np.power(10,np.random.randn(data.NI*model_latent)).tolist() + np.power(10,np.random.randn(input_dim*model_latent)).tolist()
+
+            # intialguess=[1.e-10] + [0.1831, 0.0121, 0.1502, 0.0537] + [1.8125e+00, 2.0024e-01, 5.6251e-03, 1.7371e+03] + [4.4793e+03, 1.3298e-02]
+            
+
+
+            logBK=np.log(intialguess[1:1+2*data.NI*model_latent])
+            if kwargs['model_kern'] == 'RBF':
+                #### Note that intialguess contains theta, but george needs theta^2
+                kernels_list = [george.kernels.ExpSquaredKernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]
+            elif kwargs['model_kern'] == 'Matern32':
+                kernels_list = [george.kernels.Matern32Kernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]   
+            elif kwargs['model_kern'] == 'Matern52':
+                kernels_list = [george.kernels.Matern52Kernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]            
+            else:
+                raise Exception("TODO: IMPLEMENT OTHER KERNELS")
+
+
+            K = george.kernels.LCMKernel(logBK, kernels_list, data.NI, model_latent,ndim=input_dim)
+
+            if kwargs['model_lowrank'] == True:
+                kwargs_variable = {
+                    'min_size': kwargs['model_hodlrleaf'],
+                    'tol': kwargs['model_hodlrtol'],
+                    'tol_abs': kwargs['model_hodlrtol_abs'], # YL: do we need some randomized norm estimator to calculate tol_abs? 
+                    'verbose': int(kwargs['verbose']), 
+                    'debug': int(kwargs['debug']), 
+                    'sym': kwargs['model_hodlr_sym'],
+                    'knn': kwargs['model_hodlr_knn'],
+                    'compress_grad': int(kwargs['model_grad']),
+                    'seed': seed
+                }
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
+            else:
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver)
+
+
+            Ptmp = copy.deepcopy(data.P)
+            Otmp = copy.deepcopy(data.O)
+            xtmp = np.concatenate([Ptmp[i] for i in range(len(Ptmp))])
+            x = np.concatenate([np.concatenate([Ptmp[i], np.ones((len(Ptmp[i]), 1)) * i], axis=1) for i in range(len(Ptmp))])
+            self.y = np.concatenate([Otmp[i] for i in range(len(Otmp))])
+
+            if kwargs['model_lowrank'] == True:
+                print(x.shape)
+                perm,root = self.generate_kd_tree(xtmp)
+                inv_perm = np.empty_like(perm)  
+                x = x[perm]
+                xtmp = xtmp[perm]
+                self.y = self.y[perm]
+
+                for i in range(len(perm)):
+                    inv_perm[perm[i]] = i       
+
+                knn = kwargs['model_hodlr_knn']   
+                nns = np.zeros((len(perm),knn)).astype(int)
+                if(knn>0):
+                    for i in range(len(perm)):
+                        query_point = xtmp[i]
+                        nn = self.k_nearest_neighbors(root, query_point, knn)
+                        k=0
+                        for idx, p, dist in nn:
+                            nns[i,k] = inv_perm[idx]
+                            k = k+1
+                    # print(nns)
+            else:
+                nns = np.zeros((x.shape[0],0)).astype(int)  
+                  
+            self.M.compute(x, nns, yerr=kwargs['model_jitter'])
+            
+            p0 = self.M.get_parameter_vector()
+            # p0[0]=1
+            # p0[1]=1
+            if (kwargs['verbose']):
+                print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)),p0)
+            noisevariance, B, K, lengthscales = self.extract_hyperparameters(self.M,kwargs['model_kern'])
+            print('hyperparameter (linear scale)', noisevariance, B, K, lengthscales)
+            # exit(1)
+            
+            ## YL: The following bounds are for white noise, B, K, theta^2
+            bounds = [(-10, -5)] + [(-10, 6)] * data.NI*model_latent + [(-10, 8)] * data.NI*model_latent  + [(-20, 4)] * input_dim*model_latent
+
         else:
             input_dim = len(data.P[0][0])
             # set initial guess
@@ -873,6 +1014,7 @@ class Model_George(Model):
             # intialguess=[np.power(10,np.random.randn(1)), np.power(10,np.random.randn(1))] + [np.power(10,np.random.randn(1))]*input_dim
 
             if kwargs['model_kern'] == 'RBF':
+                #### Note that intialguess contains theta, but george needs theta^2
                 K = george.kernels.ExpSquaredKernel(metric=np.array(intialguess[2:]), ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude 
@@ -903,45 +1045,44 @@ class Model_George(Model):
             else:
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver)
 
-        x = copy.deepcopy(data.P[0])
-        self.y = copy.deepcopy(data.O[0])
 
-        if kwargs['model_lowrank'] == True:
-            print(x.shape)
-            perm,root = self.generate_kd_tree(x)
-            inv_perm = np.empty_like(perm)  
-            x = x[perm]
-            self.y = self.y[perm]
+            x = copy.deepcopy(data.P[0])
+            self.y = copy.deepcopy(data.O[0])
 
-            for i in range(len(perm)):
-                inv_perm[perm[i]] = i       
+            if kwargs['model_lowrank'] == True:
+                print(x.shape)
+                perm,root = self.generate_kd_tree(x)
+                inv_perm = np.empty_like(perm)  
+                x = x[perm]
+                self.y = self.y[perm]
 
-            knn = kwargs['model_hodlr_knn']   
-            nns = np.zeros((len(perm),knn)).astype(int)
-            if(knn>0):
                 for i in range(len(perm)):
-                    query_point = x[i]
-                    nn = self.k_nearest_neighbors(root, query_point, knn)
-                    k=0
-                    for idx, p, dist in nn:
-                        nns[i,k] = inv_perm[idx]
-                        k = k+1
-                # print(nns)
+                    inv_perm[perm[i]] = i       
 
-
-        self.M.compute(x, nns, yerr=kwargs['model_jitter'])
-        
-        p0 = self.M.get_parameter_vector()
-        # p0[0]=1
-        # p0[1]=1
-        if (kwargs['verbose']):
-            print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)),p0)
-        noise_variance, amplitude, lengthscale = self.extract_hyperparameters(self.M,kwargs['model_kern'])
-        # print(noise_variance, amplitude, lengthscale)
-        # exit(1)
-        
-        ## YL: Note that I'm not setting a large range for variance [(-30, 5)], otherwise it's hard for jittering to take effect 
-        bounds = [(-15, -10)] + [(-30, 5)] + [(-23, 2)] * input_dim
+                knn = kwargs['model_hodlr_knn']   
+                nns = np.zeros((len(perm),knn)).astype(int)
+                if(knn>0):
+                    for i in range(len(perm)):
+                        query_point = x[i]
+                        nn = self.k_nearest_neighbors(root, query_point, knn)
+                        k=0
+                        for idx, p, dist in nn:
+                            nns[i,k] = inv_perm[idx]
+                            k = k+1
+                    # print(nns)
+            self.M.compute(x, nns, yerr=kwargs['model_jitter'])
+            
+            p0 = self.M.get_parameter_vector()
+            # p0[0]=1
+            # p0[1]=1
+            if (kwargs['verbose']):
+                print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)),p0)
+            noise_variance, amplitude, lengthscale = self.extract_hyperparameters(self.M,kwargs['model_kern'])
+            # print(noise_variance, amplitude, lengthscale)
+            # exit(1)
+            
+            ## YL: Note that I'm not setting a large range for variance [(-30, 5)], otherwise it's hard for jittering to take effect 
+            bounds = [(-15, -10)] + [(-30, 5)] + [(-23, 2)] * input_dim
         
 
         
@@ -989,7 +1130,41 @@ class Model_George(Model):
         iteration = resopt.nfev
         # Dump the hyperparameters
         if multitask:
-            raise Exception("TODO: IMPLEMENT MULTITASK TRAIN")
+
+
+            hyperparameters = {
+                "lengthscale": [],
+                "B_W": [],
+                "B_kappa": [],
+                "noise_variance": []
+            }
+            model_stats = {
+                "log_marginal_likelihood": self.M.log_likelihood(np.ravel(self.y))
+            }
+
+
+            modeling_options = {}
+            modeling_options["model_kern"] = kwargs["model_kern"]
+            if 'model_lowrank' in kwargs and kwargs["model_lowrank"]:
+                modeling_options["model_lowrank"] = "yes"
+            else:
+                modeling_options["model_lowrank"] = "no"
+            modeling_options["multitask"] = "yes"
+
+            noisevariance, B, K, lengthscales = self.extract_hyperparameters(self.M,kwargs['model_kern'])
+
+            hyperparameters["lengthscale"] = lengthscales
+            hyperparameters["B_W"] = B
+            hyperparameters["B_kappa"] = K
+            hyperparameters["noise_variance"] = [noisevariance]
+
+            if kwargs.get('verbose', True):
+                print("lengthscale:", hyperparameters["lengthscale"])
+                print("noise_variance:", hyperparameters["noise_variance"])
+                print("B_W:", hyperparameters["B_W"])
+                print("B_kappa:", hyperparameters["B_kappa"])
+            print("modeler:", kwargs['model_class'])
+
         else:
             hyperparameters = {
                 "lengthscale": [],
@@ -1037,10 +1212,12 @@ class Model_George(Model):
         else:
             if not len(points.shape) == 2:
                 points = np.atleast_2d(points)
-            x = points
-            # x = np.empty((points.shape[0], points.shape[1] + 1))
-            # x[:,:-1] = points
-            #  x[:,-1] = tid TODO: Add multitask later
+            if(self.M.kernel.kernel_type==13): 
+                x = np.empty((points.shape[0], points.shape[1] + 1))
+                x[:,:-1] = points
+                x[:,-1] = tid                
+            else:           
+                x = points
             mu, var = self.M.predict(np.ravel(self.y), x, return_var=not full_cov)
             mu = mu[:, np.newaxis]
             var = var[:, np.newaxis]
@@ -1049,10 +1226,15 @@ class Model_George(Model):
             return (mu, var)
 
     def predict_last(self, points : Collection[np.ndarray], tid : int, **kwargs) -> Collection[Tuple[float, float]]:
-        x = points
-        # x = np.empty((points.shape[0], points.shape[1] + 1))
-        # x[:,:-1] = points
-        #  x[:,-1] = tid TODO: Add multitask later
+        if not len(points.shape) == 2:
+            points = np.atleast_2d(points)
+        if(model.kernel.kernel_type==13): 
+            x = np.empty((points.shape[0], points.shape[1] + 1))
+            x[:,:-1] = points
+            x[:,-1] = tid                
+        else:           
+            x = points
+            
         if self.M_last != None:
             mu, var = self.M_last.predict(np.ravel(self.y), x, return_var=not full_cov)
         else:
@@ -1075,21 +1257,57 @@ class Model_George(Model):
                     seed += len(P_)
             np.random.seed(seed)
 
+
         if modeling_options["multitask"] == "yes":
-            raise Exception("TODO: IMPLEMENT multitask")
+            input_dim = data.P.shape[1] if data.P.ndim > 1 else 1
+            intialguess = hyperparameters["noise_variance"] + hyperparameters["B_W"] + hyperparameters["B_kappa"] + hyperparameters["lengthscale"]
+            if (kwargs['model_latent'] is None):
+                model_latent = data.NI
+            else:
+                model_latent = kwargs['model_latent']
+            logBK=np.log(intialguess[1:1+2*data.NI*model_latent])
+
+            if kwargs['model_kern'] == 'RBF':
+                kernels_list = [george.kernels.ExpSquaredKernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]
+            elif kwargs['model_kern'] == 'Matern32':
+                kernels_list = [george.kernels.Matern32Kernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]   
+            elif kwargs['model_kern'] == 'Matern52':
+                kernels_list = [george.kernels.Matern52Kernel(metric=np.array(intialguess[1+data.NI*model_latent*2+k*input_dim:1+data.NI*model_latent*2+(k+1)*input_dim])**2, ndim=input_dim) for k in range(model_latent)]            
+            else:
+                raise Exception("TODO: IMPLEMENT OTHER KERNELS")
+
+            K = george.kernels.LCMKernel(logBK, kernels_list, data.NI, model_latent,ndim=input_dim)
+
+            if kwargs['model_lowrank'] == True:
+                kwargs_variable = {
+                    'min_size': kwargs['model_hodlrleaf'],
+                    'tol': kwargs['model_hodlrtol'],
+                    'tol_abs': kwargs['model_hodlrtol_abs'], # YL: do we need some randomized norm estimator to calculate tol_abs? 
+                    'verbose': int(kwargs['verbose']), 
+                    'debug': int(kwargs['debug']), 
+                    'sym': kwargs['model_hodlr_sym'],
+                    'knn': kwargs['model_hodlr_knn'],
+                    'compress_grad': int(kwargs['model_grad']),
+                    'seed': seed
+                }
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
+            else:
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver)
+
+
         else:
             input_dim = data.P.shape[1] if data.P.ndim > 1 else 1
             intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
             if modeling_options['model_kern'] == 'RBF':
-                K = george.kernels.ExpSquaredKernel(metric=np.array(intialguess[2:]), ndim=input_dim)
+                K = george.kernels.ExpSquaredKernel(metric=np.array(intialguess[2:])**2, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude 
             elif modeling_options['model_kern'] == 'Matern32':
-                K = george.kernels.Matern32Kernel(metric=np.array(intialguess[2:]), ndim=input_dim)
+                K = george.kernels.Matern32Kernel(metric=np.array(intialguess[2:])**2, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude
             elif modeling_options['model_kern'] == 'Matern52':
-                K = george.kernels.Matern52Kernel(metric=np.array(intialguess[2:]), ndim=input_dim)
+                K = george.kernels.Matern52Kernel(metric=np.array(intialguess[2:])**2, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude  
             else:

@@ -354,10 +354,10 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
                 plt.show(block=False)
                 plt.pause(0.5)
                 # input("Press [enter] to continue.")
-                if(optimizer=='Gpy_optimizer'):
-                    fig.savefig('obj_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
+                if(lowrank==False):
+                    fig.savefig('obj_%s_N_%s_tid_%s.pdf'%(optimizer,int(NS_input - 1),tid))
                 else:
-                    fig.savefig('obj_%s_N_%s_tol_%s.pdf'%(optimizer,int(NS_input - 1),options['model_hodlrtol']))
+                    fig.savefig('obj_%s_N_%s_tol_%s_tid_%s.pdf'%(optimizer,int(NS_input - 1),options['model_hodlrtol'],tid))
 
 
 
@@ -457,7 +457,7 @@ def plotting(objective, objtype):
     # NS = [201, 401, 801, 1601, 3201, 6401]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [204801]
+    NS = [6401]
     
     for elem in NS:
         hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
@@ -480,11 +480,11 @@ def plotting(objective, objtype):
         model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
-        model_time_gpy.append(gpy_stats.get("time_model"))
-        model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
-        search_time_gpy.append(gpy_stats.get("time_search"))
-        model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
+        # gpy_stats = model_runtime(model="Model_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
+        # model_time_gpy.append(gpy_stats.get("time_model"))
+        # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
+        # search_time_gpy.append(gpy_stats.get("time_search"))
+        # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
      
     
 
