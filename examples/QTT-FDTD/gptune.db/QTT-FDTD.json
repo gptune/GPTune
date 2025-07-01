@@ -1,0 +1,708 @@
+{
+  "tuning_problem_name": "QTT-FDTD",
+  "tuning_problem_category": null,
+  "surrogate_model": [
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1,
+          0.37679926240019185
+        ],
+        "variance": [
+          240.24834885067085
+        ],
+        "noise_variance": [
+          4.910406956594168e-06
+        ]
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -6.594513085091773
+      },
+      "task_parameters": [
+        [
+          "5"
+        ]
+      ],
+      "function_evaluations": [],
+      "input_space": [
+        {
+          "name": "L",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "deriv_order",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "2",
+            "4",
+            "6"
+          ]
+        },
+        {
+          "name": "eta",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "time",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        },
+        {
+          "name": "E_diff",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "time",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": 0,
+        "upper_bound": 1.7976931348623157e+308,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 24,
+        "tm_sec": 48,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "78533de4-564c-11f0-aef1-0040a686cabd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1,
+          1
+        ],
+        "variance": [
+          1
+        ],
+        "noise_variance": [
+          5.0000500000000005e-06
+        ]
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -1.086187813944841e+53
+      },
+      "task_parameters": [
+        [
+          "5"
+        ]
+      ],
+      "function_evaluations": [],
+      "input_space": [
+        {
+          "name": "L",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "deriv_order",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "2",
+            "4",
+            "6"
+          ]
+        },
+        {
+          "name": "eta",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "time",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        },
+        {
+          "name": "E_diff",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "E_diff",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": 0,
+        "upper_bound": 1.7976931348623157e+308,
+        "optimize": true,
+        "objective_id": 1
+      },
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 24,
+        "tm_sec": 49,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "78b3a152-564c-11f0-aef1-0040a686cabd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1,
+          0.6300244110197449
+        ],
+        "variance": [
+          557.8880733018052
+        ],
+        "noise_variance": [
+          9.980058072720905e-06
+        ]
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -4.859552242498213
+      },
+      "task_parameters": [
+        [
+          "5"
+        ]
+      ],
+      "function_evaluations": [],
+      "input_space": [
+        {
+          "name": "L",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "deriv_order",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "2",
+            "4",
+            "6"
+          ]
+        },
+        {
+          "name": "eta",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "time",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        },
+        {
+          "name": "E_diff",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "time",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": 0,
+        "upper_bound": 1.7976931348623157e+308,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 27,
+        "tm_sec": 13,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "cefbfa46-564c-11f0-b015-0040a686cabd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1,
+          1
+        ],
+        "variance": [
+          1
+        ],
+        "noise_variance": [
+          5.0000500000000005e-06
+        ]
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -4.758844924771306e+60
+      },
+      "task_parameters": [
+        [
+          "5"
+        ]
+      ],
+      "function_evaluations": [],
+      "input_space": [
+        {
+          "name": "L",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ]
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "deriv_order",
+          "transformer": "onehot",
+          "type": "categorical",
+          "categories": [
+            "2",
+            "4",
+            "6"
+          ]
+        },
+        {
+          "name": "eta",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "time",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        },
+        {
+          "name": "E_diff",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": 0,
+          "upper_bound": 1.7976931348623157e+308,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "E_diff",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": 0,
+        "upper_bound": 1.7976931348623157e+308,
+        "optimize": true,
+        "objective_id": 1
+      },
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 27,
+        "tm_sec": 14,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "cf675ae8-564c-11f0-b015-0040a686cabd"
+    }
+  ],
+  "func_eval": [
+    {
+      "task_parameter": {
+        "L": "5"
+      },
+      "tuning_parameter": {
+        "deriv_order": "2",
+        "eta": 0.172802
+      },
+      "constants": {
+        "nodes": 1,
+        "cores": 128
+      },
+      "machine_configuration": {
+        "machine_name": "perlmutter",
+        "milan": {
+          "nodes": 1,
+          "cores": 128
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            5,
+            0,
+            3
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        },
+        "gcc": {
+          "version_split": [
+            11,
+            2,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 16.824166774749756,
+        "E_diff": 0.006107446602899665
+      },
+      "evaluation_detail": {
+        "time": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        },
+        "E_diff": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "RCI_measure",
+      "modeling": "Pilot",
+      "model_class": "Model_GPy_LCM",
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 21,
+        "tm_sec": 59,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "13da32d2-564c-11f0-9304-0040a686cabd"
+    },
+    {
+      "task_parameter": {
+        "L": "5"
+      },
+      "tuning_parameter": {
+        "deriv_order": "2",
+        "eta": 0.240477
+      },
+      "constants": {
+        "nodes": 1,
+        "cores": 128
+      },
+      "machine_configuration": {
+        "machine_name": "perlmutter",
+        "milan": {
+          "nodes": 1,
+          "cores": 128
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            5,
+            0,
+            3
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        },
+        "gcc": {
+          "version_split": [
+            11,
+            2,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 14.051484107971191,
+        "E_diff": 31540837596931850000000000
+      },
+      "evaluation_detail": {
+        "time": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        },
+        "E_diff": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "RCI_measure",
+      "modeling": "Pilot",
+      "model_class": "Model_GPy_LCM",
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 21,
+        "tm_sec": 59,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "13da376e-564c-11f0-9304-0040a686cabd"
+    },
+    {
+      "task_parameter": {
+        "L": "5"
+      },
+      "tuning_parameter": {
+        "deriv_order": "2",
+        "eta": 0.249769
+      },
+      "constants": {
+        "nodes": 1,
+        "cores": 128
+      },
+      "machine_configuration": {
+        "machine_name": "perlmutter",
+        "milan": {
+          "nodes": 1,
+          "cores": 128
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            5,
+            0,
+            3
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        },
+        "gcc": {
+          "version_split": [
+            11,
+            2,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 13.694310665130615,
+        "E_diff": 10645345231341461000000000000
+      },
+      "evaluation_detail": {
+        "time": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        },
+        "E_diff": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "RCI_measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_GPy_LCM",
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 24,
+        "tm_sec": 59,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "7eae6b3c-564c-11f0-aef1-0040a686cabd"
+    },
+    {
+      "task_parameter": {
+        "L": "5"
+      },
+      "tuning_parameter": {
+        "deriv_order": "2",
+        "eta": 2e-06
+      },
+      "constants": {
+        "nodes": 1,
+        "cores": 128
+      },
+      "machine_configuration": {
+        "machine_name": "perlmutter",
+        "milan": {
+          "nodes": 1,
+          "cores": 128
+        }
+      },
+      "software_configuration": {
+        "openmpi": {
+          "version_split": [
+            5,
+            0,
+            3
+          ]
+        },
+        "scalapack": {
+          "version_split": [
+            2,
+            1,
+            0
+          ]
+        },
+        "gcc": {
+          "version_split": [
+            11,
+            2,
+            0
+          ]
+        }
+      },
+      "evaluation_result": {
+        "time": 19.378583669662476,
+        "E_diff": 0.00010179557982701488
+      },
+      "evaluation_detail": {
+        "time": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        },
+        "E_diff": {
+          "evaluations": null,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "RCI_measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_GPy_LCM",
+      "time": {
+        "tm_year": 2025,
+        "tm_mon": 7,
+        "tm_mday": 1,
+        "tm_hour": 0,
+        "tm_min": 27,
+        "tm_sec": 24,
+        "tm_wday": 1,
+        "tm_yday": 182,
+        "tm_isdst": 1
+      },
+      "uid": "d54f83c2-564c-11f0-b015-0040a686cabd"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "tuning_problem_name": "QTT-FDTD",
+  "machine_configuration": {
+    "machine_name": "perlmutter",
+    "milan": {
+      "nodes": 1,
+      "cores": 128
+    }
+  },
+  "software_configuration": {
+    "openmpi": {
+      "version_split": [
+        5,
+        0,
+        3
+      ]
+    },
+    "scalapack": {
+      "version_split": [
+        2,
+        1,
+        0
+      ]
+    },
+    "gcc": {
+      "version_split": [
+        11,
+        2,
+        0
+      ]
+    }
+  },
+  "loadable_machine_configurations": {
+    "perlmutter": {
+      "milan": {
+        "nodes": 1,
+        "cores": 128
+      }
+    }
+  },
+  "loadable_software_configurations": {
+    "openmpi": {
+      "version_split": [
+        5,
+        0,
+        3
+      ]
+    },
+    "scalapack": {
+      "version_split": [
+        2,
+        1,
+        0
+      ]
+    },
+    "gcc": {
+      "version_split": [
+        11,
+        2,
+        0
+      ]
+    }
+  }
+}
