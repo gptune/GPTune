@@ -76,18 +76,18 @@ def main():
 	nprocmax = nodes*cores
 
 	# Define the problem
-	Ls = ['5','6', '7', '8']
+	Ls = ['5','6', '7', '8','9','10']
 
 	# Task parameters
 	L	= Categoricalnorm (Ls, transform="onehot", name="L")
 
 	# Input parameters
 	deriv_order = Categoricalnorm(['2', '4', '6'], transform="onehot", name="deriv_order")
-	eta = Real(0.0, 1.0, transform="normalize", name="eta")
+	eta = Real(0.0, 0.1, transform="normalize", name="eta")
 
 
 	time   = Real(0.0, float("inf"), name="time")
-	E_diff = Real(0.0, float("inf"), name="E_diff")
+	E_diff = Real(0.0, 0.1, name="E_diff")
 
 	IS = Space([L])
 	PS = Space([deriv_order, eta])

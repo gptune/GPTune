@@ -23,7 +23,7 @@ tp=QTT-FDTD
 app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
 echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
 logfile=log.qtt-fdtd
-bash QTT_MLA_MO_RCI.sh -a 4 -b 1 | tee ${logfile} #a: nrun b: nprocmin_pernode 
+bash QTT_MLA_MO_RCI.sh -a 20 -b 1 | tee ${logfile} #a: nrun b: nprocmin_pernode 
 cp gptune.db/QTT-FDTD.json  gptune.db/QTT-FDTD.json_$(timestamp)
 
 # cd $GPTUNEROOT/examples/SuperLU_DIST_RCI
