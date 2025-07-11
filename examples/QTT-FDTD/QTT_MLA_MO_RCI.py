@@ -53,8 +53,8 @@ import math
 def objectives(point):
 	print('objective is not needed when options["RCI_mode"]=True')
 	
-def cst1(eta,deriv_order):
-	return eta <= 1.0 / int(deriv_order) ** 2
+def cst1(lgeta,deriv_order):
+	return math.pow(10, lgeta) <= 1.0 / int(deriv_order) ** 2
 
 def main():
 
@@ -83,14 +83,14 @@ def main():
 
 	# Input parameters
 	deriv_order = Categoricalnorm(['2', '4', '6'], transform="onehot", name="deriv_order")
-	eta = Real(0.0, 0.1, transform="normalize", name="eta")
+	lgeta = Integer(-5, -1, transform="normalize", name="lgeta")
 
 
 	time   = Real(0.0, float("inf"), name="time")
 	E_diff = Real(0.0, 0.1, name="E_diff")
 
 	IS = Space([L])
-	PS = Space([deriv_order, eta])
+	PS = Space([deriv_order, lgeta])
 	OS = Space([time, E_diff])
 
 	constraints = {"cst1" : cst1}

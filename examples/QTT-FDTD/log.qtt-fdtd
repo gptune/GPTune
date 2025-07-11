@@ -1,0 +1,1114 @@
+/global/cfs/cdirs/m2957/liuyangz/my_research/GPTune/examples/QTT-FDTD
+machine: perlmutter processor: milan num_nodes: 1 num_cores: 128
+GPTune History Database Init
+[HistoryDB] Create a JSON file at ./gptune.db/QTT-FDTD.json
+
+
+
+------Starting MLA with 1 tasks and 20 samples each 
+[HistoryDB] Found a history database file
+no history data has been loaded
+time_loaddata: 0.000493702
+NS1:  10
+RCI: GPTune returns
+
+ 0
+export L=5; export deriv_order=2; export eta=0.0010000000; cd /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D; bash runit_Jon.sh | tee a.out; cd -; mv /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D/a.out .
+
+Job Name: 
+Date and Time: Fri 11 Jul 2025 12:19:24 PM PDT
+SLURM Job ID: 
+Opening file: test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0010000000_deriv_order_2_fixppw_True_save_figsFalse_save_dataFalse.py
+init args ['./test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0010000000_deriv_order_2_fixppw_True_save_figsFalse_save_dataFalse.py']
+filter type dissip 0.001 2
+filter_type dissip eta 0.001 deriv_order 2
+map keys B F
+plotting False
+save figs False
+QTT length(s) [5]
+S 0.7071067811865475
+tol(s) [0.001]
+period 9.428090415820632e-14
+wavelength 2.82842712474619e-05
+PPW 7.071067811865475
+te compress E svd
+bonds: {1: None, 2: None}
+cutoffs: {1: 1e-06, 2: 1e-06}
+cutoff modes: {1: 'rsum2', 2: 'rsum2'}
+midpt: False
+compress None 2 0
+init E (<BCType.SYMMETRIC: 2>, <BCType.SYMMETRIC: 2>)
+dx 4e-06 dy 4e-06 dt 9.428090415820633e-15 num tsteps 43
+corrector max bond [4, 4, 4, 4, 4, 4, 4, 4]
+corrector mem size [0.992, 0.992, 0.992, 0.992, 0.992, 0.992, 0.896, 0.992]
+start
+ts[-1]  0  dt  9.428090415820633e-15  nt  0 / 43
+elem multiply tn bond dimension 1
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.01059722900390625
+E dissipation strength 0.001 deriv order 2
+warning: boundary conditions not applied 2
+coeffs [ 1. -2.  1.] 3
+mth deriv gtn_mpo 7
+warning: boundary conditions not applied 2
+coeffs [ 1. -2.  1.] 3
+mth deriv gtn_mpo 7
+evolve E time  0.45289039611816406
+ts[-1]  9.428090415820633e-15  dt  9.428090415820633e-15  nt  1 / 43
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.2823655605316162
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.487762451171875
+ts[-1]  1.8856180831641265e-14  dt  9.428090415820633e-15  nt  2 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4972825050354004
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.3926053047180176
+ts[-1]  2.82842712474619e-14  dt  9.428090415820633e-15  nt  3 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4982435703277588
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4651305675506592
+ts[-1]  3.771236166328253e-14  dt  9.428090415820633e-15  nt  4 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4284977912902832
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.48636937141418457
+ts[-1]  4.714045207910316e-14  dt  9.428090415820633e-15  nt  5 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4878861904144287
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.48681116104125977
+ts[-1]  5.6568542494923793e-14  dt  9.428090415820633e-15  nt  6 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4192471504211426
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.49190568923950195
+ts[-1]  6.599663291074443e-14  dt  9.428090415820633e-15  nt  7 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4920847415924072
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5002329349517822
+ts[-1]  7.542472332656506e-14  dt  9.428090415820633e-15  nt  8 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5564937591552734
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5003163814544678
+ts[-1]  8.485281374238569e-14  dt  9.428090415820633e-15  nt  9 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5007095336914062
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.6958456039428711
+ts[-1]  9.428090415820632e-14  dt  9.428090415820633e-15  nt  10 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.41574835777282715
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.40810322761535645
+ts[-1]  1.0370899457402696e-13  dt  9.428090415820633e-15  nt  11 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4669475555419922
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.42299699783325195
+ts[-1]  1.1313708498984759e-13  dt  9.428090415820633e-15  nt  12 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.47813868522644043
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.6226890087127686
+ts[-1]  1.2256517540566822e-13  dt  9.428090415820633e-15  nt  13 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5186572074890137
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4822714328765869
+ts[-1]  1.3199326582148886e-13  dt  9.428090415820633e-15  nt  14 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.42816662788391113
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4803590774536133
+ts[-1]  1.414213562373095e-13  dt  9.428090415820633e-15  nt  15 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5790059566497803
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4346897602081299
+ts[-1]  1.5084944665313015e-13  dt  9.428090415820633e-15  nt  16 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.42284679412841797
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4193408489227295
+ts[-1]  1.602775370689508e-13  dt  9.428090415820633e-15  nt  17 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.42928314208984375
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.47190332412719727
+ts[-1]  1.6970562748477144e-13  dt  9.428090415820633e-15  nt  18 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4203476905822754
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4773101806640625
+ts[-1]  1.7913371790059208e-13  dt  9.428090415820633e-15  nt  19 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.48279309272766113
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.432159423828125
+ts[-1]  1.8856180831641272e-13  dt  9.428090415820633e-15  nt  20 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.48481154441833496
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.48253846168518066
+ts[-1]  1.9798989873223337e-13  dt  9.428090415820633e-15  nt  21 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4299297332763672
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4812955856323242
+ts[-1]  2.07417989148054e-13  dt  9.428090415820633e-15  nt  22 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4920461177825928
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4818124771118164
+ts[-1]  2.1684607956387466e-13  dt  9.428090415820633e-15  nt  23 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4319906234741211
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4834628105163574
+ts[-1]  2.262741699796953e-13  dt  9.428090415820633e-15  nt  24 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.48427510261535645
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.49002504348754883
+ts[-1]  2.3570226039551594e-13  dt  9.428090415820633e-15  nt  25 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.43065643310546875
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.6735756397247314
+ts[-1]  2.451303508113366e-13  dt  9.428090415820633e-15  nt  26 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4844691753387451
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.6166889667510986
+ts[-1]  2.5455844122715723e-13  dt  9.428090415820633e-15  nt  27 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5971856117248535
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.48264408111572266
+ts[-1]  2.6398653164297787e-13  dt  9.428090415820633e-15  nt  28 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4936215877532959
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4997086524963379
+ts[-1]  2.734146220587985e-13  dt  9.428090415820633e-15  nt  29 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5164299011230469
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5025091171264648
+ts[-1]  2.8284271247461916e-13  dt  9.428090415820633e-15  nt  30 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5619828701019287
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5054290294647217
+ts[-1]  2.922708028904398e-13  dt  9.428090415820633e-15  nt  31 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4957876205444336
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4919321537017822
+ts[-1]  3.0169889330626045e-13  dt  9.428090415820633e-15  nt  32 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4966435432434082
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.43134355545043945
+ts[-1]  3.111269837220811e-13  dt  9.428090415820633e-15  nt  33 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.4418830871582031
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4820704460144043
+ts[-1]  3.2055507413790174e-13  dt  9.428090415820633e-15  nt  34 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.49576568603515625
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5042321681976318
+ts[-1]  3.299831645537224e-13  dt  9.428090415820633e-15  nt  35 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5601141452789307
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5063803195953369
+ts[-1]  3.39411254969543e-13  dt  9.428090415820633e-15  nt  36 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.7314667701721191
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5612704753875732
+ts[-1]  3.4883934538536367e-13  dt  9.428090415820633e-15  nt  37 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5032246112823486
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.6078405380249023
+ts[-1]  3.582674358011843e-13  dt  9.428090415820633e-15  nt  38 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.495851993560791
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.4888930320739746
+ts[-1]  3.6769552621700496e-13  dt  9.428090415820633e-15  nt  39 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.586982011795044
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5117969512939453
+ts[-1]  3.771236166328256e-13  dt  9.428090415820633e-15  nt  40 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5669426918029785
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5263125896453857
+ts[-1]  3.8655170704864624e-13  dt  9.428090415820633e-15  nt  41 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5809981822967529
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5837693214416504
+ts[-1]  3.959797974644669e-13  dt  9.428090415820633e-15  nt  42 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.5311503410339355
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5738027095794678
+ts[-1]  4.0540788788028753e-13  dt  9.428090415820633e-15  nt  43 / 43
+B dissipation strength 0.001 deriv order 2
+evolve B time  0.514331579208374
+E dissipation strength 0.001 deriv order 2
+evolve E time  0.5703871250152588
+wall time 0.5711474418640137
+elapsed time 0 [44.17475199699402]
+average memory 0 [11.035733333333335]
+time per tstep 0 [1.0273198138835817]
+data/pml_point_source_L5_comp/FDTD/w6.664e+13_fixppw/Ezx_data_L=5_nt43.txt
+err diff Ez: 0.0003360482742460636
+elapsed time: 44.17475199699402
+elapsed time [44.174752]
+average memory [11.03573333]
+t/t_steps [1.02731981]
+done
+Job Ended: Fri 11 Jul 2025 12:21:01 PM PDT
+/global/cfs/cdirs/m2957/liuyangz/my_research/GPTune/examples/QTT-FDTD
+time_fun: 96.265283644
+ 1
+export L=5; export deriv_order=4; export eta=0.0100000000; cd /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D; bash runit_Jon.sh | tee a.out; cd -; mv /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D/a.out .
+
+Job Name: 
+Date and Time: Fri 11 Jul 2025 12:21:01 PM PDT
+SLURM Job ID: 
+Opening file: test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0100000000_deriv_order_4_fixppw_True_save_figsFalse_save_dataFalse.py
+init args ['./test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0100000000_deriv_order_4_fixppw_True_save_figsFalse_save_dataFalse.py']
+filter type dissip 0.01 4
+filter_type dissip eta 0.01 deriv_order 4
+map keys B F
+plotting False
+save figs False
+QTT length(s) [5]
+S 0.7071067811865475
+tol(s) [0.001]
+period 9.428090415820632e-14
+wavelength 2.82842712474619e-05
+PPW 7.071067811865475
+te compress E svd
+bonds: {1: None, 2: None}
+cutoffs: {1: 1e-06, 2: 1e-06}
+cutoff modes: {1: 'rsum2', 2: 'rsum2'}
+midpt: False
+compress None 2 0
+init E (<BCType.SYMMETRIC: 2>, <BCType.SYMMETRIC: 2>)
+dx 4e-06 dy 4e-06 dt 9.428090415820633e-15 num tsteps 43
+corrector max bond [4, 4, 4, 4, 4, 4, 4, 4]
+corrector mem size [0.992, 0.992, 0.992, 0.992, 0.992, 0.992, 0.896, 0.992]
+start
+ts[-1]  0  dt  9.428090415820633e-15  nt  0 / 43
+elem multiply tn bond dimension 1
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.014117240905761719
+E dissipation strength 0.01 deriv order 4
+warning: boundary conditions not applied 2
+coeffs [ 1. -4.  6. -4.  1.] 5
+mth deriv gtn_mpo 8
+warning: boundary conditions not applied 2
+coeffs [ 1. -4.  6. -4.  1.] 5
+mth deriv gtn_mpo 8
+evolve E time  0.38165855407714844
+ts[-1]  9.428090415820633e-15  dt  9.428090415820633e-15  nt  1 / 43
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.32720398902893066
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.50284743309021
+ts[-1]  1.8856180831641265e-14  dt  9.428090415820633e-15  nt  2 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.40110278129577637
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.41231679916381836
+ts[-1]  2.82842712474619e-14  dt  9.428090415820633e-15  nt  3 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5043559074401855
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4777498245239258
+ts[-1]  3.771236166328253e-14  dt  9.428090415820633e-15  nt  4 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5821583271026611
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.7403886318206787
+ts[-1]  4.714045207910316e-14  dt  9.428090415820633e-15  nt  5 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.42549943923950195
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4124174118041992
+ts[-1]  5.6568542494923793e-14  dt  9.428090415820633e-15  nt  6 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.47733139991760254
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4804651737213135
+ts[-1]  6.599663291074443e-14  dt  9.428090415820633e-15  nt  7 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.49629759788513184
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.49194955825805664
+ts[-1]  7.542472332656506e-14  dt  9.428090415820633e-15  nt  8 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4337453842163086
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.6787564754486084
+ts[-1]  8.485281374238569e-14  dt  9.428090415820633e-15  nt  9 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4889192581176758
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4857974052429199
+ts[-1]  9.428090415820632e-14  dt  9.428090415820633e-15  nt  10 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.695263147354126
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.41364574432373047
+ts[-1]  1.0370899457402696e-13  dt  9.428090415820633e-15  nt  11 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4781162738800049
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.43357062339782715
+ts[-1]  1.1313708498984759e-13  dt  9.428090415820633e-15  nt  12 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4231903553009033
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4114508628845215
+ts[-1]  1.2256517540566822e-13  dt  9.428090415820633e-15  nt  13 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.47580766677856445
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.40291476249694824
+ts[-1]  1.3199326582148886e-13  dt  9.428090415820633e-15  nt  14 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.49700403213500977
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.49804139137268066
+ts[-1]  1.414213562373095e-13  dt  9.428090415820633e-15  nt  15 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5147972106933594
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4896118640899658
+ts[-1]  1.5084944665313015e-13  dt  9.428090415820633e-15  nt  16 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5611898899078369
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4161348342895508
+ts[-1]  1.602775370689508e-13  dt  9.428090415820633e-15  nt  17 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4862518310546875
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4349701404571533
+ts[-1]  1.6970562748477144e-13  dt  9.428090415820633e-15  nt  18 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5158755779266357
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.40461254119873047
+ts[-1]  1.7913371790059208e-13  dt  9.428090415820633e-15  nt  19 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.3939690589904785
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.48000335693359375
+ts[-1]  1.8856180831641272e-13  dt  9.428090415820633e-15  nt  20 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5049567222595215
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.50313401222229
+ts[-1]  1.9798989873223337e-13  dt  9.428090415820633e-15  nt  21 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5111455917358398
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.48108720779418945
+ts[-1]  2.07417989148054e-13  dt  9.428090415820633e-15  nt  22 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.41435766220092773
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.47421979904174805
+ts[-1]  2.1684607956387466e-13  dt  9.428090415820633e-15  nt  23 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5098268985748291
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.5098237991333008
+ts[-1]  2.262741699796953e-13  dt  9.428090415820633e-15  nt  24 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.42429304122924805
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.5084846019744873
+ts[-1]  2.3570226039551594e-13  dt  9.428090415820633e-15  nt  25 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5564823150634766
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.501542329788208
+ts[-1]  2.451303508113366e-13  dt  9.428090415820633e-15  nt  26 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.7059485912322998
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.5276992321014404
+ts[-1]  2.5455844122715723e-13  dt  9.428090415820633e-15  nt  27 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.499284029006958
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.42470264434814453
+ts[-1]  2.6398653164297787e-13  dt  9.428090415820633e-15  nt  28 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4729273319244385
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.42104196548461914
+ts[-1]  2.734146220587985e-13  dt  9.428090415820633e-15  nt  29 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.48226284980773926
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4090423583984375
+ts[-1]  2.8284271247461916e-13  dt  9.428090415820633e-15  nt  30 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4936847686767578
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.5016269683837891
+ts[-1]  2.922708028904398e-13  dt  9.428090415820633e-15  nt  31 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.5643670558929443
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.5025730133056641
+ts[-1]  3.0169889330626045e-13  dt  9.428090415820633e-15  nt  32 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4258267879486084
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.47673606872558594
+ts[-1]  3.111269837220811e-13  dt  9.428090415820633e-15  nt  33 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.47386765480041504
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.42497944831848145
+ts[-1]  3.2055507413790174e-13  dt  9.428090415820633e-15  nt  34 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4750070571899414
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4297597408294678
+ts[-1]  3.299831645537224e-13  dt  9.428090415820633e-15  nt  35 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.47435474395751953
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.415555477142334
+ts[-1]  3.39411254969543e-13  dt  9.428090415820633e-15  nt  36 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.48005104064941406
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.48398327827453613
+ts[-1]  3.4883934538536367e-13  dt  9.428090415820633e-15  nt  37 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.42854905128479004
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.46563291549682617
+ts[-1]  3.582674358011843e-13  dt  9.428090415820633e-15  nt  38 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4267444610595703
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.46923017501831055
+ts[-1]  3.6769552621700496e-13  dt  9.428090415820633e-15  nt  39 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.42426538467407227
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.4654231071472168
+ts[-1]  3.771236166328256e-13  dt  9.428090415820633e-15  nt  40 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4263880252838135
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.47262096405029297
+ts[-1]  3.8655170704864624e-13  dt  9.428090415820633e-15  nt  41 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.4252207279205322
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.47402477264404297
+ts[-1]  3.959797974644669e-13  dt  9.428090415820633e-15  nt  42 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.41822028160095215
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.6611580848693848
+ts[-1]  4.0540788788028753e-13  dt  9.428090415820633e-15  nt  43 / 43
+B dissipation strength 0.01 deriv order 4
+evolve B time  0.42032694816589355
+E dissipation strength 0.01 deriv order 4
+evolve E time  0.46927928924560547
+wall time 0.4700052738189697
+elapsed time 0 [42.3992178440094]
+average memory 0 [7.1946666666666665]
+time per tstep 0 [0.9860283219537069]
+data/pml_point_source_L5_comp/FDTD/w6.664e+13_fixppw/Ezx_data_L=5_nt43.txt
+err diff Ez: 0.0019902242042188125
+elapsed time: 42.3992178440094
+elapsed time [42.39921784]
+average memory [7.19466667]
+t/t_steps [0.98602832]
+done
+Job Ended: Fri 11 Jul 2025 12:22:32 PM PDT
+/global/cfs/cdirs/m2957/liuyangz/my_research/GPTune/examples/QTT-FDTD
+time_fun: 90.647394509
+ 2
+export L=5; export deriv_order=6; export eta=0.0001000000; cd /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D; bash runit_Jon.sh | tee a.out; cd -; mv /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D/a.out .
+
+Job Name: 
+Date and Time: Fri 11 Jul 2025 12:22:32 PM PDT
+SLURM Job ID: 
+Opening file: test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0001000000_deriv_order_6_fixppw_True_save_figsFalse_save_dataFalse.py
+init args ['./test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0001000000_deriv_order_6_fixppw_True_save_figsFalse_save_dataFalse.py']
+filter type dissip 0.0001 6
+filter_type dissip eta 0.0001 deriv_order 6
+map keys B F
+plotting False
+save figs False
+QTT length(s) [5]
+S 0.7071067811865475
+tol(s) [0.001]
+period 9.428090415820632e-14
+wavelength 2.82842712474619e-05
+PPW 7.071067811865475
+te compress E svd
+bonds: {1: None, 2: None}
+cutoffs: {1: 1e-06, 2: 1e-06}
+cutoff modes: {1: 'rsum2', 2: 'rsum2'}
+midpt: False
+compress None 2 0
+init E (<BCType.SYMMETRIC: 2>, <BCType.SYMMETRIC: 2>)
+dx 4e-06 dy 4e-06 dt 9.428090415820633e-15 num tsteps 43
+corrector max bond [4, 4, 4, 4, 4, 4, 4, 4]
+corrector mem size [0.992, 0.992, 0.992, 0.992, 0.992, 0.992, 0.896, 0.992]
+start
+ts[-1]  0  dt  9.428090415820633e-15  nt  0 / 43
+elem multiply tn bond dimension 1
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.008606910705566406
+E dissipation strength 0.0001 deriv order 6
+warning: boundary conditions not applied 2
+coeffs [  1.  -6.  15. -20.  15.  -6.   1.] 7
+mth deriv gtn_mpo 9
+warning: boundary conditions not applied 2
+coeffs [  1.  -6.  15. -20.  15.  -6.   1.] 7
+mth deriv gtn_mpo 9
+evolve E time  0.2157433032989502
+ts[-1]  9.428090415820633e-15  dt  9.428090415820633e-15  nt  1 / 43
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.2666456699371338
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.31670427322387695
+ts[-1]  1.8856180831641265e-14  dt  9.428090415820633e-15  nt  2 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.29117250442504883
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.2694556713104248
+ts[-1]  2.82842712474619e-14  dt  9.428090415820633e-15  nt  3 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.3427541255950928
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.35849618911743164
+ts[-1]  3.771236166328253e-14  dt  9.428090415820633e-15  nt  4 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.44579291343688965
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.4815804958343506
+ts[-1]  4.714045207910316e-14  dt  9.428090415820633e-15  nt  5 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6581854820251465
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5206115245819092
+ts[-1]  5.6568542494923793e-14  dt  9.428090415820633e-15  nt  6 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5023679733276367
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.4864165782928467
+ts[-1]  6.599663291074443e-14  dt  9.428090415820633e-15  nt  7 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5061600208282471
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5586609840393066
+ts[-1]  7.542472332656506e-14  dt  9.428090415820633e-15  nt  8 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.886960506439209
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.510772705078125
+ts[-1]  8.485281374238569e-14  dt  9.428090415820633e-15  nt  9 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5651650428771973
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5165133476257324
+ts[-1]  9.428090415820632e-14  dt  9.428090415820633e-15  nt  10 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.8272240161895752
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5912566184997559
+ts[-1]  1.0370899457402696e-13  dt  9.428090415820633e-15  nt  11 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5549616813659668
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.4267597198486328
+ts[-1]  1.1313708498984759e-13  dt  9.428090415820633e-15  nt  12 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.8576385974884033
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5014686584472656
+ts[-1]  1.2256517540566822e-13  dt  9.428090415820633e-15  nt  13 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.4381115436553955
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5595638751983643
+ts[-1]  1.3199326582148886e-13  dt  9.428090415820633e-15  nt  14 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.918626070022583
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.8795950412750244
+ts[-1]  1.414213562373095e-13  dt  9.428090415820633e-15  nt  15 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5854086875915527
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5142347812652588
+ts[-1]  1.5084944665313015e-13  dt  9.428090415820633e-15  nt  16 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6935701370239258
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6061570644378662
+ts[-1]  1.602775370689508e-13  dt  9.428090415820633e-15  nt  17 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6593050956726074
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5444276332855225
+ts[-1]  1.6970562748477144e-13  dt  9.428090415820633e-15  nt  18 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6165130138397217
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.586066484451294
+ts[-1]  1.7913371790059208e-13  dt  9.428090415820633e-15  nt  19 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.627063512802124
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6623706817626953
+ts[-1]  1.8856180831641272e-13  dt  9.428090415820633e-15  nt  20 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5989441871643066
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6161515712738037
+ts[-1]  1.9798989873223337e-13  dt  9.428090415820633e-15  nt  21 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6060323715209961
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.7006945610046387
+ts[-1]  2.07417989148054e-13  dt  9.428090415820633e-15  nt  22 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6023163795471191
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.621943473815918
+ts[-1]  2.1684607956387466e-13  dt  9.428090415820633e-15  nt  23 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6906044483184814
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6762609481811523
+ts[-1]  2.262741699796953e-13  dt  9.428090415820633e-15  nt  24 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6197402477264404
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.601348876953125
+ts[-1]  2.3570226039551594e-13  dt  9.428090415820633e-15  nt  25 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6003665924072266
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.590627908706665
+ts[-1]  2.451303508113366e-13  dt  9.428090415820633e-15  nt  26 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6799945831298828
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5904192924499512
+ts[-1]  2.5455844122715723e-13  dt  9.428090415820633e-15  nt  27 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.7200822830200195
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6700844764709473
+ts[-1]  2.6398653164297787e-13  dt  9.428090415820633e-15  nt  28 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.7149620056152344
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5701477527618408
+ts[-1]  2.734146220587985e-13  dt  9.428090415820633e-15  nt  29 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5085172653198242
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5046217441558838
+ts[-1]  2.8284271247461916e-13  dt  9.428090415820633e-15  nt  30 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.49893736839294434
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.48708319664001465
+ts[-1]  2.922708028904398e-13  dt  9.428090415820633e-15  nt  31 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5030758380889893
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.48741817474365234
+ts[-1]  3.0169889330626045e-13  dt  9.428090415820633e-15  nt  32 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5072476863861084
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.494842529296875
+ts[-1]  3.111269837220811e-13  dt  9.428090415820633e-15  nt  33 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5039818286895752
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5016748905181885
+ts[-1]  3.2055507413790174e-13  dt  9.428090415820633e-15  nt  34 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5014100074768066
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.493915319442749
+ts[-1]  3.299831645537224e-13  dt  9.428090415820633e-15  nt  35 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5003693103790283
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.49146056175231934
+ts[-1]  3.39411254969543e-13  dt  9.428090415820633e-15  nt  36 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5017623901367188
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5053725242614746
+ts[-1]  3.4883934538536367e-13  dt  9.428090415820633e-15  nt  37 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.501460075378418
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.7123169898986816
+ts[-1]  3.582674358011843e-13  dt  9.428090415820633e-15  nt  38 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5690972805023193
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5024259090423584
+ts[-1]  3.6769552621700496e-13  dt  9.428090415820633e-15  nt  39 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.7779643535614014
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5162792205810547
+ts[-1]  3.771236166328256e-13  dt  9.428090415820633e-15  nt  40 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5829055309295654
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5278315544128418
+ts[-1]  3.8655170704864624e-13  dt  9.428090415820633e-15  nt  41 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.5439152717590332
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.5962119102478027
+ts[-1]  3.959797974644669e-13  dt  9.428090415820633e-15  nt  42 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.6063811779022217
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6012063026428223
+ts[-1]  4.0540788788028753e-13  dt  9.428090415820633e-15  nt  43 / 43
+B dissipation strength 0.0001 deriv order 6
+evolve B time  0.608933687210083
+E dissipation strength 0.0001 deriv order 6
+evolve E time  0.6010358333587646
+wall time 0.6019670963287354
+elapsed time 0 [49.9554009437561]
+average memory 0 [11.053155555555557]
+time per tstep 0 [1.1617535103199095]
+data/pml_point_source_L5_comp/FDTD/w6.664e+13_fixppw/Ezx_data_L=5_nt43.txt
+err diff Ez: 0.00036407611521698744
+elapsed time: 49.9554009437561
+elapsed time [49.95540094]
+average memory [11.05315556]
+t/t_steps [1.16175351]
+done
+Job Ended: Fri 11 Jul 2025 12:24:10 PM PDT
+/global/cfs/cdirs/m2957/liuyangz/my_research/GPTune/examples/QTT-FDTD
+time_fun: 97.743142970
+ 3
+export L=5; export deriv_order=2; export eta=0.0100000000; cd /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D; bash runit_Jon.sh | tee a.out; cd -; mv /global/cfs/cdirs/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D/a.out .
+
+Job Name: 
+Date and Time: Fri 11 Jul 2025 12:24:10 PM PDT
+SLURM Job ID: 
+Opening file: test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0100000000_deriv_order_2_fixppw_True_save_figsFalse_save_dataFalse.py
+init args ['./test_EM_pml_point_Jz_L_5_tol_1e-3_filter_dissip_eta_0.0100000000_deriv_order_2_fixppw_True_save_figsFalse_save_dataFalse.py']
+filter type dissip 0.01 2
+filter_type dissip eta 0.01 deriv_order 2
+map keys B F
+plotting False
+save figs False
+QTT length(s) [5]
+S 0.7071067811865475
+tol(s) [0.001]
+period 9.428090415820632e-14
+wavelength 2.82842712474619e-05
+PPW 7.071067811865475
+te compress E svd
+bonds: {1: None, 2: None}
+cutoffs: {1: 1e-06, 2: 1e-06}
+cutoff modes: {1: 'rsum2', 2: 'rsum2'}
+midpt: False
+compress None 2 0
+init E (<BCType.SYMMETRIC: 2>, <BCType.SYMMETRIC: 2>)
+dx 4e-06 dy 4e-06 dt 9.428090415820633e-15 num tsteps 43
+corrector max bond [4, 4, 4, 4, 4, 4, 4, 4]
+corrector mem size [0.992, 0.992, 0.992, 0.992, 0.992, 0.992, 0.896, 0.992]
+start
+ts[-1]  0  dt  9.428090415820633e-15  nt  0 / 43
+elem multiply tn bond dimension 1
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.009886741638183594
+E dissipation strength 0.01 deriv order 2
+warning: boundary conditions not applied 2
+coeffs [ 1. -2.  1.] 3
+mth deriv gtn_mpo 7
+warning: boundary conditions not applied 2
+coeffs [ 1. -2.  1.] 3
+mth deriv gtn_mpo 7
+evolve E time  0.2877991199493408
+ts[-1]  9.428090415820633e-15  dt  9.428090415820633e-15  nt  1 / 43
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+normal first deriv
+forward FD mpo
+bc 2 order 0 bc offset_r -1
+first deriv gtn_mpo 3
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.29236721992492676
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+normal first deriv
+backward FD mpo
+bc 2 order 0 bc offset 1
+first deriv gtn_mpo 3
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.40636658668518066
+ts[-1]  1.8856180831641265e-14  dt  9.428090415820633e-15  nt  2 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.31449365615844727
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.36591434478759766
+ts[-1]  2.82842712474619e-14  dt  9.428090415820633e-15  nt  3 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.41254734992980957
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.46508193016052246
+ts[-1]  3.771236166328253e-14  dt  9.428090415820633e-15  nt  4 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.327747106552124
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.3847770690917969
+ts[-1]  4.714045207910316e-14  dt  9.428090415820633e-15  nt  5 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.38140344619750977
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.33384227752685547
+ts[-1]  5.6568542494923793e-14  dt  9.428090415820633e-15  nt  6 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.38367390632629395
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.39490437507629395
+ts[-1]  6.599663291074443e-14  dt  9.428090415820633e-15  nt  7 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.39820384979248047
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.39699220657348633
+ts[-1]  7.542472332656506e-14  dt  9.428090415820633e-15  nt  8 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4011836051940918
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.3939931392669678
+ts[-1]  8.485281374238569e-14  dt  9.428090415820633e-15  nt  9 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4062387943267822
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.40181899070739746
+ts[-1]  9.428090415820632e-14  dt  9.428090415820633e-15  nt  10 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.6972086429595947
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.44632887840270996
+ts[-1]  1.0370899457402696e-13  dt  9.428090415820633e-15  nt  11 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5071046352386475
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.5100412368774414
+ts[-1]  1.1313708498984759e-13  dt  9.428090415820633e-15  nt  12 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.6910936832427979
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.5056817531585693
+ts[-1]  1.2256517540566822e-13  dt  9.428090415820633e-15  nt  13 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.6987426280975342
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.48615503311157227
+ts[-1]  1.3199326582148886e-13  dt  9.428090415820633e-15  nt  14 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5087985992431641
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.49872255325317383
+ts[-1]  1.414213562373095e-13  dt  9.428090415820633e-15  nt  15 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5024123191833496
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4675576686859131
+ts[-1]  1.5084944665313015e-13  dt  9.428090415820633e-15  nt  16 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.422274112701416
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.6893889904022217
+ts[-1]  1.602775370689508e-13  dt  9.428090415820633e-15  nt  17 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.504741907119751
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4828336238861084
+ts[-1]  1.6970562748477144e-13  dt  9.428090415820633e-15  nt  18 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4998438358306885
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4781792163848877
+ts[-1]  1.7913371790059208e-13  dt  9.428090415820633e-15  nt  19 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.49579644203186035
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.5879631042480469
+ts[-1]  1.8856180831641272e-13  dt  9.428090415820633e-15  nt  20 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.52667236328125
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.48323941230773926
+ts[-1]  1.9798989873223337e-13  dt  9.428090415820633e-15  nt  21 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.48183345794677734
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.430631160736084
+ts[-1]  2.07417989148054e-13  dt  9.428090415820633e-15  nt  22 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.521643877029419
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.5171036720275879
+ts[-1]  2.1684607956387466e-13  dt  9.428090415820633e-15  nt  23 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5242819786071777
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.5131092071533203
+ts[-1]  2.262741699796953e-13  dt  9.428090415820633e-15  nt  24 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5186975002288818
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4953904151916504
+ts[-1]  2.3570226039551594e-13  dt  9.428090415820633e-15  nt  25 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4811899662017822
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4252042770385742
+ts[-1]  2.451303508113366e-13  dt  9.428090415820633e-15  nt  26 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.684680700302124
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.6968281269073486
+ts[-1]  2.5455844122715723e-13  dt  9.428090415820633e-15  nt  27 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5800139904022217
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.42821455001831055
+ts[-1]  2.6398653164297787e-13  dt  9.428090415820633e-15  nt  28 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.48592305183410645
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4879486560821533
+ts[-1]  2.734146220587985e-13  dt  9.428090415820633e-15  nt  29 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.49204087257385254
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.42720794677734375
+ts[-1]  2.8284271247461916e-13  dt  9.428090415820633e-15  nt  30 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4388744831085205
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.7786469459533691
+ts[-1]  2.922708028904398e-13  dt  9.428090415820633e-15  nt  31 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.5094537734985352
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.48634982109069824
+ts[-1]  3.0169889330626045e-13  dt  9.428090415820633e-15  nt  32 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.49425625801086426
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4830443859100342
+ts[-1]  3.111269837220811e-13  dt  9.428090415820633e-15  nt  33 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4909486770629883
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4331541061401367
+ts[-1]  3.2055507413790174e-13  dt  9.428090415820633e-15  nt  34 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4916360378265381
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.484027624130249
+ts[-1]  3.299831645537224e-13  dt  9.428090415820633e-15  nt  35 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.4943239688873291
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.48421359062194824
+ts[-1]  3.39411254969543e-13  dt  9.428090415820633e-15  nt  36 / 43
+B dissipation strength 0.01 deriv order 2
+evolve B time  0.49044275283813477
+E dissipation strength 0.01 deriv order 2
+evolve E time  0.4306349754333496
+ts[-1]  3.4883934538536367e-13  dt  9.428090415820633e-15  nt  37 / 43
