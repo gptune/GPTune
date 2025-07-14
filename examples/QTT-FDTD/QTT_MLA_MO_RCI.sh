@@ -81,7 +81,7 @@ L=${input_para[0]}
 # get the tuning parameters, the parameters should follow the sequence of definition in the python file
 deriv_order=${tuning_para[0]}
 lgeta=${tuning_para[1]}
-eta=$(echo "scale=10; 10 ^ $lgeta" | bc | sed 's/^\./0./')
+eta=$(echo "scale=10; e($lgeta * l(10))" | bc -l)
 
 RUNDIR="$CFS/m2957/liuyangz/my_research/QTT-FDTD/tns_pde_v4_pr2_new/tests/EM2D"
 
