@@ -31,6 +31,7 @@ class Options(dict):
         shared_memory_parallelism      = False   # Using shared_memory_parallelism for the modeling (one MPI per model restart) and search phase (one MPI per task)
         constraints_evaluation_parallelism = False  # Reserved option
         verbose = False     # Control the verbosity level
+        debug = False     # Control the debug level
         oversubscribe = False     # Set this to True when the physical core count is less than computer.nodes*computer.cores and the --oversubscribe MPI runtime option is used
 
 
@@ -44,7 +45,7 @@ class Options(dict):
 
 
         """ Options for the sampling phase """
-        sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS'
+        sample_class = 'SampleLHSMDU' # Supported sample classes: 'SampleLHSMDU', 'SampleOpenTURNS', 'SampleNUMPY'
         sample_algo = 'LHS-MDU' # Supported sample algorithms in 'SampleLHSMDU': 'LHS-MDU' --Latin hypercube sampling with multidimensional uniformity, 'MCS' --Monte Carlo Sampling
         sample_max_iter = 10**9  # Maximum number of iterations for generating random samples and testing the constraints
         sample_random_seed = None # Specify a certain random seed for the pilot sampling phase.
@@ -69,6 +70,18 @@ class Options(dict):
         model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
+        model_lowrank = False # Whether to use HODLR solver from george or not
+        model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
+        model_mcmc = False # Whether to use Fully BAYESIAN (MCMC) instead of FREQUENTIST (LBFGS)
+        model_mcmc_sampler = 'Ensemble_emcee' # 'Ensemble_emcee': the ensemble sampling from emcee, 'MetropolisHastings', customized MetropolisHastings
+        model_mcmc_burnin = 100 # number of first MCMC samples to be discarded 
+        model_mcmc_nchain = 2 # number of MCMC chains 
+        model_mcmc_maxiter = 500 # max number of samples per chain
+        model_hodlrleaf = 100 # Leafsize of HODLR
+        model_hodlrtol = 1e-1 # Compression tolerance of HODLR
+        model_hodlrtol_abs = 1e-10 # Absolute compression tolerance of HODLR
+        model_hodlr_sym = 0 # Symmetric factorization of HODLR
+        model_hodlr_knn = 0 # KNN in low-rank compression
         model_inducing = None # Number of inducing points for SparseGPRegression or SparseGPCoregionalizedRegression
         model_layers = 2 # Number of layers for Model_DGP
         model_max_jitter_try = 10 # Max number of jittering 
@@ -152,7 +165,7 @@ class Options(dict):
 
 
     def validate(self, computer, **kwargs):
-
+        import pprint
         """  modify the options as needed """
 
         if (os.environ.get('GPTUNE_LITE_MODE') is not None):
@@ -353,4 +366,5 @@ class Options(dict):
                     raise Exception("Reduce one of the options: search_multitask_processes,search_multitask_threads,search_processes,search_threads")
                 if ((computer.cores*computer.nodes)<ncore_obj):
                     raise Exception("Reduce one of the options: objective_multisample_processes,objective_multisample_threads,objective_nprocmax")
-
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(self)

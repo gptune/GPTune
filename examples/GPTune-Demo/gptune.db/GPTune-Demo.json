@@ -1,0 +1,6157 @@
+{
+  "tuning_problem_name": "GPTune-Demo",
+  "tuning_problem_category": null,
+  "surrogate_model": [
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.020972303143205542
+        ],
+        "variance": [
+          0.9874610373381171
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -5.134245660201355
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c051cd8-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.01151547208578696
+        ],
+        "variance": [
+          0.9031433802524714
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -4.18971996523727
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 20,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c7ee81a-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.004821664718696991
+        ],
+        "variance": [
+          0.9088142746026658
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -8.026519149285418
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0cff7bb0-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.004777954548656235
+        ],
+        "variance": [
+          0.9050781162801642
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -9.192142583719711
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 22,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0d6691c4-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.004703100818517638
+        ],
+        "variance": [
+          0.8867850256000742
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -9.460119206944295
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 22,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0db87f84-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0037150143464552803
+        ],
+        "variance": [
+          0.8959219203795918
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -10.33970162131169
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd",
+        "0e38ff7e-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 23,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0e3a6224-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0034836408584148497
+        ],
+        "variance": [
+          0.8794681986344329
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -9.439909508456818
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd",
+        "0e38ff7e-2791-11ef-9128-d6f032b32ecd",
+        "0e93eea2-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 24,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0e95909a-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0034856608285698445
+        ],
+        "variance": [
+          0.9015627119540542
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -7.569217085816556
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd",
+        "0e38ff7e-2791-11ef-9128-d6f032b32ecd",
+        "0e93eea2-2791-11ef-9128-d6f032b32ecd",
+        "0f03deec-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 24,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0f05671c-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0034890752001564373
+        ],
+        "variance": [
+          0.8774688965823849
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -7.653088546866822
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd",
+        "0e38ff7e-2791-11ef-9128-d6f032b32ecd",
+        "0e93eea2-2791-11ef-9128-d6f032b32ecd",
+        "0f03deec-2791-11ef-9128-d6f032b32ecd",
+        "0f5dba20-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 25,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0f5f3ce2-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0036781580285333115
+        ],
+        "variance": [
+          0.926328728366832
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -3.947960666187903
+      },
+      "task_parameters": [
+        [
+          0.0
+        ]
+      ],
+      "function_evaluations": [
+        "0c021c9a-2791-11ef-9128-d6f032b32ecd",
+        "0c0254c6-2791-11ef-9128-d6f032b32ecd",
+        "0c026b50-2791-11ef-9128-d6f032b32ecd",
+        "0c027f96-2791-11ef-9128-d6f032b32ecd",
+        "0c02945e-2791-11ef-9128-d6f032b32ecd",
+        "0c02bede-2791-11ef-9128-d6f032b32ecd",
+        "0c02db26-2791-11ef-9128-d6f032b32ecd",
+        "0c02f6c4-2791-11ef-9128-d6f032b32ecd",
+        "0c031334-2791-11ef-9128-d6f032b32ecd",
+        "0c0332b0-2791-11ef-9128-d6f032b32ecd",
+        "0c7d73cc-2791-11ef-9128-d6f032b32ecd",
+        "0cfe03d4-2791-11ef-9128-d6f032b32ecd",
+        "0d650e80-2791-11ef-9128-d6f032b32ecd",
+        "0db7091a-2791-11ef-9128-d6f032b32ecd",
+        "0e38ff7e-2791-11ef-9128-d6f032b32ecd",
+        "0e93eea2-2791-11ef-9128-d6f032b32ecd",
+        "0f03deec-2791-11ef-9128-d6f032b32ecd",
+        "0f5dba20-2791-11ef-9128-d6f032b32ecd",
+        "1031624e-2791-11ef-9128-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "normalize",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 26,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "10331b2a-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0023794310871470582
+        ],
+        "variance": [
+          0.8630062971387058
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -12.576808180525992
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 4,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "5fba1be2-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.00159508344222966
+        ],
+        "variance": [
+          0.8727310128847979
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -18.42069778411358
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 5,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6029b84e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.2847499241960725e-06
+        ],
+        "variance": [
+          1.0431783606643408
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -39.45241760053551
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 5,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6095b9e0-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0014815425765002579
+        ],
+        "variance": [
+          0.8689296861929942
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -17.608417891580597
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 6,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "60e613ae-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.0715397358578136e-09
+        ],
+        "variance": [
+          1.0391007520956137
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -42.26153211745995
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 7,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6154bf66-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.964969570800306e-10
+        ],
+        "variance": [
+          1.0377934566385612
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -43.681061268534705
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 7,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "61a6a57e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.7982889378110518e-09
+        ],
+        "variance": [
+          1.0530479918090312
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -45.58944986587909
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 8,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "621c52ba-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.197610205395133e-10
+        ],
+        "variance": [
+          1.0676795436427762
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -47.501638626086844
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 9,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6271040e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.18909128002554e-10
+        ],
+        "variance": [
+          1.0645554727124806
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -48.88936460121272
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 9,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "62be8288-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.224524539069609e-10
+        ],
+        "variance": [
+          1.063677358130135
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -50.34280314579788
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 10,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "630b86d2-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.252697790251e-10
+        ],
+        "variance": [
+          1.061886347935159
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -51.7644915336619
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 10,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "63598422-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.188790204651893e-10
+        ],
+        "variance": [
+          1.0590797125842297
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -53.14820535318066
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 11,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "63a7272c-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.569356032154095e-10
+        ],
+        "variance": [
+          1.0577182024636311
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -54.576941850989726
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 11,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "63f4ee44-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          8.712382876350605e-10
+        ],
+        "variance": [
+          1.0556140987219909
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -55.976328925409845
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 12,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "64430390-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          8.105726438128834e-10
+        ],
+        "variance": [
+          1.0559010487815457
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -57.45999447727489
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 12,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6490966e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          8.444009432901763e-10
+        ],
+        "variance": [
+          1.0544868393839386
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -58.87971096474356
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 13,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "64df985e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          8.349537519054149e-10
+        ],
+        "variance": [
+          1.0511122976908316
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -60.220286262338206
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 13,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "65314aa0-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.0005433405578403487
+        ],
+        "variance": [
+          0.8419397065067802
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -13.841283425696219
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 14,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "65801126-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          0.00042071723718283666
+        ],
+        "variance": [
+          0.8322548145390948
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -16.387805063296334
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 15,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "661192b8-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.123183042593224e-10
+        ],
+        "variance": [
+          1.0457606224490432
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -64.40205298163285
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 15,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "668ab68e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.0100794334851295e-09
+        ],
+        "variance": [
+          1.064661073894291
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -66.67177643366588
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd",
+        "66d9314c-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 16,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "66db1af2-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          9.955166995623597e-10
+        ],
+        "variance": [
+          1.0629469104632403
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -68.07925000952426
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd",
+        "66d9314c-2a18-11ef-b238-d6f032b32ecd",
+        "672aa7d4-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 17,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "672c9a8a-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.0116061707036324e-09
+        ],
+        "variance": [
+          1.067395578697001
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -69.75552818653351
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd",
+        "66d9314c-2a18-11ef-b238-d6f032b32ecd",
+        "672aa7d4-2a18-11ef-b238-d6f032b32ecd",
+        "677a7444-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 17,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "677cba60-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.0174630523582004e-09
+        ],
+        "variance": [
+          1.0660301844041131
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -71.1782478341431
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd",
+        "66d9314c-2a18-11ef-b238-d6f032b32ecd",
+        "672aa7d4-2a18-11ef-b238-d6f032b32ecd",
+        "677a7444-2a18-11ef-b238-d6f032b32ecd",
+        "67c9a5a0-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 18,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "67cba242-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "hyperparameters": {
+        "lengthscale": [
+          1.0222730435014356e-09
+        ],
+        "variance": [
+          1.0645828707361045
+        ],
+        "noise_variance": []
+      },
+      "modeling_options": {
+        "model_kern": "RBF",
+        "model_method": "GPRegression",
+        "model_sparse": "no",
+        "multitask": "no"
+      },
+      "model_stats": {
+        "log_marginal_likelihood": -72.59455665417974
+      },
+      "task_parameters": [
+        [
+          1.0
+        ]
+      ],
+      "function_evaluations": [
+        "60275ef0-2a18-11ef-b238-d6f032b32ecd",
+        "6094141e-2a18-11ef-b238-d6f032b32ecd",
+        "60e46388-2a18-11ef-b238-d6f032b32ecd",
+        "61533d1c-2a18-11ef-b238-d6f032b32ecd",
+        "61a52294-2a18-11ef-b238-d6f032b32ecd",
+        "62195e7a-2a18-11ef-b238-d6f032b32ecd",
+        "626f7288-2a18-11ef-b238-d6f032b32ecd",
+        "62bceec8-2a18-11ef-b238-d6f032b32ecd",
+        "6309ed36-2a18-11ef-b238-d6f032b32ecd",
+        "6357e086-2a18-11ef-b238-d6f032b32ecd",
+        "63a5788c-2a18-11ef-b238-d6f032b32ecd",
+        "63f33c20-2a18-11ef-b238-d6f032b32ecd",
+        "644149c4-2a18-11ef-b238-d6f032b32ecd",
+        "648ecb4a-2a18-11ef-b238-d6f032b32ecd",
+        "64dda800-2a18-11ef-b238-d6f032b32ecd",
+        "652f476e-2a18-11ef-b238-d6f032b32ecd",
+        "657d111a-2a18-11ef-b238-d6f032b32ecd",
+        "660ed2b2-2a18-11ef-b238-d6f032b32ecd",
+        "6688c96e-2a18-11ef-b238-d6f032b32ecd",
+        "66d9314c-2a18-11ef-b238-d6f032b32ecd",
+        "672aa7d4-2a18-11ef-b238-d6f032b32ecd",
+        "677a7444-2a18-11ef-b238-d6f032b32ecd",
+        "67c9a5a0-2a18-11ef-b238-d6f032b32ecd",
+        "68186f3c-2a18-11ef-b238-d6f032b32ecd"
+      ],
+      "input_space": [
+        {
+          "name": "t",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 10.0,
+          "optimize": true
+        }
+      ],
+      "parameter_space": [
+        {
+          "name": "x",
+          "transformer": "normalize",
+          "type": "real",
+          "lower_bound": 0.0,
+          "upper_bound": 1.0,
+          "optimize": true
+        }
+      ],
+      "output_space": [
+        {
+          "name": "y",
+          "transformer": "identity",
+          "type": "real",
+          "lower_bound": -Infinity,
+          "upper_bound": Infinity,
+          "optimize": true
+        }
+      ],
+      "modeler": "Model_GPy_LCM",
+      "objective": {
+        "name": "y",
+        "transformer": "identity",
+        "type": "real",
+        "lower_bound": -Infinity,
+        "upper_bound": Infinity,
+        "optimize": true,
+        "objective_id": 0
+      },
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 18,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "681aabb2-2a18-11ef-b238-d6f032b32ecd"
+    }
+  ],
+  "func_eval": [
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.225116
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.943879
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9438791689112391,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c021c9a-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.849643
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.879158
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8791582493031341,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c0254c6-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.59326
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.892026
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8920256407535311,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c026b50-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.023087
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.622946
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.6229462252932902,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c027f96-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.114796
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.18589
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.1858903565915004,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c02945e-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.908107
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.918156
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9181563549274234,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c02bede-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.748635
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.000128
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0001279071221103,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c02db26-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.343179
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.173586
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.1735860958319704,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c02f6c4-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.428554
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.285461
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.2854607738468151,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c031334-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.636798
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.840479
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.840479315276966,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 19,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c0332b0-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.633024
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.844503
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8445031096152629,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 20,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0c7d73cc-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.68157
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.995148
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9951480247843885,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 21,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0cfe03d4-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 1.0
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.0
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9999999999999996,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 22,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0d650e80-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.508677
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.834868
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8348678970662207,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 22,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0db7091a-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.767931
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.019118
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0191178838206267,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 23,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0e38ff7e-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.891861
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.925022
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9250220915937652,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 24,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0e93eea2-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.577031
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.800568
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8005682417219999,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 24,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0f03deec-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.183767
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.99139
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9913904130772816,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 25,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "0f5dba20-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.510986
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.794187
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.7941870400204033,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 26,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "1031624e-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 0.0
+      },
+      "tuning_parameter": {
+        "x": 0.954012
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.701268
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.7012684108767786,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 10,
+        "tm_hour": 18,
+        "tm_min": 22,
+        "tm_sec": 27,
+        "tm_wday": 0,
+        "tm_yday": 162,
+        "tm_isdst": 1
+      },
+      "uid": "109828da-2791-11ef-9128-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.557973
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.02911
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0291100666506667,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16a7c814-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.797655
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.015103
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0151025426113562,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16a8677e-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.511968
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.177033
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.1770328821511113,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16a8cdb8-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.345218
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.838894
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8388939056799392,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16a92a60-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.314972
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.08646
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0864602481504166,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16a9aaa8-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.091721
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.062442
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.062442146336007,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16aa1b1e-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.993958
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.975562
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9755616279536764,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16aa7d20-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.704715
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.974453
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9744532557921389,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16aaecec-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.880529
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.952719
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9527192360336239,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16ab509c-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.253889
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.004116
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0041159650497031,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16abb5a0-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.125926
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.400805
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.4008054857472967,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16ac1c16-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.839273
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.97676
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9767596792442674,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16ac83e0-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.179135
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.813797
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8137972429063316,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16acee84-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.459896
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.775892
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.775891562620697,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16ad59dc-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.745579
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.998998
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9989982843033418,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16adca0c-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.054743
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.322364
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.3223637377547908,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16ae38e8-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.605476
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.987065
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9870649968502726,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16aeaac6-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.232885
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.013861
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.013860632712124,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16af1c2c-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.367594
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.88777
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.8877700065164903,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16af90b2-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.660453
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.04505
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.045049987159478,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 1,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b005b0-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.008973
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.596317
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.596316905460557,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 2,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b07ef0-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.843914
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.967757
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9677568378115442,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 2,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b0f740-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.434488
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.068211
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0682114819819573,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 2,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b171a2-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.598917
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.964832
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9648323467031676,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 2,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b1f17c-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.958433
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.955947
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9559472928982733,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "Pilot",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 34,
+        "tm_sec": 2,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "16b2720a-2a18-11ef-b52c-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.472236
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.943661
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9436607985328681,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 5,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "60275ef0-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.19158
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.951832
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9518315957697011,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 5,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6094141e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.634375
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.037609
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.037608857926555,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 6,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "60e46388-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.169229
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.923979
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9239789487068291,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 7,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "61533d1c-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.772647
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.99914
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9991400219322016,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 7,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "61a52294-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.018248
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.437274
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.4372737070717188,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 8,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "62195e7a-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.118408
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.449777
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.449776675659139,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 9,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "626f7288-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.883496
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.959229
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9592286413445801,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 9,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "62bceec8-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.55767
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.034281
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0342810677109233,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 10,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6309ed36-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.762135
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.999084
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.999083583745854,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 10,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6357e086-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.675249
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.955674
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9556741918031727,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 11,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "63a5788c-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.236554
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.007472
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0074724254389267,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 11,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "63f33c20-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.945951
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.974577
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9745770486007425,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 12,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "644149c4-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.531302
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.066752
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0667524686624232,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 12,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "648ecb4a-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.241229
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.997763
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.997762534230948,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 13,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "64dda800-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.444171
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.905881
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9058807411085178,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 13,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "652f476e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.555348
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.076227
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0762265679120087,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 14,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "657d111a-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.45707
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.74396
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.7439604470986971,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 15,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "660ed2b2-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.402589
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.053096
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.0530962892142877,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 15,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6688c96e-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.047581
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.69958
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.6995796069175768,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 16,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "66d9314c-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.995993
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.982721
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9827206301846775,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 17,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "672aa7d4-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.085049
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 1.255103
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 1.2551027573027522,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 17,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "677a7444-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.760674
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.999755
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9997549156027864,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 18,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "67c9a5a0-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.908903
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.992633
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9926326873375975,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 18,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "68186f3c-2a18-11ef-b238-d6f032b32ecd"
+    },
+    {
+      "task_parameter": {
+        "t": 1.0
+      },
+      "tuning_parameter": {
+        "x": 0.991492
+      },
+      "constants": {},
+      "machine_configuration": {
+        "machine_name": "mymachine",
+        "myprocessor": {
+          "nodes": 1,
+          "cores": 2
+        }
+      },
+      "software_configuration": {},
+      "evaluation_result": {
+        "y": 0.969455
+      },
+      "evaluation_detail": {
+        "y": {
+          "evaluations": 0.9694546058747833,
+          "objective_scheme": "average"
+        }
+      },
+      "additional_output": {},
+      "source": "measure",
+      "modeling": "TLA_LCM",
+      "model_class": "Model_George_HODLR_LCM",
+      "time": {
+        "tm_year": 2024,
+        "tm_mon": 6,
+        "tm_mday": 13,
+        "tm_hour": 23,
+        "tm_min": 36,
+        "tm_sec": 19,
+        "tm_wday": 3,
+        "tm_yday": 165,
+        "tm_isdst": 1
+      },
+      "uid": "6869e8a8-2a18-11ef-b238-d6f032b32ecd"
+    }
+  ]
+}

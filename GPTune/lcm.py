@@ -84,12 +84,22 @@ class LCM(GPy.kern.Kern):
         self.WS    =       np.power(10,np.random.randn(Q * num_outputs))
         # print('why????',self.theta,self.var,self.kappa,self.sigma,self.WS)
 
+
     #     self.theta =  0.54132485 * np.ones(Q * input_dim)
     #     self.var   =  0.54132485 * np.ones(Q)
     #     self.kappa = -0.43275213 * np.ones(Q * num_outputs)
     #     self.sigma =  0.54132485 * np.ones(num_outputs)
     # #        np.random.seed(0)
     #     self.WS    =   .5 * np.random.randn(Q * num_outputs)
+
+
+    #     self.theta =  np.array([4.4793e+03, 1.3298e-02])
+    #     self.var   =  np.ones(Q)
+    #     self.kappa = np.array([1.8125e+00, 5.6251e-03, 2.0024e-01, 1.7371e+03])
+    #     self.sigma =  1.e-10 * np.ones(num_outputs)
+    # #        np.random.seed(0)
+    #     self.WS    =   np.array([0.1831, 0.1502, 0.0121, 0.0537])
+
 
         self.BS    = np.empty(Q * self.num_outputs ** 2)
 
@@ -282,13 +292,15 @@ class LCM(GPy.kern.Kern):
             # print("~~~~")
             (neg_log_marginal_likelihood, g) = mpi_comm.recv(source = 0)
             # print("@@@@")
-            # print(x2,neg_log_marginal_likelihood)
+            # print(x2,neg_log_marginal_likelihood,'aha')
+            # exit(0)
             #print ("g: ", g)
             #print ("iteration: " + str(iteration[0]))
 
             iteration[0] += 1
 
             gradients[:] = g[:]
+            # print('grad',gradients[0],gradients[1],gradients[3])
             if (kwargs['verbose']):
                 sys.stdout.flush()
             if (neg_log_marginal_likelihood < min(history_fs)):
@@ -315,7 +327,7 @@ class LCM(GPy.kern.Kern):
         # x0_log[2]=0
         # x0_log[3]=-10
         # x0_log[4]=-10
-        # print(x0_log,'before')
+        # print(x0,'before')
         # sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
         t3 = time.time_ns()
 
@@ -342,7 +354,8 @@ class LCM(GPy.kern.Kern):
             print('nit      : ', sol.nit)
             print('status   : ', sol.status)
             print('success  : ', sol.success)
-            #print('x        : ', x)
+            # print('x        : ', x)
+            # print('history_fs        : ', history_fs)
     #            xopt = transform_x(sol.x)
     #            fopt = sol.fun
         xopt = history_xs[history_fs.index(min(history_fs))] # history_xs is already transformed
