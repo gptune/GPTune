@@ -47,7 +47,7 @@ EXTRAS = {
         'cloudpickle',           
         'SALib',           
         'scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git',           
-        'ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git',           
+        'ytopt-autotune @ git+https://git@github.com/gptune/autotune.git',           
         'cgp @ git+https://git@github.com/gptune/cGP.git',           
         'hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git',           
     ],

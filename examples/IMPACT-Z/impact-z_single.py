@@ -104,6 +104,12 @@ def objectives(point):                  # should always use this name for user-d
 
 	return [retval] 
 
+def input_var(x):
+    # return np.fabs(np.ones([x.shape[0],x.shape[1]]))
+    return np.fabs(x)*0.05
+    # return np.fabs(x)*0
+    # return np.fabs(np.random.rand(x.shape[0],x.shape[1]))
+
 			
 def main():
 
@@ -167,7 +173,7 @@ def main():
 	print(IS, PS, OS, constraints, models)
 
 	
-	problem = TuningProblem(IS, PS, OS, objectives, constraints, None, constants=constants)
+	problem = TuningProblem(IS, PS, OS, objectives, constraints, models=None, constants=constants, input_var=input_var)
 	computer = Computer(nodes = nodes, cores = cores, hosts = None)  
 
 	""" Set and validate options """	
@@ -179,7 +185,8 @@ def main():
 	# options['model_restart_processes'] = 1
 	options['distributed_memory_parallelism'] = False
 	options['shared_memory_parallelism'] = False
-	options['model_class'] = 'Model_LCM' # 'Model_GPy_LCM'
+	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
+	options['model_kern'] = 'WGP'
 	options['verbose'] = False
 	# options['search_pop_size'] = 10000
 	options['sample_class'] = 'SampleOpenTURNS'

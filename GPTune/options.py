@@ -66,7 +66,7 @@ class Options(dict):
         model_restart_processes = None  # Number of MPIs each handling one random start
         model_restart_threads = None   # Number of threads each handling one random start
         model_optimizer = "lbfgs" # Choosing model optimzer -- 'scg', 'fmin_tnc', 'simplex', 'lbfgsb', 'lbfgs', 'sgd' -- this is called by the paramz module (see https://github.com/sods/paramz/blob/master/paramz/model.py)
-        model_max_iters = 15000   # Number of maximum iterations for the optimizers
+        model_max_iters = 500   # Number of maximum iterations for the optimizers
         model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from Model_GPy_LCM
@@ -106,10 +106,10 @@ class Options(dict):
         search_gen = 100  # Number of evolution generations in pgymo or pymoo
         search_evolve = 10  # Number of times migration in pgymo 
         search_max_iters = 10  # Max number of searches to get results respecting the constraints
-        search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm
+        search_more_samples = 1  # Maximum number of points selected using a multi-objective search algorithm or single-objective search with q-EI/q-UCB 
         search_random_seed = None # Specify a certain random seed for the search phase
-        search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO.
-        search_ucb_beta=0.01 #hyperparameter beta in UCB, UCB-HVI 
+        search_af='EI' #acquisition function: EI, UCB, MSPE, UCB-HVI. MSPE: min-square-prediction-error as implemented in cGP. UCB-HVI: a variant of hypervolume improvement implemented in Accelerator_MOBO. q-UCB: multi-point UCB function in the paper "The reparameterization trick for acquisition functions", 2017. q-EI: multi-point EI function in the paper "The reparameterization trick for acquisition functions", 2017 
+        search_ucb_beta=0.01 #hyperparameter beta in UCB, UCB-HVI and q-UCB
         search_ei_alpha=0.0  #hyperparameter beta in EI, q-EI
         search_bigval=1e12 # return this value when the input constraint is not respected during the search phase
 

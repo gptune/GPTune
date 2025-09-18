@@ -19,18 +19,37 @@ fi
 
 ############### Yang's tr4 machine
 if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
+	
+	module purge
 	module load gcc/9.1.0
     module load openmpi/gcc-9.1.0/4.0.1
     module load scalapack-netlib/gcc-9.1.0/2.0.2
     module load cmake/3.19.2
-
 	module load python/gcc-9.1.0/3.7.4
+	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
 
-	# module swap python python/gcc-9.1.0/3.8.4
+
+	# module purge
+	# module load gcc/9.1.0
+    # module load openmpi/gcc-9.1.0/4.0.1
+    # module load scalapack-netlib/gcc-9.1.0/2.0.2
+    # module load cmake/3.19.2	
+	# module load python/gcc-9.1.0/3.8.4
 	# shopt -s expand_aliases
 	# alias python='python3.8'
 	# alias pip='pip3.8'
-	SCALAPACK_LIB=/home/administrator/Desktop/Software/scalapack-2.0.2/build/lib/libscalapack.so
+
+
+    ################## the following works for the instalation, but at runtime mpi spawn failed, maybe the openmpi installation is not correct
+	# module purge
+	# module load gcc/13.1.0
+    # module load openmpi/gcc-13.1.0/4.0.1
+    # module load scalapack-netlib/gcc-13.1.0/2.2.0
+    # module load cmake/3.19.2	
+	# module load python/gcc-13.1.0/3.12.4
+	
+
+	SCALAPACK_LIB=${SCALAPACK_LIB_DIR}/libscalapack.so
 	BLAS_LIB=/usr/lib/x86_64-linux-gnu/libblas.so
 	LAPACK_LIB=/usr/lib/x86_64-linux-gnu/liblapack.so
 	MPICC=mpicc
@@ -75,7 +94,6 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 else
 	pip install --upgrade --user -r requirements_lite.txt
 fi
-# cp ./patches/opentuner/manipulator.py  /home/administrator/Desktop/Software/Python-3.7.4/lib/python3.7/site-packages/opentuner/search/.
 
 
 cd $GPTUNEROOT
@@ -99,7 +117,8 @@ cmake .. \
 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DGPTUNE_INSTALL_PATH="${SITE_PACKAGE_DIR}"
 make -j32
 make install
 
@@ -107,23 +126,23 @@ make install
 
 if [[ $BuildExample == 1 ]]; then
 
-	cd $GPTUNEROOT/examples/SuperLU_DIST
-	rm -rf superlu_dist
-	git clone https://github.com/xiaoyeli/superlu_dist.git
-	cd superlu_dist
-	# git checkout gpu_trisolve_new
+	# cd $GPTUNEROOT/examples/SuperLU_DIST
+	# rm -rf superlu_dist
+	# git clone https://github.com/xiaoyeli/superlu_dist.git
+	# cd superlu_dist
+	# # git checkout gpu_trisolve_new
 
-	#### the following server is often down, so switch to the github repository 
-	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
-	tar -xf parmetis_4.0.3.orig.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1
-	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+	# #### the following server is often down, so switch to the github repository 
+	# wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+	# tar -xf parmetis_4.0.3.orig.tar.gz
+	# cd parmetis-4.0.3/
+	# cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+	# mkdir -p install
+	# make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+	# make install > make_parmetis_install.log 2>&1
+	# cd ../
+	# cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+	# cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
 
 
 	# mkdir -p $ParMETIS_DIR
@@ -160,41 +179,54 @@ if [[ $BuildExample == 1 ]]; then
 	# make install
 	# cd ..
 
-	mkdir -p build
+	# mkdir -p build
+	# cd build
+	# rm -rf CMakeCache.txt
+	# rm -rf DartConfiguration.tcl
+	# rm -rf CTestTestfile.cmake
+	# rm -rf cmake_install.cmake
+	# rm -rf CMakeFiles
+	# cmake .. \
+	# 	-DCMAKE_CXX_FLAGS="-std=c++11 -DAdd_" \
+	# 	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+	# 	-DBUILD_SHARED_LIBS=ON \
+	# 	-DCMAKE_CXX_COMPILER=$MPICXX \
+	# 	-DCMAKE_C_COMPILER=$MPICC \
+	# 	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	# 	-DCMAKE_BUILD_TYPE=Release \
+	# 	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	# 	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	# 	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	# 	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	# 	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+	# make pddrive_spawn
+	# make pzdrive_spawn
+	# make pddrive3d
+	# make pddrive
+
+
+	cd $GPTUNEROOT/examples/Hypre
+	rm -rf hypre
+	git clone https://github.com/hypre-space/hypre.git
+	cd hypre/src/
+	git checkout v2.19.0
+	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	make
+	cp ../../hypre-driver/src/ij.c ./test/.
+	make test
+
+
+	cd $GPTUNEROOT/examples/IMPACT-Z
+	rm -rf IMPACT-Z
+	git clone https://github.com/impact-lbl/IMPACT-Z.git
+	cd IMPACT-Z
+	git checkout f98eedd2afe8b7e9f20bb72831496b66def334b7  # the Jun 2021 commit that GPTune was able to run
+	cp ../impact-z-driver/*.f90 ./src/Contrl/.
+	mkdir -p build 
 	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-std=c++11 -DAdd_" \
-		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn
-	make pzdrive_spawn
-	make pddrive3d
-	make pddrive
-
-
-	# cd $GPTUNEROOT/examples/Hypre
-	# rm -rf hypre
-	# git clone https://github.com/hypre-space/hypre.git
-	# cd hypre/src/
-	# git checkout v2.19.0
-	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	# make
-	# cp ../../hypre-driver/src/ij.c ./test/.
-	# make test
+	cmake ../src -DUSE_MPI=ON -DCMAKE_Fortran_COMPILER=$MPIF90 -DCMAKE_BUILD_TYPE=Release 
+	make
+	# mpirun -n 4 ./ImpactZexe-mpi 0 0 0 0 0
 
 
 	# cd $GPTUNEROOT/examples/ButterflyPACK
@@ -355,37 +387,64 @@ if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
 	cd mpi4py/
 	python setup.py build --mpicc="$MPICC -shared"
 	python setup.py install --user
-	# env CC=mpicc pip install --user -e .								  
+	# env CC=mpicc pip install --user -e .		
+
+
+	version=$(python --version 2>&1)
+	PyMINOR=$(echo "$version" | grep -oP 'Python \K[0-9]+\.[0-9]+' | cut -d. -f2)
+
+	if [ "$PyMINOR" -gt 8 ]; then
+		#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo.   
+		
+		cd $GPTUNEROOT
+		export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+		export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
+		export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
+		export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
+		cd $GPTUNEROOT
+		rm -rf oneTBB
+		git clone https://github.com/oneapi-src/oneTBB.git
+		cd oneTBB
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+		make -j
+		make install
+		git clone https://github.com/wjakob/tbb.git
+		cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+
+		cd $GPTUNEROOT
+		rm -rf download
+		wget -c 'http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.bz2/download'
+		tar -xvf download
+		cd boost_1_78_0/
+		./bootstrap.sh --prefix=$PWD/build
+		./b2 install
+
+		cd $GPTUNEROOT
+		rm -rf pagmo2
+		git clone https://github.com/esa/pagmo2.git
+		cd pagmo2
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+		make -j
+		make install
+		cp lib/cmake/pagmo/*.cmake . 
+
+		cd $GPTUNEROOT
+		rm -rf pygmo2
+		git clone https://github.com/esa/pygmo2.git
+		cd pygmo2
+		mkdir build
+		cd build
+		cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DPYGMO_INSTALL_PATH="${SITE_PACKAGE_DIR}" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${pybind11_DIR}
+		make -j
+		make install
+	fi
+
+
 fi
-
-
-# cd $GPTUNEROOT
-# rm -rf scikit-optimize
-# git clone https://github.com/scikit-optimize/scikit-optimize.git
-# cd scikit-optimize/
-# cp ../patches/scikit-optimize/space.py skopt/space/.
-# python setup.py build 
-# python setup.py install --user
-# # env CC=mpicc pip install --user -e .								  
-
-# cd $GPTUNEROOT
-# rm -rf cGP
-# git clone https://github.com/gptune/cGP
-# cd cGP/
-# python setup.py install --user
-
-
-# cd $GPTUNEROOT
-# rm -rf autotune
-# git clone https://github.com/ytopt-team/autotune.git
-# cd autotune/
-# env CC=$MPICC pip install --user -e .
-
-# cd $GPTUNEROOT
-# rm -rf hybridMinimization
-# git clone https://github.com/gptune/hybridMinimization.git
-# cd hybridMinimization/
-# python setup.py install --user
 
 
 

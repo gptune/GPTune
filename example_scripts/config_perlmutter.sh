@@ -7,17 +7,25 @@ if [[ $NERSC_HOST != "perlmutter" ]]; then
 	exit
 fi
 
+source /opt/cray/pe/cpe/23.12/restore_lmod_system_defaults.sh
 module load cpe/23.03 
 
-PY_VERSION=3.9
-PY_TIME=2021.11
-
+#################
+# Note that the following module versions need to be updated over time 
+#################
+PY_VERSION=3.11
+# PY_TIME=2021.11
+GCC_VERSION=11.2.0
+LIBSCI_VERSION=23.02.1.1
+MPICH_VERSION=8.1.25
+OPENMPI_VERSION=5.0.3
+CUDA_VERSION=11.7
 
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/perlmutter/
 rm -rf ~/.local/lib/python$PY_VERSION
-module load python/$PY_VERSION-anaconda-$PY_TIME
-PREFIX_PATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/
+module load python/$PY_VERSION
+PREFIX_PATH=~/.local/perlmutter/python-$PY_VERSION/
 
 
 echo $(which python) 
@@ -34,7 +42,7 @@ mpi=openmpi    # craympich, openmpi
 compiler=gnu   # gnu, intel	
 
 
-BuildExample=1 # whether to build all examples
+BuildExample=0 # whether to build all examples
 
 export ModuleEnv=$machine-$proc-$mpi-$compiler
 
@@ -46,7 +54,10 @@ echo "The ModuleEnv is $ModuleEnv"
 if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
-	module load cudatoolkit
+	module load gcc/${GCC_VERSION}
+	module load cray-libsci/${LIBSCI_VERSION}
+	module load cray-mpich/${MPICH_VERSION}	
+	module load cudatoolkit/${CUDA_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
@@ -64,6 +75,9 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
+	module load cray-libsci/${LIBSCI_VERSION}
+	module load cray-mpich/${MPICH_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
@@ -79,12 +93,14 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
 	module unload cray-libsci
 	module unload cray-mpich
 	module unload openmpi
-	module load openmpi
+	module load openmpi/${OPENMPI_VERSION}
 	module unload darshan
-	module load cudatoolkit
+	module load cudatoolkit/${CUDA_VERSION}
+
 
 	GPTUNEROOT=$PWD
     BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
@@ -105,10 +121,11 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
+	module load gcc/${GCC_VERSION}
 	module unload cray-libsci
 	module unload cray-mpich
 	module unload openmpi
-	module load openmpi
+	module load openmpi/${OPENMPI_VERSION}
 	module unload darshan
 
 	GPTUNEROOT=$PWD
@@ -129,7 +146,8 @@ else
     exit
 fi 
 
-export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+# export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
+export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
 export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
@@ -169,9 +187,9 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_intel.txt
+	env CC=$MPICC pip install --user -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --prefix=$PREFIX_PATH -r requirements_perlmutter.txt
+	env CC=$MPICC pip install --user -r requirements_perlmutter.txt
 fi
 # cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
@@ -497,47 +515,47 @@ fi
 
 
 
-cd $GPTUNEROOT
-rm -rf oneTBB
-git clone https://github.com/oneapi-src/oneTBB.git
-cd oneTBB
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
-make -j16
-make install
-git clone https://github.com/wjakob/tbb.git
-cp tbb/include/tbb/tbb_stddef.h include/tbb/.
+# cd $GPTUNEROOT
+# rm -rf oneTBB
+# git clone https://github.com/oneapi-src/oneTBB.git
+# cd oneTBB
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+# make -j16
+# make install
+# git clone https://github.com/wjakob/tbb.git
+# cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
-cd $GPTUNEROOT
-rm -rf download
-wget -c 'http://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.bz2/download'
-tar -xvf download
-cd boost_1_69_0/
-./bootstrap.sh --prefix=$PWD/build
-./b2 install
-export BOOST_ROOT=$GPTUNEROOT/boost_1_69_0/build
+# cd $GPTUNEROOT
+# rm -rf download
+# wget -c 'http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.bz2/download'
+# tar -xvf download
+# cd boost_1_78_0/
+# ./bootstrap.sh --prefix=$PWD/build
+# ./b2 install
+# export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
 
-cd $GPTUNEROOT
-rm -rf pagmo2
-git clone https://github.com/esa/pagmo2.git
-cd pagmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
-make -j16
-make install
-cp lib/cmake/pagmo/*.cmake . 
+# cd $GPTUNEROOT
+# rm -rf pagmo2
+# git clone https://github.com/esa/pagmo2.git
+# cd pagmo2
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_INSTALL_LIBDIR=$PWD/lib
+# make -j16
+# make install
+# cp lib/cmake/pagmo/*.cmake . 
 
-cd $GPTUNEROOT
-rm -rf pygmo2
-git clone https://github.com/esa/pygmo2.git
-cd pygmo2
-mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
-make -j16
-make install
+# cd $GPTUNEROOT
+# rm -rf pygmo2
+# git clone https://github.com/esa/pygmo2.git
+# cd pygmo2
+# mkdir build
+# cd build
+# cmake ../ -DCMAKE_INSTALL_PREFIX=$PREFIX_PATH -DPYGMO_INSTALL_PATH="${PREFIX_PATH}/lib/python$PY_VERSION/site-packages" -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -Dpagmo_DIR=${GPTUNEROOT}/pagmo2/build/ -Dpybind11_DIR=${PREFIX_PATH}/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+# make -j16
+# make install
 
 cd $GPTUNEROOT
 rm -rf mpi4py
@@ -568,7 +586,7 @@ python setup.py install --prefix=$PREFIX_PATH
 
 # cd $GPTUNEROOT
 # rm -rf autotune
-# git clone https://github.com/ytopt-team/autotune.git
+# git clone https://github.com/gptune/autotune.git
 # cd autotune/
 # # cp ../patches/autotune/problem.py autotune/.
 # env CC=$MPICC pip install --prefix=$PREFIX_PATH -e .

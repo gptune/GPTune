@@ -13,20 +13,19 @@ Table of Contents
 * [Table of Contents](#table-of-contents)
    * [Features](#features)
    * [Installation](#installation)
+      * [Installation of the lite version](#installation-of-the-lite-version)
       * [Installation using example scripts](#installation-using-example-scripts)
          * [Ubuntu/Debian-like systems supporting apt-get](#ubuntudebian-like-systems-supporting-apt-get)
          * [Mac OS supporting homebrew](#mac-os-supporting-homebrew)
-         * [NERSC Cori](#nersc-cori)
          * [NERSC Perlmutter](#nersc-perlmutter)
          * [OLCF Summit](#olcf-summit)
+         * [OLCF Frontier](#olcf-frontier)
       * [Installation using spack](#installation-using-spack)
-      * [Installation from scratch](#installation-from-scratch)
-      * [Install OpenMPI](#install-openmpi)
+      * [Installation using nix](#installation-using-nix)
+      * [Installation of the full version from scratch](#installation-of-the-full-version-from-scratch)
+         * [Install OpenMPI](#install-openmpi)
          * [Install SCALAPACK](#install-scalapack)
          * [Install mpi4py](#install-mpi4py)
-         * [Install scikit-optimize](#install-scikit-optimize)
-         * [Install autotune](#install-autotune)
-         * [Install cGP](#install-cgp)
          * [Install GPTune](#install-gptune)
       * [Using prebuilt docker images](#using-prebuilt-docker-images)
    * [Examples](#examples)
@@ -70,9 +69,79 @@ Our GPTune website at https://gptune.lbl.gov provides a shared database reposito
 
 ## Installation
 
-### Installation using nix (for single-node systems)
+To best support the various needs of different users, we provide several
+GPTune installation modes, as detailed below. Users may choose an installation mode in the decision tree depending
+on their needs.
 
-Nix may be used to install GPTune and all its dependencies on single-node systems, including personal computers and cloud servers (both with and without root access). Nix pulls in independent copies of GPTune's dependencies, and as a result it will neither affect nor be affected by the state of your system's packages.
+<p align="center">
+  <img src="./Install_decision_tree.png" alt="Installation Decision Tree" width="100%"/>
+  <br>
+  <em>Figure 1: Installation Decision Tree.</em>
+</p>
+
+
+### Installation of the lite version
+The easiest way to install GPTune is to install the lite version of GPTune, which skips many software dependencies required by advanced GPTune features. As a result, the lite version only supports the basic functionalities and the tuning performance can be compromised. The lite version is what we highly recommend to try out first before you decide to use GPTune for more serious tasks.    
+
+GPTune lite version can be installed simply by:
+```
+git clone https://github.com/gptune/GPTune
+cd GPTune 
+pip install --user -r requirements.txt
+```
+In case some packages (particularly openturns or pygmo) in requirements.txt fail to be installed, try:
+```
+export GPTUNE_LITE_MODE=1
+pip install --user -r requirements_lite.txt
+```
+
+### Installation using example scripts
+The following example build scripts are available for a collection of tested systems. 
+
+#### Ubuntu/Debian-like systems supporting apt-get
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
+```
+config_cleanlinux.sh
+```
+Note that this would require superuser (sudo) account of the system. If this is not the case, one can use 
+```
+config_linux.sh
+``` 
+
+#### Mac OS supporting homebrew
+The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
+```
+config_macbook.zsh
+```
+
+#### NERSC Perlmutter
+The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
+```
+config_perlmutter.sh
+```
+
+#### OLCF Summit
+The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
+```
+config_summit.sh
+```
+
+#### OLCF Frontier
+The following script installs GPTune with the PrgEnv-gnu module on Frontier. Note that you can set "proc=EPYC", "mpi=craympich" and "compiler=gnu". Currently, only the RCI mode can be used on Frontier.
+```
+config_frontier.sh
+```
+
+
+### Installation using spack
+One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
+```
+spack install gptune@master
+spack load gptune@master
+```
+
+### Installation using nix
+For single-node systems, Nix may be used to install GPTune and all its dependencies on single-node systems, including personal computers and cloud servers (both with and without root access). Nix pulls in independent copies of GPTune's dependencies, and as a result it will neither affect nor be affected by the state of your system's packages.
 #### 1. Install Nix
 
 **If you have root access,** run this command to automatically install Nix, then immediately proceed to step 2:
@@ -137,50 +206,13 @@ then run
 to enter an environment where the `python` executable has all the dependencies needed.
 
 Alternatively, if you just want the C++ libraries for GPTune (e.g. to link with), run `nix build .#gptune-libs`, which will put the librarires in `result/gptune`.
-### Installation using example scripts
-The following example build scripts are available for a collection of tested systems. 
 
-#### Ubuntu/Debian-like systems supporting apt-get
-The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. If "MPIFromSource=0", you need to set PATH, LIBRARY_PATH, LD_LIBRARY_PATH and MPI compiler wrappers when prompted.
+### Installation of the full version from scratch
+GPTune full version relies on OpenMPI (4.0 or higher) or CrayMPICH (8.1.23 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher) and mpi4py, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
 ```
-config_cleanlinux.sh
-```
+git clone https://github.com/gptune/GPTune
+cd GPTune # this is the GPTUNEROOT directory
 
-#### Mac OS supporting homebrew
-The following script installs everything from scratch and can take up to 2 hours depending on the users' machine specifications. The user may need to set pythonversion, gccversion, openblasversion, lapackversion on the top of the script to the versions supported by your homebrew software. 
-```
-config_macbook.zsh
-```
-
-#### NERSC Cori
-The following script installs GPTune with mpi, python, compiler and cmake modules on Cori. Note that you can set "proc=haswell or knl", "mpi=openmpi or craympich" and "compiler=gnu or intel". Setting mpi=craympich will limit certain GPTune features. Particularly, only the so-called reverse communication interface (RCI) mode can be used, please refer to the user guide for details https://github.com/gptune/GPTune/blob/master/Doc/GPTune_UsersGuide.pdf.
-```
-config_cori.sh
-```
-
-#### NERSC Perlmutter
-The following script installs GPTune with mpi, python, compiler, cudatoolkit and cmake modules on Perlmutter. Note that you need to set "proc=milan #(CPU nodes) or gpu #(GPU nodes)", "mpi=openmpi or craympich" and "compiler=gnu". Setting mpi=craympich will only support the RCI mode.
-```
-config_perlmutter.sh
-```
-
-#### OLCF Summit
-The following script installs GPTune with mpi, python, compiler, cuda and cmake modules on Summit. Note that you can set "proc=power9", "mpi=spectrummpi" and "compiler=gnu". Currently, only the RCI mode can be used on Summit.
-```
-config_summit.sh
-```
-
-
-### Installation using spack
-One can also consider using Spack (https://spack.io/). To install and test GPTune using Spack (the develop branch of the spack github repo is highly recommended), one simply needs:
-```
-spack install gptune@master
-spack load gptune@master
-```
-
-### Installation from scratch
-GPTune relies on OpenMPI (4.0 or higher) or CrayMPICH (8.1.23 or higher), Python (3.7 or higher), BLAS/LAPACK, SCALAPACK (2.1.0 or higher), mpi4py, scikit-optimize, cGP and autotune, which need to be installed by the user. In what follows, we assume Python, BLAS/LAPACK have been installed (with the same compiler version):
-```
 export MPICC=path-to-c-compiler-wrapper  # see next subsection to install OpenMPI from source if one doesn't yet have one installed. 
 export MPICXX=path-to-cxx-compiler-wrapper
 export MPIF90=path-to-f90-compiler-wrapper
@@ -246,34 +278,6 @@ python setup.py install --user
 export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
-#### Install scikit-optimize
-```
-cd $GPTUNEROOT
-git clone https://github.com/scikit-optimize/scikit-optimize.git
-cd scikit-optimize/
-cp ../patches/scikit-optimize/space.py skopt/space/.
-pip install --user -e .
-export PYTHONPATH=$PYTHONPATH:$PWD
-```
-
-#### Install autotune
-autotune contains a common autotuning interface used by GPTune and ytopt. It can be installed as follows:
-```
-cd $GPTUNEROOT
-git clone https://github.com/ytopt-team/autotune.git
-cd autotune/
-pip install --user -e .
-export PYTHONPATH=$PYTHONPATH:$PWD
-```
-
-#### Install cGP
-```
-cd $GPTUNEROOT
-git clone https://github.com/gptune/cGP
-cd cGP/
-python setup.py install 
-```
-
 #### Install GPTune
 GPTune also depends on several external Python libraries as listed in the `requirements.txt` file, including numpy, joblib, scikit-learn, scipy, statsmodels, pyaml, matplotlib, GPy, openturns,lhsmdu, ipyparallel, opentuner, hpbandster, pygmo, filelock, requests, pymoo and cloudpickle. These Python libraries can all be installed through the standard Python repository through the pip tool.
 ```
@@ -321,7 +325,7 @@ The file `demo.py` in the `examples/GPTune-Demo` folder shows how to describe th
 cd $GPTUNEROOT/examples/GPTune-Demo
 
 edit .gptune/meta.json
-$MPIRUN -n 1 python ./demo.py
+python ./demo.py
 
 or 
 edit ../../run_env.sh
@@ -458,7 +462,7 @@ Then, the different kinds of tuning techniques (*MLA, ...*) can be called throug
 
 ## References
 ### Publications
-Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234–246. DOI:https://doi.org/10.1145/3437801.3441621
+Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li. "GPTune: multitask learning for autotuning exascale applications", in Proceedings of the 26th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '21). Association for Computing Machinery, New York, NY, USA, 234-246. DOI:https://doi.org/10.1145/3437801.3441621
 
 ### BibTeX citation
 ```
@@ -471,7 +475,22 @@ Y. Liu, W.M. Sid-Lakhdar, O. Marques, X. Zhu, C. Meng, J.W. Demmel, and X.S. Li.
 }
 ```
 
-### Copyright
+## More Techniques of GPTune
+There are multiple extensions/variants of GPTune tuning techniques, extending the techniques in the first GPTune PPoPP 2021 paper. They are incorporated into this GPTune package or callable from the GPTune interface.
+
+### GPTuneBand (most relevant GPTune function: MB_LCM in gptune.py)
+Xinran Zhu, Yang Liu, Pieter Ghysels, David Bindel, and Xiaoye S. Li. "GPTuneBand: Multi-task and Multi-fidelity Autotuning for Large-scale High Performance Computing Applications", in SIAM Conference on Parallel Processing for Scientific Computing, 2022.
+
+### GPTuneCrowd (most relevant GPTune function: TLA_I in gptune.py)
+Younghyun Cho, James W. Demmel, Jacob King, Xiaoye S. Li, Yang Liu, and Hengrui Luo. "Harnessing the Crowd for Autotuning High-Performance Computing Applications", in IEEE International Parallel and Distributed Processing Symposium (IPDPS), 2023.
+
+### GPTuneHybrid: callable from GPTune interface
+Hengrui Luo, Younghyun Cho, James W Demmel, Xiaoye S Li, Yang Liu. "Hybrid Parameter Search and Dynamic Model Selection for Mixed-Variable Bayesian Optimization", in Journal of Computational and Graphical Statistics, 2024.
+
+### clustered GP (cGP): callable from GPTune interface
+Hengrui Luo, Younghyun Cho, James W Demmel, Igor Kozachenko, Xiaoye S Li, and Yang Liu. "Non-smooth Bayesian optimization in tuning scientific applications", The International Journal of High Performance Computing Applications, 2024.
+
+## Copyright
 GPTune Copyright (c) 2019, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S.Dept. of Energy) and the University of California, Berkeley.
 All rights reserved.
 

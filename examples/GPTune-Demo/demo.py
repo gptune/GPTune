@@ -197,7 +197,7 @@ def main():
     options['sample_class'] = 'SampleLHSMDU'
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
-    options['model_class'] = 'Model_GPy_LCM'#'Model_George'  #'Model_LCM'
+    options['model_class'] = 'Model_GPy_LCM' #'Model_George' 'Model_LCM' 'Model_GPy_LCM' 'Model_GPFlow_LCM'
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
@@ -206,7 +206,7 @@ def main():
     #options['search_class'] = 'SearchSciPy'
     #options['search_algo'] = 'l-bfgs-b'
 
-    options['search_more_samples'] = 4
+    options['search_more_samples'] = 1
     options['search_af']='EI'
     # options['search_pop_size']=1000
     # options['search_ucb_beta']=0.01

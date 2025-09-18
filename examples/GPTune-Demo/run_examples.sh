@@ -10,13 +10,14 @@ app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
 echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
 
 
-# ##########################################################################################
-# ################## Illustrate basic functionalities ######################################
-# tuner=GPTune
-# rm -rf gptune.db/*.json # do not load any database
-# #$RUN
-# python ./demo.py -optimization ${tuner} -ntask 1 -nrun 20
-# ###########################################################################################
+##########################################################################################
+################## Illustrate basic functionalities ######################################
+tuner=GPTune
+rm -rf gptune.db/*.json # do not load any database
+#$RUN
+python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
+# python ./demo_wgp.py -optimization ${tuner} -ntask 1 -nrun 20
+###########################################################################################
 
 # ###########################################################################################
 # ################### Illustrate use of coarse performance model ############################

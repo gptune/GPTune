@@ -1,11 +1,12 @@
 ConfigSpace <= 0.6.0
-numpy < 1.24
+numpy 
 joblib
 scikit-learn 
 scipy >= 1.7.0
 statsmodels >= 0.13.0
 # GPy uses get_cmap of matplotlib, which is depreciated in matplotlib==3.9
 matplotlib < 3.9
+gpflow 
 openturns
 lhsmdu
 ipyparallel
@@ -18,7 +19,8 @@ pymoo
 cloudpickle
 SALib
 termcolor
+wheel
 scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git
-ytopt-autotune @ git+https://git@github.com/ytopt-team/autotune.git
+ytopt-autotune @ git+https://git@github.com/gptune/autotune.git
 cgp @ git+https://git@github.com/gptune/cGP.git
 hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git
