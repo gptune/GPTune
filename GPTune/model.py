@@ -756,7 +756,7 @@ class Model_George(Model):
 
 
 
-    def log_posterior(self, params):
+    def log_posterior(self, params, bounds=None):
 
         def log_prior_truncnorm(log_param, lower_bound, upper_bound):
             mean = (lower_bound + upper_bound) / 2
@@ -779,9 +779,25 @@ class Model_George(Model):
             noisevariance, B, K, lengthscales = self.extract_hyperparameters(self.M,'RBF')   
             # print(noisevariance, B, K, lengthscales, 'log_posterior') 
             log_lengthscales = np.log(lengthscales)
+            log_noisevariance = np.log(noisevariance)
+            log_Bs = np.log(B)
+            log_Ks = np.log(K)
 
             # Define bounds for the parameters
-            lengthscales_bounds = (-23, 2)
+            if bounds is not None:
+                noisevariance_bounds = bounds[0]
+                B_bounds = bounds[1:1+len(log_Bs)]
+                K_bounds = bounds[1+len(log_Bs):1+len(log_Bs)+len(log_Ks)]
+                lengthscales_bounds = bounds[1+len(log_Bs)+len(log_Ks):]
+ 
+                # Check if parameters are within bounds for bounded parameters
+                if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
+                        all(B_bound[0] <= log_B <= B_bound[1] for log_B, B_bound in zip(log_Bs, B_bounds)) and
+                        all(K_bound[0] <= log_K <= K_bound[1] for log_K, K_bound in zip(log_Ks, K_bounds)) and
+                        all(lengthscales_bound[0] <= log_lengthscale <= lengthscales_bound[1] for log_lengthscale, lengthscales_bound in zip(log_lengthscales, lengthscales_bounds))):
+                    # print('parameters out of bounds in log_posterior')
+                    return -1e30  # Return a very low log posterior if out of bounds
+
 
             # Calculate log likelihood
             log_likelihood = -self.nll(params)
@@ -799,8 +815,9 @@ class Model_George(Model):
             log_prior_K =  sum(gamma.logpdf(K, a=1, scale=0.001))
 
             # Log prior for length scales 
-            log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
-
+            # log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+            log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
+            
             log_prior += log_prior_noisevariance + log_prior_B + log_prior_K + log_prior_lengthscales
             # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
 
@@ -811,16 +828,17 @@ class Model_George(Model):
             log_lengthscales = params[2:]
 
             # Define bounds for the parameters
-            # noisevariance_bounds = (-15, -6)
-            # amplitude_squared_bounds = None  # Unbounded
-            lengthscales_bounds = (-23, 2)
-
-            # # Check if parameters are within bounds for bounded parameters
-            # if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
-            #         (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
-            #         all(lengthscales_bounds[0] <= log_lengthscale <= lengthscales_bounds[1] for log_lengthscale in log_lengthscales)):
-            #     # print('parameters out of bounds in log_posterior')
-            #     return -np.inf  # Return a very low log posterior if out of bounds
+            if bounds is not None:
+                noisevariance_bounds = bounds[0]
+                amplitude_squared_bounds = bounds[1]
+                lengthscales_bounds = bounds[2:]
+ 
+                # Check if parameters are within bounds for bounded parameters
+                if not (noisevariance_bounds[0] <= log_noisevariance <= noisevariance_bounds[1] and
+                        (amplitude_squared_bounds is None or amplitude_squared_bounds[0] <= log_amplitude_squared <= amplitude_squared_bounds[1]) and
+                        all(lengthscales_bound[0] <= log_lengthscale <= lengthscales_bound[1] for log_lengthscale, lengthscales_bound in zip(log_lengthscales, lengthscales_bounds))):
+                    # print('parameters out of bounds in log_posterior')
+                    return -1e30  # Return a very low log posterior if out of bounds
 
             # Convert to original scale
             noisevariance = np.exp(log_noisevariance)
@@ -844,10 +862,10 @@ class Model_George(Model):
             log_prior_amplitude_squared = gamma.logpdf(amplitude_squared, a=1, scale=0.1)
 
             # Log prior for length scales 
-            log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
+            # log_prior_lengthscales = sum(log_prior_norm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
             # log_prior_lengthscales = sum(log_prior_truncnorm(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]) for log_lengthscale in log_lengthscales)
             # log_prior_lengthscales = sum(uniform.logpdf(log_lengthscale, lengthscales_bounds[0], lengthscales_bounds[1]-lengthscales_bounds[0]) for log_lengthscale in log_lengthscales)
-            # log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
+            log_prior_lengthscales = sum(gamma.logpdf(lengthscale, a=1, scale=1) for lengthscale in lengthscales)
             
             log_prior += log_prior_noisevariance + log_prior_amplitude_squared + log_prior_lengthscales
             # print(log_likelihood, log_prior,log_prior_noisevariance, log_prior_lengthscales, log_prior_amplitude_squared, 'noway')
@@ -923,9 +941,9 @@ class Model_George(Model):
                 model_latent = kwargs['model_latent']
 
             input_dim = len(data.P[0][0]) 
-            intialguess=[5e-6] + [1]*data.NI*model_latent  +  [5e-6]*data.NI*model_latent + [1]*model_latent*input_dim  
+            # intialguess=[5e-6] + [1]*data.NI*model_latent  +  [5e-6]*data.NI*model_latent + [1]*model_latent*input_dim  
             
-            intialguess=np.power(10,np.random.randn(1)).tolist() + np.power(10,np.random.randn(data.NI*model_latent)).tolist()  +  np.power(10,np.random.randn(data.NI*model_latent)).tolist() + np.power(10,np.random.randn(input_dim*model_latent)).tolist()
+            intialguess=[1e-3] + np.power(10,np.random.randn(data.NI*model_latent)).tolist()  +  np.power(10,np.random.randn(data.NI*model_latent)).tolist() + np.power(10,np.random.randn(input_dim*model_latent)-1).tolist()
 
             # intialguess=[1.e-10] + [0.1831, 0.0121, 0.1502, 0.0537] + [1.8125e+00, 2.0024e-01, 5.6251e-03, 1.7371e+03] + [4.4793e+03, 1.3298e-02]
             
@@ -1005,7 +1023,7 @@ class Model_George(Model):
             # exit(1)
             
             ## YL: The following bounds are for white noise, B, K, theta^2
-            bounds = [(-10, -5)] + [(-10, 6)] * data.NI*model_latent + [(-10, 8)] * data.NI*model_latent  + [(-20, 4)] * input_dim*model_latent
+            bounds = [(-6, -5)] + [(-10, 6)] * data.NI*model_latent + [(-10, 8)] * data.NI*model_latent  + [(-16, -1)] * input_dim*model_latent
 
         else:
             input_dim = len(data.P[0][0])
@@ -1084,7 +1102,6 @@ class Model_George(Model):
             ## YL: Note that I'm not setting a large range for variance [(-30, 5)], otherwise it's hard for jittering to take effect 
             bounds = [(-15, -10)] + [(-30, 5)] + [(-23, 2)] * input_dim
         
-
         
         if kwargs['model_mcmc']:
             # Initialize MCMC walkers around the initial guess
@@ -1102,7 +1119,7 @@ class Model_George(Model):
                     else:
                         initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
                         
-            mcmc = MCMC(self.log_posterior, ndim=ndim, nchain=nwalkers, mcmcsampler=kwargs['model_mcmc_sampler'])
+            mcmc = MCMC(self.log_posterior, bounds=bounds, ndim=ndim, nchain=nwalkers, mcmcsampler=kwargs['model_mcmc_sampler'])
             resopt= mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'],verbose=kwargs['verbose'])
         else:
             if kwargs['model_grad'] == True:

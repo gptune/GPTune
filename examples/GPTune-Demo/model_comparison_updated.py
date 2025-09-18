@@ -454,10 +454,10 @@ def plotting(objective, objtype):
 
     plotgp=True
 
-    # NS = [201, 401, 801, 1601, 3201, 6401]
+    # NS = [201, 401, 801, 1601, 3201, 6401, 12801, 25601, 51201, 102401, 204801, 409601]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [204801]
+    NS = [12801, 25601, 51201]
     
     for elem in NS:
         hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
@@ -480,11 +480,11 @@ def plotting(objective, objtype):
         model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
-        model_time_gpy.append(gpy_stats.get("time_model"))
-        model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
-        search_time_gpy.append(gpy_stats.get("time_search"))
-        model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
+        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
+        # model_time_gpy.append(gpy_stats.get("time_model"))
+        # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
+        # search_time_gpy.append(gpy_stats.get("time_search"))
+        # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
      
     
 
@@ -513,7 +513,7 @@ def plotting(objective, objtype):
     print("Modeling Iterations George HODLR MCMC: ", model_iterations_hodlr_mcmc)
     print("Modeling Iterations GPy: ", model_iterations_gpy)
 
-    fontsize=10
+    fontsize=8
     plt.rcParams.update({'font.size': fontsize})
     figure, axis = plt.subplots(2,2)
     figure.suptitle("Optimizer Comparison 1D",fontsize=fontsize)
@@ -523,8 +523,8 @@ def plotting(objective, objtype):
     axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[0,0].legend(fontsize=fontsize-4)
-    axis[0,0].set_title("Model Time Comparison",fontsize=fontsize)
-    axis[0,0].set_xlabel("Number of Samples",fontsize=fontsize)
+    axis[0,0].set_title("Model Time",fontsize=fontsize)
+    axis[0,0].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
     # axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
@@ -532,8 +532,8 @@ def plotting(objective, objtype):
     axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[0,1].legend(fontsize=fontsize-4)
-    axis[0,1].set_title("Search Time Comparison",fontsize=fontsize)
-    axis[0,1].set_xlabel("Number of Samples",fontsize=fontsize)
+    axis[0,1].set_title("Search Time",fontsize=fontsize)
+    axis[0,1].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,1].set_ylabel("Time (sec)",fontsize=fontsize)
 
     # axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
@@ -541,7 +541,7 @@ def plotting(objective, objtype):
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[1,0].legend(fontsize=fontsize-4)
-    axis[1,0].set_title("Model Covariance Inversion Time Comparison",fontsize=fontsize)
+    axis[1,0].set_title("Model Time Per Iteration",fontsize=fontsize)
     axis[1,0].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[1,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
@@ -550,14 +550,9 @@ def plotting(objective, objtype):
     axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
     axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[1,1].legend(fontsize=fontsize-4)
-    axis[1,1].set_title("Model Iterations Comparison",fontsize=fontsize)
-    axis[1,1].set_xlabel("Number of Samples",fontsize=fontsize)
+    axis[1,1].set_title("Model Iterations",fontsize=fontsize)
+    axis[1,1].set_xlabel("Sample Count",fontsize=fontsize)
     axis[1,1].set_ylabel("Iterations",fontsize=fontsize)
-
-
-
-
-
 
     plt.tight_layout()
     plt.show()

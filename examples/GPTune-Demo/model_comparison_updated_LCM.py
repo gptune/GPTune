@@ -286,7 +286,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
     if ntask == 1:
         giventask = [[round(tvalue,1)]]
     elif ntask == 2:
-        giventask = [[round(tvalue,1)],[round(tvalue*2.0,1)]]
+        giventask = [[round(tvalue,1)],[round(tvalue*2,1)]]
     else:
         giventask = [[round(tvalue*float(i+1),1)] for i in range(ntask)]
 
@@ -457,7 +457,7 @@ def plotting(objective, objtype):
     # NS = [201, 401, 801, 1601, 3201, 6401]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [6401]
+    NS = [12801]
     
     for elem in NS:
         hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)

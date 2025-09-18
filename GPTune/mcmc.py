@@ -32,9 +32,10 @@ import math
 
 
 class MCMCSampler_MetropolisHastings:
-    def __init__(self, target_prob, ndim=1, nchain=1):
+    def __init__(self, target_prob, bounds, ndim=1, nchain=1):
         self.p = target_prob # Target distribution
         self.nchain = nchain
+        self.bounds = bounds
         self.ndim = ndim  # Number of dimensions (hyperparameters)
         self.chains_data = np.empty((0, 0, self.ndim))  # Initialize with zero dimensions for samples, chains, ndim
         self.log_probs_data = np.empty((0, 0))  # Initialize with zero dimensions for samples, chains
@@ -87,11 +88,11 @@ class MCMCSampler_MetropolisHastings:
         samples = np.zeros((iterations, self.ndim))  # Preallocate array for samples
         log_probs = np.zeros(iterations)  # Preallocate array for log probabilities
         covariance = np.eye(self.ndim) * self.scale  # Initial covariance
-        px = self.p(x) 
+        px = self.p(x,self.bounds) 
 
         for i in range(iterations):
             x_candidate = self.q_sample(x, covariance)
-            px_candiate = self.p(x_candidate)
+            px_candiate = self.p(x_candidate,self.bounds)
 
             accept_prob = min(1, (np.exp(px_candiate) * self.q(x, x_candidate, covariance)) /
                                  (np.exp(px) * self.q(x_candidate, x, covariance)))
@@ -134,9 +135,9 @@ class MCMCSampler_MetropolisHastings:
             
 
 class MCMC:
-    def __init__(self, target_prob, ndim=1, nchain=1, mcmcsampler='MetropolisHastings'):
+    def __init__(self, target_prob, bounds=None, ndim=1, nchain=1, mcmcsampler='MetropolisHastings'):
         if(mcmcsampler is 'MetropolisHastings'):
-            self.sampler = MCMCSampler_MetropolisHastings(target_prob, ndim=ndim, nchain=nchain)
+            self.sampler = MCMCSampler_MetropolisHastings(target_prob, bounds, ndim=ndim, nchain=nchain)
         elif(mcmcsampler is 'Ensemble_emcee'):
             import emcee
             self.sampler = emcee.EnsembleSampler(nchain, ndim, target_prob)  
