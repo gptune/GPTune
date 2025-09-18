@@ -70,9 +70,6 @@ fi
 ################################### 
 
 
-
-export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
-export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
 export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
@@ -499,7 +496,7 @@ if [ "$PyMINOR" -gt 8 ]; then
 	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo.   
 	
 	cd $GPTUNEROOT
-	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+	export TBB_ROOT=$GPTUNEROOT/oneTBB/build/lib/cmake/TBB
 	export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
 	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
 	export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
@@ -513,6 +510,7 @@ if [ "$PyMINOR" -gt 8 ]; then
 	cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD -DCMAKE_INSTALL_LIBDIR=$PWD/lib -DCMAKE_C_COMPILER=$MPICC -DCMAKE_CXX_COMPILER=$MPICXX -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 	make -j
 	make install
+	cp lib/cmake/TBB/*.cmake . 
 	git clone https://github.com/wjakob/tbb.git
 	cp tbb/include/tbb/tbb_stddef.h include/tbb/.
 
