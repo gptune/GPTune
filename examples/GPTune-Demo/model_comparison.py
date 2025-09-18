@@ -50,6 +50,7 @@ import argparse
 # from mpi4py import MPI
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 from callopentuner import OpenTuner
 from callhpbandster import HpBandSter
@@ -88,7 +89,7 @@ def parse_args():
 
     return args
 
-def objectives(point):
+def objectives1(point):
     """
     f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
     """
@@ -112,43 +113,33 @@ def objectives(point):
 
     return [f]
 
+def objectives2(point):
+    x1 = point["x1"]
+    x2 = point["x2"]
+    y = 4*(x1**2) + 4*(x2**2)
+    return [y]
 
-# test=1  # make sure to set global variables here, rather than in the main function
-def models(point):
-    """
-    f(t,x) = exp(- (x + 1) ^ (t + 1) * cos(2 * pi * x)) * (sin( (t + 2) * (2 * pi * x) ) + sin( (t + 2)^(2) * (2 * pi * x) + sin ( (t + 2)^(3) * (2 * pi *x))))
-    """
-    # global test
-    t = point['t']
-    x = point['x']
-    a = 2 * np.pi
-    b = a * t
-    c = a * x
-    d = np.exp(- (x + 1) ** (t + 1)) * np.cos(c)
-    e = np.sin((t + 2) * c) + np.sin((t + 2)**2 * c) + np.sin((t + 2)**3 * c)
-    f = d * e + 1
-    # print('dd',test)
+def objectives3(point):
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
+    x4 = point["x4"]
+    x5 = point["x5"]
+    x6 = point["x6"]
+    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2 + (x6-1)**2)
+    return [y]
 
-    """
-    f(t,x) = x^2+t
-    """
-    # t = point['t']
-    # x = point['x']
-    # f = 20*x**2+t
-    # time.sleep(1.0)
 
-    return [f*(1+np.random.uniform()*0.1)]
-
-def main():
-
+def model_runtime(model, obj_func, NS_input,objtype,lowrank):
     import matplotlib.pyplot as plt
     global nodes
     global cores
 
+
     # Parse command line arguments
     args = parse_args()
     ntask = args.ntask
-    nrun = args.nrun
+    nrun = NS_input
     tvalue = args.tvalue
     TUNER_NAME = args.optimization
     perfmodel = args.perfmodel
@@ -159,16 +150,32 @@ def main():
     os.environ['TUNER_NAME'] = TUNER_NAME
 
     input_space = Space([Real(0., 10., transform="normalize", name="t")])
-    parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
+    # parameter_space = Space([Real(0., 1., transform="normalize", name="x")])
+    
+    x = Real(0., 1., transform="normalize", name="x")
+    x1 = Real(0., 1., transform="normalize", name="x1")
+    x2 = Real(0., 1., transform="normalize", name="x2")
+    x3 = Real(0., 1., transform="normalize", name="x3")
+    x4 = Real(0., 1., transform="normalize", name="x4")
+    x5 = Real(0., 1., transform="normalize", name="x5")
+    x6 = Real(0., 1., transform="normalize", name="x6")    
+    if(objtype==1):
+        parameter_space = Space([x])    
+    elif(objtype==2):
+        parameter_space = Space([x1,x2])    
+    elif(objtype==3):
+        parameter_space = Space([x1,x2,x3,x4,x5,x6])    
+
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
 
     output_space = Space([Real(float('-Inf'), float('Inf'), name="y")])
-    constraints = {"cst1": "x >= 0. and x <= 1."}
+    #constraints = {"cst1": "x >= 0. and x <= 1."}
+    constraints = {}
     if(perfmodel==1):
-        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, models)  # with performance model
+        problem =  (input_space, parameter_space,output_space, obj_func, constraints, models)  # with performance model
     else:
-        problem = TuningProblem(input_space, parameter_space,output_space, objectives, constraints, None)  # no performance model
+        problem = TuningProblem(input_space, parameter_space,output_space, obj_func, constraints, None)  # no performance model
 
     computer = Computer(nodes=nodes, cores=cores, hosts=None)
     options = Options()
@@ -194,10 +201,19 @@ def main():
 
     # Use the following two lines if you want to specify a certain random seed for the random pilot sampling
     # options['sample_algo'] = 'MCS'
-    options['sample_class'] = 'SampleLHSMDU'
+    options['sample_class'] = 'SampleOpenTURNS' #'SampleLHSMDU' 
     options['sample_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
-    options['model_class'] = 'Model_GPy_LCM' #'Model_George' 'Model_LCM' 'Model_GPy_LCM' 'Model_GPFlow_LCM'
+    options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
+    options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
+    if(lowrank==True):
+        options['model_lowrank'] = True
+        options['model_hodlrleaf'] = 200
+        options['model_hodlrtol'] = 1e-3
+        options['model_grad'] = False
+    options['mcmc'] = True 
+        
+
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
@@ -206,10 +222,11 @@ def main():
     #options['search_class'] = 'SearchSciPy'
     #options['search_algo'] = 'l-bfgs-b'
 
-    options['search_more_samples'] = 1
+    options['search_more_samples'] = 4
     options['search_af']='EI'
     # options['search_pop_size']=1000
     # options['search_ucb_beta']=0.01
+
 
     options['verbose'] = False
     options.validate(computer=computer)
@@ -231,20 +248,18 @@ def main():
     if(TUNER_NAME=='GPTune'):
         data = Data(problem)
 
-        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__))
-        # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
+        # gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__)) # run GPTune with database 
+        gt = GPTune(problem, computer=computer, data=data, options=options, driverabspath=os.path.abspath(__file__), historydb=False) ## Run GPTune without database
 
-        (data, modeler, stats) = gt.MLA(NS=NS, NS1=int(NS/2), NI=NI, Tgiven=giventask)
-        # print("stats type", type(stats))
-        # print("stats keys", stats.keys())
+        (data, modeler, stats) = gt.MLA(NS=NS_input, NS1= int(NS_input - 1), NI=NI, Tgiven=giventask)
         print("stats: ", stats)
-        """ Print all input and parameter samples """
-        for tid in range(NI):
-            print("tid: %d" % (tid))
-            print("    t:%f " % (data.I[tid][0]))
-            print("    Ps ", data.P[tid])
-            print("    Os ", data.O[tid].tolist())
-            print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+        # """ Print all input and parameter samples """
+        # for tid in range(NI):
+        #     print("tid: %d" % (tid))
+        #     print("    t:%f " % (data.I[tid][0]))
+        #     print("    Ps ", data.P[tid])
+        #     print("    Os ", data.O[tid].tolist())
+        #     print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -282,6 +297,113 @@ def main():
             print("    Ps ", data.P[tid])
             print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+    
+    return stats
+
+
+def objective_selection():
+    objective = input("What Objective Function would you like to use (1, 2, or 3)")
+    if ("1" in objective):
+        objtype=1
+        return objectives1, objtype
+    elif ("2" in objective):
+        objtype=2
+        return objectives2, objtype
+    elif ("3" in objective):
+        objtype=3
+        return objectives3, objtype
+    else:
+        raise Exception("Invalid objective selection")
+    
+import matplotlib.pyplot as plt
+
+def plotting(objective, objtype):
+    model_time_gpy = []
+    model_time_per_likelihoodeval_gpy = []
+    search_time_gpy = []
+
+    model_time_george_basic = []
+    model_time_per_likelihoodeval_george_basic = []
+    search_time_george_basic = []
+
+    model_time_george_hodlr = []
+    model_time_per_likelihoodeval_george_hodlr = []
+    search_time_george_hodlr = []
+
+    NS = [51, 201, 401, 801, 1601, 3201]
+    
+    for elem in NS:
+        hodlr_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True)
+        model_time_george_hodlr.append(hodlr_stats.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr.append(hodlr_stats.get("time_model_per_likelihoodeval"))
+        search_time_george_hodlr.append(hodlr_stats.get("time_search"))
+
+        # basic_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False)
+        # model_time_george_basic.append(basic_stats.get("time_model"))
+        # model_time_per_likelihoodeval_george_basic.append(basic_stats.get("time_model_per_likelihoodeval"))
+        # search_time_george_basic.append(basic_stats.get("time_search"))
+
+        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False) 
+        model_time_gpy.append(gpy_stats.get("time_model"))
+        model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
+        search_time_gpy.append(gpy_stats.get("time_search"))
+     
+    
+    print("Time-Model HODLR: ", model_time_george_hodlr)
+    print("Time-Search HODLR: ", search_time_george_hodlr)
+    print("inversion time HODLR" , model_time_per_likelihoodeval_george_hodlr)
+    # print("Time-Model Basic: ", model_time_george_basic)
+    # print("Time-Search Basic: ", search_time_george_basic)
+    # print("inversion time Basic" , model_time_per_likelihoodeval_george_basic)
+    print("Time-Model GPy: ", model_time_gpy)
+    print("Time-Search GPy: ", search_time_gpy)
+    print("inversion time GPy" , model_time_per_likelihoodeval_gpy)
+
+    # Plotting
+    figure, axis = plt.subplots(1, 3, figsize=(15, 5))
+    figure.suptitle("Model_grad = False, 2D")
+
+    # axis[0].loglog(NS, model_time_george_basic, label="george_basic", color="blue", marker='o')
+    axis[0].loglog(NS, model_time_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
+    axis[0].legend()
+    axis[0].set_title("Model Time Comparison")
+    axis[0].set_xlabel("Number of Samples")
+    axis[0].set_ylabel("Time (sec)")
+
+    # axis[1].loglog(NS, search_time_george_basic, label="george_basic", color="blue", marker='o')
+    axis[1].loglog(NS, search_time_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
+    axis[1].legend()
+    axis[1].set_title("Search Time Comparison")
+    axis[1].set_xlabel("Number of Samples")
+    axis[1].set_ylabel("Time (sec)")
+
+    # axis[2].loglog(NS, model_time_per_likelihoodeval_george_basic, label="george_basic", color="blue", marker='o')
+    axis[2].loglog(NS, model_time_per_likelihoodeval_george_hodlr, label="george_hodlr", color="red", marker='o')
+    axis[2].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+    axis[2].legend()
+    axis[2].set_title("Model Covariance Inversion Time Comparison")
+    axis[2].set_xlabel("Number of Samples")
+    axis[2].set_ylabel("Time (sec)")
+
+    plt.tight_layout()
+    plt.show()
+    plt.savefig('model_search_compare.pdf')
+
+def main():
+    objective, objtype = objective_selection()
+    plotting(objective=objective, objtype=objtype)
+
+
+    
+
+
+
+
+    
+
 
 if __name__ == "__main__":
     main()
+

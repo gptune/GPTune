@@ -215,7 +215,7 @@ def main():
 	options['model_class'] = 'Model_GPy_LCM' # 'Model_GPy_LCM'
 	options['verbose'] = False
 	options.validate(computer = computer)
-	print(options)
+	# print(options)
 
 	# """ Building MLA with the given list of tasks """
 	# giventask = [[np.random.choice(matrices,size=1)[0]] for i in range(ntask)]

@@ -45,12 +45,12 @@
 # export nodes=16  # number of nodes to be used
 
 
-############# Perlmutter
-export machine=perlmutter
-export proc=milan   # milan,gpu
-export mpi=openmpi #openmpi  # craympich
-export compiler=gnu   # gnu, intel
-export nodes=1  # number of nodes to be used
+# ############# Perlmutter
+# export machine=perlmutter
+# export proc=milan   # milan,gpu
+# export mpi=openmpi #openmpi  # craympich
+# export compiler=gnu   # gnu, intel
+# export nodes=1  # number of nodes to be used
 
 # # ################ Yang's tr4 machine
 #  export machine=tr4-workstation
@@ -58,14 +58,14 @@ export nodes=1  # number of nodes to be used
 #  export mpi=openmpi  
 #  export compiler=gnu   
 #  export nodes=1  # number of nodes to be used
-# #
+# # #
 
-# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-# export machine=cleanlinux
-# export proc=unknown
-# export mpi=openmpi
-# export compiler=gnu
-# export nodes=1  # number of nodes to be used
+################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+export machine=cleanlinux
+export proc=unknown
+export mpi=openmpi
+export compiler=gnu
+export nodes=1  # number of nodes to be used
 
 
 # # ################ ex3 simula

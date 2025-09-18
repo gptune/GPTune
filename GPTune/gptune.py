@@ -534,7 +534,7 @@ class GPTune(object):
                                 iteration)
                         stats["modeling_iteration"][optiter-1] += iteration
                     else:
-                        (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                        (hyperparameters, modeling_options, model_stats, iteration) = modelers[o].train(data = tmpdata, **kwargs)
                         self.historydb.store_model_GPy_LCM(
                                 o,
                                 self.problem,
@@ -542,7 +542,7 @@ class GPTune(object):
                                 hyperparameters,
                                 modeling_options,
                                 model_stats)
-                        stats["modeling_iteration"][optiter-1] += 0
+                        stats["modeling_iteration"][optiter-1] += iteration
                     model_reupdate = 0
                 else:
                     if (kwargs["model_class"] == "Model_LCM"):
@@ -588,6 +588,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_search'] = time_search
         stats['time_loaddata'] = time_loaddata
+        stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -786,8 +787,12 @@ class GPTune(object):
             if NS1 == 0:
                 NS1 = 1
             if (NSmin<NS1):
+                t9 = time.time_ns()
                 check_constraints = functools.partial(self.computer.evaluate_constraints, self.problem, inputs_only = False, kwargs = kwargs)
                 tmpP = sampler.sample_parameters(problem = self.problem, n_samples = NS1-NSmin, I = self.data.I, IS = self.problem.IS, PS = self.problem.PS, check_constraints = check_constraints, **kwargs)
+                t10 = time.time_ns()
+                # print("time temp ",(t10-t9)/1e9 )
+
                 for i in range(NI):
                     if(T_sampleflag[i]== False):
                         tmpP[i] = np.empty(shape=(0,self.problem.DP))
@@ -980,7 +985,7 @@ class GPTune(object):
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
                     # print(tmpdata.O)
-                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats,iteration) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
                             self.problem,
@@ -988,6 +993,8 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
+                    stats["modeling_iteration"][optiter-1] += iteration
+
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
                     print("The correlation matrix C is \n", C)
@@ -1054,6 +1061,7 @@ class GPTune(object):
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
+        stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -2335,7 +2343,7 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats,iteration) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
                             self.problem,
@@ -2343,6 +2351,7 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
+                    stats["modeling_iteration"][optiter-1] += iteration
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -2393,6 +2402,7 @@ class GPTune(object):
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
+        stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -2653,7 +2663,7 @@ class GPTune(object):
                             iteration)
                     stats["modeling_iteration"][optiter-1] += iteration
                 else:
-                    (hyperparameters, modeling_options, model_stats) = modelers[o].train(data = tmpdata, **kwargs)
+                    (hyperparameters, modeling_options, model_stats,iteration) = modelers[o].train(data = tmpdata, **kwargs)
                     self.historydb.store_model_GPy_LCM(
                             o,
                             self.problem,
@@ -2661,6 +2671,7 @@ class GPTune(object):
                             hyperparameters,
                             modeling_options,
                             model_stats)
+                    stats["modeling_iteration"][optiter-1] += iteration
 
                 if self.options['verbose'] == True and self.options['model_class'] == 'Model_LCM' and len(self.data.I)>1:
                     C = modelers[o].M.kern.get_correlation_metric()
@@ -2712,6 +2723,7 @@ class GPTune(object):
         stats['time_search'] = time_search
         stats['time_loaddata'] = time_loaddata
         stats['time_sample_init'] = time_sample_init
+        stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -3207,6 +3219,7 @@ class GPTune(object):
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
         stats['time_sample_init'] = time_sample_init
+        stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -3463,7 +3476,9 @@ class GPTune_MB(object):
                 stats['time_loaddata'] += stats0['time_loaddata']
                 stats['time_search'] += stats0['time_search']
                 stats['time_sample_init'] += stats0['time_sample_init']
+                stats["modeling_iteration"] += stats0["modeling_iteration"]
 
+            stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
             # bug fix: data1 will load all available data from database, the following make srue that it only contains MLA samples generated at the current loop    
             for s in range(len(self.budgets)):  # loop over the budget levels

@@ -19,18 +19,18 @@ python ./demo.py -optimization ${tuner} -ntask 2 -nrun 20
 # python ./demo_wgp.py -optimization ${tuner} -ntask 1 -nrun 20
 ###########################################################################################
 
-## ###########################################################################################
-## ################### Illustrate use of coarse performance model ############################
-## this example autotunes the analytical function using $\epsilon=20$ and $\delta=2$ with and without a performance model. Suppose your machine has 1 node with 4 cores, run the following two configuratoins and check the difference in "Oopt" and in the plots. You will notice a better optimum is found by using the performance model.
-#cd $GPTUNEROOT/examples/GPTune-Demo
-#rm -rf gptune.db/*.json
-#tp=GPTune-Demo
-#app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
-#echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
-#$RUN python ./demo_perf_model.py -nrun 20 -ntask 2 -perfmodel 0 -plot 1 | tee a.out_demo_perf0 # without a performance model, you will see "Popt  [0.5386916457874029] Oopt  0.5365493976919858" for the task "t:0.000000" and "Popt  [0.466133977547591] Oopt  0.7810616750180267" for the task "t:0.500000"
-#rm -rf gptune.db/*.json
-#$RUN python ./demo_perf_model.py -nrun 20 -ntask 2 -perfmodel 1 -plot 1 | tee a.out_demo_perf1 # with a performance model, you will see "Popt  [0.5382320616588907] Oopt  0.536732793802327" for the task "t:0.000000" and "Popt  [0.5257108563434262] Oopt  0.5698278466330067" for the task "t:0.500000"
-############################################################################################
+# ###########################################################################################
+# ################### Illustrate use of coarse performance model ############################
+# this example autotunes the analytical function using $\epsilon=20$ and $\delta=2$ with and without a performance model. Suppose your machine has 1 node with 4 cores, run the following two configuratoins and check the difference in "Oopt" and in the plots. You will notice a better optimum is found by using the performance model.
+cd $GPTUNEROOT/examples/GPTune-Demo
+rm -rf gptune.db/*.json
+tp=GPTune-Demo
+app_json=$(echo "{\"tuning_problem_name\":\"$tp\"")
+echo "$app_json$machine_json$software_json$loadable_machine_json$loadable_software_json}" | jq '.' > .gptune/meta.json
+$RUN python ./demo_perf_model.py -nrun 20 -ntask 1 -perfmodel 0 -plot 1 | tee a.out_demo_perf0 # without a performance model, you will see "Popt  [0.5386916457874029] Oopt  0.5365493976919858" for the task "t:0.000000" and "Popt  [0.466133977547591] Oopt  0.7810616750180267" for the task "t:0.500000"
+rm -rf gptune.db/*.json
+$RUN python ./demo_perf_model.py -nrun 20 -ntask 1 -perfmodel 1 -plot 1 | tee a.out_demo_perf1 # with a performance model, you will see "Popt  [0.5382320616588907] Oopt  0.536732793802327" for the task "t:0.000000" and "Popt  [0.5257108563434262] Oopt  0.5698278466330067" for the task "t:0.500000"
+###########################################################################################
 
 
 # ###########################################################################################

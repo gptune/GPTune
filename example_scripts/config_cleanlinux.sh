@@ -500,6 +500,7 @@ if [ "$PyMINOR" -gt 8 ]; then
 	
 	cd $GPTUNEROOT
 	export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+	export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
 	export pybind11_DIR=$SITE_PACKAGE_DIR/pybind11/share/cmake/pybind11
 	export Boost_DIR=$GPTUNEROOT/boost_1_78_0/build
 	export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
