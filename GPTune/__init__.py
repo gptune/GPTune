@@ -19,4 +19,4 @@ import sys
 if sys.version_info < (3, 8):
     raise RuntimeError("GPTune requires Python >= 3.8")
 
-from gptune import *
+from GPTune import *

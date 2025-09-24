@@ -31,7 +31,7 @@
 
 ## # ################ Any mac os machine that has used config_macbook.zsh to build GPTune
 # export machine=mac
-# export proc=intel
+# export proc=mchip # intel, mchip
 # export mpi=openmpi
 # export compiler=gnu
 # export nodes=1  # number of nodes to be used
@@ -159,14 +159,14 @@ elif [ $ModuleEnv = 'ex3-xeongold16q-openmpi-gnu' ]; then
 # fi
 ###############
 ############### macbook
-elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
+elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ] || [ $ModuleEnv = 'mac-mchip-openmpi-gnu' ]; then
     
     MPIFromSource=1 # whether openmpi was built from source when installing GPTune
     if [[ $MPIFromSource = 1 ]]; then
-        export PATH=$PWD/openmpi-4.1.5/bin:$PATH
-        export MPIRUN="$PWD/openmpi-4.1.5/bin/mpirun"
-        export LD_LIBRARY_PATH=$PWD/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
-        export DYLD_LIBRARY_PATH=$PWD/openmpi-4.1.5/lib:$DYLD_LIBRARY_PATH
+        export PATH=$PWD/openmpi-5.0.6/bin:$PATH
+        export MPIRUN="$PWD/openmpi-5.0.6/bin/mpirun"
+        export LD_LIBRARY_PATH=$PWD/openmpi-5.0.6/lib:$LD_LIBRARY_PATH
+        export DYLD_LIBRARY_PATH=$PWD/openmpi-5.0.6/lib:$DYLD_LIBRARY_PATH
     else
         export MPIRUN=
         export PATH=$PATH
@@ -195,8 +195,8 @@ elif [ $ModuleEnv = 'mac-intel-openmpi-gnu' ]; then
     cores=8
     gpus=0
     
-    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [4,1,5]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
-    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [4,1,5]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
+    software_json=$(echo ",\"software_configuration\":{\"openmpi\":{\"version_split\": [5,0,6]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
+    loadable_software_json=$(echo ",\"loadable_software_configurations\":{\"openmpi\":{\"version_split\": [5,0,6]},\"scalapack\":{\"version_split\": [2,2,0]},\"gcc\":{\"version_split\": [13,1,0]}}")
 # fi
 
 

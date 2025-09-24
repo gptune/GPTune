@@ -14,7 +14,7 @@ fi
 # Path to Homebrew install packages
 if [[ $(uname -p) == "arm" ]]; then
     echo "This is an Apple M chip"
-    export BREWPATH=/usr/local/Cellar
+    export BREWPATH=$(brew --prefix)/Cellar
     export ModuleEnv='mac-mchip-openmpi-gnu'
 elif [[ $(uname -p) == "i386" ]]; then
     echo "This is an Intel chip"
@@ -22,35 +22,14 @@ elif [[ $(uname -p) == "i386" ]]; then
     export ModuleEnv='mac-intel-openmpi-gnu'
 fi
 
-# Install dependencies using homebrew and virtualenv
-
-# softwareupdate --all --install --force
-brew install wget
-brew upgrade wget
-brew install python@3.9
-brew upgrade python@3.9
-
-brew install cmake
-brew upgrade cmake
-
-brew reinstall tbb
-brew reinstall pagmo
-brew reinstall pybind11
-
-brew install gcc
-brew upgrade gcc
-
-brew install openblas
-brew upgrade openblas
-
-#brew install lapack
-#brew upgrade lapack
-
-brew install jq
+# Install dependencies using homebrew
+brew install wget python@3.9 cmake tbb pagmo pybind11 gcc openblas jq libevent hwloc
+brew upgrade wget python@3.9 cmake gcc openblas
 
 # Detect package version numbers from homebrew (the upgraded package versions from the homebrew commands above).
 pythonversion=$(ls ${BREWPATH}/python@3.9/ | sort -V | tail -n 1)
 gccversion=$(ls ${BREWPATH}/gcc/ | sort -V | tail -n 1)
+gccversionmajor=$(echo "$gccversion" | cut -d. -f1)
 openblasversion=$(ls ${BREWPATH}/openblas/ | sort -V | tail -n 1)
 #lapackversion=$(ls ${BREWPATH}/lapack/)
 libeventversion=$(ls ${BREWPATH}/libevent/ | sort -V | tail -n 1)
@@ -92,9 +71,9 @@ if [[ ${ModuleEnv} == 'mac-intel-openmpi-gnu' || ${ModuleEnv} == 'mac-mchip-open
     export DYLD_LIBRARY_PATH=$GPTUNEROOT/scalapack-2.2.0/build/install/lib/:$DYLD_LIBRARY_PATH
     export DYLD_LIBRARY_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/:$DYLD_LIBRARY_PATH
     OPENMPFLAG=fopenmp
-    CC=$BREWPATH/gcc/$gccversion/bin/gcc-14
-    FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-14
-    CXX=$BREWPATH/gcc/$gccversion/bin/g++-14
+    CC=$BREWPATH/gcc/$gccversion/bin/gcc-$gccversionmajor
+    FTN=$BREWPATH/gcc/$gccversion/bin/gfortran-$gccversionmajor
+    CXX=$BREWPATH/gcc/$gccversion/bin/g++-$gccversionmajor
 
     if [[ $MPIFromSource = 1 ]]; then
         export MPICC="$GPTUNEROOT/openmpi-5.0.6/bin/mpicc"
@@ -137,8 +116,7 @@ unalias pip  # this makes sure virtualenv install packages at its own site-packa
 unalias python
 
 pip install --upgrade pip
-pip install --force-reinstall cloudpickle
-pip install --force-reinstall filelock
+pip install --force-reinstall cloudpickle filelock
 
 cd $GPTUNEROOT
 python --version
@@ -158,8 +136,9 @@ wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.6.tar.bz2
 bzip2 -d openmpi-5.0.6.tar.bz2
 tar -xvf openmpi-5.0.6.tar 
 cd openmpi-5.0.6/ 
-# ./configure --prefix=$PWD --enable-mpi-interface-warning --enable-shared --enable-static --enable-cxx-exceptions CC=$CC CXX=$CXX F77=$FTN FC=$FTN --enable-mpi1-compatibility --disable-dlopen
-./configure --prefix=$PWD CC=$CC CXX=$CXX F77=$FTN FC=$FTN --with-libevent=/usr/local/Cellar/libevent/$libeventversion --with-hwloc=/usr/local/Cellar/hwloc/$hwlocversion
+./configure --prefix=$PWD CC=$CC CXX=$CXX F77=$FTN FC=$FTN \
+    --with-libevent=$BREWPATH/libevent/$libeventversion \
+    --with-hwloc=$BREWPATH/hwloc/$hwlocversion
 make -j8
 make install
 
