@@ -1748,6 +1748,8 @@ class Model_George(Model):
                         for idx, p, dist in nn:
                             nns[i,k] = inv_perm[idx]
                             k = k+1
+            else:
+                nns = np.zeros((x.shape[0],0)).astype(int)                              
                     # print(nns)
             self.M.compute(x, nns, yerr=kwargs['model_jitter'])
             
