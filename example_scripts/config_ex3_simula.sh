@@ -132,7 +132,7 @@ $PY -m venv env
 source env/bin/activate
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
-	pip install --upgrade -r requirements.txt
+	MPICC=$MPICC pip install --upgrade -r requirements.txt
 else
 	pip install --upgrade -r requirements_lite.txt
 fi

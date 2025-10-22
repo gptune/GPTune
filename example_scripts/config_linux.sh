@@ -92,7 +92,7 @@ export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 cd $GPTUNEROOT
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
-	pip install --upgrade -r requirements.txt
+	MPICC=$MPICC pip install --upgrade -r requirements.txt
 else
 	pip install --upgrade -r requirements_lite.txt
 fi
