@@ -29,3 +29,5 @@ scikit-optimize @ git+https://git@github.com/gptune/scikit-optimize.git
 ytopt-autotune @ git+https://git@github.com/gptune/autotune.git
 cgp @ git+https://git@github.com/gptune/cGP.git
 hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git
+george @ git+https://github.com/gptune/george.git
+mpi4py 

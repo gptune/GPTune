@@ -89,7 +89,6 @@ export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 
 
-
 # install dependencies using apt-get and virtualenv
 ###################################
 
@@ -169,7 +168,7 @@ source env/bin/activate
 
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
-	pip install --upgrade -r requirements.txt
+	MPICC=$MPICC pip install --upgrade -r requirements.txt
 else
 	pip install --upgrade -r requirements_lite.txt
 fi
@@ -247,86 +246,57 @@ cmake .. \
 	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}"
 make -j32
 make install
-# cp lib_gptuneclcm.so ../.
-# cp pdqrdriver ../
+
+
+cd $GPTUNEROOT/examples/SuperLU_DIST
+rm -rf superlu_dist
+git clone https://github.com/xiaoyeli/superlu_dist.git
+cd superlu_dist
+
+wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+tar -xf parmetis_4.0.3.orig.tar.gz
+cd parmetis-4.0.3/
+cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+mkdir -p install
+make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+make install > make_parmetis_install.log 2>&1
+cd ../
+cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
+	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+make pddrive_spawn -j
+make pzdrive_spawn -j
+make python -j
+make install -j
+
+
+
+
 
 if [[ $BuildExample == 1 ]]; then
-
-	cd $GPTUNEROOT/examples/SuperLU_DIST
-	rm -rf superlu_dist
-	git clone https://github.com/xiaoyeli/superlu_dist.git
-	cd superlu_dist
-
-	#### the following server is often down, so switch to the github repository 
-	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
-	tar -xf parmetis_4.0.3.orig.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1
-	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	# mkdir -p $ParMETIS_DIR
-	# rm -f GKlib
-	# git clone https://github.com/KarypisLab/GKlib.git
-	# cd GKlib
-	# make config prefix=$ParMETIS_DIR
-	# make -j8
-	# make install
-	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	# make config prefix=$ParMETIS_DIR
-	# make -j8
-	# make install
-
-	# cd ../
-	# rm -rf METIS
-	# git clone https://github.com/KarypisLab/METIS.git
-	# cd METIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	# make -j8
-	# make install	
-	# cd ../
-	# rm -rf ParMETIS
-	# git clone https://github.com/KarypisLab/ParMETIS.git
-	# cd ParMETIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	# make -j8
-	# make install
-	# cd ..
-
-	mkdir -p build
-	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS=$PARMETIS_INCLUDE_DIRS \
-		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn
-	make pzdrive_spawn
-
 
 	cd $GPTUNEROOT/examples/Hypre
 	rm -rf hypre
@@ -481,16 +451,6 @@ fi
 
 
 if [[ -z "${GPTUNE_LITE_MODE}" ]]; then
-
-	cd $GPTUNEROOT
-	rm -rf mpi4py
-	git clone https://github.com/mpi4py/mpi4py.git
-	cd mpi4py/
-	python setup.py build --mpicc="$MPICC -shared"
-	python setup.py install 
-	# env CC=mpicc pip install  -e .
-
-
 
 if [ "$PyMINOR" -gt 8 ]; then
 	#### install pygmo and its dependencies tbb, boost, pagmo from source, as pip install pygmo for python >3.8 is not working yet on some linux distributions. Otherwise, one can use requirement.txt to install pygmo.   

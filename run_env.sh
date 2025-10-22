@@ -135,7 +135,7 @@ if [ $ModuleEnv = 'tr4-workstation-AMD1950X-openmpi-gnu' ]; then
 elif [ $ModuleEnv = 'ex3-xeongold16q-openmpi-gnu' ]; then
         module load cmake/gcc/3.26.4
         # module load python37
-      module load openblas/dynamic/0.3.7
+        module load openblas/dynamic/0.3.7
         # module load openblas/dynamic/0.3.23
         module load openmpi/gcc/64/4.1.5
         module load jq/1.6
