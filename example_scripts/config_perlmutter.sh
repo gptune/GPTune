@@ -7,19 +7,35 @@ if [[ $NERSC_HOST != "perlmutter" ]]; then
 	exit
 fi
 
-source /opt/cray/pe/cpe/23.12/restore_lmod_system_defaults.sh
-module load cpe/23.03 
+##################################################
+##################################################
+machine=perlmutter
+proc=milan   # milan,gpu
+mpi=craympich    # craympich, openmpi
+compiler=gnu   # gnu, intel	
+export ModuleEnv=$machine-$proc-$mpi-$compiler
+
 
 #################
 # Note that the following module versions need to be updated over time 
 #################
-PY_VERSION=3.11
-# PY_TIME=2021.11
-GCC_VERSION=11.2.0
-LIBSCI_VERSION=23.02.1.1
-MPICH_VERSION=8.1.25
-OPENMPI_VERSION=5.0.3
-CUDA_VERSION=11.7
+if [[ $ModuleEnv == *"openmpi"* ]]; then
+	PY_VERSION=3.11
+	# PY_TIME=2021.11
+	GCC_VERSION=11.2.0
+	OPENMPI_VERSION=5.0.3
+	CUDA_VERSION=11.7
+else 
+	PY_VERSION=3.11
+	# PY_TIME=2021.11
+	GCC_VERSION=13.2
+	LIBSCI_VERSION=24.07.0
+	MPICH_VERSION=8.1.30
+	CUDA_VERSION=12.4
+fi
+
+
+
 
 rm -rf  ~/.cache/pip
 rm -rf ~/.local/perlmutter/
@@ -34,17 +50,11 @@ module unload cmake
 module load cmake
 
 
-##################################################
-##################################################
-machine=perlmutter
-proc=milan   # milan,gpu
-mpi=openmpi    # craympich, openmpi
-compiler=gnu   # gnu, intel	
+
 
 
 BuildExample=0 # whether to build all examples
 
-export ModuleEnv=$machine-$proc-$mpi-$compiler
 
 
 ##################################################
@@ -54,14 +64,14 @@ echo "The ModuleEnv is $ModuleEnv"
 if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
-	module load gcc/${GCC_VERSION}
+	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
 	module load cray-mpich/${MPICH_VERSION}	
 	module load cudatoolkit/${CUDA_VERSION}
 	GPTUNEROOT=$PWD
-	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
-	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
-	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -75,13 +85,13 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	export CRAYPE_LINK_TYPE=dynamic
 	module load PrgEnv-gnu
-	module load gcc/${GCC_VERSION}
+	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
 	module load cray-mpich/${MPICH_VERSION}
 	GPTUNEROOT=$PWD
-	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
-	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
-	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_82_mpi_mp.so"
+	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -90,6 +100,8 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 # fi 
 
 elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
+	source /opt/cray/pe/cpe/23.12/restore_lmod_system_defaults.sh
+	module load cpe/23.03 
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -118,6 +130,8 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 # fi 
 
 elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
+	source /opt/cray/pe/cpe/23.12/restore_lmod_system_defaults.sh
+	module load cpe/23.03 
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -148,9 +162,9 @@ fi
 
 # export PYTHONPATH=~/.local/perlmutter/$PY_VERSION-anaconda-$PY_TIME/lib/python$PY_VERSION/site-packages
 export PYTHONPATH=$PREFIX_PATH/lib/python$PY_VERSION/site-packages
-export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
-export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
-export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
+# export PYTHONPATH=$PYTHONPATH:$PWD/autotune/
+# export PYTHONPATH=$PYTHONPATH:$PWD/scikit-optimize/
+# export PYTHONPATH=$PYTHONPATH:$PWD/mpi4py/
 export PYTHONPATH=$PYTHONPATH:$PWD/GPTune/
 export PYTHONWARNINGS=ignore
 
@@ -164,11 +178,11 @@ export METIS_INCLUDE_DIRS="$ParMETIS_DIR/include"
 export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/libmetis.so"
 export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
-export TBB_ROOT=$GPTUNEROOT/oneTBB/build
-export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+# export TBB_ROOT=$GPTUNEROOT/oneTBB/build
+# export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
 # export BOOST_ROOT=/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build
-export BOOST_ROOT=/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/
-export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
+# export BOOST_ROOT=/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/
+# export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
 
 
 
@@ -187,9 +201,9 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	LDSHARED="$MPICC -shared" CC=$MPICC python setup.py build_ext --inplace
 	python setup.py install --prefix=$PREFIX_PATH
 	cd $GPTUNEROOT
-	env CC=$MPICC pip install --user -r requirements_intel.txt
+	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_intel.txt
 else 
-	env CC=$MPICC pip install --user -r requirements_perlmutter.txt
+	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_perlmutter.txt
 fi
 # cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 
@@ -199,6 +213,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 	cd $GPTUNEROOT
 	git clone https://github.com/xianyi/OpenBLAS
 	cd OpenBLAS
+	git checkout v0.3.30
 	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 -j32
 	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 install -j32
 
@@ -249,102 +264,67 @@ cmake .. \
 make install
 
 
+cd $GPTUNEROOT/examples/SuperLU_DIST
+rm -rf superlu_dist
+git clone https://github.com/xiaoyeli/superlu_dist.git
+cd superlu_dist
+
+wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
+tar -xf parmetis_4.0.3.orig.tar.gz
+cd parmetis-4.0.3/
+cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
+mkdir -p install
+make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
+make install > make_parmetis_install.log 2>&1
+cd ../
+cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
+cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
+
+mkdir -p build
+cd build
+rm -rf CMakeCache.txt
+rm -rf DartConfiguration.tcl
+rm -rf CTestTestfile.cmake
+rm -rf cmake_install.cmake
+rm -rf CMakeFiles
+cmake .. \
+	-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
+	-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=0 -DPROFlevel=0 -DDEBUGlevel=0" \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CUDA_FLAGS=$SLU_CUDA_FLAG \
+	-DTPL_ENABLE_CUDALIB=$SLU_ENABLE_CUDA \
+	-DCMAKE_CUDA_ARCHITECTURES=80 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
+	-DTPL_PARMETIS_INCLUDE_DIRS="${PARMETIS_INCLUDE_DIRS}" \
+	-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
+make pddrive_spawn -j
+make pzdrive_spawn -j
+make pddrive3d -j
+make python -j
+make install -j
+
+
+
+
 if [[ $BuildExample == 1 ]]; then
 
-	cd $GPTUNEROOT/examples/SuperLU_DIST
-	rm -rf superlu_dist
-	git clone https://github.com/xiaoyeli/superlu_dist.git
-	cd superlu_dist
-
-	#### the following server is often down, so switch to the github repository 
-	# wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz
-	# tar -xf parmetis-4.0.3.tar.gz
-	wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/parmetis/4.0.3-4/parmetis_4.0.3.orig.tar.gz
-	tar -xf parmetis_4.0.3.orig.tar.gz
-	cd parmetis-4.0.3/
-	cp $GPTUNEROOT/patches/parmetis/CMakeLists.txt .
-	mkdir -p install
-	make config shared=1 cc=$MPICC cxx=$MPICXX prefix=$PWD/install
-	make install > make_parmetis_install.log 2>&1
-	cd ../
-	cp $PWD/parmetis-4.0.3/build/Linux-x86_64/libmetis/libmetis.so $PWD/parmetis-4.0.3/install/lib/.
-	cp $PWD/parmetis-4.0.3/metis/include/metis.h $PWD/parmetis-4.0.3/install/include/.
-
-
-	# mkdir -p $ParMETIS_DIR
-	# rm -f GKlib
-	# git clone https://github.com/KarypisLab/GKlib.git
-	# cd GKlib
-	# make config prefix=$ParMETIS_DIR
-	# make -j8
-	# make install
-	# sed -i "s/-DCMAKE_VERBOSE_MAKEFILE=1/-DCMAKE_VERBOSE_MAKEFILE=1 -DBUILD_SHARED_LIBS=ON/" Makefile
-	# make config prefix=$ParMETIS_DIR
-	# make -j8
-	# make install
-
-	# cd ../
-	# rm -rf METIS
-	# git clone https://github.com/KarypisLab/METIS.git
-	# cd METIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR 
-	# make -j8
-	# make install	
-	# cd ../
-	# rm -rf ParMETIS
-	# git clone https://github.com/KarypisLab/ParMETIS.git
-	# cd ParMETIS
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR shared=1
-	# make -j8
-	# make install
-	# make config cc=$MPICC prefix=$ParMETIS_DIR gklib_path=$ParMETIS_DIR
-	# make -j8
-	# make install
-	# cd ../
-
-	mkdir -p build
-	cd build
-	rm -rf CMakeCache.txt
-	rm -rf DartConfiguration.tcl
-	rm -rf CTestTestfile.cmake
-	rm -rf cmake_install.cmake
-	rm -rf CMakeFiles
-	cmake .. \
-		-DCMAKE_CXX_FLAGS="-Ofast -std=c++11 -DAdd_ -DRELEASE" \
-		-DCMAKE_C_FLAGS="-std=c11 -DPRNTlevel=1 -DPROFlevel=0 -DDEBUGlevel=0" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_CUDA_FLAGS=$SLU_CUDA_FLAG \
-		-DTPL_ENABLE_CUDALIB=$SLU_ENABLE_CUDA \
-		-DCMAKE_CUDA_ARCHITECTURES=80 \
-		-DCMAKE_INSTALL_PREFIX=. \
-	 	-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB};${CUBLAS_LIB}" \
-		-DTPL_PARMETIS_INCLUDE_DIRS="${PARMETIS_INCLUDE_DIRS}" \
-		-DTPL_PARMETIS_LIBRARIES=$PARMETIS_LIBRARIES
-	make pddrive_spawn
-	make pzdrive_spawn
-	make pddrive3d
-	make install
-
-
-	# cd $GPTUNEROOT/examples/Hypre
-	# rm -rf hypre
-	# git clone https://github.com/hypre-space/hypre.git
-	# cd hypre/src/
-	# git checkout v2.19.0
-	# ./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	# make
-	# cp ../../hypre-driver/src/ij.c ./test/.
-	# make test
+	cd $GPTUNEROOT/examples/Hypre
+	rm -rf hypre
+	git clone https://github.com/hypre-space/hypre.git
+	cd hypre/src/
+	git checkout v2.19.0
+	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	make
+	cp ../../hypre-driver/src/ij.c ./test/.
+	make test
 
 
 	cd $GPTUNEROOT/examples/ButterflyPACK
@@ -557,13 +537,14 @@ fi
 # make -j16
 # make install
 
-cd $GPTUNEROOT
-rm -rf mpi4py
-git clone https://github.com/mpi4py/mpi4py.git
-cd mpi4py/
-python setup.py build --mpicc="$MPICC -shared"
-python setup.py install --prefix=$PREFIX_PATH
-# env CC=mpicc pip install --user -e .								  
+# cd $GPTUNEROOT
+# rm -rf mpi4py
+# git clone https://github.com/mpi4py/mpi4py.git
+# cd mpi4py/
+# git checkout 4.1.0
+# python setup.py build --mpicc="$MPICC -shared"
+# python setup.py install --prefix=$PREFIX_PATH
+# # env CC=mpicc pip install --user -e .								  
 
 
 

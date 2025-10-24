@@ -30,4 +30,5 @@ ytopt-autotune @ git+https://git@github.com/gptune/autotune.git
 cgp @ git+https://git@github.com/gptune/cGP.git
 hybridMinimization @ git+https://git@github.com/gptune/hybridMinimization.git
 george @ git+https://github.com/gptune/george.git
-mpi4py 
+--no-binary=mpi4py
+mpi4py >= 4.0.0 

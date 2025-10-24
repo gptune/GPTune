@@ -45,12 +45,12 @@
 # export nodes=16  # number of nodes to be used
 
 
-# ############# Perlmutter
-# export machine=perlmutter
-# export proc=milan   # milan,gpu
-# export mpi=openmpi #openmpi  # craympich
-# export compiler=gnu   # gnu, intel
-# export nodes=1  # number of nodes to be used
+############# Perlmutter
+export machine=perlmutter
+export proc=milan   # milan,gpu
+export mpi=craympich #openmpi  # craympich
+export compiler=gnu   # gnu, intel
+export nodes=1  # number of nodes to be used
 
 # # ################ Yang's tr4 machine
 #  export machine=tr4-workstation
@@ -60,12 +60,12 @@
 #  export nodes=1  # number of nodes to be used
 # # #
 
-################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
-export machine=cleanlinux
-export proc=unknown
-export mpi=openmpi
-export compiler=gnu
-export nodes=1  # number of nodes to be used
+# ################ Any ubuntu/debian machine that has used config_cleanlinux.sh to build GPTune
+# export machine=cleanlinux
+# export proc=unknown
+# export mpi=openmpi
+# export compiler=gnu
+# export nodes=1  # number of nodes to be used
 
 
 # # ################ ex3 simula
@@ -408,14 +408,14 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 
 ############### Perlmutter Milan with GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
-    PY_VERSION=3.11
-    GCC_VERSION=11.2.0
-    LIBSCI_VERSION=23.02.1.1
-    MPICH_VERSION=8.1.25
-    CUDA_VERSION=11.7
+	PY_VERSION=3.11
+	GCC_VERSION=13.2
+	LIBSCI_VERSION=24.07.0
+	MPICH_VERSION=8.1.30
+	CUDA_VERSION=12.4
     module load python/$PY_VERSION
 	module load PrgEnv-gnu
-	module load gcc/${GCC_VERSION}
+	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
 	module load cray-mpich/${MPICH_VERSION}	
 	module load cudatoolkit/${CUDA_VERSION}
@@ -520,13 +520,13 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 
 ############### Perlmutter Milan with no GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
-    PY_VERSION=3.11
-    GCC_VERSION=11.2.0
-    LIBSCI_VERSION=23.02.1.1
-    MPICH_VERSION=8.1.25
+	PY_VERSION=3.11
+	GCC_VERSION=13.2
+	LIBSCI_VERSION=24.07.0
+	MPICH_VERSION=8.1.30
     module load python/$PY_VERSION
 	module load PrgEnv-gnu
-	module load gcc/${GCC_VERSION}
+	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
 	module load cray-mpich/${MPICH_VERSION}	
 

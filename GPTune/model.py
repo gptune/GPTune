@@ -19,6 +19,7 @@ import abc
 import copy
 from typing import Collection, Tuple
 import numpy as np
+from sklearn.neighbors import BallTree
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -30,7 +31,7 @@ from mcmc import MCMC
 
 import scipy.optimize as op
 from scipy.stats import truncnorm, gamma, invgamma, norm, uniform
-
+import time
 
 
 import math
@@ -1417,43 +1418,37 @@ class Model_George(Model):
 
 
 
-    def range_search(self, node, query, distance):
-        neighbors = []  # To store all found neighbors
+    def range_search(self, node, query, radius):
+        neighbors = []
+        radius_sq = radius * radius
 
         def search(node, depth=0):
             if node is None:
                 return
             
-            # Compute the distance from the query point to the current node's point
-            dist = np.linalg.norm(query - node.point)
-            
-            # If the current point is within the specified distance
-            if dist <= distance:
-                neighbors.append((node.index, node.point, dist))
-            
-            # Determine which side of the tree to search first
             axis = depth % node.dim
             diff = query[axis] - node.point[axis]
-            
-            # Check both sides of the tree
+
+            # Compute squared distance only
+            delta = query - node.point
+            dist_sq = np.dot(delta, delta)
+
+            # If within range, record it
+            if dist_sq <= radius_sq:
+                neighbors.append((node.index, node.point, np.sqrt(dist_sq)))
+
+            # Search the nearer branch first
             if diff < 0:
-                # Search the left branch first
                 search(node.left, depth + 1)
-                # Check if we need to search the right branch
-                if abs(diff) < distance:
+                if diff * diff <= radius_sq:  # prune by hyperplane distance
                     search(node.right, depth + 1)
             else:
-                # Search the right branch first
                 search(node.right, depth + 1)
-                # Check if we need to search the left branch
-                if abs(diff) < distance:
+                if diff * diff <= radius_sq:
                     search(node.left, depth + 1)
 
-        # Start the search
         search(node, 0)
         return neighbors
-
-
 
 
 
@@ -1848,6 +1843,7 @@ class Model_George(Model):
             x = copy.deepcopy(data.P[0])
             self.y = copy.deepcopy(data.O[0])
 
+            start = time.time()    
             if kwargs['model_lowrank'] == True:
                 print(x.shape)
                 perm,root = self.generate_kd_tree(x)
@@ -1871,27 +1867,14 @@ class Model_George(Model):
             else:
                 if kwargs['model_kern'] == 'WendlandC2':
                     print(x.shape)
-                    perm,root = self.generate_kd_tree(x)
-                    inv_perm = np.empty_like(perm)  
-                    x = x[perm]
-                    self.y = self.y[perm]
-                    N = len(perm)
-                    nns = [[] for _ in range(N)]  # List to hold nonzero indices of a hypothetical NxN matrix
+                    tree = BallTree(x)    
+                    nns = tree.query_radius(x, r=kwargs['model_cutoff'])
 
-                    for i in range(N):
-                        inv_perm[perm[i]] = i       
-
-                    for i in range(N):
-                        query_point = x[i]
-                        nn = self.range_search(root, query_point, kwargs['model_cutoff'])
-                        k=0
-                        for idx, p, dist in nn:
-                            nns[i].append(inv_perm[idx])
-                            # print(i,inv_perm[idx],dist)
-                            k = k+1 
                 else: 
                     nns = np.zeros((x.shape[0],0)).astype(int)                              
                     # print(nns)
+            end = time.time()
+            print(f"Time spent in nns computation: {end - start} seconds")
             self.M.compute(x, nns, yerr=kwargs['model_jitter'])
             
             if kwargs['model_kern'] == 'WendlandC2':

@@ -251,6 +251,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
 
     if(modelsparse==True):
         options['model_sparse'] = True
+        options['model_cutoff'] = 0.01*12801.0/NS_input
         options['model_kern'] = 'WendlandC2'
     
     # Temporary hardcode 
@@ -259,6 +260,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
         options['model_grad'] = True
     elif (optimizer == "mcmc"):
         options['model_mcmc'] = True
+        options['model_grad'] = False
         options['model_mcmc_sampler'] = 'MetropolisHastings' # 'Ensemble_emcee', 'MetropolisHastings'
         options['model_mcmc_nchain'] = 2
     elif (optimizer == "finite difference"):
@@ -425,15 +427,6 @@ def objective_selection():
         raise Exception("Invalid objective selection")
 
     
-# def setup():
-#     # setup cases base off input
-
-#     # Have the option to select the kernel for each 
-
-#     objective = input("How many many cases would you like compare?")
-
-
-
     
     
 import matplotlib.pyplot as plt
@@ -480,7 +473,7 @@ def plotting(objective, objtype):
     # NS = [201, 401, 801, 1601, 3201, 6401, 12801, 25601, 51201, 102401, 204801, 409601]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [1601, 3201, 6401]
+    NS = [6401, 12801, 25601, 51201, 102401]
     
     for elem in NS:
 
