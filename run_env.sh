@@ -558,6 +558,7 @@ elif [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
     if [[ $MPIFromSource = 1 ]]; then
         export PATH=$PWD/openmpi-4.1.5/bin:$PATH
         export MPIRUN=$PWD/openmpi-4.1.5/bin/mpirun
+		export MPIARG=--allow-run-as-root
         export LD_LIBRARY_PATH=$PWD/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
     else
         export PATH=$PATH
