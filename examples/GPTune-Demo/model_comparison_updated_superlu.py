@@ -45,6 +45,7 @@ from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
 from gptune import * # import all
+from mpl_toolkits.mplot3d import Axes3D
 
 
 import argparse
@@ -131,9 +132,26 @@ def objectives3(point):
     return [y]
 
 
-def predict_aug(modeler, gt, point,tid):   # point is the orginal space
-    x =point['x']
-    xNorm = gt.problem.PS.transform([[x]])
+def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
+
+    if(objtype==1):
+        x =point['x']
+        x = [x]
+    elif(objtype==2):
+        x1 =point['x1']
+        x2 =point['x2']
+        x = [x1,x2]  
+    elif(objtype==3):
+        x1 =point['x1']
+        x2 =point['x2']          
+        x3 =point['x3']
+        x4 =point['x4']  
+        x5 =point['x5']
+        x6 =point['x6']  
+        x = [x1,x2,x3,x4,x5,x6]  
+
+    # x =point['x']
+    xNorm = gt.problem.PS.transform([x])
     xi0 = gt.problem.PS.inverse_transform(np.array(xNorm, ndmin=2))
     xi=xi0[0]
 
@@ -251,7 +269,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
 
     if(modelsparse==True):
         options['model_sparse'] = True
-        options['model_cutoff'] = 0.01*12801.0/NS_input
+        options['model_cutoff'] = 0.1
         options['model_kern'] = 'WendlandC2'
     
     # Temporary hardcode 
@@ -321,8 +339,8 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
 
         if objtype==1 and plotgp==True:
             # fig = plt.figure(figsize=[12.8, 9.6])
-            x = np.arange(0., 1., 0.01)
             for tid in range(len(data.I)):
+                x = np.arange(0., 1., 0.01)
                 fig = plt.figure(figsize=[12.8, 9.6])
                 p = data.I[tid]
                 t = p[0]
@@ -337,7 +355,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
                     kwargs.update(kwargst)
                     y[i]=objectives1(kwargs)
                     if(TUNER_NAME=='GPTune'):
-                        (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid)
+                        (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid,objtype)
                         y_std[i]=np.sqrt(var)
                         # print(y_mean[i],y_std[i],y[i])
                 fontsize=40
@@ -370,7 +388,80 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,lowrank=Fal
 
 
 
+        if objtype==2 and plotgp==True:
+            # fig = plt.figure(figsize=[12.8, 9.6])
+            for tid in range(len(data.I)):
+                res = 80
+                x1 = np.linspace(0., 1., res)
+                x2 = np.linspace(0., 1., res)
+                X1, X2 = np.meshgrid(x1, x2)
 
+                Y_mean = np.zeros_like(X1)
+                Y_std  = np.zeros_like(X1)
+                Y_true  = np.zeros_like(X1)
+
+                # kwargst from data.I[tid]
+                p = data.I[tid]
+                t = p[0]
+                kwargst = {input_space[k].name: p[k] for k in range(len(input_space))}
+
+                # ====== 2. Evaluate GP ======
+                for i in range(res):
+                    for j in range(res):
+                        P_orig = [x1[i], x2[j]]
+                        kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
+                        kwargs.update(kwargst)
+                        
+                        Y_true[j, i] = objectives2(kwargs)[0]
+
+                        y_m, var = predict_aug(modeler, gt, kwargs, tid, objtype)
+                        # print(kwargs,y_m,var)
+                        Y_mean[j, i] = y_m
+                        Y_std[j, i]  = np.sqrt(var)
+                # print(Y_mean)
+                # Sampled points
+                samples = np.array(data.P[tid], dtype=float)   # shape (m, 2)
+                # print(samples)
+                sample_vals = data.O[tid].reshape(-1)  # shape (m,)
+
+                fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+                titles = ["True Function", "Predicted Mean", "Predicted Std"]
+
+                # --- True function ---
+                c0 = axes[0].contourf(X1, X2, Y_true, levels=50, cmap='viridis')
+                fig.colorbar(c0, ax=axes[0])
+                axes[0].scatter(samples[:,0], samples[:,1], c='r', edgecolor='r', s=1)
+                axes[0].set_title(titles[0])
+                axes[0].set_xlabel("x1")
+                axes[0].set_ylabel("x2")
+
+                # --- GP mean ---
+                c1 = axes[1].contourf(X1, X2, Y_mean, levels=50, cmap='viridis')
+                fig.colorbar(c1, ax=axes[1])
+                axes[1].scatter(samples[:,0], samples[:,1], c='r', edgecolor='r', s=1)
+                axes[1].set_title(titles[1])
+                axes[1].set_xlabel("x1")
+                axes[1].set_ylabel("x2")
+
+                # --- GP std ---
+                c2 = axes[2].contourf(X1, X2, Y_std, levels=50, cmap='magma')
+                fig.colorbar(c2, ax=axes[2])
+                axes[2].scatter(samples[:,0], samples[:,1], c='r', edgecolor='r', s=1)
+                axes[2].set_title(titles[2])
+                axes[2].set_xlabel("x1")
+                axes[2].set_ylabel("x2")
+
+                plt.tight_layout()
+                plt.show(block=False)
+                plt.pause(0.5)
+                # input("Press [enter] to continue.")
+                if(lowrank==True):
+                    fig.savefig('obj_2D_%s_N_%s_tol_%s.pdf'%(optimizer,int(NS_input - 1),options['model_hodlrtol']))
+                elif(modelsparse==True):    
+                    fig.savefig('obj_2D_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
+                else:
+                    fig.savefig('obj_2D_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
+                    
 
     if(TUNER_NAME=='opentuner'):
         (data,stats)=OpenTuner(T=giventask, NS=NS, tp=problem, computer=computer, run_id="OpenTuner", niter=1, technique=None)
@@ -473,7 +564,8 @@ def plotting(objective, objtype):
     # NS = [201, 401, 801, 1601, 3201, 6401, 12801, 25601, 51201, 102401, 204801, 409601]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
-    NS = [6401, 12801, 25601, 51201, 102401]
+    # NS = [6401, 12801, 25601, 51201, 102401]
+    NS = [6401]
     
     for elem in NS:
 
@@ -484,37 +576,37 @@ def plotting(objective, objtype):
         model_iterations_sparse_gradient.extend(sparse_stats_gradient.get("modeling_iteration"))
         
 
-        sparse_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer = "finite difference",plotgp=plotgp)
-        model_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model"))
-        model_time_per_likelihoodeval_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        search_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_search"))
-        model_iterations_sparse_finite_difference.extend(sparse_stats_finite_difference.get("modeling_iteration"))
+        # sparse_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer = "finite difference",plotgp=plotgp)
+        # model_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model"))
+        # model_time_per_likelihoodeval_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        # search_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_search"))
+        # model_iterations_sparse_finite_difference.extend(sparse_stats_finite_difference.get("modeling_iteration"))
 
-        sparse_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer="mcmc",plotgp=plotgp)
-        model_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model"))
-        model_time_per_likelihoodeval_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model_per_likelihoodeval"))
-        search_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_search"))
-        model_iterations_sparse_mcmc.extend(sparse_stats_mcmc.get("modeling_iteration"))
+        # sparse_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer="mcmc",plotgp=plotgp)
+        # model_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model"))
+        # model_time_per_likelihoodeval_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model_per_likelihoodeval"))
+        # search_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_search"))
+        # model_iterations_sparse_mcmc.extend(sparse_stats_mcmc.get("modeling_iteration"))
 
 
-        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
-        model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
+        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
-        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference",plotgp=plotgp)
-        model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
-        model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
+        # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference",plotgp=plotgp)
+        # model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
+        # model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
-        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc",plotgp=plotgp)
-        model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
-        model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
+        # hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc",plotgp=plotgp)
+        # model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
+        # model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
         # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
