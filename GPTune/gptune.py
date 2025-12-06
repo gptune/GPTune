@@ -637,7 +637,7 @@ class GPTune(object):
     def MLA_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, mfs = None, **kwargs):
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
@@ -648,7 +648,7 @@ class GPTune(object):
             "modeling_iteration":[]
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -808,7 +808,7 @@ class GPTune(object):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
         t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
+        time_init = time_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
 
@@ -1060,7 +1060,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
-        stats['time_sample_init'] = time_sample_init
+        stats['time_init'] = time_init
         stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -1092,7 +1092,7 @@ class GPTune(object):
     def MLA_ParallelEval_(self, NS, NS1 = None, NI = None, Tgiven = None, T_sampleflag = None, function_evaluations = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
@@ -1103,7 +1103,7 @@ class GPTune(object):
             "modeling_iteration":[]
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -1255,7 +1255,7 @@ class GPTune(object):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
         t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
+        time_init = time_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
 
@@ -1522,7 +1522,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_search'] = time_search
         stats['time_loaddata'] = time_loaddata
-        stats['time_sample_init'] = time_sample_init
+        stats['time_init'] = time_init
 
         return (copy.deepcopy(self.data), modelers, stats)
 
@@ -2080,7 +2080,7 @@ class GPTune(object):
     def TLA_Regression(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
@@ -2091,7 +2091,7 @@ class GPTune(object):
             "modeling_iteration":[]
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -2197,7 +2197,7 @@ class GPTune(object):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
         t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
+        time_init = time_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
         if (NSmin<NS1):
@@ -2401,7 +2401,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
-        stats['time_sample_init'] = time_sample_init
+        stats['time_init'] = time_init
         stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -2409,7 +2409,7 @@ class GPTune(object):
     def TLA_LCM_BF(self, NS, NS1 = None, NI = None, Tgiven = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
@@ -2420,7 +2420,7 @@ class GPTune(object):
             "modeling_iteration":[]
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -2525,7 +2525,7 @@ class GPTune(object):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
         t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
+        time_init = time_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
         if (NSmin<NS1):
@@ -2722,7 +2722,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_search'] = time_search
         stats['time_loaddata'] = time_loaddata
-        stats['time_sample_init'] = time_sample_init
+        stats['time_init'] = time_init
         stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -2730,7 +2730,7 @@ class GPTune(object):
     def TLA_Stacking(self, NS, NS1 = None, NI = None, Tgiven = None, source_function_evaluations = None, models_transfer = None, **kwargs):
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
@@ -2741,7 +2741,7 @@ class GPTune(object):
             "modeling_iteration":[]
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -3029,7 +3029,7 @@ class GPTune(object):
             raise Exception("len(self.data.O) !=len(self.data.I)")
 
         t2 = time.time_ns()
-        time_sample_init = time_sample_init + (t2-t1)/1e9
+        time_init = time_init + (t2-t1)/1e9
 
         t1 = time.time_ns()
         if (NSmin<NS1 or run_pilot_anyway == True):
@@ -3218,7 +3218,7 @@ class GPTune(object):
         stats['time_model'] = time_model
         stats['time_loaddata'] = time_loaddata
         stats['time_search'] = time_search
-        stats['time_sample_init'] = time_sample_init
+        stats['time_init'] = time_init
         stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
         return (copy.deepcopy(self.data), modelers, stats)
@@ -3401,14 +3401,14 @@ class GPTune_MB(object):
 
         stats = {
             "time_total": 0,
-            "time_sample_init": 0,
+            "time_init": 0,
             "time_fun": 0,
             "time_search": 0,
             "time_model": 0,
             "time_loaddata": 0
         }
         time_fun=0
-        time_sample_init=0
+        time_init=0
         time_search=0
         time_model=0
         time_loaddata=0
@@ -3475,7 +3475,7 @@ class GPTune_MB(object):
                 stats['time_model'] += stats0['time_model']
                 stats['time_loaddata'] += stats0['time_loaddata']
                 stats['time_search'] += stats0['time_search']
-                stats['time_sample_init'] += stats0['time_sample_init']
+                stats['time_init'] += stats0['time_init']
                 stats["modeling_iteration"] += stats0["modeling_iteration"]
 
             stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
