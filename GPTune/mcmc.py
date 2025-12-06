@@ -51,7 +51,16 @@ class MCMCSampler_MetropolisHastings:
 
     # Update the proposal sample function to use the dynamic covariance
     def q_sample(self, x, covariance):
-        return np.random.multivariate_normal(x, covariance)
+        if self.bounds is None:
+            return np.random.multivariate_normal(x, covariance)
+        else:
+            bounds = np.array(self.bounds, dtype=float) 
+            while True:
+                candidate = np.random.multivariate_normal(x, covariance)
+                if np.all(candidate >= bounds[:,0]) and np.all(candidate <= bounds[:,1]):
+                    return candidate
+
+
 
 
     def get_last_sample(self):
@@ -88,14 +97,19 @@ class MCMCSampler_MetropolisHastings:
         samples = np.zeros((iterations, self.ndim))  # Preallocate array for samples
         log_probs = np.zeros(iterations)  # Preallocate array for log probabilities
         covariance = np.eye(self.ndim) * self.scale  # Initial covariance
+        
         px = self.p(x,self.bounds) 
 
         for i in range(iterations):
             x_candidate = self.q_sample(x, covariance)
             px_candiate = self.p(x_candidate,self.bounds)
+            
+            log_accept_ratio = px_candiate- px+ np.log(self.q(x, x_candidate, covariance))- np.log(self.q(x_candidate, x, covariance))
+            accept_prob = np.exp(min(0, log_accept_ratio))
 
-            accept_prob = min(1, (np.exp(px_candiate) * self.q(x, x_candidate, covariance)) /
-                                 (np.exp(px) * self.q(x_candidate, x, covariance)))
+
+            # print(accept_prob,i,'wocao',px_candiate,px)
+
             if np.random.rand() < accept_prob:
                 x = x_candidate
                 log_probs[i] = px_candiate  # Store the log probability    
