@@ -18,7 +18,7 @@
 #
 
 import sys, os
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 
 import math
 
@@ -73,7 +73,7 @@ ret = gptune.SensitivityAnalysis(
     modeler="Model_GPy_LCM",
     method="Sobol",
     input_task = [1000,1000],
-    tuning_problem_name = "PDGEQRF", # read function evaluations from gptune.db/PDGEQRF.json
+    tuning_problem_name = "PDGEQRF", # read function evaluations from GPTune.gptune.db/PDGEQRF.json
     num_samples=512)
 print (ret)
 '''

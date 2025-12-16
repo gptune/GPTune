@@ -35,21 +35,21 @@ import sys
 import os
 # import mpi4py
 import logging
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 logging.getLogger('matplotlib.font_manager').disabled = True
 import matplotlib.pyplot as plt
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 import argparse
 # from mpi4py import MPI
 import numpy as np
 import time
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 
 
 
@@ -238,7 +238,7 @@ def main():
 
     # options['mpi_comm'] = None
     #options['mpi_comm'] = mpi4py.MPI.COMM_WORLD
-    options['model_class'] = 'Model_George'#'Model_GPy_LCM' #'Model_LCM' 
+    options['model_class'] = 'Model_GPy_LCM' #'Model_George'#'Model_GPy_LCM' #'Model_LCM' 
     options['model_lowrank'] = False
     options['model_hodlrleaf'] = 200
     options['model_hodlrtol'] = 1e-3

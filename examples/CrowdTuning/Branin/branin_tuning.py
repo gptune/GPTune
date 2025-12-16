@@ -20,15 +20,15 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../../GPTune/"))
+
 api_key = os.getenv("CROWDTUNING_API_KEY")
 
-from gptune import *
+from GPTune.gptune import *
 
 import argparse
 import numpy as np
 
-import crowdtune
+from GPTune import crowdtune
 
 def parse_args():
 

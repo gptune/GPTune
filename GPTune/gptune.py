@@ -22,14 +22,14 @@ import time
 from autotune.problem import TuningProblem
 from autotune.space import *
 
-from problem import Problem
-from computer import Computer
-from options import Options
-from data import *
-from database import *
-from sample import *
-from model import *
-from search import *
+from GPTune.problem import Problem
+from GPTune.computer import Computer
+from GPTune.options import Options
+from GPTune.data import *
+from GPTune.database import *
+from GPTune.sample import *
+from GPTune.model import *
+from GPTune.search import *
 import math
 import os
 
@@ -3480,7 +3480,7 @@ class GPTune_MB(object):
 
             stats['time_model_per_likelihoodeval'] = stats['time_model']/sum(stats["modeling_iteration"])
 
-            # bug fix: data1 will load all available data from database, the following make srue that it only contains MLA samples generated at the current loop    
+            # bug fix: data1 will load all available data from GPTune.database, the following make srue that it only contains MLA samples generated at the current loop    
             for s in range(len(self.budgets)):  # loop over the budget levels
                 idx = s*len(Tgiven) 
                 for i in range(len(Tgiven)):

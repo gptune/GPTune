@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gptune"
-version = "4.0.0"
+version = "5.0.0"
 description = "GPTune: autotuning framework"
 readme = "README.md"
 

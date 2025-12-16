@@ -49,8 +49,8 @@ import sys, os
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+from GPTune.gptune import * # import all
+
 sys.path.insert(0, os.path.abspath(__file__ + "/../cnnMNIST-driver/"))
 from cnnMNISTdriver import cnnMNISTdriver
 import re
@@ -59,8 +59,8 @@ import time
 import argparse
 import pickle
 from random import *
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter, HpBandSter_bandit
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter, HpBandSter_bandit
 import math
 import functools
 import scipy

@@ -38,15 +38,15 @@ from mpi4py import MPI
 from array import array
 import math
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../../GPTune/"))
 
-from gptune import *
+
+from GPTune.gptune import *
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 import math
 import time
 

@@ -27,12 +27,12 @@ import functools
 from joblib import *
 
 import copy
-from problem import Problem
-from computer import Computer
-from options import Options
-from data import Data
-from model import Model
-from sample import *
+from GPTune.problem import Problem
+from GPTune.computer import Computer
+from GPTune.options import Options
+from GPTune.data import Data
+from GPTune.model import Model
+from GPTune.sample import *
 
 from pathlib import Path
 import importlib

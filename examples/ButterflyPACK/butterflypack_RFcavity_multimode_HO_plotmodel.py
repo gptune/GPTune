@@ -41,17 +41,17 @@ import math
 import matplotlib.pyplot as plt
 from csv import writer, reader
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from gptune import * # import all
+
+from GPTune.gptune import * # import all
 
 
 from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 import pygmo as pg
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 import math
 
 ################################################################################

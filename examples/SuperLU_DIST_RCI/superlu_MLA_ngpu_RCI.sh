@@ -23,7 +23,7 @@ export PYTHONWARNINGS=ignore
 cd -
 
 # name of your machine, processor model, number of compute nodes, number of cores per compute node, which are defined in .gptune/meta.json
-declare -a machine_info=($(python -c "from gptune import *;
+declare -a machine_info=($(python -c "from GPTune.gptune import *;
 (machine, processor, nodes, cores)=list(GetMachineConfiguration());
 print(machine, processor, nodes, cores)"))
 machine=${machine_info[0]}

@@ -246,6 +246,7 @@ set(GPTUNE_PYTHON_FILES
     GPTune/problem.py
     GPTune/sample.py
     GPTune/search.py
+    GPTune/mcmc.py
 )
 
 

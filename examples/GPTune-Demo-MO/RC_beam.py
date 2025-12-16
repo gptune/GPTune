@@ -20,12 +20,12 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import *
+from GPTune.gptune import *
 
 import argparse
 import numpy as np

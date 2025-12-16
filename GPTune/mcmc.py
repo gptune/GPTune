@@ -19,9 +19,9 @@ import abc
 # import copy
 # from typing import Collection, Tuple
 import numpy as np
-# from problem import Problem
-# from computer import Computer
-# from data import Data
+# from GPTune.problem import Problem
+# from GPTune.computer import Computer
+# from GPTune.data import Data
 
 # import scipy.optimize as op
 # import emcee

@@ -21,13 +21,13 @@ import sys
 import os
 import logging
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 sys.path.insert(0, os.path.abspath(__file__ + "/newtonsketch/"))
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import *
+from GPTune.gptune import *
 
 import argparse
 import numpy as np

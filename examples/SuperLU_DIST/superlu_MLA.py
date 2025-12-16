@@ -39,9 +39,9 @@ import pickle
 from array import array
 import math
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from gptune import * # import all
+
+from GPTune.gptune import * # import all
 
 
 
@@ -49,8 +49,8 @@ from autotune.problem import *
 from autotune.space import *
 from autotune.search import *
 
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 import math
 import subprocess
 
@@ -282,7 +282,7 @@ def main():
 			print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
 	if(TUNER_NAME=='cgp'):
-		from callcgp import cGP
+		from GPTune.callcgp import cGP
 		NI = len(giventask)
 		NS = nrun
 		options['EXAMPLE_NAME_CGP']='SuperLU_DIST'

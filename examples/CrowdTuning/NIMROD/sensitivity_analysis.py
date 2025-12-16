@@ -23,7 +23,7 @@
 import os
 api_key = os.getenv("CROWDTUNING_API_KEY")
 
-import crowdtune
+from GPTune import crowdtune
 
 problem_space = {
     "input_space": [

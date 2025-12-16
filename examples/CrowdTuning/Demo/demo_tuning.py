@@ -35,9 +35,9 @@ where:
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../../GPTune/"))
 
-from gptune import *
+
+from GPTune.gptune import *
 
 import argparse
 import numpy as np
@@ -59,7 +59,7 @@ def parse_args():
 def LoadFunctionEvaluations():
     api_key = os.getenv("CROWDTUNING_API_KEY")
 
-    import crowdtune
+    from GPTune import crowdtune
     problem_space = {
         "input_space": [
             {"name":"t", "type":"real", "transformer":"normalize", "lower_bound":1.0, "upper_bound":1.001}
@@ -81,7 +81,7 @@ def LoadFunctionEvaluations():
 def LoadModels():
     api_key = os.getenv("CROWDTUNING_API_KEY")
 
-    import crowdtune
+    from GPTune import crowdtune
     problem_space = {
         "input_space": [
             {"name":"t", "type":"real", "transformer":"normalize", "lower_bound":1.0, "upper_bound":1.001}

@@ -16,8 +16,8 @@
 #
 
 import numpy as np
-from problem import Problem
-from data import Data
+from GPTune.problem import Problem
+from GPTune.data import Data
 import json
 import os.path
 from filelock import FileLock

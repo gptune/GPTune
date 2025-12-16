@@ -37,13 +37,13 @@ import os
 # import mpi4py
 import logging
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 logging.getLogger('matplotlib.font_manager').disabled = True
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 
 import argparse
@@ -52,8 +52,8 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 
 
 
@@ -284,7 +284,7 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='cgp'):
-        from callcgp import cGP
+        from GPTune.callcgp import cGP
         options['EXAMPLE_NAME_CGP']='GPTune-Demo'
         options['N_PILOT_CGP']=int(NS/2)
         options['N_SEQUENTIAL_CGP']=NS-options['N_PILOT_CGP']

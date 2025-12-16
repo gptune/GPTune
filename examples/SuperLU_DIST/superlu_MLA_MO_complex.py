@@ -40,9 +40,9 @@ from mpi4py import MPI
 from array import array
 import math
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from gptune import * # import all
+
+from GPTune.gptune import * # import all
 
 
 

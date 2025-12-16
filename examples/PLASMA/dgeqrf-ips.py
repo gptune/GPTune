@@ -20,9 +20,9 @@
 import sys
 import os
 import subprocess
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
 
-from gptune import *
+
+from GPTune.gptune import *
 import argparse
 import numpy as np
 import time

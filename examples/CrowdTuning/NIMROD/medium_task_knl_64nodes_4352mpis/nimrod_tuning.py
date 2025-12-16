@@ -22,7 +22,7 @@
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import *
+from GPTune.gptune import *
 
 import sys
 import os
@@ -31,7 +31,7 @@ import time
 import argparse
 import logging
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../../../GPTune/"))
+
 logging.getLogger('matplotlib.font_manager').disabled = True
 
 ################################################################################
@@ -39,7 +39,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 def LoadFunctionEvaluations():
     api_key = os.getenv("CROWDTUNING_API_KEY")
 
-    import crowdtune
+    from GPTune import crowdtune
     problem_space = {
         "input_space": [
             {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},
@@ -75,7 +75,7 @@ def LoadFunctionEvaluations():
 def LoadModels():
     api_key = os.getenv("CROWDTUNING_API_KEY")
 
-    import crowdtune
+    from GPTune import crowdtune
     problem_space = {
         "input_space": [
             {"name":"mx", "type":"integer", "transformer":"normalize", "lower_bound":5, "upper_bound":6},

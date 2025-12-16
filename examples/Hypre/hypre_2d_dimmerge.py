@@ -55,7 +55,7 @@ Input space:
 """
 import sys, os
 # add GPTunde path in front of all python pkg path
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 sys.path.insert(0, os.path.abspath(__file__ + "/../hypre-driver/"))
 
 
@@ -63,7 +63,7 @@ from hypredriver import hypredriver
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 import re
 import numpy as np
@@ -71,9 +71,9 @@ import time
 import argparse
 import pickle
 from random import *
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
-from callhybrid import GPTuneHybrid
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
+from GPTune.callhybrid import GPTuneHybrid
 import math
 import matplotlib.pyplot as plt
 # from termcolor import colored
@@ -320,7 +320,7 @@ def main():
 
 
     if(TUNER_NAME=='cgp'):
-        from callcgp import cGP
+        from GPTune.callcgp import cGP
         NI = len(giventask)
         NS = nrun
         options['EXAMPLE_NAME_CGP']='Hypre'

@@ -24,10 +24,10 @@ from sklearn.neighbors import BallTree
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from problem import Problem
-from computer import Computer
-from data import Data
-from mcmc import MCMC
+from GPTune.problem import Problem
+from GPTune.computer import Computer
+from GPTune.data import Data
+from GPTune.mcmc import MCMC
 
 import scipy.optimize as op
 from scipy.stats import truncnorm, gamma, invgamma, norm, uniform
@@ -1111,7 +1111,7 @@ class Model_LCM(Model):
         import GPy
         if (kwargs['RCI_mode']== False):
             import mpi4py
-            from lcm import LCM
+            from GPTune.lcm import LCM
 
         if (kwargs['model_latent'] is None):
             Q = data.NI
@@ -1214,7 +1214,7 @@ class Model_LCM(Model):
         likelihoods_list = [GPy.likelihoods.Gaussian(variance = kern.sigma[i], name = "Gaussian_noise_%s" %i) for i in range(data.NI)]
         import copy
         data_O = copy.deepcopy(data.O)
-        # YL: GPCoregionalizedRegression initialization in GPy (unlike GPRegression) doesn't accept mean_function, so we need to subtract mean from data.O for calling the prediction function later. Also, we need to add back the mean in the predict function below 
+        # YL: GPCoregionalizedRegression initialization in GPy (unlike GPRegression) doesn't accept mean_function, so we need to subtract mean from GPTune.data.O for calling the prediction function later. Also, we need to add back the mean in the predict function below 
         if(self.mf is not None):
             for i in range(len(data.P)):
                 for p in range(data.P[i].shape[0]):
@@ -1303,7 +1303,7 @@ class Model_LCM(Model):
 
     def gen_model_from_hyperparameters(self, data : Data, hyperparameters : list, **kwargs):
         if (kwargs['RCI_mode']== False):
-            from lcm import LCM
+            from GPTune.lcm import LCM
 
         if (kwargs['model_latent'] is None):
             Q = data.NI

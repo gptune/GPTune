@@ -39,13 +39,13 @@ import logging
 import pandas as pd
 df = pd.read_csv('./output-jobs-and-subjobs-301-304.csv')
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 logging.getLogger('matplotlib.font_manager').disabled = True
 
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 
 import argparse
@@ -53,8 +53,8 @@ import argparse
 import numpy as np
 import time
 
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 
 
 
@@ -229,7 +229,7 @@ def main():
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
     if(TUNER_NAME=='cgp'):
-        from callcgp import cGP
+        from GPTune.callcgp import cGP
         options['EXAMPLE_NAME_CGP']='BLISv2'
         options['N_PILOT_CGP']=NS1
         options['N_SEQUENTIAL_CGP']=NS-options['N_PILOT_CGP']

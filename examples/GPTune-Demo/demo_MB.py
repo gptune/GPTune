@@ -24,12 +24,12 @@ import os
 # import mpi4py
 import logging
 
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 logging.getLogger('matplotlib.font_manager').disabled = True
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 
 import mpi4py
@@ -38,8 +38,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import argparse
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter, HpBandSter_bandit
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter, HpBandSter_bandit
 import scipy
 
 

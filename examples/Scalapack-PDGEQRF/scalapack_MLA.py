@@ -18,21 +18,21 @@ where:
 ################################################################################
 import sys
 import os
-sys.path.insert(0, os.path.abspath(__file__ + "/../../../GPTune/"))
+
 sys.path.insert(0, os.path.abspath(__file__ + "/../scalapack-driver/spt/"))
 
 from pdqrdriver import pdqrdriver
 from autotune.search import *
 from autotune.space import *
 from autotune.problem import *
-from gptune import * # import all
+from GPTune.gptune import * # import all
 
 import numpy as np
 import argparse
 import pickle
 from random import *
-from callopentuner import OpenTuner
-from callhpbandster import HpBandSter
+from GPTune.callopentuner import OpenTuner
+from GPTune.callhpbandster import HpBandSter
 import time
 import math
 
