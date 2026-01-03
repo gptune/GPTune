@@ -71,8 +71,9 @@ class Options(dict):
         model_jitter = 1e-10   # Initial jittering
         model_latent = None # Number of latent functions for building one LCM model, defaults to number of tasks
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from GPTune.model_GPy_LCM, or sparse kernels from george
-        model_lowrank = False # Whether to use HODLR solver from george or not
+        model_hodlr = False # Whether to use HODLR solver from george or not
         model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
+        model_bpack = False # Whether to use solvers from butterflypack or not
         model_mcmc = False # Whether to use Fully BAYESIAN (MCMC) instead of FREQUENTIST (LBFGS)
         model_mcmc_sampler = 'Ensemble_emcee' # 'Ensemble_emcee': the ensemble sampling from emcee, 'MetropolisHastings', customized MetropolisHastings
         model_mcmc_burnin = 100 # number of first MCMC samples to be discarded 

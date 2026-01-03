@@ -1683,7 +1683,7 @@ class Model_George(Model):
         np.random.seed(seed)
 
         self.M_last = copy.deepcopy(self.M)
-
+        
         multitask = len(data.I) > 1 
         # multitask =  True
         if multitask:
@@ -1716,7 +1716,7 @@ class Model_George(Model):
 
             K = george.kernels.LCMKernel(logBK, kernels_list, data.NI, model_latent,ndim=input_dim)
 
-            if kwargs['model_lowrank'] == True:
+            if kwargs['model_hodlr'] == True:
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
@@ -1727,6 +1727,7 @@ class Model_George(Model):
                     'knn': kwargs['model_hodlr_knn'],
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': int(kwargs['model_sparse']),
+                    'model_bpack': int(kwargs['model_bpack']),
                     'seed': seed
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
@@ -1735,6 +1736,7 @@ class Model_George(Model):
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': int(kwargs['model_sparse']),
+                    'model_bpack': int(kwargs['model_bpack']),
                 }                
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
 
@@ -1745,7 +1747,7 @@ class Model_George(Model):
             x = np.concatenate([np.concatenate([Ptmp[i], np.ones((len(Ptmp[i]), 1)) * i], axis=1) for i in range(len(Ptmp))])
             self.y = np.concatenate([Otmp[i] for i in range(len(Otmp))])
 
-            if kwargs['model_lowrank'] == True:
+            if kwargs['model_hodlr'] == True:
                 print(x.shape)
                 perm,root = self.generate_kd_tree(xtmp)
                 inv_perm = np.empty_like(perm)  
@@ -1816,8 +1818,8 @@ class Model_George(Model):
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
-  
-            if kwargs['model_lowrank'] == True:
+
+            if kwargs['model_hodlr'] == True:
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
@@ -1828,6 +1830,7 @@ class Model_George(Model):
                     'knn': kwargs['model_hodlr_knn'],
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': 0,
+                    'model_bpack': 0,
                     'seed': seed,
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
@@ -1836,6 +1839,7 @@ class Model_George(Model):
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': int(kwargs['model_sparse']),
+                    'model_bpack': int(kwargs['model_bpack']),
                     'debug': int(kwargs['debug']), 
                     'sym': 0,
                 }  
@@ -1844,7 +1848,7 @@ class Model_George(Model):
             self.y = copy.deepcopy(data.O[0])
 
             start = time.time()    
-            if kwargs['model_lowrank'] == True:
+            if kwargs['model_hodlr'] == True:
                 print(x.shape)
                 perm,root = self.generate_kd_tree(x)
                 inv_perm = np.empty_like(perm)  
@@ -1963,10 +1967,10 @@ class Model_George(Model):
 
             modeling_options = {}
             modeling_options["model_kern"] = kwargs["model_kern"]
-            if 'model_lowrank' in kwargs and kwargs["model_lowrank"]:
-                modeling_options["model_lowrank"] = "yes"
+            if 'model_hodlr' in kwargs and kwargs["model_hodlr"]:
+                modeling_options["model_hodlr"] = "yes"
             else:
-                modeling_options["model_lowrank"] = "no"
+                modeling_options["model_hodlr"] = "no"
             modeling_options["multitask"] = "yes"
 
             noisevariance, B, K, lengthscales = self.extract_hyperparameters(self.M,kwargs['model_kern'])
@@ -1994,10 +1998,10 @@ class Model_George(Model):
             }
             modeling_options = {}
             modeling_options["model_kern"] = kwargs["model_kern"]
-            if 'model_lowrank' in kwargs and kwargs["model_lowrank"]:
-                modeling_options["model_lowrank"] = "yes"
+            if 'model_hodlr' in kwargs and kwargs["model_hodlr"]:
+                modeling_options["model_hodlr"] = "yes"
             else:
-                modeling_options["model_lowrank"] = "no"
+                modeling_options["model_hodlr"] = "no"
             modeling_options["multitask"] = "no"
 
             if(kwargs['model_kern']=="WendlandC2"):
@@ -2118,7 +2122,7 @@ class Model_George(Model):
 
             K = george.kernels.LCMKernel(logBK, kernels_list, data.NI, model_latent,ndim=input_dim)
 
-            if kwargs['model_lowrank'] == True:
+            if kwargs['model_hodlr'] == True:
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
@@ -2129,6 +2133,7 @@ class Model_George(Model):
                     'knn': kwargs['model_hodlr_knn'],
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': int(kwargs['model_sparse']),
+                    'model_bpack': int(kwargs['model_bpack']),
                     'seed': seed
                 }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
@@ -2137,6 +2142,7 @@ class Model_George(Model):
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
                     'model_sparse': int(kwargs['model_sparse']),
+                    'model_bpack': int(kwargs['model_bpack']),
                 }                   
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
 
@@ -2168,7 +2174,7 @@ class Model_George(Model):
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
 
-            if modeling_options['model_lowrank'] == 'yes':
+            if modeling_options['model_hodlr'] == 'yes':
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],

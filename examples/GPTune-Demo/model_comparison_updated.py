@@ -161,7 +161,7 @@ def predict_aug(modeler, gt, point,tid):   # point is the orginal space
     return (mu, var)
 
 
-def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
+def model_runtime(model, obj_func, NS_input,objtype,modelhodlr, optimizer,plotgp):
     import matplotlib
     matplotlib.use('Agg')    
     import matplotlib.pyplot as plt
@@ -239,8 +239,8 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank, optimizer,plotgp):
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
-    if(lowrank==True):
-        options['model_lowrank'] = True
+    if(modelhodlr==True):
+        options['model_hodlr'] = True
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-10
         options['model_hodlrtol_abs'] = 1e-20
@@ -460,27 +460,27 @@ def plotting(objective, objtype):
     NS = [12801, 25601, 51201]
     
     for elem in NS:
-        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="gradient",plotgp=plotgp)
+        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
         model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
         model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
-        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer = "finite difference",plotgp=plotgp)
+        hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
         model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
         model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
-        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True, optimizer="mcmc",plotgp=plotgp)
+        hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="mcmc",plotgp=plotgp)
         model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
         model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
+        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
         # model_time_gpy.append(gpy_stats.get("time_model"))
         # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
         # search_time_gpy.append(gpy_stats.get("time_search"))

@@ -10,7 +10,7 @@ cd -
 NROW=2   # number of MPI row processes 
 NCOL=2   # number of MPI column processes 
 NPZ=1    # number of 2D process grids  
-NTH=8 # number of OMP threads
+NTH=1 # number of OMP threads
 ################################################# 
 
 

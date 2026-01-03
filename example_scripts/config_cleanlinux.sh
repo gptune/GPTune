@@ -37,12 +37,12 @@ if [ $ModuleEnv = 'cleanlinux-unknown-openmpi-gnu' ]; then
 
 		#######################################
 		#  define the following as needed
-		export MPICC=
-		export MPICXX=
-		export MPIF90=
-		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-		export LIBRARY_PATH=$LIBRARY_PATH 
-		export PATH=$PATH 
+		export PATH=$PATH:$GPTUNEROOT/openmpi-4.1.5/bin
+		export MPICC="$GPTUNEROOT/openmpi-4.1.5/bin/mpicc"
+		export MPICXX="$GPTUNEROOT/openmpi-4.1.5/bin/mpicxx"
+		export MPIF90="$GPTUNEROOT/openmpi-4.1.5/bin/mpif90"
+		export LD_LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
+		export LIBRARY_PATH=$GPTUNEROOT/openmpi-4.1.5/lib:$LIBRARY_PATH  	
 		########################################
 
 		if [[ -z "$MPICC" ]]; then
@@ -150,11 +150,11 @@ if [[ $PYTHONFromSource = 1 ]]; then
 	export SITE_PACKAGE_DIR=$GPTUNEROOT/env/lib/python$PyMAJOR.$PyMINOR/site-packages
 else
 	PyMAJOR=3 # set the correct python versions and path according to your system
-	PyMINOR=8
-	PyPATCH=5
-	PY=PATH-TO-PYTHON  # this makes sure virtualenv uses the correct python version
-	PIP=PATH-TO-PIP
-	export SITE_PACKAGE_DIR=PATH-TO-SITE-PACKAGES	
+	PyMINOR=9
+	PyPATCH=17
+	PY=$GPTUNEROOT/Python-$PyMAJOR.$PyMINOR.$PyPATCH/bin/python$PyMAJOR.$PyMINOR  # this makes sure virtualenv uses the correct python version
+	PIP=$GPTUNEROOT/Python-$PyMAJOR.$PyMINOR.$PyPATCH/bin/pip$PyMAJOR.$PyMINOR
+	export SITE_PACKAGE_DIR=$GPTUNEROOT/Python-$PyMAJOR.$PyMINOR.$PyPATCH/bin/python$PyMAJOR.$PyMINOR
 fi
 
 
@@ -294,6 +294,52 @@ make install -j
 
 
 
+cd $GPTUNEROOT/examples/ButterflyPACK
+rm -rf ButterflyPACK
+git clone https://github.com/liuyangzhuan/ButterflyPACK.git
+cd ButterflyPACK
+git clone https://github.com/opencollab/arpack-ng.git
+cd arpack-ng
+git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
+mkdir -p build
+cd build
+cmake .. \
+	-DBUILD_SHARED_LIBS=ON \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
+	-DBLAS_LIBRARIES="${BLAS_LIB}" \
+	-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DMPI=ON \
+	-DEXAMPLES=ON \
+	-DCOVERALLS=OFF 
+make
+cd ../../
+mkdir build
+cd build
+cmake .. \
+	-DCMAKE_Fortran_FLAGS="$BLAS_INC -fallow-argument-mismatch"\
+	-DCMAKE_CXX_FLAGS="" \
+	-DBUILD_SHARED_LIBS=ON \
+	-Denable_python=ON \
+	-DCMAKE_Fortran_COMPILER=$MPIF90 \
+	-DCMAKE_CXX_COMPILER=$MPICXX \
+	-DCMAKE_C_COMPILER=$MPICC \
+	-DCMAKE_INSTALL_PREFIX=. \
+	-DCMAKE_INSTALL_LIBDIR=./lib \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+	-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
+	-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
+	-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
+	-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
+make -j
+make install -j
+
 
 
 if [[ $BuildExample == 1 ]]; then
@@ -308,51 +354,6 @@ if [[ $BuildExample == 1 ]]; then
 	cp ../../hypre-driver/src/ij.c ./test/.
 	make test
 
-
-	cd $GPTUNEROOT/examples/ButterflyPACK
-	rm -rf ButterflyPACK
-	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
-	cd ButterflyPACK
-	git clone https://github.com/opencollab/arpack-ng.git
-	cd arpack-ng
-	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e
-	mkdir -p build
-	cd build
-	cmake .. \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_INSTALL_PREFIX=. \
-		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DCMAKE_Fortran_FLAGS="-fallow-argument-mismatch" \
-		-DBLAS_LIBRARIES="${BLAS_LIB}" \
-		-DLAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DMPI=ON \
-		-DEXAMPLES=ON \
-		-DCOVERALLS=OFF 
-	make
-	cd ../../
-	mkdir build
-	cd build
-	cmake .. \
-		-DCMAKE_Fortran_FLAGS="$BLAS_INC -fallow-argument-mismatch"\
-		-DCMAKE_CXX_FLAGS="" \
-		-DBUILD_SHARED_LIBS=ON \
-		-DCMAKE_Fortran_COMPILER=$MPIF90 \
-		-DCMAKE_CXX_COMPILER=$MPICXX \
-		-DCMAKE_C_COMPILER=$MPICC \
-		-DCMAKE_INSTALL_PREFIX=. \
-		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
-		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \
-		-DTPL_SCALAPACK_LIBRARIES="${SCALAPACK_LIB}" \
-		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
-	make -j32
-	make install -j32
 
 
 

@@ -130,7 +130,7 @@ def objectives3(point):
     return [y]
 
 
-def model_runtime(model, obj_func, NS_input,objtype,lowrank):
+def model_runtime(model, obj_func, NS_input,objtype,modelhodlr):
     import matplotlib.pyplot as plt
     global nodes
     global cores
@@ -206,8 +206,8 @@ def model_runtime(model, obj_func, NS_input,objtype,lowrank):
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
-    if(lowrank==True):
-        options['model_lowrank'] = True
+    if(modelhodlr==True):
+        options['model_hodlr'] = True
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-3
         options['model_grad'] = False
@@ -333,17 +333,17 @@ def plotting(objective, objtype):
     NS = [51, 201, 401, 801, 1601, 3201]
     
     for elem in NS:
-        hodlr_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=True)
+        hodlr_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True)
         model_time_george_hodlr.append(hodlr_stats.get("time_model"))
         model_time_per_likelihoodeval_george_hodlr.append(hodlr_stats.get("time_model_per_likelihoodeval"))
         search_time_george_hodlr.append(hodlr_stats.get("time_search"))
 
-        # basic_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False)
+        # basic_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False)
         # model_time_george_basic.append(basic_stats.get("time_model"))
         # model_time_per_likelihoodeval_george_basic.append(basic_stats.get("time_model_per_likelihoodeval"))
         # search_time_george_basic.append(basic_stats.get("time_search"))
 
-        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, lowrank=False) 
+        gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False) 
         model_time_gpy.append(gpy_stats.get("time_model"))
         model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
         search_time_gpy.append(gpy_stats.get("time_search"))
