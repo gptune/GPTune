@@ -7,10 +7,12 @@ cd -
 
 #MPI+OMP settings:
 ################################################# 
-nmpi=2 # number of MPIs
+nmpi=1 # number of MPIs
 NTH=1 # number of OMP threads
 export OMP_NUM_THREADS=$NTH
 ################################################# 
+
+
 
 
 #ButterflyPACK settings:
@@ -37,7 +39,7 @@ export MAX_ID_FILE=10 ## this is the maximum number of BPACK instances
 for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
-mpirun --allow-run-as-root -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --tol_comp 1e-10 --lrlevel 0 --reclr_leaf 5 --nmin_leaf 128 --errsol 1 | tee a.out_seperatelaunch_worker &
+mpirun --allow-run-as-root -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --tol_comp 1e-10 --lrlevel 0 --reclr_leaf 5 --nmin_leaf 128 --errsol 1 --verbosity -1 | tee a.out_seperatelaunch_worker &
 python -u model_comparison_updated_bpack.py | tee a.out_gptune
 python -c "from dPy_BPACK_wrapper import *; bpack_terminate()"
 
