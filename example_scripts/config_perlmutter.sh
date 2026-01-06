@@ -66,12 +66,16 @@ if [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	module load PrgEnv-gnu
 	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
+	# module unload cray-libsci
 	module load cray-mpich/${MPICH_VERSION}	
 	module load cudatoolkit/${CUDA_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+    # BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+    # LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	# SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.2.0/build/lib/libscalapack.so"	
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -87,11 +91,15 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	module load PrgEnv-gnu
 	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
+	# module unload cray-libsci
 	module load cray-mpich/${MPICH_VERSION}
 	GPTUNEROOT=$PWD
 	BLAS_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	LAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
 	SCALAPACK_LIB="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_gnu_mpi_mp.so"
+    # BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+    # LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
+	# SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.2.0/build/lib/libscalapack.so"	
 	MPICC=cc
 	MPICXX=CC
 	MPIF90=ftn
@@ -117,7 +125,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 	GPTUNEROOT=$PWD
     BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
     LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
-	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
+	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.2.0/build/lib/libscalapack.so"
 	MPICC=mpicc
 	MPICXX=mpiCC
 	MPIF90=mpif90
@@ -146,7 +154,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OMPI_DIR}/lib/
     BLAS_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
     LAPACK_LIB=$GPTUNEROOT/OpenBLAS/libopenblas.so
-	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.1.0/build/lib/libscalapack.so"
+	SCALAPACK_LIB="$GPTUNEROOT/scalapack-2.2.0/build/lib/libscalapack.so"
 	MPICC=mpicc
 	MPICXX=mpiCC
 	MPIF90=mpif90
@@ -179,7 +187,7 @@ export PARMETIS_LIBRARIES="$ParMETIS_DIR/lib/libparmetis.so;$ParMETIS_DIR/lib/li
 export METIS_LIBRARIES="$ParMETIS_DIR/lib/libmetis.so"
 
 # export TBB_ROOT=$GPTUNEROOT/oneTBB/build
-# export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
+export pybind11_DIR=$PREFIX_PATH/lib/python$PY_VERSION/site-packages/pybind11/share/cmake/pybind11
 # export BOOST_ROOT=/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build
 # export BOOST_ROOT=/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/
 # export pagmo_DIR=$GPTUNEROOT/pagmo2/build/lib/cmake/pagmo
@@ -214,13 +222,38 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 	git clone https://github.com/xianyi/OpenBLAS
 	cd OpenBLAS
 	git checkout v0.3.30
-	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 -j32
-	make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 install -j32
+	
+	rm -rf build
+	mkdir -p build
+	cd build
+	cmake .. \
+			-DBUILD_SHARED_LIBS=ON \
+			-DCMAKE_C_COMPILER=$MPICC \
+			-DCMAKE_Fortran_COMPILER=$MPIF90 \
+			-DCMAKE_INSTALL_PREFIX=. \
+			-DUSE_OPENMP=ON \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_INSTALL_PREFIX=./install \
+			-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+			-DOpenMP_C_FLAGS="-fopenmp" \
+			-DOpenMP_C_LIB_NAMES="gomp" \
+			-DOpenMP_Fortran_FLAGS="-fopenmp" \
+			-DOpenMP_Fortran_LIB_NAMES="gomp" \
+			-DOpenMP_gomp_LIBRARY=$(gcc --print-file-name=libgomp.so) \
+			-DCMAKE_Fortran_FLAGS="-Ofast -fopenmp -fallow-argument-mismatch" \
+			-DCMAKE_C_FLAGS="-Ofast" 
+	make -j32
+	make install
+	cp ./install/lib64/libopenblas.so ../.
+	
+	# make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 -j32
+	# make PREFIX=. CC=$MPICC CXX=$MPICXX FC=$MPIF90 install -j32
+
 
 	cd $GPTUNEROOT
-	wget http://www.netlib.org/scalapack/scalapack-2.1.0.tgz
-	tar -xf scalapack-2.1.0.tgz
-	cd scalapack-2.1.0
+	wget http://www.netlib.org/scalapack/scalapack-2.2.0.tgz
+	tar -xf scalapack-2.2.0.tgz
+	cd scalapack-2.2.0
 	rm -rf build
 	mkdir -p build
 	cd build
@@ -314,19 +347,6 @@ make install -j
 
 
 
-if [[ $BuildExample == 1 ]]; then
-
-	cd $GPTUNEROOT/examples/Hypre
-	rm -rf hypre
-	git clone https://github.com/hypre-space/hypre.git
-	cd hypre/src/
-	git checkout v2.19.0
-	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
-	make
-	cp ../../hypre-driver/src/ij.c ./test/.
-	make test
-
-
 	cd $GPTUNEROOT/examples/ButterflyPACK
 	rm -rf ButterflyPACK
 	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
@@ -362,6 +382,7 @@ if [[ $BuildExample == 1 ]]; then
 		-DCMAKE_Fortran_COMPILER=$MPIF90 \
 		-DCMAKE_CXX_COMPILER=$MPICXX \
 		-DCMAKE_C_COMPILER=$MPICC \
+		-Denable_python=ON \
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_INSTALL_LIBDIR=./lib \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -372,6 +393,22 @@ if [[ $BuildExample == 1 ]]; then
 		-DTPL_ARPACK_LIBRARIES="$PWD/../arpack-ng/build/lib/libarpack.so;$PWD/../arpack-ng/build/lib/libparpack.so"
 	make -j32
 	make install -j32
+
+
+
+
+
+if [[ $BuildExample == 1 ]]; then
+
+	cd $GPTUNEROOT/examples/Hypre
+	rm -rf hypre
+	git clone https://github.com/hypre-space/hypre.git
+	cd hypre/src/
+	git checkout v2.19.0
+	./configure CC=$MPICC CXX=$MPICXX FC=$MPIF90 CFLAGS="-DTIMERUSEMPI" --enable-shared
+	make
+	cp ../../hypre-driver/src/ij.c ./test/.
+	make test
 
 
 
