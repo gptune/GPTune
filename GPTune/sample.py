@@ -194,8 +194,8 @@ class SampleLHSMDU(Sample):
             self.cached_algo      = kwargs['sample_algo']
 
             if (kwargs['sample_algo'] == 'LHS-MDU'):
-                if kwargs['sample_random_seed'] != None:
-                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"]+n_itr)
+                if kwargs['sample_random_seed'] is not None:
+                    lhs = lhsmdu.sample(len(space), n_samples, randomSeed=kwargs["sample_random_seed"] + n_itr)
                 else:
                     np.random.seed()
                     lhs = lhsmdu.sample(len(space), n_samples)
@@ -203,18 +203,13 @@ class SampleLHSMDU(Sample):
                 lhs = lhsmdu.createRandomStandardUniformMatrix(len(space), n_samples)
                 lhs = np.matrix(lhs)
             else:
-                raise Excepetion(f"Unknown algorithm {kwargs['sample_algo']}")
+                raise Exception(f"Unknown algorithm {kwargs['sample_algo']}")
         lhs = np.array(list(zip(*[np.array(lhs[k])[0] for k in range(len(lhs))])))
 
         return lhs
 
 
 class SampleOpenTURNS(Sample):
-
-    """
-    XXX: This class, together with the underlying OpenTURNS only works on Intel and AMD CPUs.
-    The reason is that OpenTURNS requires the Intel 'Thread Building Block' library to compile and execute.
-    """
 
     def __init__(self):
 
@@ -228,14 +223,14 @@ class SampleOpenTURNS(Sample):
         kwargs = kwargs['kwargs']
 
         import openturns as ot
-        if kwargs['sample_random_seed'] != None:
-            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed']+n_itr)
+        if kwargs['sample_random_seed'] is not None:
+            ot.RandomGenerator.SetSeed(kwargs['sample_random_seed'] + n_itr)
 
         if (self.cached_space is not None and space == self.cached_space):
             distribution = self.cached_distribution
         else:
-            distributions = [ot.Uniform(*d.transformed_bounds) for d in space.dimensions]
-            distribution  = ot.ComposedDistribution(distributions)
+            marginals = [ot.Uniform(*d.transformed_bounds) for d in space.dimensions]
+            distribution  = ot.JointDistribution(marginals)
             # Caching space and distribution to speed-up future samplings, especially if invoked by the sample_constrained method.
             self.cached_space = space
             self.cached_distribution = distribution
@@ -259,9 +254,8 @@ class SampleNUMPY(Sample):
 
         kwargs = kwargs['kwargs']
 
-        import openturns as ot
         if kwargs['sample_random_seed'] != None:
-            np.random.seed(kwargs['sample_random_seed']+n_itr)
+            np.random.seed(kwargs['sample_random_seed'] + n_itr)
 
         # t1 = time.time_ns()
         S = np.random.rand(n_samples, len(space))
