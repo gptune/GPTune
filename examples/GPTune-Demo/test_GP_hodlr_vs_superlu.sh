@@ -34,6 +34,15 @@ export SUPERLU_MPI_PROCESS_PER_GPU=$nmpipergpu # nmpipergpu>1 can better saturat
 ################################################# 
 
 
+#ButterflyPACK settings:
+################################################# 
+export BPACK_PYTHON_LIB_PATH=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/
+export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
+################################################# 
+
+
+
+
 
 
 NCORE_VAL_TOT=`expr $NROW \* $NCOL \* $NPZ `

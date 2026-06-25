@@ -572,7 +572,7 @@ def plotting(objective, objtype):
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
     # NS = [6401, 12801, 25601, 51201, 102401]
-    NS = [6401]
+    NS = [25601]
     
     for elem in NS:
 
@@ -596,11 +596,11 @@ def plotting(objective, objtype):
         # model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
 
 
-        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
-        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
+        model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
         # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)

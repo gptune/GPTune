@@ -7,18 +7,34 @@ cd -
 
 #MPI+OMP settings:
 ################################################# 
-nmpi=1 # number of MPIs
-NTH=1 # number of OMP threads
+nmpi=128 # number of MPIs
+NTH=2 # number of OMP threads
 export OMP_NUM_THREADS=$NTH
 ################################################# 
 
 
+#SUPERLU settings:
+################################################# 
+export SUPERLU_PYTHON_LIB_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/build/lib/PYTHON/
+export PYTHONPATH=$SUPERLU_PYTHON_LIB_PATH:$PYTHONPATH
+export SUPERLU_LBS=GD  
+export SUPERLU_ACC_OFFLOAD=0 # whether to do CPU or GPU numerical factorization
+export GPU3DVERSION=0 # whether to do use the latest C++ numerical factorization 
+export SUPERLU_ACC_SOLVE=0 # whether to do CPU or GPU triangular solve
+export SUPERLU_BIND_MPI_GPU=1 # assign GPU based on the MPI rank, assuming one MPI per GPU
+export SUPERLU_MAXSUP=256 # max supernode size
+export SUPERLU_RELAX=64  # upper bound for relaxed supernode size
+export SUPERLU_MAX_BUFFER_SIZE=100000000 ## 500000000 # buffer size in words on GPU
+export SUPERLU_NUM_LOOKAHEADS=2   ##4, must be at least 2, see 'lookahead winSize'
+export SUPERLU_NUM_GPU_STREAMS=1
+export SUPERLU_N_GEMM=6000 # FLOPS threshold divide workload between CPU and GPU
+nmpipergpu=1
+export SUPERLU_MPI_PROCESS_PER_GPU=$nmpipergpu # nmpipergpu>1 can better saturate GPU for some smaller matrices
+################################################# 
 
 
 #ButterflyPACK settings:
 ################################################# 
-export SUPERLU_PYTHON_LIB_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/build/lib/PYTHON/
-export PYTHONPATH=$SUPERLU_PYTHON_LIB_PATH:$PYTHONPATH
 export BPACK_PYTHON_LIB_PATH=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/
 export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
 ################################################# 
@@ -39,7 +55,7 @@ export MAX_ID_FILE=10 ## this is the maximum number of BPACK instances
 for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
-mpirun --allow-run-as-root -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --tol_comp 1e-10 --lrlevel 0 --reclr_leaf 5 --nmin_leaf 128 --errsol 1 --verbosity -1 | tee a.out_seperatelaunch_worker &
+$MPIRUN $MPIARG -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --tol_comp 1e-10 --lrlevel 0 --reclr_leaf 5 --baca_batch 1 --nmin_leaf 128 --errsol 1 --verbosity -1 --knn 1 | tee a.out_seperatelaunch_worker &
 python -u model_comparison_updated_bpack.py | tee a.out_gptune
 python -c "from dPy_BPACK_wrapper import *; bpack_terminate()"
 
