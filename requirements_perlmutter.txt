@@ -4,7 +4,7 @@ numpy
 joblib
 scikit-learn 
 scipy >= 1.7.0
-statsmodels >= 0.13.0
+statsmodels >= 0.14.6
 pyaml
 GPy>=1.13.2; python_version > '3.8'
 GPy; python_version <= '3.8'

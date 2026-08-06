@@ -26,12 +26,12 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 	OPENMPI_VERSION=5.0.3
 	CUDA_VERSION=11.7
 else 
-	PY_VERSION=3.11
+	PY_VERSION=3.12
 	# PY_TIME=2021.11
-	GCC_VERSION=13.2
-	LIBSCI_VERSION=24.07.0
-	MPICH_VERSION=8.1.30
-	CUDA_VERSION=12.4
+	GCC_VERSION=14
+	LIBSCI_VERSION=25.09.0
+	MPICH_VERSION=9.0.1
+	CUDA_VERSION=12.9
 fi
 
 
@@ -46,7 +46,7 @@ PREFIX_PATH=~/.local/perlmutter/python-$PY_VERSION/
 
 echo $(which python) 
 
-module unload cmake
+# module unload cmake
 module load cmake
 
 
@@ -385,7 +385,7 @@ make install -j
 		-Denable_python=ON \
 		-DCMAKE_INSTALL_PREFIX=. \
 		-DCMAKE_INSTALL_LIBDIR=./lib \
-		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
 		-DTPL_BLAS_LIBRARIES="${BLAS_LIB}" \
 		-DTPL_LAPACK_LIBRARIES="${LAPACK_LIB}" \

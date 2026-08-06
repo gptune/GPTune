@@ -8,7 +8,7 @@ cd -
 #MPI+OMP settings:
 ################################################# 
 nmpi=128 # number of MPIs
-NTH=2 # number of OMP threads
+NTH=1 # number of OMP threads
 export OMP_NUM_THREADS=$NTH
 ################################################# 
 
@@ -49,17 +49,20 @@ export MAX_ID_FILE=10 ## this is the maximum number of BPACK instances
 #################################################
 
 
-
+if [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
+    CORES_PER_NODE=128
+    THREADS_PER_RANK=`expr $NTH \* 2`								 
+    NODE_VAL=`expr $nmpi / $CORES_PER_NODE \* $NTH`
+    MPIARG="-N ${NODE_VAL} -c ${THREADS_PER_RANK} --cpu_bind=cores"
+fi
 
 ############## sequentially call the python driver Test_python_master.py, but parallelly launching the workers dPy_BPACK_worker.py 
 for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
-$MPIRUN $MPIARG -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --tol_comp 1e-10 --lrlevel 0 --reclr_leaf 5 --baca_batch 1 --nmin_leaf 128 --errsol 1 --verbosity -1 --knn 1 | tee a.out_seperatelaunch_worker &
+$MPIRUN $MPIARG -n $nmpi python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 1 --format 1 --sym 1 --IR_HODLR 10 --tol_comp 1e-10 --jitter_factor 0 --lrlevel 0 --reclr_leaf 5 --baca_batch 16 --nmin_leaf 128 --errsol 0 --verbosity -1 --knn 0 | tee a.out_seperatelaunch_worker &
 python -u model_comparison_updated_bpack.py | tee a.out_gptune
 python -c "from dPy_BPACK_wrapper import *; bpack_terminate()"
-
-
 
 
 

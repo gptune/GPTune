@@ -263,7 +263,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         options['model_hodlrleaf'] = 200
         options['model_hodlrtol'] = 1e-10
         options['model_hodlrtol_abs'] = 1e-20
-        options['model_hodlr_sym'] = 0
+        options['model_hodlr_sym'] = 0 # whether to use symmetric HODLR or not in george 
         options['model_hodlr_knn'] = 0
         options['model_jitter'] = 0 # 1e-5 # 1e-3
 
@@ -576,31 +576,31 @@ def plotting(objective, objtype):
     
     for elem in NS:
 
-        bpack_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="gradient",plotgp=plotgp)
-        model_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_model"))
-        model_time_per_likelihoodeval_george_bpack_gradient.append(bpack_stats_gradient.get("time_model_per_likelihoodeval"))
-        search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
-        model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
+        # bpack_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="gradient",plotgp=plotgp)
+        # model_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_model"))
+        # model_time_per_likelihoodeval_george_bpack_gradient.append(bpack_stats_gradient.get("time_model_per_likelihoodeval"))
+        # search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
+        # model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
         
 
-        # bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
-        # model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_search"))
-        # model_iterations_bpack_finite_difference.extend(bpack_stats_finite_difference.get("modeling_iteration"))
+        bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
+        model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
+        model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        search_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_search"))
+        model_iterations_bpack_finite_difference.extend(bpack_stats_finite_difference.get("modeling_iteration"))
 
-        # bpack_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="mcmc",plotgp=plotgp)
-        # model_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model"))
-        # model_time_per_likelihoodeval_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model_per_likelihoodeval"))
-        # search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
-        # model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
+        bpack_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="mcmc",plotgp=plotgp)
+        model_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model"))
+        model_time_per_likelihoodeval_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model_per_likelihoodeval"))
+        search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
+        model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
 
 
-        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
-        model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
+        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
         # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
