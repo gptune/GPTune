@@ -41,7 +41,7 @@ rm -rf  ~/.cache/pip
 rm -rf ~/.local/perlmutter/
 rm -rf ~/.local/lib/python$PY_VERSION
 module load python/$PY_VERSION
-PREFIX_PATH=~/.local/perlmutter/python-$PY_VERSION/
+PREFIX_PATH=${PYTHONUSERBASE}
 
 
 echo $(which python) 
@@ -212,6 +212,7 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_intel.txt
 else 
 	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_perlmutter.txt
+	# env MPICC=$MPICC MPI4PY_BUILD_MPICC=$MPICC CC=$MPICC CXX=$MPICXX python -m pip install --user --force-reinstall --no-binary=mpi4py 'mpi4py>=4.0.0'
 fi
 # cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 

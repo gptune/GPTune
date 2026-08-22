@@ -417,7 +417,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
-    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=${PYTHONUSERBASE}/lib/python$PY_VERSION/site-packages
     export MPIRUN=srun
     export MPI4PY_RC_RECV_MPROBE=false
     export MPICH_VERSION_DISPLAY=0
@@ -455,7 +455,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/oneTBB/build/lib/
-    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=${PYTHONUSERBASE}/lib/python$PY_VERSION/site-packages
     
     # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
     # export UCX_NET_DEVICES=mlx5_0:1
@@ -494,7 +494,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=${PYTHONUSERBASE}/lib/python$PY_VERSION/site-packages
     # # the following was the workaround for openmpi 4.1.x, however which fails after openmpi 5.0.0 is available on Perlmutter
     # export UCX_NET_DEVICES=mlx5_0:1
     # export UCX_TLS=rc
@@ -525,7 +525,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
     # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/cfs/cdirs/m3894/lib/PrgEnv-gnu/boost_1_68_0/build/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/global/common/software/nersc/pm-2021q4/spack/cray-sles15-zen3/boost-1.78.0-ixcb3d5/lib/
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/examples/SuperLU_DIST/superlu_dist/parmetis-4.0.3/install/lib/
-    export PYTHONPATH=~/.local/perlmutter/python-$PY_VERSION/lib/python$PY_VERSION/site-packages
+    export PYTHONPATH=${PYTHONUSERBASE}/lib/python$PY_VERSION/site-packages
     export MPIRUN=srun
     export MPI4PY_RC_RECV_MPROBE=false
     export MPICH_VERSION_DISPLAY=0
