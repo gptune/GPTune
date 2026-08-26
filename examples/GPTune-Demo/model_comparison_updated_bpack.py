@@ -126,10 +126,7 @@ def objectives3(point):
     x1 = point["x1"]
     x2 = point["x2"]
     x3 = point["x3"]
-    x4 = point["x4"]
-    x5 = point["x5"]
-    x6 = point["x6"]
-    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2 + (x6-1)**2)
+    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2)
     return [y]
 
 
@@ -146,10 +143,7 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
         x1 =point['x1']
         x2 =point['x2']          
         x3 =point['x3']
-        x4 =point['x4']  
-        x5 =point['x5']
-        x6 =point['x6']  
-        x = [x1,x2,x3,x4,x5,x6]  
+        x = [x1,x2,x3]  
 
     # x =point['x']
     xNorm = gt.problem.PS.transform([x])
@@ -209,16 +203,13 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     x = Real(0., 1., transform="normalize", name="x")
     x1 = Real(0., 1., transform="normalize", name="x1")
     x2 = Real(0., 1., transform="normalize", name="x2")
-    x3 = Real(0., 1., transform="normalize", name="x3")
-    x4 = Real(0., 1., transform="normalize", name="x4")
-    x5 = Real(0., 1., transform="normalize", name="x5")
-    x6 = Real(0., 1., transform="normalize", name="x6")    
+    x3 = Real(0., 1., transform="normalize", name="x3")  
     if(objtype==1):
         parameter_space = Space([x])    
     elif(objtype==2):
         parameter_space = Space([x1,x2])    
     elif(objtype==3):
-        parameter_space = Space([x1,x2,x3,x4,x5,x6])    
+        parameter_space = Space([x1,x2,x3])    
 
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
@@ -248,8 +239,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
     options['model_optimzier'] = 'lbfgs'
-    
-    
+
     options['model_isotropic'] = True
 
 
@@ -403,7 +393,8 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         if objtype==2 and plotgp==True:
             # fig = plt.figure(figsize=[12.8, 9.6])
             for tid in range(len(data.I)):
-                res = 80
+                n_model_samples = max(int(NS_input - 1), 1)
+                res = max(int(round(n_model_samples**0.5)) + 1, 2)
                 x1 = np.linspace(0., 1., res)
                 x2 = np.linspace(0., 1., res)
                 X1, X2 = np.meshgrid(x1, x2)
@@ -475,6 +466,89 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                     fig.savefig('obj_2D_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
                 else:
                     fig.savefig('obj_2D_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
+
+
+        if objtype==3 and plotgp==True:
+            for tid in range(len(data.I)):
+                n_model_samples = max(int(NS_input - 1), 1)
+                res = max(int(round(n_model_samples**(1.0 / 3.0))) + 1, 2)
+                grid = np.linspace(0., 1., res)
+                X_horizontal, X_vertical = np.meshgrid(grid, grid)
+
+                p = data.I[tid]
+                t = p[0]
+                kwargst = {input_space[k].name: p[k] for k in range(len(input_space))}
+
+                # (fixed coordinate, horizontal coordinate, vertical coordinate)
+                planes = [
+                    (0, 1, 2, "x1=0.5", "x2", "x3"),
+                    (1, 0, 2, "x2=0.5", "x1", "x3"),
+                    (2, 0, 1, "x3=0.5", "x1", "x2"),
+                ]
+
+                fig, axes = plt.subplots(3, 3, figsize=(20, 18))
+                column_titles = ["True Function", "Predicted Mean", "Predicted Std"]
+
+                for row, (fixed_dim, horizontal_dim, vertical_dim,
+                          plane_label, horizontal_label, vertical_label) in enumerate(planes):
+                    Y_mean = np.zeros_like(X_horizontal)
+                    Y_std = np.zeros_like(X_horizontal)
+                    Y_true = np.zeros_like(X_horizontal)
+
+                    for i in range(res):
+                        for j in range(res):
+                            point = [0.5, 0.5, 0.5]
+                            point[horizontal_dim] = grid[i]
+                            point[vertical_dim] = grid[j]
+                            point[fixed_dim] = 0.5
+
+                            kwargs = {
+                                parameter_space[k].name: point[k]
+                                for k in range(len(parameter_space))
+                            }
+                            kwargs.update(kwargst)
+
+                            Y_true[j, i] = objectives3(kwargs)[0]
+                            y_m, var = predict_aug(modeler, gt, kwargs, tid, objtype)
+                            Y_mean[j, i] = y_m
+                            Y_std[j, i] = np.sqrt(max(var, 0.0))
+
+                    value_min = min(Y_true.min(), Y_mean.min())
+                    value_max = max(Y_true.max(), Y_mean.max())
+                    if np.isclose(value_min, value_max):
+                        value_max = value_min + 1.0
+                    value_levels = np.linspace(value_min, value_max, 51)
+
+                    plots = [
+                        (Y_true, 'viridis', value_levels),
+                        (Y_mean, 'viridis', value_levels),
+                        (Y_std, 'magma', 50),
+                    ]
+                    for column, (values, cmap, levels) in enumerate(plots):
+                        contour = axes[row, column].contourf(
+                            X_horizontal, X_vertical, values,
+                            levels=levels, cmap=cmap,
+                        )
+                        fig.colorbar(contour, ax=axes[row, column])
+                        axes[row, column].set_xlabel(horizontal_label)
+                        axes[row, column].set_ylabel(vertical_label)
+                        axes[row, column].set_title(
+                            "%s: %s" % (plane_label, column_titles[column])
+                        )
+
+                fig.suptitle('t=%f' % t)
+                plt.tight_layout()
+                plt.show(block=False)
+                plt.pause(0.5)
+
+                if(modelhodlr==True):
+                    fig.savefig('obj_3D_slices_%s_N_%s_tol_%s.pdf'%(optimizer,int(NS_input - 1),options['model_hodlrtol']))
+                elif(modelsparse==True):
+                    fig.savefig('obj_3D_slices_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
+                elif(modelbpack==True):
+                    fig.savefig('obj_3D_slices_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
+                else:
+                    fig.savefig('obj_3D_slices_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
                     
 
     if(TUNER_NAME=='opentuner'):
@@ -581,7 +655,8 @@ def plotting(objective, objtype, bpackonly=False):
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
     # NS = [6401, 12801, 25601, 51201, 102401]
-    NS = [102401, 204801, 409601, 819201, 1638401]
+    NS = [102401]
+    # NS = [1638401]
     
     for elem in NS:
 
@@ -591,17 +666,17 @@ def plotting(objective, objtype, bpackonly=False):
         search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
         model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
         
-        bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
-        model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
-        model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        search_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_search"))
-        model_iterations_bpack_finite_difference.extend(bpack_stats_finite_difference.get("modeling_iteration"))
+        # bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
+        # model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
+        # model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
+        # search_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_search"))
+        # model_iterations_bpack_finite_difference.extend(bpack_stats_finite_difference.get("modeling_iteration"))
 
-        bpack_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="mcmc",plotgp=plotgp)
-        model_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model"))
-        model_time_per_likelihoodeval_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model_per_likelihoodeval"))
-        search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
-        model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
+        # bpack_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="mcmc",plotgp=plotgp)
+        # model_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model"))
+        # model_time_per_likelihoodeval_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model_per_likelihoodeval"))
+        # search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
+        # model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
 
         if bpackonly == False:
             hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
@@ -747,4 +822,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
