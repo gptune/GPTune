@@ -26,7 +26,7 @@ if [[ $ModuleEnv == *"openmpi"* ]]; then
 	OPENMPI_VERSION=5.0.3
 	CUDA_VERSION=11.7
 else 
-	PY_VERSION=3.12
+	PY_VERSION=3.13
 	# PY_TIME=2021.11
 	GCC_VERSION=14
 	LIBSCI_VERSION=26.03.0
@@ -212,7 +212,7 @@ if [[ $ModuleEnv == *"intel"* ]]; then
 	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_intel.txt
 else 
 	CC=$MPICC CXX=$MPICXX pip install --user -r requirements_perlmutter.txt
-	# env MPICC=$MPICC MPI4PY_BUILD_MPICC=$MPICC CC=$MPICC CXX=$MPICXX python -m pip install --user --force-reinstall --no-binary=mpi4py 'mpi4py>=4.0.0'
+	env MPICC=$MPICC MPI4PY_BUILD_MPICC=$MPICC CC=$MPICC CXX=$MPICXX python -m pip install --user --force-reinstall --no-binary=mpi4py 'mpi4py>=4.0.0'
 fi
 # cp ./patches/opentuner/manipulator.py  $PREFIX_PATH/lib/python$PY_VERSION/site-packages/opentuner/search/.
 

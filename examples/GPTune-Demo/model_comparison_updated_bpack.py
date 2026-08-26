@@ -86,6 +86,7 @@ def parse_args():
     parser.add_argument('-nrun', type=int, default=20, help='Number of runs per task')
     parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')
     parser.add_argument('-tvalue', type=float, default=1.0, help='Input task t value')
+    parser.add_argument('-format', type=int, default=1, help='BPACK format: 1 for HODLR, 2 for H, and 7 for H2')
 
     args = parser.parse_args()
 
@@ -177,7 +178,7 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
         xNorm = np.hstack((xNorm,modeldata))  # YL: here tmpdata in the normalized space, but modeldata is the in the original space
         # print(xNorm)
     (mu, var) = modeler[0].predict(xNorm, tid=tid)
-    return (mu, var)
+    return (float(np.asarray(mu).item()), float(np.asarray(var).item()))
 
 
 def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=False, modelsparse=False, modelbpack=False):
@@ -191,6 +192,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # Parse command line arguments
     args = parse_args()
     ntask = args.ntask
+    format = args.format
     nrun = NS_input
     tvalue = args.tvalue
     TUNER_NAME = args.optimization
@@ -246,6 +248,11 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # options['model_threads'] = 1
     # options['model_restart_processes'] = 1
     options['model_optimzier'] = 'lbfgs'
+    
+    
+    options['model_isotropic'] = True
+
+
 
     # options['search_multitask_processes'] = 1
     # options['search_multitask_threads'] = 1
@@ -386,7 +393,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 elif(modelsparse==True):    
                     fig.savefig('obj_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
                 elif(modelbpack==True):    
-                    fig.savefig('obj_%s_N_%s_bpack.pdf'%(optimizer,int(NS_input - 1)))                    
+                    fig.savefig('obj_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
                 else:
                     fig.savefig('obj_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
                     
@@ -465,7 +472,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 elif(modelsparse==True):    
                     fig.savefig('obj_2D_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
                 elif(modelbpack==True):    
-                    fig.savefig('obj_2D_%s_N_%s_bpack.pdf'%(optimizer,int(NS_input - 1)))                    
+                    fig.savefig('obj_2D_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
                 else:
                     fig.savefig('obj_2D_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
                     
@@ -511,6 +518,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
 
 def objective_selection():
+    # return objectives1, 1
     objective = input("What Objective Function would you like to use (1, 2, or 3)")
     if ("1" in objective):
         objtype=1
@@ -529,26 +537,27 @@ def objective_selection():
     
 import matplotlib.pyplot as plt
 
-def plotting(objective, objtype):
-    model_time_gpy = []
-    model_time_per_likelihoodeval_gpy = []
-    search_time_gpy = []
-    model_iterations_gpy = []
+def plotting(objective, objtype, bpackonly=False):
+    if bpackonly == False:
+        model_time_gpy = []
+        model_time_per_likelihoodeval_gpy = []
+        search_time_gpy = []
+        model_iterations_gpy = []
 
-    model_time_george_hodlr_gradient = []
-    model_time_per_likelihoodeval_george_hodlr_gradient = []
-    search_time_george_hodlr_gradient = []
-    model_iterations_hodlr_gradient = []
+        model_time_george_hodlr_gradient = []
+        model_time_per_likelihoodeval_george_hodlr_gradient = []
+        search_time_george_hodlr_gradient = []
+        model_iterations_hodlr_gradient = []
 
-    model_time_george_hodlr_finite_difference = []
-    model_time_per_likelihoodeval_george_hodlr_finite_difference = []
-    search_time_george_hodlr_finite_difference = []
-    model_iterations_hodlr_finite_difference = []
+        model_time_george_hodlr_finite_difference = []
+        model_time_per_likelihoodeval_george_hodlr_finite_difference = []
+        search_time_george_hodlr_finite_difference = []
+        model_iterations_hodlr_finite_difference = []
 
-    model_time_george_hodlr_mcmc = []
-    model_time_per_likelihoodeval_george_hodlr_mcmc = []
-    search_time_george_hodlr_mcmc = []
-    model_iterations_hodlr_mcmc = []
+        model_time_george_hodlr_mcmc = []
+        model_time_per_likelihoodeval_george_hodlr_mcmc = []
+        search_time_george_hodlr_mcmc = []
+        model_iterations_hodlr_mcmc = []
 
     model_time_george_bpack_gradient = []
     model_time_per_likelihoodeval_george_bpack_gradient = []
@@ -572,17 +581,16 @@ def plotting(objective, objtype):
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
     # NS = [6401, 12801, 25601, 51201, 102401]
-    NS = [25601]
+    NS = [102401, 204801, 409601, 819201, 1638401]
     
     for elem in NS:
 
-        # bpack_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="gradient",plotgp=plotgp)
-        # model_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_bpack_gradient.append(bpack_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
-        # model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
+        bpack_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="gradient",plotgp=plotgp)
+        model_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_model"))
+        model_time_per_likelihoodeval_george_bpack_gradient.append(bpack_stats_gradient.get("time_model_per_likelihoodeval"))
+        search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
+        model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
         
-
         bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
         model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
         model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
@@ -595,81 +603,90 @@ def plotting(objective, objtype):
         search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
         model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
 
+        if bpackonly == False:
+            hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
+            model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+            model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+            search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+            model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+            
 
-        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
-        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
-        
+            hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
+            model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
+            model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
+            search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
+            model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
 
-        # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
-        # model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
-        # model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
-
-        # hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="mcmc",plotgp=plotgp)
-        # model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
-        # model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
+            hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="mcmc",plotgp=plotgp)
+            model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
+            model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
+            search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
+            model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
 
 
-        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
-        # model_time_gpy.append(gpy_stats.get("time_model"))
-        # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
-        # search_time_gpy.append(gpy_stats.get("time_search"))
-        # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
-     
+            gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
+            model_time_gpy.append(gpy_stats.get("time_model"))
+            model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
+            search_time_gpy.append(gpy_stats.get("time_search"))
+            model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
+
     
 
 
     # Model Time
-    print("Time-Model George HODLR Gradient: ", model_time_george_hodlr_gradient)
-    print("Time-Model George HODLR Finite Difference: ", model_time_george_hodlr_finite_difference)
-    print("Time-Model George HODLR MCMC: ", model_time_george_hodlr_mcmc)
+    if bpackonly == False:
+        print("Time-Model George HODLR Gradient: ", model_time_george_hodlr_gradient)
+        print("Time-Model George HODLR Finite Difference: ", model_time_george_hodlr_finite_difference)
+        print("Time-Model George HODLR MCMC: ", model_time_george_hodlr_mcmc)
+        print("Time-Model GPy: ", model_time_gpy)
     print("Time-Model George BPACK Gradient: ", model_time_george_bpack_gradient)
     print("Time-Model George BPACK Finite Difference: ", model_time_george_bpack_finite_difference)
     print("Time-Model George BPACK MCMC: ", model_time_george_bpack_mcmc)    
-    print("Time-Model GPy: ", model_time_gpy)
+    
 
     # Search Time
-    print("Time-Search George HODLR Gradient: ", search_time_george_hodlr_gradient)
-    print("Time-Search George HODLR Finite Difference: ", search_time_george_hodlr_finite_difference)
-    print("Time-Search George HODLR MCMC: ", search_time_george_hodlr_mcmc)
+    if bpackonly == False:
+        print("Time-Search George HODLR Gradient: ", search_time_george_hodlr_gradient)
+        print("Time-Search George HODLR Finite Difference: ", search_time_george_hodlr_finite_difference)
+        print("Time-Search George HODLR MCMC: ", search_time_george_hodlr_mcmc)
+        print("Time-Search GPy: ", search_time_gpy)
     print("Time-Search George BPACK Gradient: ", search_time_george_bpack_gradient)
     print("Time-Search George BPACK Finite Difference: ", search_time_george_bpack_finite_difference)
     print("Time-Search George BPACK MCMC: ", search_time_george_bpack_mcmc)    
-    print("Time-Search GPy: ", search_time_gpy)
+    
 
     # Inversion Time
-    print("Inversion Time George HODLR Gradient: ", model_time_per_likelihoodeval_george_hodlr_gradient)
-    print("Inversion Time George HODLR Finite Difference: ", model_time_per_likelihoodeval_george_hodlr_finite_difference)
-    print("Inversion Time George HODLR MCMC: ", model_time_per_likelihoodeval_george_hodlr_mcmc)
+    if bpackonly == False:
+        print("Inversion Time George HODLR Gradient: ", model_time_per_likelihoodeval_george_hodlr_gradient)
+        print("Inversion Time George HODLR Finite Difference: ", model_time_per_likelihoodeval_george_hodlr_finite_difference)
+        print("Inversion Time George HODLR MCMC: ", model_time_per_likelihoodeval_george_hodlr_mcmc)
+        print("Inversion Time GPy: ", model_time_per_likelihoodeval_gpy)
     print("Inversion Time George BPACK Gradient: ", model_time_per_likelihoodeval_george_bpack_gradient)
     print("Inversion Time George BPACK Finite Difference: ", model_time_per_likelihoodeval_george_bpack_finite_difference)
     print("Inversion Time George BPACK MCMC: ", model_time_per_likelihoodeval_george_bpack_mcmc)    
-    print("Inversion Time GPy: ", model_time_per_likelihoodeval_gpy)
+    
 
     # Modeling Iterations
-    print("Modeling Iterations George HODLR Gradient: ", model_iterations_hodlr_gradient)
-    print("Modeling Iterations George HODLR Finite Difference: ", model_iterations_hodlr_finite_difference)
-    print("Modeling Iterations George HODLR MCMC: ", model_iterations_hodlr_mcmc)
+    if bpackonly == False:
+        print("Modeling Iterations George HODLR Gradient: ", model_iterations_hodlr_gradient)
+        print("Modeling Iterations George HODLR Finite Difference: ", model_iterations_hodlr_finite_difference)
+        print("Modeling Iterations George HODLR MCMC: ", model_iterations_hodlr_mcmc)
+        print("Modeling Iterations GPy: ", model_iterations_gpy)
     print("Modeling Iterations George BPACK Gradient: ", model_iterations_bpack_gradient)
     print("Modeling Iterations George BPACK Finite Difference: ", model_iterations_bpack_finite_difference)
     print("Modeling Iterations George BPACK MCMC: ", model_iterations_bpack_mcmc)    
-    print("Modeling Iterations GPy: ", model_iterations_gpy)
+    
 
     fontsize=8
     plt.rcParams.update({'font.size': fontsize})
     figure, axis = plt.subplots(2,2)
     figure.suptitle("Optimizer Comparison 1D",fontsize=fontsize)
 
-    # axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')    
+    if bpackonly == False:
+        axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
+        axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')    
     axis[0,0].loglog(NS, model_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
     axis[0,0].loglog(NS, model_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
     axis[0,0].loglog(NS, model_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')
@@ -678,10 +695,11 @@ def plotting(objective, objtype):
     axis[0,0].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    # axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    if bpackonly == False:
+        axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
+        axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[0,1].loglog(NS, search_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
     axis[0,1].loglog(NS, search_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
     axis[0,1].loglog(NS, search_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
@@ -690,10 +708,11 @@ def plotting(objective, objtype):
     axis[0,1].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,1].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    # axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    if bpackonly == False:
+        axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
     axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
@@ -702,10 +721,11 @@ def plotting(objective, objtype):
     axis[1,0].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[1,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
-    # axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    if bpackonly == False:
+        axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
+        axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
     axis[1,1].loglog(NS, model_iterations_bpack_gradient, label="bpack_grad", color="blue", marker='x')
     axis[1,1].loglog(NS, model_iterations_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
     axis[1,1].loglog(NS, model_iterations_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
@@ -720,7 +740,7 @@ def plotting(objective, objtype):
 
 def main():
     objective, objtype = objective_selection()
-    plotting(objective=objective, objtype=objtype)
+    plotting(objective=objective, objtype=objtype, bpackonly=True)
 
     # superlu_terminate()
 

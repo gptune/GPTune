@@ -400,7 +400,7 @@ elif [ $ModuleEnv = 'cori-knl-openmpi-intel' ]; then
 
 ############### Perlmutter Milan with GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
-	PY_VERSION=3.12
+	PY_VERSION=3.13
 	GCC_VERSION=14
 	LIBSCI_VERSION=26.03.0
 	MPICH_VERSION=9.1.0
@@ -433,7 +433,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 
 ############### Perlmutter Milan with GPU OpenMPI+GNU
 elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
-    PY_VERSION=3.11
+    PY_VERSION=3.13
     # PY_TIME=2021.11
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
@@ -472,7 +472,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
 
 ############### Perlmutter Milan with no GPU OpenMPI+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
-    PY_VERSION=3.11
+    PY_VERSION=3.13
     # PY_TIME=2021.11
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
@@ -509,7 +509,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
 
 ############### Perlmutter Milan with no GPU CrayMPICH+GNU
 elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
-	PY_VERSION=3.12
+	PY_VERSION=3.13
 	GCC_VERSION=14
 	LIBSCI_VERSION=26.03.0
 	MPICH_VERSION=9.1.0

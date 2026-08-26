@@ -218,6 +218,18 @@ class LCM(GPy.kern.Kern):
         raise("Not implemented")
 
     def train_kernel(self, X, Y, computer, kwargs):
+        lengthscale_range = kwargs['model_lcm_lengthscale']
+        B_range = kwargs['model_lcm_B']
+        K_range = kwargs['model_lcm_K']
+        noisevariance_range = kwargs['model_lcm_noisevariance']
+
+        self.theta.fill(lengthscale_range[2])
+        self.var.fill(1.0)
+        self.kappa.fill(K_range[2])
+        self.sigma.fill(noisevariance_range[2])
+        self.WS.fill(B_range[2])
+        self.parameters_changed()
+
         npernode = int(computer.cores/kwargs['model_threads'])
         maxtries = kwargs['model_max_jitter_try']
         jitter = kwargs['model_jitter']
@@ -322,17 +334,21 @@ class LCM(GPy.kern.Kern):
         x0 = self.get_param_array()
         x0_log = inverse_transform_x(x0)
 
-        # x0_log[0]=0
-        x0_log[list(range(len(self.theta),len(self.theta)+len(self.var)))]=0
-        # x0_log[2]=0
-        # x0_log[3]=-10
-        # x0_log[4]=-10
         # print(x0,'before')
         # sol = scipy.optimize.show_options(method='L-BFGS-B', disp=True, solver='minimize')
         t3 = time.time_ns()
 
-        # bounds = [(-10, 10)] * len(x0_log)
-        bounds = [(-10, 8)] * len(self.theta) + [(None, None)] * len(self.var) + [(-10, 8)] * len(self.kappa)+ [(-10, -5)] * len(self.sigma)+ [(-10, 6)] * len(self.WS)
+        lengthscale_bounds = tuple(np.log10(lengthscale_range[:2]))
+        K_bounds = tuple(np.log10(K_range[:2]))
+        noisevariance_bounds = tuple(np.log10(noisevariance_range[:2]))
+        B_bounds = tuple(np.log10(B_range[:2]))
+        bounds = (
+            [lengthscale_bounds] * len(self.theta)
+            + [(None, None)] * len(self.var)
+            + [K_bounds] * len(self.kappa)
+            + [noisevariance_bounds] * len(self.sigma)
+            + [B_bounds] * len(self.WS)
+        )
         # print(bounds)
 
         # sol = scipy.optimize.minimize(fun, x0_log, args=(), method='L-BFGS-B', jac=grad)
@@ -485,4 +501,3 @@ if __name__ == "__main__":
             cond = False
             cliblcm.finalize(z)
             mpi_comm.Disconnect()
-

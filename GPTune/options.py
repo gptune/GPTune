@@ -55,7 +55,17 @@ class Options(dict):
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
         model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52', 'WendlandC2'
-        model_cutoff = 0.1 # upperbound of the cutoff distance hyperparameter when model_kern = 'WendlandC2'
+        model_isotropic = False # Use one shared length scale for all input dimensions in single-task Model_George RBF/Matern kernels
+        # Single-task ranges are linear-scale [minimum, maximum, initial] values.
+        model_noisevariance = [math.exp(-15), math.exp(-10), 5e-6]
+        model_amplitude = [math.exp(-30), math.exp(5), 1.0]
+        model_lengthscale = [math.exp(-11.5), math.exp(1), 1.0]
+        model_cutoff = [math.exp(-23), 0.1, 0.025]
+        # LCM ranges are shared by the George, GPy, and custom LCM models.
+        model_lcm_noisevariance = [math.exp(-6), math.exp(-5), math.exp(-6)]
+        model_lcm_B = [math.exp(-10), math.exp(6), 1.0]
+        model_lcm_K = [math.exp(-10), math.exp(8), 1.0]
+        model_lcm_lengthscale = [math.exp(-8), math.exp(-0.5), 0.1]
         model_output_constraint = None # Check output range constraints and disregard out-of-range outputs. Supported options: 'LargeNum': Put a large number, 'Ignore': Ignore those configurations, None: do not check out-of-range outputs.
         model_bigval_LargeNum = 1000000000.0  # Specify the big value to be used in model_output_constraint='LargeNum' (see above)
         model_input_separation = False # Set true if you want to ensure to use samples from the same modeling scheme
