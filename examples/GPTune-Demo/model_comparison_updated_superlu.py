@@ -212,6 +212,15 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
 
 NTEST = 1000 # held-out test points (not used for training) for the RMSE and CRPS of the GP along its training
+# GP_KERNEL=INLA replaces the Wendland kernel of the sparse runs by the INLA/SPDE model (model_kern='INLA',
+# george/inla.py, 2D and 3D objectives) on a lattice of GP_INLA_SHAPE nodes per dimension. The result files and
+# plots go to GP_OUTPUT_DIR, so that runs of different models do not overwrite each other.
+GP_KERNEL = os.environ.get('GP_KERNEL', 'WendlandC2')
+OUTPUT_DIR = os.environ.get('GP_OUTPUT_DIR', '.')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+import plot_training_results
+if GP_KERNEL == 'INLA':
+    plot_training_results.MODEL_LABEL = 'INLA/SPDE GP (george + SuperLU)'
 REPLAY_POINTS = 20 # history entries replayed for the test metrics of a training (evenly spaced, including the last)
 
 
@@ -374,6 +383,10 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
         print("SPARSE CONFIG: N=%d cutoff=%g" % 
               (NS_input - 1,options['model_cutoff']))
+        if GP_KERNEL == 'INLA':
+            options['model_kern'] = 'INLA'
+            options['model_inla_shape'] = int(os.environ.get('GP_INLA_SHAPE', '128'))
+            print("INLA CONFIG: N=%d lattice of %d nodes per dimension" % (NS_input - 1, options['model_inla_shape']))
     
     # Temporary hardcode 
     if(optimizer == "gradient"):
@@ -403,11 +416,11 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     else:
         pass
     run_tag = 'obj%d_N%d_%s' % (objtype, NS_input - 1, optimizer.replace(' ', '_'))
-    options['model_history_file'] = 'training_iterations_%s.csv' % run_tag # written during the training (see GPTune.model.TrainingHistory)
+    options['model_history_file'] = os.path.join(OUTPUT_DIR, 'training_iterations_%s.csv' % run_tag) # written during the training (see GPTune.model.TrainingHistory)
     if optimizer in ("mcmc", "mala"):
         # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
         # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
-        lbfgs_files = ['training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o) for o in ('gradient', 'finite_difference')]
+        lbfgs_files = [os.path.join(OUTPUT_DIR, 'training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o)) for o in ('gradient', 'finite_difference')]
         if all(os.path.exists(f) for f in lbfgs_files):
             lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
             options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
@@ -465,11 +478,11 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
         if len(getattr(modeler[0], 'train_history', [])) > 0:
             rows, predictions = training_test_metrics(modeler[0], gt, obj_func, NTEST, batch=250 if NS_input <= 400001 else 100)
-            write_training_metrics(rows, 'training_metrics_%s.csv' % run_tag)
-            np.savez('test_predictions_%s.npz' % run_tag, **predictions)
+            write_training_metrics(rows, os.path.join(OUTPUT_DIR, 'training_metrics_%s.csv' % run_tag))
+            np.savez(os.path.join(OUTPUT_DIR, 'test_predictions_%s.npz' % run_tag), **predictions)
             if hasattr(modeler[0], 'mcmc_chains'):
-                np.savez('mcmc_chains_%s.npz' % run_tag, chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
-            write_run_stats('run_stats_%s.json' % run_tag, objective=objtype, N=NS_input - 1, optimizer=optimizer,
+                np.savez(os.path.join(OUTPUT_DIR, 'mcmc_chains_%s.npz' % run_tag), chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
+            write_run_stats(os.path.join(OUTPUT_DIR, 'run_stats_%s.json' % run_tag), objective=objtype, N=NS_input - 1, optimizer=optimizer, kernel=options['model_kern'],
                             cutoff=options['model_cutoff'], mcmc_max_time=options['model_mcmc_max_time'] if optimizer in ("mcmc", "mala") else None,
                             slurm_job_id=os.environ.get('SLURM_JOB_ID'), date=time.strftime('%Y-%m-%d %H:%M:%S'), stats=stats,
                             final_hyperparameters=modeler[0].M.get_parameter_vector(), final_nll=rows[-1]['nll'],
@@ -758,7 +771,7 @@ def plotting(objective, objtype):
     
 
 
-        plot_training_histories(objtype, elem - 1)
+        plot_training_histories(objtype, elem - 1, OUTPUT_DIR)
 
 
     # Model Time
@@ -798,7 +811,7 @@ def plotting(objective, objtype):
     print("Modeling Iterations GPy: ", model_iterations_gpy)
 
     # model time, search time, time per likelihood evaluation and evaluations against N, from the saved files of all runs
-    plot_optimizer_scaling(objtype)
+    plot_optimizer_scaling(objtype, OUTPUT_DIR)
 
 
 def main():

@@ -1908,6 +1908,9 @@ class Model_George(Model):
                 amplitude = np.exp(log_amplitude_squared ) * model.kernel.ndim
                 lengthscales = np.sqrt(np.exp(log_lengthscales))
                 return noisevariance, rc, amplitude, lengthscales         
+        elif(kernel_type == 'INLA'):
+                params = np.asarray(params)
+                return np.exp(params[0]), np.exp(params[1]), np.sqrt(np.exp(params[2:]))
         else:
             if kernel_type == 'RBF' or kernel_type == 'Matern32' or kernel_type == 'Matern52':
             
@@ -1942,6 +1945,10 @@ class Model_George(Model):
         if multitask and isotropic:
             raise ValueError(
                 "model_isotropic is supported only for single-task "
+                "Model_George models")
+        if multitask and kwargs['model_kern'] == 'INLA':
+            raise ValueError(
+                "model_kern='INLA' is supported only for single-task "
                 "Model_George models")
         # multitask =  True
         if multitask:
@@ -2064,10 +2071,10 @@ class Model_George(Model):
         else:
             input_dim = len(data.P[0][0])
             if isotropic and kwargs['model_kern'] not in (
-                    'RBF', 'Matern32', 'Matern52'):
+                    'RBF', 'Matern32', 'Matern52', 'INLA'):
                 raise ValueError(
                     "model_isotropic is supported only for single-task "
-                    "RBF, Matern32, and Matern52 kernels")
+                    "RBF, Matern32, Matern52, and INLA kernels")
             noisevariance_range = self._linear_hyperparameter_range(
                 kwargs, 'model_noisevariance',
                 [np.exp(-15), np.exp(-10), 5e-6])
@@ -2111,6 +2118,12 @@ class Model_George(Model):
                 K = george.kernels.Matern52Kernel(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude
+            elif kwargs['model_kern'] == 'INLA':
+                # SPDE Matern field on a lattice, see george/inla.py; the amplitude is its marginal variance
+                intialguess = (
+                    [noisevariance_range[2], amplitude_range[2]]
+                    + [lengthscale_range[2]] * lengthscale_count
+                )
             elif kwargs['model_kern'] == 'WendlandC2':
                 cutoff_range = self._linear_hyperparameter_range(
                     kwargs, 'model_cutoff',
@@ -2128,7 +2141,20 @@ class Model_George(Model):
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
 
-            if kwargs['model_hodlr'] == True:
+            if kwargs['model_kern'] == 'INLA':
+                if kwargs['model_hodlr'] or kwargs['model_bpack']:
+                    raise ValueError("model_kern='INLA' factors its precision matrix with SuperLU_DIST: "
+                                     "set model_hodlr and model_bpack to False")
+                from george.inla import INLAGP
+                # the buffer should be at least the largest range 2*lengthscale
+                inla_buffer = kwargs.get('model_inla_buffer', None)
+                self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
+                                lengthscale=intialguess[2:], isotropic=isotropic,
+                                shape=kwargs.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
+                                buffer=2 * lengthscale_range[1] if inla_buffer is None else inla_buffer,
+                                nsamples=kwargs.get('model_inla_nsamples', 128),
+                                nprobe=int(kwargs.get('model_grad_nprobe', 64)), seed=seed, verbose=int(kwargs['verbose']))
+            elif kwargs['model_hodlr'] == True:
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
                     'tol': kwargs['model_hodlrtol'],
@@ -2207,6 +2233,23 @@ class Model_George(Model):
                     [noisevariance_bounds, cutoff_bounds, amplitude_bounds]
                     + [lengthscale_bounds] * input_dim
                 )
+            elif kwargs['model_kern'] == 'INLA':
+                # the amplitude is not divided by the dimension, and the lattice cannot resolve length
+                # scales below about twice its spacing
+                spacing = self.M.spacing
+                if isotropic:
+                    spacing = np.array([np.max(spacing)])
+                lengthscale_min = np.maximum(lengthscale_range[0], 2 * spacing)
+                if np.any(lengthscale_min >= lengthscale_range[1]):
+                    raise ValueError("model_lengthscale[1] must be larger than twice the INLA lattice spacing %s" % (2 * spacing))
+                bounds = (
+                    [noisevariance_bounds, tuple(np.log(amplitude_range[:2]))]
+                    + [(2.0 * np.log(lmin), 2.0 * np.log(lengthscale_range[1])) for lmin in lengthscale_min]
+                )
+                p0 = np.clip(self.M.get_parameter_vector(), [b[0] for b in bounds], [b[1] for b in bounds])
+                self.M.set_parameter_vector(p0)
+                if (kwargs['verbose']):
+                    print("Initial Log-likelihood:", self.M.log_likelihood(np.ravel(self.y)),p0)
             else:
 
                 p0 = self.M.get_parameter_vector()
@@ -2321,6 +2364,10 @@ class Model_George(Model):
             else:
                 modeling_options["model_hodlr"] = "no"
             modeling_options["multitask"] = "no"
+            if kwargs['model_kern'] == 'INLA':
+                modeling_options["model_inla_shape"] = self.M.shape
+                modeling_options["model_inla_buffer"] = self.M.buffer
+                modeling_options["model_inla_nsamples"] = self.M.nsamples
 
             if(kwargs['model_kern']=="WendlandC2"):
 
@@ -2513,6 +2560,20 @@ class Model_George(Model):
                 amplitude = intialguess[2]
                 kernel *= amplitude  
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
+            elif modeling_options['model_kern'] == 'INLA':
+                from george.inla import INLAGP
+                intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
+                self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
+                                lengthscale=intialguess[2:], isotropic=isotropic,
+                                shape=modeling_options.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
+                                buffer=modeling_options['model_inla_buffer'],
+                                nsamples=modeling_options.get('model_inla_nsamples', 128),
+                                nprobe=int(kwargs.get('model_grad_nprobe', 64)),
+                                seed=seed if kwargs['model_random_seed'] is not None else 42,
+                                verbose=int(kwargs['verbose']))
+                # the lattice is built from the inputs
+                self.M.compute(points, None, yerr=kwargs['model_jitter'])
+                return
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
 

@@ -54,13 +54,16 @@ class Options(dict):
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
-        model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52', 'WendlandC2'
+        model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52', 'WendlandC2'; 'INLA' (single-task Model_George, 2D and 3D) is the SPDE Matern field (smoothness 1 in 2D, 1/2 in 3D) on a lattice, see george/inla.py
         model_isotropic = False # Use one shared length scale for all input dimensions in single-task Model_George RBF/Matern kernels
         # Single-task ranges are linear-scale [minimum, maximum, initial] values.
         model_noisevariance = [math.exp(-15), math.exp(-10), 5e-6]
         model_amplitude = [math.exp(-30), math.exp(5), 1.0]
         model_lengthscale = [math.exp(-11.5), math.exp(1), 1.0]
         model_cutoff = [math.exp(-23), 0.1, 0.025]
+        model_inla_shape = None # With model_kern='INLA', the number of lattice nodes per dimension (an int or a list) covering [0,1]^d; None if the inputs are on an evenly spaced lattice, which is then used
+        model_inla_buffer = None # With model_kern='INLA', the width of the buffer added around the lattice against the boundary effect (cells growing by 1.2); None for twice model_lengthscale[1], the largest range
+        model_inla_nsamples = 128 # With model_kern='INLA', the number of posterior samples of the Rao-Blackwellized estimator of the predictive variances
         # LCM ranges are shared by the George, GPy, and custom LCM models.
         model_lcm_noisevariance = [math.exp(-6), math.exp(-5), math.exp(-6)]
         model_lcm_B = [math.exp(-10), math.exp(6), 1.0]
@@ -83,7 +86,7 @@ class Options(dict):
         model_sparse = False # Whether to use SparseGPRegression or SparseGPCoregionalizedRegression from GPTune.model_GPy_LCM, or sparse kernels from george
         model_hodlr = False # Whether to use HODLR solver from george or not
         model_grad = False # Whether to provide gradient of log-likelihood to scikit-optimze (george doesn't use HODLR to compress the gradient)
-        model_grad_nprobe = 64 # Number of random probe vectors for the trace terms of the log-likelihood gradient with sparse george kernels (model_sparse and model_grad)
+        model_grad_nprobe = 64 # Number of random probe vectors for the trace terms of the log-likelihood gradient with sparse george kernels (model_sparse and model_grad) and with model_kern='INLA'
         model_history_file = None # If set, the george model training appends one line per L-BFGS iteration (time, evaluations, -loglikelihood, hyperparameters) to this CSV file
         model_bpack = False # Whether to use solvers from butterflypack or not
         model_bpack_scaled_geometry = False # With model_bpack, divide each dimension of the points passed to butterflypack by the current kernel length scale (single-task, non-isotropic kernels; the H2 format then needs --h2_unstructured 1 in the butterflypack worker)
