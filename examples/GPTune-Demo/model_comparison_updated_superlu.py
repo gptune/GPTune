@@ -37,6 +37,11 @@ import os
 # import mpi4py
 import logging
 from pdbridge import *
+# george's sparse solver (model_sparse) calls superlu_factor/logdet/solve, but george/solvers/basic.py
+# no longer imports pdbridge since the ButterflyPACK solver was added, so provide them here
+import george.solvers.basic
+for _f in (superlu_factor, superlu_logdet, superlu_solve):
+    setattr(george.solvers.basic, _f.__name__, _f)
 
 
 logging.getLogger('matplotlib.font_manager').disabled = True
@@ -53,6 +58,7 @@ import argparse
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from plot_training_results import plot_training_histories, plot_optimizer_scaling
 
 from GPTune.callopentuner import OpenTuner
 from GPTune.callhpbandster import HpBandSter
@@ -130,6 +136,27 @@ def objectives3(point):
     x6 = point["x6"]
     y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2 + (x4-4)**2 + (x5-1)**2 + (x6-1)**2)
     return [y]
+    
+def schwefel2_raw(x1, x2):
+   
+    z1 = -500.0 + 1000.0 * x1
+    z2 = -500.0 + 1000.0 * x2
+
+    d = 2
+    y = 418.9829 * d - (
+        z1 * np.sin(np.sqrt(abs(z1))) +
+        z2 * np.sin(np.sqrt(abs(z2)))
+    )
+    return y
+
+def objectives4(point):
+    x1 = point["x1"]
+    x2 = point["x2"]
+
+    y_raw = schwefel2_raw(x1, x2)
+    y = y_raw / (418.9829 * 2) - 1.0
+
+    return [y]
 
 
 def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
@@ -148,7 +175,11 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
         x4 =point['x4']  
         x5 =point['x5']
         x6 =point['x6']  
-        x = [x1,x2,x3,x4,x5,x6]  
+        x = [x1,x2,x3,x4,x5,x6]
+    elif(objtype==4):
+        x1 =point['x1']
+        x2 =point['x2']
+        x = [x1,x2]
 
     # x =point['x']
     xNorm = gt.problem.PS.transform([x])
@@ -178,6 +209,71 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
         # print(xNorm)
     (mu, var) = modeler[0].predict(xNorm, tid=tid)
     return (mu, var)
+
+
+NTEST = 1000 # held-out test points (not used for training) for the RMSE and CRPS of the GP along its training
+REPLAY_POINTS = 20 # history entries replayed for the test metrics of a training (evenly spaced, including the last)
+
+
+def training_test_metrics(modeler, gt, obj_func, ntest, seed=2026, batch=250, max_replay=REPLAY_POINTS):
+    """
+    Held-out accuracy of a george GP along its training: for the points recorded in
+    modeler.train_history (L-BFGS iterations, or improvements of the best MCMC sample), refactor the
+    covariance matrix at those hyperparameters and predict ntest uniformly random points that are not
+    used for training. Returns the history entries extended with the RMSE of the predictive mean and
+    the mean CRPS of the Gaussian predictive distributions, and the test points and predictions. At
+    most max_replay entries, evenly spaced in the history and including the last one, are replayed;
+    the others get NaN. Predictions are done in batches, each needing one multi-RHS solve.
+    """
+    from scipy.stats import norm
+    PS = gt.problem.PS
+    rng = np.random.default_rng(seed)
+    xtest = [[rng.uniform(d.low, d.high) for d in PS.dimensions] for _ in range(ntest)]
+    ytest = np.array([obj_func(dict(zip(PS.dimension_names, p)))[0] for p in xtest])
+    xtest_norm = np.array(PS.transform(xtest))
+    y = np.ravel(modeler.y)
+    p_final = modeler.M.get_parameter_vector()
+    history = modeler.train_history
+    replay = set(np.round(np.linspace(0, len(history) - 1, min(max_replay, len(history)))).astype(int))
+    metrics = {} # hyperparameters -> (RMSE, CRPS)
+    predictions = {'xtest': np.array(xtest), 'ytest': ytest, 'history_entry': [], 'time': [], 'hyperparameters': [], 'mu': [], 'var': []}
+    rows = []
+    for i, entry in enumerate(history):
+        key = tuple(entry['hyperparameters'])
+        if i in replay and key not in metrics:
+            start = time.time()
+            modeler.M.set_parameter_vector(entry['hyperparameters'])
+            mu = np.empty(ntest)
+            var = np.empty(ntest)
+            for s in range(0, ntest, batch):
+                mu[s:s+batch], var[s:s+batch] = modeler.M.predict(y, xtest_norm[s:s+batch], return_var=True)
+            sd = np.sqrt(np.maximum(var, 1e-300))
+            z = (ytest - mu) / sd
+            crps = sd * (z * (2 * norm.cdf(z) - 1) + 2 * norm.pdf(z) - 1 / np.sqrt(np.pi))
+            metrics[key] = (float(np.sqrt(np.mean((mu - ytest)**2))), float(np.mean(crps)))
+            for name, value in (('history_entry', i), ('time', entry['time']), ('hyperparameters', entry['hyperparameters']), ('mu', mu), ('var', var)):
+                predictions[name].append(value)
+            print("test metrics at history entry %d (training time %.2f s): -loglikelihood %.8e, RMSE %.6e, CRPS %.6e (replay %.1f s)"
+                  % (entry['iteration'], entry['time'], entry['nll'], metrics[key][0], metrics[key][1], time.time() - start))
+        rmse, crps = metrics.get(key, (np.nan, np.nan))
+        rows.append(dict(entry, rmse=rmse, crps=crps))
+    modeler.M.set_parameter_vector(p_final)
+    return rows, {name: np.array(value) for name, value in predictions.items()}
+
+
+def write_training_metrics(rows, filename):
+    with open(filename, 'w') as f:
+        f.write('iteration,time,nfev,ngev,nll,rmse,crps,' + ','.join('hp_%d' % i for i in range(len(rows[0]['hyperparameters']))) + '\n')
+        for r in rows:
+            f.write('%d,%.6f,%d,%d,%.12e,%.12e,%.12e,' % (r['iteration'], r['time'], r['nfev'], r['ngev'], r['nll'], r['rmse'], r['crps'])
+                    + ','.join('%.12e' % v for v in r['hyperparameters']) + '\n')
+
+
+def write_run_stats(filename, **fields):
+    """The settings and GPTune statistics of a run, for plots made later (plot_training_results.py)."""
+    import json
+    with open(filename, 'w') as f:
+        json.dump(fields, f, indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
 
 
 def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=False, modelsparse=False):
@@ -216,7 +312,9 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     elif(objtype==2):
         parameter_space = Space([x1,x2])    
     elif(objtype==3):
-        parameter_space = Space([x1,x2,x3,x4,x5,x6])    
+        parameter_space = Space([x1,x2,x3,x4,x5,x6])
+    elif(objtype==4):
+        parameter_space = Space([x1,x2])
 
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
@@ -269,24 +367,53 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
     if(modelsparse==True):
         options['model_sparse'] = True
-        options['model_cutoff'] = 0.1
         options['model_kern'] = 'WendlandC2'
+
+        # about 78 neighbours per point: the cutoff shrinks like 1/sqrt(N), 0.0158 at N=100k (0.005 at N=1M)
+        options['model_cutoff'] = 0.0158 * np.sqrt(100000 / (NS_input - 1))
+
+        print("SPARSE CONFIG: N=%d cutoff=%g" % 
+              (NS_input - 1,options['model_cutoff']))
     
     # Temporary hardcode 
     if(optimizer == "gradient"):
         options['model_mcmc'] = False
         options['model_grad'] = True
+        options['model_grad_nprobe'] = 64 # random probe vectors for the trace terms of the sparse gradient
     elif (optimizer == "mcmc"):
         options['model_mcmc'] = True
         options['model_grad'] = False
         options['model_mcmc_sampler'] = 'MetropolisHastings' # 'Ensemble_emcee', 'MetropolisHastings'
         options['model_mcmc_nchain'] = 2
+        options['model_mcmc_burnin'] = 100
+        options['model_mcmc_maxiter'] = 500
+    elif (optimizer == "mala"):
+        options['model_mcmc'] = True
+        options['model_grad'] = True # MALA needs the gradient of the log-likelihood
+        options['model_grad_nprobe'] = 64 # random probe vectors for the traces of the gradient and the Fisher information
+        options['model_mcmc_sampler'] = 'MALA'
+        options['model_mcmc_nchain'] = 2
+        options['model_mcmc_burnin'] = 20
+        options['model_mcmc_maxiter'] = 150
+        options['model_mala_fisher_interval'] = 1 # compute the Fisher information preconditioner at every proposal (exact sampling)
+        options['model_mala_step_size'] = 1.0
     elif (optimizer == "finite difference"):
         options['model_mcmc'] = False
         options['model_grad'] = False
     else:
         pass
-        
+    run_tag = 'obj%d_N%d_%s' % (objtype, NS_input - 1, optimizer.replace(' ', '_'))
+    options['model_history_file'] = 'training_iterations_%s.csv' % run_tag # written during the training (see GPTune.model.TrainingHistory)
+    if optimizer in ("mcmc", "mala"):
+        # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
+        # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
+        lbfgs_files = ['training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o) for o in ('gradient', 'finite_difference')]
+        if all(os.path.exists(f) for f in lbfgs_files):
+            lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
+            options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
+            options['model_mcmc_maxiter'] = 1000000
+            print("MCMC sampling time limit: %.1f s (3 x the shorter L-BFGS training, %s)" % (options['model_mcmc_max_time'], lbfgs_times))
+
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
@@ -335,6 +462,18 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
             # print("    Ps ", data.P[tid])
             # print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
+
+        if len(getattr(modeler[0], 'train_history', [])) > 0:
+            rows, predictions = training_test_metrics(modeler[0], gt, obj_func, NTEST, batch=250 if NS_input <= 400001 else 100)
+            write_training_metrics(rows, 'training_metrics_%s.csv' % run_tag)
+            np.savez('test_predictions_%s.npz' % run_tag, **predictions)
+            if hasattr(modeler[0], 'mcmc_chains'):
+                np.savez('mcmc_chains_%s.npz' % run_tag, chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
+            write_run_stats('run_stats_%s.json' % run_tag, objective=objtype, N=NS_input - 1, optimizer=optimizer,
+                            cutoff=options['model_cutoff'], mcmc_max_time=options['model_mcmc_max_time'] if optimizer in ("mcmc", "mala") else None,
+                            slurm_job_id=os.environ.get('SLURM_JOB_ID'), date=time.strftime('%Y-%m-%d %H:%M:%S'), stats=stats,
+                            final_hyperparameters=modeler[0].M.get_parameter_vector(), final_nll=rows[-1]['nll'],
+                            popt=data.P[0][np.argmin(data.O[0])], oopt=float(min(data.O[0])[0]))
 
 
         if objtype==1 and plotgp==True:
@@ -504,7 +643,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
 
 def objective_selection():
-    objective = input("What Objective Function would you like to use (1, 2, or 3)")
+    objective = input("What Objective Function would you like to use (1, 2, 3 or 4)")
     if ("1" in objective):
         objtype=1
         return objectives1, objtype
@@ -514,6 +653,9 @@ def objective_selection():
     elif ("3" in objective):
         objtype=3
         return objectives3, objtype
+    elif ("4" in objective):
+        objtype=4
+        return objectives4, objtype
     else:
         raise Exception("Invalid objective selection")
 
@@ -559,41 +701,39 @@ def plotting(objective, objtype):
     model_iterations_sparse_mcmc = []
 
 
-    plotgp=True
+    plotgp=False
 
     # NS = [201, 401, 801, 1601, 3201, 6401, 12801, 25601, 51201, 102401, 204801, 409601]
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
     # NS = [6401, 12801, 25601, 51201, 102401]
-    NS = [25601]
-    
+    # sample counts and sparse-GP optimizers of this run, e.g. GP_NS="100000,200000" and
+    # GP_OPTIMIZERS="gradient,finite difference" ("gradient", "finite difference", "mcmc", "mala")
+    NS = [int(n) + 1 for n in os.environ.get('GP_NS', '100000').split(',')]
+    optimizers = os.environ.get('GP_OPTIMIZERS', 'mala').split(',')
+    sparse_series = {
+        'gradient': (model_time_george_sparse_gradient, model_time_per_likelihoodeval_george_sparse_gradient, search_time_george_sparse_gradient, model_iterations_sparse_gradient),
+        'finite difference': (model_time_george_sparse_finite_difference, model_time_per_likelihoodeval_george_sparse_finite_difference, search_time_george_sparse_finite_difference, model_iterations_sparse_finite_difference),
+        'mcmc': (model_time_george_sparse_mcmc, model_time_per_likelihoodeval_george_sparse_mcmc, search_time_george_sparse_mcmc, model_iterations_sparse_mcmc),
+    }
+
     for elem in NS:
 
-        # sparse_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer="gradient",plotgp=plotgp)
-        # model_time_george_sparse_gradient.append(sparse_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_sparse_gradient.append(sparse_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_sparse_gradient.append(sparse_stats_gradient.get("time_search"))
-        # model_iterations_sparse_gradient.extend(sparse_stats_gradient.get("modeling_iteration"))
-        
-
-        # sparse_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer = "finite difference",plotgp=plotgp)
-        # model_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_sparse_finite_difference.append(sparse_stats_finite_difference.get("time_search"))
-        # model_iterations_sparse_finite_difference.extend(sparse_stats_finite_difference.get("modeling_iteration"))
-
-        # sparse_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer="mcmc",plotgp=plotgp)
-        # model_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model"))
-        # model_time_per_likelihoodeval_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_model_per_likelihoodeval"))
-        # search_time_george_sparse_mcmc.append(sparse_stats_mcmc.get("time_search"))
-        # model_iterations_sparse_mcmc.extend(sparse_stats_mcmc.get("modeling_iteration"))
+        for optimizer in optimizers:
+            sparse_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer=optimizer,plotgp=plotgp)
+            if optimizer in sparse_series:
+                model_time, time_per_likelihoodeval, search_time, iterations = sparse_series[optimizer]
+                model_time.append(sparse_stats.get("time_model"))
+                time_per_likelihoodeval.append(sparse_stats.get("time_model_per_likelihoodeval"))
+                search_time.append(sparse_stats.get("time_search"))
+                iterations.extend(sparse_stats.get("modeling_iteration"))
 
 
-        hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
-        model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
+        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
+        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
+        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
+        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
+        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
         
 
         # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
@@ -616,6 +756,9 @@ def plotting(objective, objtype):
         # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
      
     
+
+
+        plot_training_histories(objtype, elem - 1)
 
 
     # Model Time
@@ -654,62 +797,9 @@ def plotting(objective, objtype):
     print("Modeling Iterations George Sparse MCMC: ", model_iterations_sparse_mcmc)    
     print("Modeling Iterations GPy: ", model_iterations_gpy)
 
-    fontsize=8
-    plt.rcParams.update({'font.size': fontsize})
-    figure, axis = plt.subplots(2,2)
-    figure.suptitle("Optimizer Comparison 1D",fontsize=fontsize)
+    # model time, search time, time per likelihood evaluation and evaluations against N, from the saved files of all runs
+    plot_optimizer_scaling(objtype)
 
-    # axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')    
-    axis[0,0].loglog(NS, model_time_george_sparse_gradient, label="sparse_grad", color="blue", marker='x')
-    axis[0,0].loglog(NS, model_time_george_sparse_finite_difference, label="sparse_fd", color="red", marker='x')
-    axis[0,0].loglog(NS, model_time_george_sparse_mcmc, label="sparse_mcmc", color="purple", marker='x')
-    axis[0,0].legend(fontsize=fontsize-4)
-    axis[0,0].set_title("Model Time",fontsize=fontsize)
-    axis[0,0].set_xlabel("Sample Count",fontsize=fontsize)
-    axis[0,0].set_ylabel("Time (sec)",fontsize=fontsize)
-
-    # axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[0,1].loglog(NS, search_time_george_sparse_gradient, label="sparse_grad", color="blue", marker='x')
-    axis[0,1].loglog(NS, search_time_george_sparse_finite_difference, label="sparse_fd", color="red", marker='x')
-    axis[0,1].loglog(NS, search_time_george_sparse_mcmc, label="sparse_mcmc", color="purple", marker='x')    
-    axis[0,1].legend(fontsize=fontsize-4)
-    axis[0,1].set_title("Search Time",fontsize=fontsize)
-    axis[0,1].set_xlabel("Sample Count",fontsize=fontsize)
-    axis[0,1].set_ylabel("Time (sec)",fontsize=fontsize)
-
-    # axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_sparse_gradient, label="sparse_grad", color="blue", marker='x')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_sparse_finite_difference, label="sparse_fd", color="red", marker='x')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_sparse_mcmc, label="sparse_mcmc", color="purple", marker='x')    
-    axis[1,0].legend(fontsize=fontsize-4)
-    axis[1,0].set_title("Model Time Per Iteration",fontsize=fontsize)
-    axis[1,0].set_xlabel("Number of Samples",fontsize=fontsize)
-    axis[1,0].set_ylabel("Time (sec)",fontsize=fontsize)
-
-    # axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-    axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[1,1].loglog(NS, model_iterations_sparse_gradient, label="sparse_grad", color="blue", marker='x')
-    axis[1,1].loglog(NS, model_iterations_sparse_finite_difference, label="sparse_fd", color="red", marker='x')
-    axis[1,1].loglog(NS, model_iterations_sparse_mcmc, label="sparse_mcmc", color="purple", marker='x')    
-    axis[1,1].legend(fontsize=fontsize-4)
-    axis[1,1].set_title("Model Iterations",fontsize=fontsize)
-    axis[1,1].set_xlabel("Sample Count",fontsize=fontsize)
-    axis[1,1].set_ylabel("Iterations",fontsize=fontsize)
-
-    plt.tight_layout()
-    plt.show()
-    plt.savefig('opttimizer_compare.pdf')
 
 def main():
     objective, objtype = objective_selection()

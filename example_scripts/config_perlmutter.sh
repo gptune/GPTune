@@ -352,6 +352,7 @@ make install -j
 	rm -rf ButterflyPACK
 	git clone https://github.com/liuyangzhuan/ButterflyPACK.git
 	cd ButterflyPACK
+	git checkout H2_optimization
 	git clone https://github.com/opencollab/arpack-ng.git
 	cd arpack-ng
 	git checkout f670e731b7077c78771eb25b48f6bf9ca47a490e

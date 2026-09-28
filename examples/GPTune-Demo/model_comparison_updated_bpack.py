@@ -56,6 +56,9 @@ import matplotlib.pyplot as plt
 
 from GPTune.callopentuner import OpenTuner
 from GPTune.callhpbandster import HpBandSter
+# held-out test metrics along the training, run files and training plots, shared with the SuperLU driver
+from model_comparison_updated_superlu import training_test_metrics, write_training_metrics, write_run_stats, NTEST
+import plot_training_results
 
 
 
@@ -87,6 +90,14 @@ def parse_args():
     parser.add_argument('-perfmodel', type=int, default=0, help='Whether to use the performance model')
     parser.add_argument('-tvalue', type=float, default=1.0, help='Input task t value')
     parser.add_argument('-format', type=int, default=1, help='BPACK format: 1 for HODLR, 2 for H, and 7 for H2')
+    parser.add_argument('-noisevariance', type=float, nargs=3, default=None, help='Minimum, maximum, and initial noise variance (linear scale); default: the GPTune default')
+    parser.add_argument('-lengthscale', type=float, nargs=3, default=None, help='Minimum, maximum, and initial length scale (linear scale); default: the GPTune default')
+    parser.add_argument('-plot_points', type=int, default=400, help='Approximate number of test points in the 2D/3D prediction plots (one butterflypack solve per point)')
+    parser.add_argument('-optimizer', type=str, default='gradient', help='Comma-separated hyperparameter optimizers for the butterflypack model, run one after the other: gradient, finite difference, mcmc, mala')
+    parser.add_argument('-objtype', type=int, default=0, help='Objective function 1, 2, 3, or 4 (anisotropic 2D); 0 asks interactively')
+    parser.add_argument('-NS', type=int, default=102401, help='Number of samples (the model is built with NS-1 samples)')
+    parser.add_argument('-isotropic', type=int, default=1, help='Whether to use one shared length scale for all dimensions')
+    parser.add_argument('-bpack_scaled_geometry', type=int, default=0, help='Whether to divide each dimension of the points passed to butterflypack by its length scale (use with -isotropic 0 and --h2_unstructured 1 for H2)')
 
     args = parser.parse_args()
 
@@ -129,13 +140,20 @@ def objectives3(point):
     y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2)
     return [y]
 
+def objectives4(point):
+    # anisotropic 2D function: oscillates quickly along x1 and varies slowly along x2
+    x1 = point["x1"]
+    x2 = point["x2"]
+    y = np.sin(10*np.pi*x1) + 4*(x2**2)
+    return [y]
+
 
 def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
     if(objtype==1):
         x =point['x']
         x = [x]
-    elif(objtype==2):
+    elif(objtype==2 or objtype==4):
         x1 =point['x1']
         x2 =point['x2']
         x = [x1,x2]  
@@ -206,7 +224,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     x3 = Real(0., 1., transform="normalize", name="x3")  
     if(objtype==1):
         parameter_space = Space([x])    
-    elif(objtype==2):
+    elif(objtype==2 or objtype==4):
         parameter_space = Space([x1,x2])    
     elif(objtype==3):
         parameter_space = Space([x1,x2,x3])    
@@ -240,7 +258,10 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # options['model_restart_processes'] = 1
     options['model_optimzier'] = 'lbfgs'
 
-    options['model_isotropic'] = True
+    options['model_isotropic'] = bool(args.isotropic)
+    options['model_bpack_scaled_geometry'] = bool(args.bpack_scaled_geometry)
+    # file name suffix distinguishing the anisotropic runs; empty for the default isotropic runs
+    bpack_tag = '' if args.isotropic else ('_aniso_scaledgeo' if args.bpack_scaled_geometry else '_aniso')
 
 
 
@@ -255,6 +276,10 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
+    if args.noisevariance is not None:
+        options['model_noisevariance'] = list(args.noisevariance)
+    if args.lengthscale is not None:
+        options['model_lengthscale'] = list(args.lengthscale)
     if(modelhodlr==True):
         options['model_hodlr'] = True
         options['model_hodlrleaf'] = 200
@@ -276,17 +301,41 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     if(optimizer == "gradient"):
         options['model_mcmc'] = False
         options['model_grad'] = True
+        options['model_grad_nprobe'] = 64 # fixed random probe vectors for the trace terms of the gradient
     elif (optimizer == "mcmc"):
         options['model_mcmc'] = True
         options['model_grad'] = False
         options['model_mcmc_sampler'] = 'MetropolisHastings' # 'Ensemble_emcee', 'MetropolisHastings'
         options['model_mcmc_nchain'] = 2
+        options['model_mcmc_burnin'] = 100
+        options['model_mcmc_maxiter'] = 500
+    elif (optimizer == "mala"):
+        options['model_mcmc'] = True
+        options['model_grad'] = True # MALA needs the gradient of the log-likelihood
+        options['model_grad_nprobe'] = 64 # fixed random probe vectors for the traces of the gradient and the Fisher information
+        options['model_mcmc_sampler'] = 'MALA'
+        options['model_mcmc_nchain'] = 2
+        options['model_mcmc_burnin'] = 20
+        options['model_mcmc_maxiter'] = 150
+        options['model_mala_fisher_interval'] = 1 # compute the Fisher information preconditioner at every proposal (exact sampling)
+        options['model_mala_step_size'] = 1.0
     elif (optimizer == "finite difference"):
         options['model_mcmc'] = False
         options['model_grad'] = False
     else:
         pass
-        
+    run_tag = 'obj%d_N%d_%s' % (objtype, NS_input - 1, optimizer.replace(' ', '_'))
+    options['model_history_file'] = 'training_iterations_%s.csv' % run_tag # written during the training (see GPTune.model.TrainingHistory)
+    if optimizer in ("mcmc", "mala"):
+        # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
+        # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
+        lbfgs_files = ['training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o) for o in ('gradient', 'finite_difference')]
+        if all(os.path.exists(f) for f in lbfgs_files):
+            lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
+            options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
+            options['model_mcmc_maxiter'] = 1000000
+            print("MCMC sampling time limit: %.1f s (3 x the shorter L-BFGS training, %s)" % (options['model_mcmc_max_time'], lbfgs_times))
+
     options['model_random_seed'] = 0
     # Use the following two lines if you want to specify a certain random seed for the search phase
     # options['search_class'] = 'SearchSciPy'
@@ -336,6 +385,20 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
             # print("    Os ", data.O[tid].tolist())
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
+        if len(getattr(modeler[0], 'train_history', [])) > 0:
+            rows, predictions = training_test_metrics(modeler[0], gt, obj_func, NTEST, batch=250 if NS_input <= 400001 else 100)
+            write_training_metrics(rows, 'training_metrics_%s.csv' % run_tag)
+            np.savez('test_predictions_%s.npz' % run_tag, **predictions)
+            if hasattr(modeler[0], 'mcmc_chains'):
+                np.savez('mcmc_chains_%s.npz' % run_tag, chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
+            write_run_stats('run_stats_%s.json' % run_tag, objective=objtype, N=NS_input - 1, optimizer=optimizer,
+                            format=format, isotropic=options['model_isotropic'], bpack_scaled_geometry=options['model_bpack_scaled_geometry'],
+                            noisevariance=args.noisevariance, lengthscale=args.lengthscale,
+                            mcmc_max_time=options['model_mcmc_max_time'] if optimizer in ("mcmc", "mala") else None,
+                            slurm_job_id=os.environ.get('SLURM_JOB_ID'), date=time.strftime('%Y-%m-%d %H:%M:%S'), stats=stats,
+                            final_hyperparameters=modeler[0].M.get_parameter_vector(), final_nll=rows[-1]['nll'],
+                            popt=data.P[0][np.argmin(data.O[0])], oopt=float(min(data.O[0])[0]))
+
 
         if objtype==1 and plotgp==True:
             # fig = plt.figure(figsize=[12.8, 9.6])
@@ -383,18 +446,18 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 elif(modelsparse==True):    
                     fig.savefig('obj_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
                 elif(modelbpack==True):    
-                    fig.savefig('obj_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
+                    fig.savefig('obj_%s_N_%s_bpack_format_%s%s.pdf'%(optimizer,int(NS_input - 1), format, bpack_tag))
                 else:
                     fig.savefig('obj_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
                     
 
 
 
-        if objtype==2 and plotgp==True:
+        if (objtype==2 or objtype==4) and plotgp==True:
             # fig = plt.figure(figsize=[12.8, 9.6])
             for tid in range(len(data.I)):
                 n_model_samples = max(int(NS_input - 1), 1)
-                res = max(int(round(n_model_samples**0.5)) + 1, 2)
+                res = max(min(int(round(n_model_samples**0.5)) + 1, int(args.plot_points**0.5)), 2)
                 x1 = np.linspace(0., 1., res)
                 x2 = np.linspace(0., 1., res)
                 X1, X2 = np.meshgrid(x1, x2)
@@ -415,13 +478,15 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                         kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
                         kwargs.update(kwargst)
                         
-                        Y_true[j, i] = objectives2(kwargs)[0]
+                        Y_true[j, i] = obj_func(kwargs)[0]
 
                         y_m, var = predict_aug(modeler, gt, kwargs, tid, objtype)
                         # print(kwargs,y_m,var)
                         Y_mean[j, i] = y_m
                         Y_std[j, i]  = np.sqrt(var)
                 # print(Y_mean)
+                print('2D grid %dx%d: rmse(mean-true) %e, max|mean-true| %e, mean std %e, max std %e, points with negative variance %d'
+                      % (res, res, np.sqrt(np.mean((Y_mean - Y_true)**2)), np.max(np.abs(Y_mean - Y_true)), np.nanmean(Y_std), np.nanmax(Y_std), np.isnan(Y_std).sum()))
                 # Sampled points
                 samples = np.array(data.P[tid], dtype=float)   # shape (m, 2)
                 # print(samples)
@@ -463,7 +528,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 elif(modelsparse==True):    
                     fig.savefig('obj_2D_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
                 elif(modelbpack==True):    
-                    fig.savefig('obj_2D_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
+                    fig.savefig('obj_2D_%s_N_%s_bpack_format_%s%s.pdf'%(optimizer,int(NS_input - 1), format, bpack_tag))
                 else:
                     fig.savefig('obj_2D_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
 
@@ -471,7 +536,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         if objtype==3 and plotgp==True:
             for tid in range(len(data.I)):
                 n_model_samples = max(int(NS_input - 1), 1)
-                res = max(int(round(n_model_samples**(1.0 / 3.0))) + 1, 2)
+                res = max(min(int(round(n_model_samples**(1.0 / 3.0))) + 1, int((args.plot_points / 3.0)**0.5)), 2)
                 grid = np.linspace(0., 1., res)
                 X_horizontal, X_vertical = np.meshgrid(grid, grid)
 
@@ -546,7 +611,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 elif(modelsparse==True):
                     fig.savefig('obj_3D_slices_%s_N_%s_superlu.pdf'%(optimizer,int(NS_input - 1)))
                 elif(modelbpack==True):
-                    fig.savefig('obj_3D_slices_%s_N_%s_bpack_format_%s.pdf'%(optimizer,int(NS_input - 1), format))
+                    fig.savefig('obj_3D_slices_%s_N_%s_bpack_format_%s%s.pdf'%(optimizer,int(NS_input - 1), format, bpack_tag))
                 else:
                     fig.savefig('obj_3D_slices_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
                     
@@ -593,7 +658,8 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
 def objective_selection():
     # return objectives1, 1
-    objective = input("What Objective Function would you like to use (1, 2, or 3)")
+    objtype = parse_args().objtype
+    objective = str(objtype) if objtype > 0 else input("What Objective Function would you like to use (1, 2, 3, or 4)")
     if ("1" in objective):
         objtype=1
         return objectives1, objtype
@@ -603,6 +669,9 @@ def objective_selection():
     elif ("3" in objective):
         objtype=3
         return objectives3, objtype
+    elif ("4" in objective):
+        objtype=4
+        return objectives4, objtype
     else:
         raise Exception("Invalid objective selection")
 
@@ -655,28 +724,30 @@ def plotting(objective, objtype, bpackonly=False):
     # NS = [1601, 3201, 6401, 12801]
     # NS = [25601, 51201, 102401]
     # NS = [6401, 12801, 25601, 51201, 102401]
-    NS = [102401]
+    # NS = [102401]
     # NS = [1638401]
+    NS = [parse_args().NS]
+    bpack_optimizers = parse_args().optimizer.split(',')
+    bpack_series = {
+        'gradient': (model_time_george_bpack_gradient, model_time_per_likelihoodeval_george_bpack_gradient, search_time_george_bpack_gradient, model_iterations_bpack_gradient),
+        'finite difference': (model_time_george_bpack_finite_difference, model_time_per_likelihoodeval_george_bpack_finite_difference, search_time_george_bpack_finite_difference, model_iterations_bpack_finite_difference),
+        'mcmc': (model_time_george_bpack_mcmc, model_time_per_likelihoodeval_george_bpack_mcmc, search_time_george_bpack_mcmc, model_iterations_bpack_mcmc),
+    }
+    plot_training_results.MODEL_LABEL = 'H2 GP (george + ButterflyPACK, %s kernel)' % ('isotropic' if parse_args().isotropic else 'anisotropic')
     
     for elem in NS:
 
-        bpack_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="gradient",plotgp=plotgp)
-        model_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_model"))
-        model_time_per_likelihoodeval_george_bpack_gradient.append(bpack_stats_gradient.get("time_model_per_likelihoodeval"))
-        search_time_george_bpack_gradient.append(bpack_stats_gradient.get("time_search"))
-        model_iterations_bpack_gradient.extend(bpack_stats_gradient.get("modeling_iteration"))
-        
-        # bpack_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer = "finite difference",plotgp=plotgp)
-        # model_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_bpack_finite_difference.append(bpack_stats_finite_difference.get("time_search"))
-        # model_iterations_bpack_finite_difference.extend(bpack_stats_finite_difference.get("modeling_iteration"))
-
-        # bpack_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer="mcmc",plotgp=plotgp)
-        # model_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model"))
-        # model_time_per_likelihoodeval_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_model_per_likelihoodeval"))
-        # search_time_george_bpack_mcmc.append(bpack_stats_mcmc.get("time_search"))
-        # model_iterations_bpack_mcmc.extend(bpack_stats_mcmc.get("modeling_iteration"))
+        # the optimizers run one after the other: the MCMC samplers are limited to 3 times the shorter
+        # L-BFGS training time when both L-BFGS trainings at this N come first
+        for bpack_optimizer in bpack_optimizers:
+            bpack_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelbpack=True, optimizer=bpack_optimizer, plotgp=plotgp)
+            if bpack_optimizer in bpack_series:
+                model_time, time_per_likelihoodeval, search_time, iterations = bpack_series[bpack_optimizer]
+                model_time.append(bpack_stats.get("time_model"))
+                time_per_likelihoodeval.append(bpack_stats.get("time_model_per_likelihoodeval"))
+                search_time.append(bpack_stats.get("time_search"))
+                iterations.extend(bpack_stats.get("modeling_iteration"))
+        plot_training_results.plot_training_histories(objtype, elem - 1)
 
         if bpackonly == False:
             hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
@@ -752,58 +823,63 @@ def plotting(objective, objtype, bpackonly=False):
     print("Modeling Iterations George BPACK MCMC: ", model_iterations_bpack_mcmc)    
     
 
+    def loglog(ax, y, **kwargs):
+        # skip the optimizers that were not run
+        if len(y) == len(NS):
+            ax.loglog(NS, y, **kwargs)
+
     fontsize=8
     plt.rcParams.update({'font.size': fontsize})
     figure, axis = plt.subplots(2,2)
     figure.suptitle("Optimizer Comparison 1D",fontsize=fontsize)
 
     if bpackonly == False:
-        axis[0,0].loglog(NS, model_time_gpy, label="GPy", color="green", marker='o')
-        axis[0,0].loglog(NS, model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-        axis[0,0].loglog(NS, model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-        axis[0,0].loglog(NS, model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')    
-    axis[0,0].loglog(NS, model_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
-    axis[0,0].loglog(NS, model_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
-    axis[0,0].loglog(NS, model_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')
+        loglog(axis[0,0], model_time_gpy, label="GPy", color="green", marker='o')
+        loglog(axis[0,0], model_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        loglog(axis[0,0], model_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        loglog(axis[0,0], model_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')    
+    loglog(axis[0,0], model_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
+    loglog(axis[0,0], model_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
+    loglog(axis[0,0], model_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')
     axis[0,0].legend(fontsize=fontsize-4)
     axis[0,0].set_title("Model Time",fontsize=fontsize)
     axis[0,0].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
     if bpackonly == False:
-        axis[0,1].loglog(NS, search_time_gpy, label="GPy", color="green", marker='o')
-        axis[0,1].loglog(NS, search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-        axis[0,1].loglog(NS, search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-        axis[0,1].loglog(NS, search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[0,1].loglog(NS, search_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
-    axis[0,1].loglog(NS, search_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
-    axis[0,1].loglog(NS, search_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
+        loglog(axis[0,1], search_time_gpy, label="GPy", color="green", marker='o')
+        loglog(axis[0,1], search_time_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        loglog(axis[0,1], search_time_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        loglog(axis[0,1], search_time_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    loglog(axis[0,1], search_time_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
+    loglog(axis[0,1], search_time_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
+    loglog(axis[0,1], search_time_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
     axis[0,1].legend(fontsize=fontsize-4)
     axis[0,1].set_title("Search Time",fontsize=fontsize)
     axis[0,1].set_xlabel("Sample Count",fontsize=fontsize)
     axis[0,1].set_ylabel("Time (sec)",fontsize=fontsize)
 
     if bpackonly == False:
-        axis[1,0].loglog(NS, model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
-        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-        axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
-    axis[1,0].loglog(NS, model_time_per_likelihoodeval_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
+        loglog(axis[1,0], model_time_per_likelihoodeval_gpy, label="GPy", color="green", marker='o')
+        loglog(axis[1,0], model_time_per_likelihoodeval_george_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        loglog(axis[1,0], model_time_per_likelihoodeval_george_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        loglog(axis[1,0], model_time_per_likelihoodeval_george_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    loglog(axis[1,0], model_time_per_likelihoodeval_george_bpack_gradient, label="bpack_grad", color="blue", marker='x')
+    loglog(axis[1,0], model_time_per_likelihoodeval_george_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
+    loglog(axis[1,0], model_time_per_likelihoodeval_george_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
     axis[1,0].legend(fontsize=fontsize-4)
     axis[1,0].set_title("Model Time Per Iteration",fontsize=fontsize)
     axis[1,0].set_xlabel("Number of Samples",fontsize=fontsize)
     axis[1,0].set_ylabel("Time (sec)",fontsize=fontsize)
 
     if bpackonly == False:
-        axis[1,1].loglog(NS, model_iterations_gpy, label="GPy", color="green", marker='o')
-        axis[1,1].loglog(NS, model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
-        axis[1,1].loglog(NS, model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
-        axis[1,1].loglog(NS, model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
-    axis[1,1].loglog(NS, model_iterations_bpack_gradient, label="bpack_grad", color="blue", marker='x')
-    axis[1,1].loglog(NS, model_iterations_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
-    axis[1,1].loglog(NS, model_iterations_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
+        loglog(axis[1,1], model_iterations_gpy, label="GPy", color="green", marker='o')
+        loglog(axis[1,1], model_iterations_hodlr_gradient, label="hodlr_grad", color="blue", marker='o')
+        loglog(axis[1,1], model_iterations_hodlr_finite_difference, label="hodlr_fd", color="red", marker='o')
+        loglog(axis[1,1], model_iterations_hodlr_mcmc, label="hodlr_mcmc", color="purple", marker='o')
+    loglog(axis[1,1], model_iterations_bpack_gradient, label="bpack_grad", color="blue", marker='x')
+    loglog(axis[1,1], model_iterations_bpack_finite_difference, label="bpack_fd", color="red", marker='x')
+    loglog(axis[1,1], model_iterations_bpack_mcmc, label="bpack_mcmc", color="purple", marker='x')    
     axis[1,1].legend(fontsize=fontsize-4)
     axis[1,1].set_title("Model Iterations",fontsize=fontsize)
     axis[1,1].set_xlabel("Sample Count",fontsize=fontsize)
@@ -812,6 +888,9 @@ def plotting(objective, objtype, bpackonly=False):
     plt.tight_layout()
     plt.show()
     plt.savefig('opttimizer_compare.pdf')
+
+    # model time, search time, time per likelihood evaluation and evaluations against N, from the saved files of all runs
+    plot_training_results.plot_optimizer_scaling(objtype)
 
 def main():
     objective, objtype = objective_selection()

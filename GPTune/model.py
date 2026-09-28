@@ -1407,6 +1407,38 @@ class Model_LCM(Model):
 
         return
 
+class TrainingHistory:
+    """
+    Record of a model training: one entry per recorded point (an L-BFGS iteration, or an improvement of
+    the best MCMC sample) with the wall time since the start of the training, the likelihood and
+    gradient evaluations so far, -loglikelihood and hyperparameters. Entries are printed if verbose
+    and appended to a CSV file if one is given.
+    """
+    def __init__(self, nparam, label, verbose=False, filename=None):
+        self.entries = []
+        self.nfev = 0
+        self.ngev = 0
+        self.label = label
+        self.verbose = verbose
+        self.filename = filename
+        self.t0 = time.time()
+        if filename is not None:
+            with open(filename, 'w') as f:
+                f.write('iteration,time,nfev,ngev,nll,' + ','.join('hp_%d' % i for i in range(nparam)) + '\n')
+
+    def record(self, x, nll):
+        entry = {'iteration': len(self.entries), 'time': time.time() - self.t0, 'nfev': self.nfev, 'ngev': self.ngev,
+                 'nll': float(nll), 'hyperparameters': [float(v) for v in x]}
+        self.entries.append(entry)
+        if self.verbose:
+            print("%s %d: time %.2f s, %d likelihood and %d gradient evaluations, -loglikelihood %.10e, hyperparameters %s"
+                  % (self.label, entry['iteration'], entry['time'], entry['nfev'], entry['ngev'], entry['nll'], np.array2string(np.asarray(x), precision=6)))
+        if self.filename is not None:
+            with open(self.filename, 'a') as f:
+                f.write('%d,%.6f,%d,%d,%.12e,' % (entry['iteration'], entry['time'], entry['nfev'], entry['ngev'], entry['nll'])
+                        + ','.join('%.12e' % v for v in x) + '\n')
+
+
 class Model_George(Model):
     y = []
 
@@ -1734,13 +1766,118 @@ class Model_George(Model):
 
     def nll(self, params):
         self.M.set_parameter_vector(params)
-        return -self.M.log_likelihood(np.ravel(self.y), quiet=True)
+        self.last_nll = -self.M.log_likelihood(np.ravel(self.y), quiet=True)
+        return self.last_nll
 
     def grad_nll(self, params):
         self.M.set_parameter_vector(params)
         g = self.M.grad_log_likelihood(np.ravel(self.y), quiet=True)
         # print('grad ',-g[2],-g[1],-g[0])
         return -g
+
+    def grad_log_prior(self, params):
+        """
+        Gradient of the log prior of log_posterior with respect to its (log) parameters: Gamma(1, scale)
+        priors on exp(param) contribute -exp(param)/scale, the Gamma(1, 1) priors on the length scales
+        sqrt(exp(param)) contribute -sqrt(exp(param))/2.
+        """
+        params = np.asarray(params, dtype=float)
+        if(self.M.kernel.kernel_type==13):
+            lcm_terms = self.M.kernel.T * self.M.kernel.Q
+            scales = [0.001] + [0.1]*lcm_terms + [0.001]*lcm_terms # noise variance, B, K
+        elif(self.M.kernel.kernel_type==14):
+            scales = [0.001, 0.1, 0.1] # noise variance, rc, amplitude squared
+        else:
+            scales = [0.001, 0.1] # noise variance, amplitude squared
+        n = len(scales)
+        return np.concatenate([-np.exp(params[:n]) / np.array(scales), -0.5*np.sqrt(np.exp(params[n:]))])
+
+    def grad_log_posterior(self, params):
+        return -self.grad_nll(params) + self.grad_log_prior(params)
+
+    def fisher_information(self, params):
+        """Fisher information matrix of the log-likelihood at params (see george's GP.fisher_information)."""
+        self.M.set_parameter_vector(params)
+        return self.M.fisher_information(quiet=True)
+
+    def minimize_nll(self, p0, bounds, lbfgs_options, **kwargs):
+        """
+        L-BFGS-B on the negative log-likelihood, with the analytic gradient if model_grad and 3-point
+        finite differences otherwise. Every iteration is recorded in self.train_history (see
+        TrainingHistory; the CSV file is model_history_file). Iteration 0 is the initial guess.
+        """
+        history = TrainingHistory(len(p0), "L-BFGS iteration", kwargs['verbose'], kwargs.get('model_history_file', None))
+        self.train_history = history.entries
+
+        def fun(x):
+            history.nfev += 1
+            f = self.nll(x)
+            if history.nfev == 1:
+                history.record(x, f)
+            return f
+
+        def grad(x):
+            history.ngev += 1
+            return self.grad_nll(x)
+
+        def callback(intermediate_result):
+            history.record(intermediate_result.x, intermediate_result.fun)
+
+        jac = grad if kwargs['model_grad'] == True else '3-point'
+        resopt = op.minimize(fun, p0, jac=jac, method="L-BFGS-B", bounds=bounds, tol=None, callback=callback, options=lbfgs_options)
+        return resopt, history.nfev
+
+    def sample_posterior(self, initial_state, bounds, **kwargs):
+        """
+        MCMC on the log-posterior, returning the MAP sample like MCMC.run_mcmc_with_convergence. The
+        best sample so far (the best state the chains have been in, not the best proposal: MALA can
+        reject a proposal better than the current state) is recorded in self.train_history (see
+        TrainingHistory; the CSV file is model_history_file) every time it improves, with its
+        -loglikelihood, and once more at the end of the sampling.
+        """
+        ndim = initial_state.shape[1]
+        history = TrainingHistory(ndim, "MCMC best sample", kwargs['verbose'], kwargs.get('model_history_file', None))
+        self.train_history = history.entries
+        best_log_posterior = [-np.inf]
+        # the MetropolisHastings and MALA samplers report the states of the chains; for emcee every evaluated point is used
+        report_states = kwargs['model_mcmc_sampler'] in ('MetropolisHastings', 'MALA')
+
+        def improve(x, log_posterior):
+            # the likelihood of x is the last one computed: the state is reported right after its evaluation
+            if log_posterior > best_log_posterior[0]:
+                best_log_posterior[0] = log_posterior
+                history.record(x, self.last_nll)
+
+        def target(x, bounds=None):
+            log_posterior = self.log_posterior(x, bounds)
+            if log_posterior > -1e29: # log_posterior returns -1e30 without evaluating the likelihood outside the bounds
+                history.nfev += 1
+                if not report_states:
+                    improve(x, log_posterior)
+            return log_posterior
+
+        sampler_options = {'on_accept': improve} if report_states else {}
+        if kwargs['model_mcmc_sampler'] == 'MALA':
+            if kwargs['model_grad'] != True:
+                raise Exception("The MALA sampler needs the gradient of the log-likelihood: set model_grad to True")
+
+            def grad(x):
+                history.ngev += 1
+                return self.grad_log_posterior(x)
+
+            sampler_options.update({'grad_prob': grad, 'fisher_prob': self.fisher_information,
+                                    'step_size': kwargs.get('model_mala_step_size', 1.0),
+                                    'fisher_interval': kwargs.get('model_mala_fisher_interval', 1)})
+
+        mcmc = MCMC(target, bounds=bounds, ndim=ndim, nchain=initial_state.shape[0], mcmcsampler=kwargs['model_mcmc_sampler'], **sampler_options)
+        resopt = mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'], verbose=kwargs['verbose'],
+                                                max_time=kwargs.get('model_mcmc_max_time', None))
+        # the chains (steps, chains, parameters) and their log posteriors, for analysis after the training
+        self.mcmc_chains = mcmc.sampler.get_chain()
+        self.mcmc_log_posteriors = mcmc.sampler.get_log_prob()
+        if len(history.entries) > 0:
+            history.record(history.entries[-1]['hyperparameters'], history.entries[-1]['nll'])
+        return resopt, history.nfev
 
     def extract_hyperparameters(self, model, kernel_type):
         params = model.get_parameter_vector()
@@ -1867,6 +2004,7 @@ class Model_George(Model):
                 kwargs_variable = {
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
+                    'nprobe': int(kwargs.get('model_grad_nprobe', 64)),
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
                 }                
@@ -1986,6 +2124,7 @@ class Model_George(Model):
                 amplitude = intialguess[2]
                 kernel *= amplitude
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
+                K.max_cutoff = cutoff_range[1] # the upper bound of rc: the neighbours are searched once, within it
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
 
@@ -2008,11 +2147,13 @@ class Model_George(Model):
                 kwargs_variable = {
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
+                    'nprobe': int(kwargs.get('model_grad_nprobe', 64)),
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
-                    'debug': int(kwargs['debug']), 
+                    'bpack_scaled_geometry': int(kwargs.get('model_bpack_scaled_geometry', False)),
+                    'debug': int(kwargs['debug']),
                     'sym': 0,
-                }  
+                }
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
             x = copy.deepcopy(data.P[0])
             self.y = copy.deepcopy(data.O[0])
@@ -2093,20 +2234,19 @@ class Model_George(Model):
                 
             lower_bounds = np.asarray([bound[0] for bound in bounds])
             upper_bounds = np.asarray([bound[1] for bound in bounds])
-            initial_state = p0 + 1e-4 * np.random.randn(nwalkers, ndim)
+            # every chain starts near the initial guess, p0 plus Gaussian jitter of 1% of the width of each
+            # bound: chains started anywhere in the bounds can land in degenerate regions (e.g. a support radius so
+            # small that the covariance matrix is diagonal and the likelihood is flat) and never leave them
+            initial_state = p0 + 0.01 * (upper_bounds - lower_bounds) * np.random.randn(nwalkers, ndim)
             initial_state = np.clip(initial_state, lower_bounds, upper_bounds)
-            for i in range(1,nwalkers):
-                for j in range(0,ndim):
-                    initial_state[i,j] = np.random.uniform(bounds[j][0], bounds[j][1])
                         
-            mcmc = MCMC(self.log_posterior, bounds=bounds, ndim=ndim, nchain=nwalkers, mcmcsampler=kwargs['model_mcmc_sampler'])
-            resopt= mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'],verbose=kwargs['verbose'])
+            resopt, nlikelihood = self.sample_posterior(initial_state, bounds, **kwargs)
         else:
-            if kwargs['model_grad'] == True:
-                resopt = op.minimize(self.nll, p0, jac=self.grad_nll, method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'maxcor': 10, 'ftol': 1e-7, 'gtol': 1e-05, 'maxfun': 1000, 'maxiter': 1000, 'maxls': 100})
-            else:
+            lbfgs_options = {'maxcor': 10, 'ftol': 1e-7, 'gtol': 1e-05, 'maxfun': 1000, 'maxiter': 1000, 'maxls': 100}
+            if kwargs['model_grad'] == False:
                 # use finite difference, jac could be None, '2-point', '3-point', or 'cs'
-                resopt = op.minimize(self.nll, p0, jac='3-point', method="L-BFGS-B", bounds=bounds, tol=None, callback=None, options={'maxcor': 10, 'ftol': 1e-7, 'gtol': 1e-05, 'finite_diff_rel_step': 1e-02, 'maxfun': 1000, 'maxiter': 1000, 'maxls': 100})
+                lbfgs_options['finite_diff_rel_step'] = 1e-02
+            resopt, nlikelihood = self.minimize_nll(p0, bounds, lbfgs_options, **kwargs)
         
 
         
@@ -2124,7 +2264,7 @@ class Model_George(Model):
             print('nit      : ', resopt.nit)
             print('status   : ', resopt.status)
             print('success  : ', resopt.success)
-        iteration = resopt.nfev
+        iteration = nlikelihood # likelihood evaluations
         # Dump the hyperparameters
         if multitask:
 
@@ -2328,6 +2468,7 @@ class Model_George(Model):
                 kwargs_variable = {
                     'verbose': int(kwargs['verbose']), 
                     'compute_grad': int(kwargs['model_grad']),
+                    'nprobe': int(kwargs.get('model_grad_nprobe', 64)),
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
                 }                   
