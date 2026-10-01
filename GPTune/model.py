@@ -1454,6 +1454,16 @@ class Model_George(Model):
         return bool(value)
 
     @staticmethod
+    def _wendland_base(name):
+        """The george kernel class of the base kernel tapered by the Wendland C2 function."""
+        import george
+        bases = {'RBF': george.kernels.ExpSquaredKernel, 'Matern32': george.kernels.Matern32Kernel,
+                 'Matern52': george.kernels.Matern52Kernel}
+        if name not in bases:
+            raise ValueError("model_wendland_base must be one of %s, got %s" % (list(bases), name))
+        return bases[name]
+
+    @staticmethod
     def _george_metric(lengthscales, input_dim, isotropic):
         lengthscales = np.asarray(lengthscales, dtype=float).reshape(-1)
         expected = 1 if isotropic else input_dim
@@ -1764,13 +1774,23 @@ class Model_George(Model):
 
 
 
+    def set_hyperparameters(self, params):
+        """
+        Set the hyperparameters of the george model unless it already has them, so that the
+        log-likelihood, its gradient and the Fisher information at the same point (L-BFGS evaluates
+        the first two there, MALA all three) share one computation of the model.
+        """
+        params = np.asarray(params, dtype=float)
+        if not np.array_equal(params, self.M.get_parameter_vector()):
+            self.M.set_parameter_vector(params)
+
     def nll(self, params):
-        self.M.set_parameter_vector(params)
+        self.set_hyperparameters(params)
         self.last_nll = -self.M.log_likelihood(np.ravel(self.y), quiet=True)
         return self.last_nll
 
     def grad_nll(self, params):
-        self.M.set_parameter_vector(params)
+        self.set_hyperparameters(params)
         g = self.M.grad_log_likelihood(np.ravel(self.y), quiet=True)
         # print('grad ',-g[2],-g[1],-g[0])
         return -g
@@ -1797,7 +1817,7 @@ class Model_George(Model):
 
     def fisher_information(self, params):
         """Fisher information matrix of the log-likelihood at params (see george's GP.fisher_information)."""
-        self.M.set_parameter_vector(params)
+        self.set_hyperparameters(params)
         return self.M.fisher_information(quiet=True)
 
     def minimize_nll(self, p0, bounds, lbfgs_options, **kwargs):
@@ -2133,7 +2153,7 @@ class Model_George(Model):
                     + [lengthscale_range[2]] * input_dim
                 )
                 log_rc=np.log(intialguess[1])
-                kernel = george.kernels.ExpSquaredKernel(metric=metric_initial, ndim=input_dim)
+                kernel = self._wendland_base(kwargs.get('model_wendland_base', 'RBF'))(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[2]
                 kernel *= amplitude
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
@@ -2152,7 +2172,7 @@ class Model_George(Model):
                                 lengthscale=intialguess[2:], isotropic=isotropic,
                                 shape=kwargs.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
                                 buffer=2 * lengthscale_range[1] if inla_buffer is None else inla_buffer,
-                                nsamples=kwargs.get('model_inla_nsamples', 128),
+                                nsamples=kwargs.get('model_inla_nsamples', 128), nu=kwargs.get('model_inla_nu', None),
                                 nprobe=int(kwargs.get('model_grad_nprobe', 64)), seed=seed, verbose=int(kwargs['verbose']))
             elif kwargs['model_hodlr'] == True:
                 kwargs_variable = {
@@ -2364,10 +2384,13 @@ class Model_George(Model):
             else:
                 modeling_options["model_hodlr"] = "no"
             modeling_options["multitask"] = "no"
+            if kwargs['model_kern'] == 'WendlandC2':
+                modeling_options["model_wendland_base"] = kwargs.get('model_wendland_base', 'RBF')
             if kwargs['model_kern'] == 'INLA':
                 modeling_options["model_inla_shape"] = self.M.shape
                 modeling_options["model_inla_buffer"] = self.M.buffer
                 modeling_options["model_inla_nsamples"] = self.M.nsamples
+                modeling_options["model_inla_nu"] = self.M.nu
 
             if(kwargs['model_kern']=="WendlandC2"):
 
@@ -2556,7 +2579,7 @@ class Model_George(Model):
             elif modeling_options['model_kern'] == 'WendlandC2':
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["rc"] + hyperparameters["variance"]  + hyperparameters["lengthscale"]
                 log_rc=np.log(intialguess[1])
-                kernel = george.kernels.ExpSquaredKernel(metric=np.array(intialguess[3:])**2, ndim=input_dim)
+                kernel = self._wendland_base(modeling_options.get('model_wendland_base', 'RBF'))(metric=np.array(intialguess[3:])**2, ndim=input_dim)
                 amplitude = intialguess[2]
                 kernel *= amplitude  
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
@@ -2568,6 +2591,7 @@ class Model_George(Model):
                                 shape=modeling_options.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
                                 buffer=modeling_options['model_inla_buffer'],
                                 nsamples=modeling_options.get('model_inla_nsamples', 128),
+                                nu=modeling_options.get('model_inla_nu', None),
                                 nprobe=int(kwargs.get('model_grad_nprobe', 64)),
                                 seed=seed if kwargs['model_random_seed'] is not None else 42,
                                 verbose=int(kwargs['verbose']))

@@ -61,9 +61,11 @@ class Options(dict):
         model_amplitude = [math.exp(-30), math.exp(5), 1.0]
         model_lengthscale = [math.exp(-11.5), math.exp(1), 1.0]
         model_cutoff = [math.exp(-23), 0.1, 0.025]
+        model_wendland_base = 'RBF' # With model_kern='WendlandC2', the kernel tapered by the Wendland C2 function: 'RBF', 'Matern32' or 'Matern52'
         model_inla_shape = None # With model_kern='INLA', the number of lattice nodes per dimension (an int or a list) covering [0,1]^d; None if the inputs are on an evenly spaced lattice, which is then used
         model_inla_buffer = None # With model_kern='INLA', the width of the buffer added around the lattice against the boundary effect (cells growing by 1.2); None for twice model_lengthscale[1], the largest range
         model_inla_nsamples = 128 # With model_kern='INLA', the number of posterior samples of the Rao-Blackwellized estimator of the predictive variances
+        model_inla_nu = None # With model_kern='INLA', the smoothness nu of the Matern field: exact if nu + d/2 is an integer (nu = 1, 2, 3 in 2D; 0.5, 1.5, 2.5 in 3D), otherwise the parsimonious approximation of R-INLA; None for nu = 2 - d/2 (1 in 2D, 0.5 in 3D)
         # LCM ranges are shared by the George, GPy, and custom LCM models.
         model_lcm_noisevariance = [math.exp(-6), math.exp(-5), math.exp(-6)]
         model_lcm_B = [math.exp(-10), math.exp(6), 1.0]

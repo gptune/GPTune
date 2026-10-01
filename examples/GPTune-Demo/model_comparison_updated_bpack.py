@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument('-lengthscale', type=float, nargs=3, default=None, help='Minimum, maximum, and initial length scale (linear scale); default: the GPTune default')
     parser.add_argument('-plot_points', type=int, default=400, help='Approximate number of test points in the 2D/3D prediction plots (one butterflypack solve per point)')
     parser.add_argument('-optimizer', type=str, default='gradient', help='Comma-separated hyperparameter optimizers for the butterflypack model, run one after the other: gradient, finite difference, mcmc, mala')
-    parser.add_argument('-objtype', type=int, default=0, help='Objective function 1, 2, 3, or 4 (anisotropic 2D); 0 asks interactively')
+    parser.add_argument('-objtype', type=int, default=0, help='Objective function 1, 2, 3, 4 (anisotropic 2D), or 5 (anisotropic 3D); 0 asks interactively')
     parser.add_argument('-NS', type=int, default=102401, help='Number of samples (the model is built with NS-1 samples)')
     parser.add_argument('-isotropic', type=int, default=1, help='Whether to use one shared length scale for all dimensions')
     parser.add_argument('-bpack_scaled_geometry', type=int, default=0, help='Whether to divide each dimension of the points passed to butterflypack by its length scale (use with -isotropic 0 and --h2_unstructured 1 for H2)')
@@ -147,6 +147,14 @@ def objectives4(point):
     y = np.sin(10*np.pi*x1) + 4*(x2**2)
     return [y]
 
+def objectives5(point):
+    # anisotropic 3D function: oscillates quickly along x1, slowly along x3, and varies slowly along x2
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
+    y = np.sin(10*np.pi*x1) + 4*(x2**2) + np.sin(3*np.pi*x3)
+    return [y]
+
 
 def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
@@ -157,7 +165,7 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
         x1 =point['x1']
         x2 =point['x2']
         x = [x1,x2]  
-    elif(objtype==3):
+    elif(objtype==3 or objtype==5):
         x1 =point['x1']
         x2 =point['x2']          
         x3 =point['x3']
@@ -226,7 +234,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         parameter_space = Space([x])    
     elif(objtype==2 or objtype==4):
         parameter_space = Space([x1,x2])    
-    elif(objtype==3):
+    elif(objtype==3 or objtype==5):
         parameter_space = Space([x1,x2,x3])    
 
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
@@ -533,7 +541,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                     fig.savefig('obj_2D_%s_N_%s.pdf'%(optimizer,int(NS_input - 1)))
 
 
-        if objtype==3 and plotgp==True:
+        if (objtype==3 or objtype==5) and plotgp==True:
             for tid in range(len(data.I)):
                 n_model_samples = max(int(NS_input - 1), 1)
                 res = max(min(int(round(n_model_samples**(1.0 / 3.0))) + 1, int((args.plot_points / 3.0)**0.5)), 2)
@@ -573,7 +581,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                             }
                             kwargs.update(kwargst)
 
-                            Y_true[j, i] = objectives3(kwargs)[0]
+                            Y_true[j, i] = obj_func(kwargs)[0]
                             y_m, var = predict_aug(modeler, gt, kwargs, tid, objtype)
                             Y_mean[j, i] = y_m
                             Y_std[j, i] = np.sqrt(max(var, 0.0))
@@ -659,7 +667,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 def objective_selection():
     # return objectives1, 1
     objtype = parse_args().objtype
-    objective = str(objtype) if objtype > 0 else input("What Objective Function would you like to use (1, 2, 3, or 4)")
+    objective = str(objtype) if objtype > 0 else input("What Objective Function would you like to use (1, 2, 3, 4, or 5)")
     if ("1" in objective):
         objtype=1
         return objectives1, objtype
@@ -672,6 +680,9 @@ def objective_selection():
     elif ("4" in objective):
         objtype=4
         return objectives4, objtype
+    elif ("5" in objective):
+        objtype=5
+        return objectives5, objtype
     else:
         raise Exception("Invalid objective selection")
 

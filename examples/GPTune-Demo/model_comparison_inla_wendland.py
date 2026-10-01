@@ -19,23 +19,34 @@
 
 
 """
-Example of invocation of this script:
-
-mpirun -n 1 python ./demo.py -nrun 20 -ntask 5 -perfmodel 0 -optimization GPTune
-
-where:
-    -ntask is the number of different matrix sizes that will be tuned
-    -nrun is the number of calls per task
-    -perfmodel is whether a coarse performance model is used
-    -optimization is the optimization algorithm: GPTune,opentuner,hpbandster
+Comparison of two sparse GP models of george with SuperLU_DIST, trained by GPTune (Model_George) with four
+optimizers, a copy of model_comparison_updated_superlu.py:
+  wendland  the compactly supported Wendland C2 kernel (sparse covariance matrix, model_kern='WendlandC2')
+  inla      the INLA/SPDE Matern model on a lattice (sparse precision matrix, model_kern='INLA', george/inla.py),
+            2D and 3D objectives only
+The environment selects the runs: GP_NS (sample counts, default 102400), GP_MODELS (default "wendland,inla"),
+GP_OPTIMIZERS (default "gradient,finite difference,mcmc,mala": the L-BFGS trainings first, they set the time
+limit of the samplers), GP_INLA_SHAPE (lattice nodes per dimension, default sqrt(N)) and GP_INLA_NU (the INLA
+Matern smoothness, default 2 - d/2). The objective is
+read from the standard input (4: 2D Schwefel). The files of every model go to GP_OUTPUT_DIR/<model> (default
+./<model>): the ones of model_comparison_updated_superlu.py and its plots (plot_training_results.py), plus
+the comparison of the models at every N, model_compare_obj<o>_N<N>.pdf/png/csv in GP_OUTPUT_DIR.
+Run with the SuperLU_DIST workers by run_inla_wendland_gpu.sbatch.
 """
 
 
 ################################################################################
 import sys
 import os
+# GPTune and george (for its INLA model, george/inla.py) of the source trees of this repository, which the
+# installed packages may predate
+GPTUNE_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
+sys.path.insert(0, GPTUNE_ROOT)
+import george
+george.__path__.insert(0, os.path.join(GPTUNE_ROOT, 'george/src/george'))
 # import mpi4py
 import logging
+import json
 from pdbridge import *
 # george's sparse solver (model_sparse) calls superlu_factor/logdet/solve, but george/solvers/basic.py
 # no longer imports pdbridge since the ButterflyPACK solver was added, so provide them here
@@ -212,15 +223,18 @@ def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
 
 NTEST = 1000 # held-out test points (not used for training) for the RMSE and CRPS of the GP along its training
-# GP_KERNEL=INLA replaces the Wendland kernel of the sparse runs by the INLA/SPDE model (model_kern='INLA',
-# george/inla.py, 2D and 3D objectives) on a lattice of GP_INLA_SHAPE nodes per dimension. The result files and
-# plots go to GP_OUTPUT_DIR, so that runs of different models do not overwrite each other.
-GP_KERNEL = os.environ.get('GP_KERNEL', 'WendlandC2')
+# the compared models: their george kernel and the name of the GP model in the figures
+MODELS = {'wendland': ('WendlandC2', 'Sparse GP, Wendland C2 (george + SuperLU)'),
+          'inla': ('INLA', 'INLA/SPDE GP (george + SuperLU)')}
 OUTPUT_DIR = os.environ.get('GP_OUTPUT_DIR', '.')
-os.makedirs(OUTPUT_DIR, exist_ok=True)
 import plot_training_results
-if GP_KERNEL == 'INLA':
-    plot_training_results.MODEL_LABEL = 'INLA/SPDE GP (george + SuperLU)'
+
+
+def model_dir(model_name):
+    """The directory of the result files of a model."""
+    directory = os.path.join(OUTPUT_DIR, model_name)
+    os.makedirs(directory, exist_ok=True)
+    return directory
 REPLAY_POINTS = 20 # history entries replayed for the test metrics of a training (evenly spaced, including the last)
 
 
@@ -285,7 +299,8 @@ def write_run_stats(filename, **fields):
         json.dump(fields, f, indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
 
 
-def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=False, modelsparse=False):
+def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=False, modelsparse=False, model_name='wendland'):
+    output_dir = model_dir(model_name)
     import matplotlib
     matplotlib.use('Agg')    
     import matplotlib.pyplot as plt
@@ -383,9 +398,10 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
         print("SPARSE CONFIG: N=%d cutoff=%g" % 
               (NS_input - 1,options['model_cutoff']))
-        if GP_KERNEL == 'INLA':
+        if MODELS[model_name][0] == 'INLA':
             options['model_kern'] = 'INLA'
-            options['model_inla_shape'] = int(os.environ.get('GP_INLA_SHAPE', '128'))
+            # about one lattice node per sample by default
+            options['model_inla_shape'] = int(os.environ.get('GP_INLA_SHAPE', int(round(np.sqrt(NS_input - 1)))))
             if os.environ.get('GP_INLA_NU'):
                 options['model_inla_nu'] = float(os.environ['GP_INLA_NU'])  # the Matern smoothness (default 2 - d/2)
             print("INLA CONFIG: N=%d lattice of %d nodes per dimension" % (NS_input - 1, options['model_inla_shape']))
@@ -418,11 +434,11 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     else:
         pass
     run_tag = 'obj%d_N%d_%s' % (objtype, NS_input - 1, optimizer.replace(' ', '_'))
-    options['model_history_file'] = os.path.join(OUTPUT_DIR, 'training_iterations_%s.csv' % run_tag) # written during the training (see GPTune.model.TrainingHistory)
+    options['model_history_file'] = os.path.join(output_dir, 'training_iterations_%s.csv' % run_tag) # written during the training (see GPTune.model.TrainingHistory)
     if optimizer in ("mcmc", "mala"):
         # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
         # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
-        lbfgs_files = [os.path.join(OUTPUT_DIR, 'training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o)) for o in ('gradient', 'finite_difference')]
+        lbfgs_files = [os.path.join(output_dir, 'training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o)) for o in ('gradient', 'finite_difference')]
         if all(os.path.exists(f) for f in lbfgs_files):
             lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
             options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
@@ -480,11 +496,11 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 
         if len(getattr(modeler[0], 'train_history', [])) > 0:
             rows, predictions = training_test_metrics(modeler[0], gt, obj_func, NTEST, batch=250 if NS_input <= 400001 else 100)
-            write_training_metrics(rows, os.path.join(OUTPUT_DIR, 'training_metrics_%s.csv' % run_tag))
-            np.savez(os.path.join(OUTPUT_DIR, 'test_predictions_%s.npz' % run_tag), **predictions)
+            write_training_metrics(rows, os.path.join(output_dir, 'training_metrics_%s.csv' % run_tag))
+            np.savez(os.path.join(output_dir, 'test_predictions_%s.npz' % run_tag), **predictions)
             if hasattr(modeler[0], 'mcmc_chains'):
-                np.savez(os.path.join(OUTPUT_DIR, 'mcmc_chains_%s.npz' % run_tag), chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
-            write_run_stats(os.path.join(OUTPUT_DIR, 'run_stats_%s.json' % run_tag), objective=objtype, N=NS_input - 1, optimizer=optimizer, kernel=options['model_kern'],
+                np.savez(os.path.join(output_dir, 'mcmc_chains_%s.npz' % run_tag), chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
+            write_run_stats(os.path.join(output_dir, 'run_stats_%s.json' % run_tag), objective=objtype, N=NS_input - 1, optimizer=optimizer, kernel=options['model_kern'],
                             cutoff=options['model_cutoff'], mcmc_max_time=options['model_mcmc_max_time'] if optimizer in ("mcmc", "mala") else None,
                             slurm_job_id=os.environ.get('SLURM_JOB_ID'), date=time.strftime('%Y-%m-%d %H:%M:%S'), stats=stats,
                             final_hyperparameters=modeler[0].M.get_parameter_vector(), final_nll=rows[-1]['nll'],
@@ -679,141 +695,79 @@ def objective_selection():
     
 import matplotlib.pyplot as plt
 
+def plot_model_results(model_name, objtype, N=None):
+    """The plots of plot_training_results.py for one model: its training histories at N, or its optimizer scaling."""
+    plot_training_results.MODEL_LABEL = MODELS[model_name][1]
+    if N is None:
+        plot_optimizer_scaling(objtype, model_dir(model_name))
+    else:
+        plot_training_histories(objtype, N, model_dir(model_name))
+
+
+def compare_models(objtype, N, models):
+    """
+    The test RMSE and CRPS along the trainings of all the models and optimizers at N (the log-likelihoods of
+    different models are not comparable) in model_compare_obj<o>_N<N>.pdf/png, and a summary of the runs in
+    model_compare_obj<o>_N<N>.csv.
+    """
+    def first(value):
+        return value[0] if isinstance(value, list) else value
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
+    summary = []
+    for model_name, linestyle in zip(models, ('-', '--', ':')):
+        for optimizer in plot_training_results.OPTIMIZERS:
+            metrics_file = plot_training_results.run_file('training_metrics', objtype, N, optimizer, 'csv', model_dir(model_name))
+            stats_file = plot_training_results.run_file('run_stats', objtype, N, optimizer, 'json', model_dir(model_name))
+            if not (os.path.exists(metrics_file) and os.path.exists(stats_file)):
+                continue
+            metrics = np.atleast_1d(np.genfromtxt(metrics_file, delimiter=',', names=True))
+            with open(stats_file) as f:
+                stats = json.load(f)['stats']
+            done = np.isfinite(metrics['rmse'])
+            for ax, key in zip(axes, ('rmse', 'crps')):
+                ax.plot(metrics['time'][done], metrics[key][done], linestyle=linestyle, marker='o', markersize=3,
+                        drawstyle='steps-post' if optimizer in ('mcmc', 'mala') else 'default',
+                        color=plot_training_results.COLORS[optimizer], label='%s, %s' % (model_name, plot_training_results.NAMES[optimizer]))
+            summary.append([model_name, optimizer, first(stats['time_model']), first(stats['modeling_iteration']),
+                            first(stats['time_model_per_likelihoodeval']), first(stats['time_search']),
+                            metrics['rmse'][done][-1], metrics['crps'][done][-1]])
+    for ax, ylabel in zip(axes, ('test RMSE (%d points)' % NTEST, 'test CRPS (%d points)' % NTEST)):
+        ax.set_xlabel('training time (s)')
+        ax.set_ylabel(ylabel)
+        ax.set_yscale('log')
+    fig.legend(*axes[0].get_legend_handles_labels(), loc='lower center', ncol=4, fontsize=8, frameon=False)
+    fig.suptitle('Wendland vs INLA sparse GPs, objective %d, N=%d: hyperparameter training' % (objtype, N), fontsize=10)
+    fig.tight_layout(rect=(0, 0.14, 1, 1))
+    prefix = os.path.join(OUTPUT_DIR, 'model_compare_obj%d_N%d' % (objtype, N))
+    for extension in ('pdf', 'png'):
+        fig.savefig('%s.%s' % (prefix, extension), dpi=150)
+    plt.close(fig)
+    header = ['model', 'optimizer', 'time_model', 'likelihood_evaluations', 'time_per_evaluation', 'time_search', 'final_test_rmse', 'final_test_crps']
+    with open(prefix + '.csv', 'w') as f:
+        f.write(','.join(header) + '\n')
+        for row in summary:
+            f.write('%s,%s,%.6f,%d,%.6f,%.6f,%.6e,%.6e\n' % tuple(row))
+    print("model comparison, objective %d, N=%d:" % (objtype, N))
+    print("  %-9s %-18s %10s %6s %10s %9s %12s %12s" % ('model', 'optimizer', 'model (s)', 'evals', 'per eval', 'search', 'test RMSE', 'test CRPS'))
+    for row in summary:
+        print("  %-9s %-18s %10.1f %6d %10.3f %9.1f %12.4e %12.4e" % tuple(row))
+
+
 def plotting(objective, objtype):
-    model_time_gpy = []
-    model_time_per_likelihoodeval_gpy = []
-    search_time_gpy = []
-    model_iterations_gpy = []
-
-    model_time_george_hodlr_gradient = []
-    model_time_per_likelihoodeval_george_hodlr_gradient = []
-    search_time_george_hodlr_gradient = []
-    model_iterations_hodlr_gradient = []
-
-    model_time_george_hodlr_finite_difference = []
-    model_time_per_likelihoodeval_george_hodlr_finite_difference = []
-    search_time_george_hodlr_finite_difference = []
-    model_iterations_hodlr_finite_difference = []
-
-    model_time_george_hodlr_mcmc = []
-    model_time_per_likelihoodeval_george_hodlr_mcmc = []
-    search_time_george_hodlr_mcmc = []
-    model_iterations_hodlr_mcmc = []
-
-    model_time_george_sparse_gradient = []
-    model_time_per_likelihoodeval_george_sparse_gradient = []
-    search_time_george_sparse_gradient = []
-    model_iterations_sparse_gradient = []
-
-    model_time_george_sparse_finite_difference = []
-    model_time_per_likelihoodeval_george_sparse_finite_difference = []
-    search_time_george_sparse_finite_difference = []
-    model_iterations_sparse_finite_difference = []
-
-    model_time_george_sparse_mcmc = []
-    model_time_per_likelihoodeval_george_sparse_mcmc = []
-    search_time_george_sparse_mcmc = []
-    model_iterations_sparse_mcmc = []
-
-
-    plotgp=False
-
-    # NS = [201, 401, 801, 1601, 3201, 6401, 12801, 25601, 51201, 102401, 204801, 409601]
-    # NS = [1601, 3201, 6401, 12801]
-    # NS = [25601, 51201, 102401]
-    # NS = [6401, 12801, 25601, 51201, 102401]
-    # sample counts and sparse-GP optimizers of this run, e.g. GP_NS="100000,200000" and
-    # GP_OPTIMIZERS="gradient,finite difference" ("gradient", "finite difference", "mcmc", "mala")
-    NS = [int(n) + 1 for n in os.environ.get('GP_NS', '100000').split(',')]
-    optimizers = os.environ.get('GP_OPTIMIZERS', 'mala').split(',')
-    sparse_series = {
-        'gradient': (model_time_george_sparse_gradient, model_time_per_likelihoodeval_george_sparse_gradient, search_time_george_sparse_gradient, model_iterations_sparse_gradient),
-        'finite difference': (model_time_george_sparse_finite_difference, model_time_per_likelihoodeval_george_sparse_finite_difference, search_time_george_sparse_finite_difference, model_iterations_sparse_finite_difference),
-        'mcmc': (model_time_george_sparse_mcmc, model_time_per_likelihoodeval_george_sparse_mcmc, search_time_george_sparse_mcmc, model_iterations_sparse_mcmc),
-    }
-
+    NS = [int(n) + 1 for n in os.environ.get('GP_NS', '102400').split(',')]
+    models = os.environ.get('GP_MODELS', 'wendland,inla').split(',')
+    optimizers = os.environ.get('GP_OPTIMIZERS', 'gradient,finite difference,mcmc,mala').split(',')
+    plotgp = False
     for elem in NS:
-
-        for optimizer in optimizers:
-            sparse_stats = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True, optimizer=optimizer,plotgp=plotgp)
-            if optimizer in sparse_series:
-                model_time, time_per_likelihoodeval, search_time, iterations = sparse_series[optimizer]
-                model_time.append(sparse_stats.get("time_model"))
-                time_per_likelihoodeval.append(sparse_stats.get("time_model_per_likelihoodeval"))
-                search_time.append(sparse_stats.get("time_search"))
-                iterations.extend(sparse_stats.get("modeling_iteration"))
-
-
-        # hodlr_stats_gradient = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="gradient",plotgp=plotgp)
-        # model_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_gradient.append(hodlr_stats_gradient.get("time_search"))
-        # model_iterations_hodlr_gradient.extend(hodlr_stats_gradient.get("modeling_iteration"))
-        
-
-        # hodlr_stats_finite_difference = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer = "finite difference",plotgp=plotgp)
-        # model_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_finite_difference.append(hodlr_stats_finite_difference.get("time_search"))
-        # model_iterations_hodlr_finite_difference.extend(hodlr_stats_finite_difference.get("modeling_iteration"))
-
-        # hodlr_stats_mcmc = model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=True, optimizer="mcmc",plotgp=plotgp)
-        # model_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model"))
-        # model_time_per_likelihoodeval_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_model_per_likelihoodeval"))
-        # search_time_george_hodlr_mcmc.append(hodlr_stats_mcmc.get("time_search"))
-        # model_iterations_hodlr_mcmc.extend(hodlr_stats_mcmc.get("modeling_iteration"))
-
-
-        # gpy_stats = model_runtime(model="Model_GPy_LCM", obj_func=objective, NS_input=elem, objtype=objtype, modelhodlr=False, optimizer = "Gpy_optimizer",plotgp=plotgp) 
-        # model_time_gpy.append(gpy_stats.get("time_model"))
-        # model_time_per_likelihoodeval_gpy.append(gpy_stats.get("time_model_per_likelihoodeval"))
-        # search_time_gpy.append(gpy_stats.get("time_search"))
-        # model_iterations_gpy.extend(gpy_stats.get("modeling_iteration"))
-     
-    
-
-
-        plot_training_histories(objtype, elem - 1, OUTPUT_DIR)
-
-
-    # Model Time
-    print("Time-Model George HODLR Gradient: ", model_time_george_hodlr_gradient)
-    print("Time-Model George HODLR Finite Difference: ", model_time_george_hodlr_finite_difference)
-    print("Time-Model George HODLR MCMC: ", model_time_george_hodlr_mcmc)
-    print("Time-Model George Sparse Gradient: ", model_time_george_sparse_gradient)
-    print("Time-Model George Sparse Finite Difference: ", model_time_george_sparse_finite_difference)
-    print("Time-Model George Sparse MCMC: ", model_time_george_sparse_mcmc)    
-    print("Time-Model GPy: ", model_time_gpy)
-
-    # Search Time
-    print("Time-Search George HODLR Gradient: ", search_time_george_hodlr_gradient)
-    print("Time-Search George HODLR Finite Difference: ", search_time_george_hodlr_finite_difference)
-    print("Time-Search George HODLR MCMC: ", search_time_george_hodlr_mcmc)
-    print("Time-Search George Sparse Gradient: ", search_time_george_sparse_gradient)
-    print("Time-Search George Sparse Finite Difference: ", search_time_george_sparse_finite_difference)
-    print("Time-Search George Sparse MCMC: ", search_time_george_sparse_mcmc)    
-    print("Time-Search GPy: ", search_time_gpy)
-
-    # Inversion Time
-    print("Inversion Time George HODLR Gradient: ", model_time_per_likelihoodeval_george_hodlr_gradient)
-    print("Inversion Time George HODLR Finite Difference: ", model_time_per_likelihoodeval_george_hodlr_finite_difference)
-    print("Inversion Time George HODLR MCMC: ", model_time_per_likelihoodeval_george_hodlr_mcmc)
-    print("Inversion Time George Sparse Gradient: ", model_time_per_likelihoodeval_george_sparse_gradient)
-    print("Inversion Time George Sparse Finite Difference: ", model_time_per_likelihoodeval_george_sparse_finite_difference)
-    print("Inversion Time George Sparse MCMC: ", model_time_per_likelihoodeval_george_sparse_mcmc)    
-    print("Inversion Time GPy: ", model_time_per_likelihoodeval_gpy)
-
-    # Modeling Iterations
-    print("Modeling Iterations George HODLR Gradient: ", model_iterations_hodlr_gradient)
-    print("Modeling Iterations George HODLR Finite Difference: ", model_iterations_hodlr_finite_difference)
-    print("Modeling Iterations George HODLR MCMC: ", model_iterations_hodlr_mcmc)
-    print("Modeling Iterations George Sparse Gradient: ", model_iterations_sparse_gradient)
-    print("Modeling Iterations George Sparse Finite Difference: ", model_iterations_sparse_finite_difference)
-    print("Modeling Iterations George Sparse MCMC: ", model_iterations_sparse_mcmc)    
-    print("Modeling Iterations GPy: ", model_iterations_gpy)
-
-    # model time, search time, time per likelihood evaluation and evaluations against N, from the saved files of all runs
-    plot_optimizer_scaling(objtype, OUTPUT_DIR)
+        for model_name in models:
+            for optimizer in optimizers:
+                model_runtime(model="Model_George", obj_func=objective, NS_input=elem, objtype=objtype, modelsparse=True,
+                              optimizer=optimizer, plotgp=plotgp, model_name=model_name)
+            plot_model_results(model_name, objtype, elem - 1)
+        compare_models(objtype, elem - 1, models)
+    for model_name in models:
+        plot_model_results(model_name, objtype)
 
 
 def main():
