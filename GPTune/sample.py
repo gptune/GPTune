@@ -36,7 +36,10 @@ class Sample(abc.ABC):
     def sample_constrained(self, n_samples : int, repeat : int, space : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         if (check_constraints is None):
-            S = self.sample(n_samples, space)
+            # Every concrete sampler takes (n_samples, space, n_itr, kwargs=kwargs), as the call
+            # in the constrained branch below does; this one had been left without them, and went
+            # unnoticed because a caller always passed a constraint check, even an empty one.
+            S = self.sample(n_samples, space, repeat, kwargs = kwargs)
 
         else:
 
@@ -57,9 +60,11 @@ class Sample(abc.ABC):
                 # t2 = time.time_ns()
                 # print('sample_para:',(t2-t1)/1e9)
 
-                for s_norm in S2:
-                    # print("jiji",s_norm)
-                    s_orig = space.inverse_transform(np.array(s_norm, ndmin=2))[0]
+                # One transform for the whole batch.  Transforming a sample at a time costs
+                # about 20 microseconds of numpy call overhead each, which at a pilot sampling of
+                # millions of points dominates everything else here, the constraint check included.
+                S2_orig = space.inverse_transform(S2)
+                for s_norm, s_orig in zip(S2, S2_orig):
                     kwargs2 = {d.name: s_orig[i] for (i, d) in enumerate(space)}
                     # print("dfdfdfdfd",kwargs2)
                     kwargs2.update(check_constraints_kwargs)
@@ -97,6 +102,30 @@ class Sample(abc.ABC):
             return tuple(sorted((self.make_hashable(k), self.make_hashable(v)) for k, v in obj.items()))
         return obj
 
+    def first_occurrences(self, space : Space, xs : np.ndarray):
+        """
+        The indices of the rows of xs whose value in the original space appears there for the first
+        time, in increasing order, so that xs[result] is xs with its duplicates dropped and the
+        order of the rest kept.
+
+        The transform and the comparison are done on the whole array at once.  One row at a time
+        they cost around 20 microseconds each, which is hours over a pilot sampling of tens of
+        millions of points, and nothing in them needs a row to be looked at on its own.
+        """
+        origs = np.asarray(space.inverse_transform(xs))
+        if origs.dtype != object:
+            return np.sort(np.unique(origs, axis=0, return_index=True)[1])
+        # np.unique cannot sort an object array (a space whose dimensions transform to mixed
+        # types), so those are hashed as before, still with one transform for the whole array
+        seen = set()
+        keep = []
+        for i, row in enumerate(origs):
+            hashable_element = self.make_hashable(row)
+            if hashable_element not in seen:
+                seen.add(hashable_element)
+                keep.append(i)
+        return np.array(keep, dtype=int)
+
     def sample_parameters(self, problem : Problem, n_samples : int, I : np.ndarray, IS : Space, PS : Space, check_constraints : Callable = None, check_constraints_kwargs : dict = {}, **kwargs):
 
         P = []
@@ -118,33 +147,20 @@ class Sample(abc.ABC):
 
             xs = np.empty((0,0))
             repeat = 0
+            # evaluate_constraints returns True for every point when the problem states no
+            # constraints, so the per-sample loop it is called from has nothing to decide: ask
+            # sample_constrained for its plain sampling path instead.
+            constrained = check_constraints if getattr(problem, 'constraints', None) else None
             while (len(xs) < n_samples):
                 gen_samples = n_samples - len(xs)
-                xs_ = self.sample_constrained(gen_samples, repeat, PS, check_constraints = check_constraints, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
+                xs_ = self.sample_constrained(gen_samples, repeat, PS, check_constraints = constrained, check_constraints_kwargs = kwargs2, **kwargs) # result from the sampling module
                 
-                xs_orig = [problem.PS.inverse_transform(np.array([x], ndmin=2)) for x in xs]
-                xs_orig_ = [problem.PS.inverse_transform(np.array([x], ndmin=2)) for x in xs_]
-                xs_origs = xs_orig + xs_orig_
                 if(xs.shape[0]==0):
                     xs = xs_
                 else:
                     xs = np.vstack((xs, xs_))
 
-                seen_elements = set()
-                # List to store the indices of duplicates
-                duplicate_indices = []
-                for i, element in enumerate(xs_origs):
-                    # Convert lists to tuples to make them hashable
-                    hashable_element = self.make_hashable(element)
-                    
-                    # If the element is already seen, record its index as duplicate
-                    if hashable_element in seen_elements:
-                        duplicate_indices.append(i)
-                    else:
-                        # Add the element to the set
-                        seen_elements.add(hashable_element)
-
-                xs = np.delete(xs, duplicate_indices, axis=0)
+                xs = xs[self.first_occurrences(problem.PS, xs)]
 
                 repeat += 1
 

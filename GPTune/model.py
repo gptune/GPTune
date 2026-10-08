@@ -1868,10 +1868,26 @@ class Model_George(Model):
                 best_log_posterior[0] = log_posterior
                 history.record(x, self.last_nll)
 
+        # A proposal whose covariance matrix did not factor as positive definite is rejected: the
+        # hierarchical compression has broken down there, so the likelihood it returns is
+        # meaningless (the sign flip alone moves the log-determinant by twice its magnitude, which
+        # at a million points is millions of nats).  The value of the log-determinant is not a
+        # usable test: at a good fit it is legitimately very negative, since a covariance matrix
+        # with a small nugget has most of its eigenvalues below one.
+        reject_indefinite = kwargs.get('model_mcmc_reject_indefinite', True)
+        rejected = [0]
+
+        def indefinite():
+            return (getattr(self.M.solver, 'log_determinant_sign', 1.0) <= 0
+                    or not np.isfinite(self.last_nll))
+
         def target(x, bounds=None):
             log_posterior = self.log_posterior(x, bounds)
             if log_posterior > -1e29: # log_posterior returns -1e30 without evaluating the likelihood outside the bounds
                 history.nfev += 1
+                if reject_indefinite and indefinite():
+                    rejected[0] += 1
+                    return -1e30
                 if not report_states:
                     improve(x, log_posterior)
             return log_posterior
@@ -1895,6 +1911,9 @@ class Model_George(Model):
         # the chains (steps, chains, parameters) and their log posteriors, for analysis after the training
         self.mcmc_chains = mcmc.sampler.get_chain()
         self.mcmc_log_posteriors = mcmc.sampler.get_log_prob()
+        if rejected[0] > 0:
+            print("%d of %d evaluated states rejected: the covariance matrix did not factor as "
+                  "positive definite" % (rejected[0], history.nfev + rejected[0]), flush=True)
         if len(history.entries) > 0:
             history.record(history.entries[-1]['hyperparameters'], history.entries[-1]['nll'])
         return resopt, history.nfev
@@ -1962,6 +1981,8 @@ class Model_George(Model):
         multitask = len(data.I) > 1 
         isotropic = self._boolean_option(
             kwargs.get('model_isotropic', False), 'model_isotropic')
+        if kwargs.get('model_kern') == 'INLA' and kwargs.get('model_inla_sphere') is not None:
+            isotropic = True  # the SPDE on the sphere has one length scale
         if multitask and isotropic:
             raise ValueError(
                 "model_isotropic is supported only for single-task "
@@ -2144,6 +2165,13 @@ class Model_George(Model):
                     [noisevariance_range[2], amplitude_range[2]]
                     + [lengthscale_range[2]] * lengthscale_count
                 )
+                # per-dimension initial length scales (e.g. a prediction at trained hyperparameters), within the bounds
+                if kwargs.get('model_inla_initial_lengthscale') is not None:
+                    initial = np.clip(np.asarray(kwargs['model_inla_initial_lengthscale'], dtype=float).ravel(),
+                                      lengthscale_range[0], lengthscale_range[1])
+                    if len(initial) != lengthscale_count:
+                        raise ValueError("model_inla_initial_lengthscale must have %d values" % lengthscale_count)
+                    intialguess = intialguess[:2] + list(initial)
             elif kwargs['model_kern'] == 'WendlandC2':
                 cutoff_range = self._linear_hyperparameter_range(
                     kwargs, 'model_cutoff',
@@ -2165,15 +2193,22 @@ class Model_George(Model):
                 if kwargs['model_hodlr'] or kwargs['model_bpack']:
                     raise ValueError("model_kern='INLA' factors its precision matrix with SuperLU_DIST: "
                                      "set model_hodlr and model_bpack to False")
-                from george.inla import INLAGP
-                # the buffer should be at least the largest range 2*lengthscale
-                inla_buffer = kwargs.get('model_inla_buffer', None)
-                self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
-                                lengthscale=intialguess[2:], isotropic=isotropic,
-                                shape=kwargs.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
-                                buffer=2 * lengthscale_range[1] if inla_buffer is None else inla_buffer,
-                                nsamples=kwargs.get('model_inla_nsamples', 128), nu=kwargs.get('model_inla_nu', None),
-                                nprobe=int(kwargs.get('model_grad_nprobe', 64)), seed=seed, verbose=int(kwargs['verbose']))
+                from george.inla import INLAGP, SphereINLAGP
+                if kwargs.get('model_inla_sphere') is not None:
+                    # the SPDE on the unit sphere, on an icosahedral mesh (3D inputs on the sphere)
+                    self.M = SphereINLAGP(level=int(kwargs['model_inla_sphere']), nu=kwargs.get('model_inla_nu', None),
+                                          noise_variance=intialguess[0], amplitude=intialguess[1], lengthscale=intialguess[2:],
+                                          nsamples=kwargs.get('model_inla_nsamples', 128),
+                                          nprobe=int(kwargs.get('model_grad_nprobe', 64)), seed=seed, verbose=int(kwargs['verbose']))
+                else:
+                    # the buffer should be at least the largest range 2*lengthscale
+                    inla_buffer = kwargs.get('model_inla_buffer', None)
+                    self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
+                                    lengthscale=intialguess[2:], isotropic=isotropic,
+                                    shape=kwargs.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
+                                    buffer=2 * lengthscale_range[1] if inla_buffer is None else inla_buffer,
+                                    nsamples=kwargs.get('model_inla_nsamples', 128), nu=kwargs.get('model_inla_nu', None),
+                                    nprobe=int(kwargs.get('model_grad_nprobe', 64)), seed=seed, verbose=int(kwargs['verbose']))
             elif kwargs['model_hodlr'] == True:
                 kwargs_variable = {
                     'min_size': kwargs['model_hodlrleaf'],
@@ -2306,10 +2341,25 @@ class Model_George(Model):
             resopt, nlikelihood = self.sample_posterior(initial_state, bounds, **kwargs)
         else:
             lbfgs_options = {'maxcor': 10, 'ftol': 1e-7, 'gtol': 1e-05, 'maxfun': 1000, 'maxiter': 1000, 'maxls': 100}
+            if kwargs.get('model_lbfgs_maxiter') is not None:
+                lbfgs_options['maxiter'] = int(kwargs['model_lbfgs_maxiter'])
             if kwargs['model_grad'] == False:
                 # use finite difference, jac could be None, '2-point', '3-point', or 'cs'
                 lbfgs_options['finite_diff_rel_step'] = 1e-02
-            resopt, nlikelihood = self.minimize_nll(p0, bounds, lbfgs_options, **kwargs)
+            if lbfgs_options['maxiter'] == 0:
+                # no optimization: the model keeps its initial hyperparameters (scipy's L-BFGS-B still takes one
+                # step with maxiter 0, so it is bypassed). The training history gets its single entry, the
+                # initial guess, so that whatever reads it (e.g. a replay of the training) still works.
+                history = TrainingHistory(len(p0), "L-BFGS iteration", kwargs['verbose'], kwargs.get('model_history_file', None))
+                self.train_history = history.entries
+                history.nfev = 1
+                f0 = self.nll(np.asarray(p0, dtype=float))
+                history.record(p0, f0)
+                resopt = op.OptimizeResult(x=np.asarray(p0, dtype=float), fun=float(f0), nfev=1, nit=0, status=0, success=True,
+                                           message='no optimization (model_lbfgs_maxiter=0)')
+                nlikelihood = 1
+            else:
+                resopt, nlikelihood = self.minimize_nll(p0, bounds, lbfgs_options, **kwargs)
         
 
         
@@ -2391,6 +2441,7 @@ class Model_George(Model):
                 modeling_options["model_inla_buffer"] = self.M.buffer
                 modeling_options["model_inla_nsamples"] = self.M.nsamples
                 modeling_options["model_inla_nu"] = self.M.nu
+                modeling_options["model_inla_sphere"] = kwargs.get('model_inla_sphere', None)
 
             if(kwargs['model_kern']=="WendlandC2"):
 
@@ -2584,17 +2635,26 @@ class Model_George(Model):
                 kernel *= amplitude  
                 K = george.kernels.WendlandC2Kernel(log_rc=log_rc, kernel_base=kernel, ndim=input_dim)
             elif modeling_options['model_kern'] == 'INLA':
-                from george.inla import INLAGP
+                from george.inla import INLAGP, SphereINLAGP
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
-                self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
-                                lengthscale=intialguess[2:], isotropic=isotropic,
-                                shape=modeling_options.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
-                                buffer=modeling_options['model_inla_buffer'],
-                                nsamples=modeling_options.get('model_inla_nsamples', 128),
-                                nu=modeling_options.get('model_inla_nu', None),
-                                nprobe=int(kwargs.get('model_grad_nprobe', 64)),
-                                seed=seed if kwargs['model_random_seed'] is not None else 42,
-                                verbose=int(kwargs['verbose']))
+                if modeling_options.get('model_inla_sphere') is not None:
+                    self.M = SphereINLAGP(level=int(modeling_options['model_inla_sphere']),
+                                          nu=modeling_options.get('model_inla_nu', None),
+                                          noise_variance=intialguess[0], amplitude=intialguess[1], lengthscale=intialguess[2:],
+                                          nsamples=modeling_options.get('model_inla_nsamples', 128),
+                                          nprobe=int(kwargs.get('model_grad_nprobe', 64)),
+                                          seed=seed if kwargs['model_random_seed'] is not None else 42,
+                                          verbose=int(kwargs['verbose']))
+                else:
+                    self.M = INLAGP(input_dim, noise_variance=intialguess[0], amplitude=intialguess[1],
+                                    lengthscale=intialguess[2:], isotropic=isotropic,
+                                    shape=modeling_options.get('model_inla_shape', None), bounds=[(0.0, 1.0)] * input_dim,
+                                    buffer=modeling_options['model_inla_buffer'],
+                                    nsamples=modeling_options.get('model_inla_nsamples', 128),
+                                    nu=modeling_options.get('model_inla_nu', None),
+                                    nprobe=int(kwargs.get('model_grad_nprobe', 64)),
+                                    seed=seed if kwargs['model_random_seed'] is not None else 42,
+                                    verbose=int(kwargs['verbose']))
                 # the lattice is built from the inputs
                 self.M.compute(points, None, yerr=kwargs['model_jitter'])
                 return

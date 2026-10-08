@@ -26,9 +26,12 @@ optimizers, a copy of model_comparison_updated_superlu.py:
             2D and 3D objectives only
 The environment selects the runs: GP_NS (sample counts, default 102400), GP_MODELS (default "wendland,inla"),
 GP_OPTIMIZERS (default "gradient,finite difference,mcmc,mala": the L-BFGS trainings first, they set the time
-limit of the samplers), GP_INLA_SHAPE (lattice nodes per dimension, default sqrt(N)) and GP_INLA_NU (the INLA
-Matern smoothness, default 2 - d/2). The objective is
-read from the standard input (4: 2D Schwefel). The files of every model go to GP_OUTPUT_DIR/<model> (default
+limit of the samplers), GP_INLA_SHAPE (lattice nodes per dimension, default N^(1/d)) and GP_INLA_NU (the INLA
+Matern smoothness, default 2 - d/2), GP_NOISEVAR and GP_LENGTHSCALE ("min max initial" ranges, linear scale,
+default the GPTune ones), GP_INLA_BUFFER (the width of the lattice buffer, default 2 x the largest length scale), GP_ISOTROPIC (1: one length scale, INLA only) and GP_OBJECTIVE_SET (bpack: the
+objectives of model_comparison_updated_bpack.py, where 3 and 5 are 3D, with the same samples and testing points
+as its H2 runs). The objective is read from the standard input (4: 2D Schwefel; with GP_OBJECTIVE_SET=bpack,
+3: 3D quadratic, 5: anisotropic 3D). The files of every model go to GP_OUTPUT_DIR/<model> (default
 ./<model>): the ones of model_comparison_updated_superlu.py and its plots (plot_training_results.py), plus
 the comparison of the models at every N, model_compare_obj<o>_N<N>.pdf/png/csv in GP_OUTPUT_DIR.
 Run with the SuperLU_DIST workers by run_inla_wendland_gpu.sbatch.
@@ -170,6 +173,28 @@ def objectives4(point):
     return [y]
 
 
+# the 3D objectives 3 and 5 of model_comparison_updated_bpack.py (GP_OBJECTIVE_SET=bpack)
+OBJECTIVE_SET = os.environ.get('GP_OBJECTIVE_SET', 'inla')
+
+def objectives3_bpack(point):
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
+    y = -1*(25*((x1-2)**2) + (x2-2)**2 + (x3-1)**2)
+    return [y]
+
+def objectives5_bpack(point):
+    # anisotropic 3D function: oscillates quickly along x1, slowly along x3, and varies slowly along x2
+    x1 = point["x1"]
+    x2 = point["x2"]
+    x3 = point["x3"]
+    y = np.sin(10*np.pi*x1) + 4*(x2**2) + np.sin(3*np.pi*x3)
+    return [y]
+
+def objective_dimension(objtype):
+    return {1: 1, 2: 2, 3: 3 if OBJECTIVE_SET == 'bpack' else 6, 4: 2, 5: 3}[objtype]
+
+
 def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
     if(objtype==1):
@@ -235,7 +260,7 @@ def model_dir(model_name):
     directory = os.path.join(OUTPUT_DIR, model_name)
     os.makedirs(directory, exist_ok=True)
     return directory
-REPLAY_POINTS = 20 # history entries replayed for the test metrics of a training (evenly spaced, including the last)
+REPLAY_POINTS = int(os.environ.get('GP_REPLAY_POINTS', 20)) # history entries replayed for the test metrics of a training (GP_REPLAY_POINTS=2: first and last only)
 
 
 def training_test_metrics(modeler, gt, obj_func, ntest, seed=2026, batch=250, max_replay=REPLAY_POINTS):
@@ -331,14 +356,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     x4 = Real(0., 1., transform="normalize", name="x4")
     x5 = Real(0., 1., transform="normalize", name="x5")
     x6 = Real(0., 1., transform="normalize", name="x6")    
-    if(objtype==1):
-        parameter_space = Space([x])    
-    elif(objtype==2):
-        parameter_space = Space([x1,x2])    
-    elif(objtype==3):
-        parameter_space = Space([x1,x2,x3,x4,x5,x6])
-    elif(objtype==4):
-        parameter_space = Space([x1,x2])
+    parameter_space = Space([x] if objective_dimension(objtype) == 1 else [x1, x2, x3, x4, x5, x6][:objective_dimension(objtype)])
 
     # input_space = Space([Real(0., 0.0001, "uniform", "normalize", name="t")])
     # parameter_space = Space([Real(-1., 1., "uniform", "normalize", name="x")])
@@ -380,6 +398,15 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     # Use the following two lines if you want to specify a certain random seed for surrogate modeling
     options['model_class'] = model #'Model_George_LCM'#'Model_George_LCM'  #'Model_LCM'
     options['model_kern'] = 'RBF' #'Matern32' #'RBF' #'Matern52'
+    # hyperparameter ranges ("min max initial", linear) and isotropy, e.g. those of the H2 runs of
+    # test_GP_h2_unstructured.sh: GP_NOISEVAR="1e-3 1e-1 1e-2" GP_LENGTHSCALE="1e-2 2.718281828 0.1"
+    if os.environ.get('GP_NOISEVAR'):
+        options['model_noisevariance'] = [float(v) for v in os.environ['GP_NOISEVAR'].split()]
+    if os.environ.get('GP_LENGTHSCALE'):
+        options['model_lengthscale'] = [float(v) for v in os.environ['GP_LENGTHSCALE'].split()]
+    if os.environ.get('GP_AMPLITUDE'):
+        options['model_amplitude'] = [float(v) for v in os.environ['GP_AMPLITUDE'].split()]
+    options['model_isotropic'] = os.environ.get('GP_ISOTROPIC', '0') == '1'
     if(modelhodlr==True):
         options['model_hodlr'] = True
         options['model_hodlrleaf'] = 200
@@ -401,9 +428,16 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         if MODELS[model_name][0] == 'INLA':
             options['model_kern'] = 'INLA'
             # about one lattice node per sample by default
-            options['model_inla_shape'] = int(os.environ.get('GP_INLA_SHAPE', int(round(np.sqrt(NS_input - 1)))))
+            options['model_inla_shape'] = int(os.environ.get('GP_INLA_SHAPE', int(round((NS_input - 1) ** (1.0 / objective_dimension(objtype))))))
             if os.environ.get('GP_INLA_NU'):
                 options['model_inla_nu'] = float(os.environ['GP_INLA_NU'])  # the Matern smoothness (default 2 - d/2)
+            if os.environ.get('GP_INLA_BUFFER'):
+                options['model_inla_buffer'] = float(os.environ['GP_INLA_BUFFER'])  # the lattice buffer width (default 2 x the largest length scale)
+            if os.environ.get('GP_LBFGS_MAXITER'):
+                options['model_lbfgs_maxiter'] = int(os.environ['GP_LBFGS_MAXITER'])  # 0: prediction at the initial hyperparameters
+            if os.environ.get('GP_INLA_INITIAL_LENGTHSCALE'):
+                # per-dimension initial length scales, e.g. the trained ones of a prediction rerun
+                options['model_inla_initial_lengthscale'] = [float(v) for v in os.environ['GP_INLA_INITIAL_LENGTHSCALE'].split()]
             print("INLA CONFIG: N=%d lattice of %d nodes per dimension" % (NS_input - 1, options['model_inla_shape']))
     
     # Temporary hardcode 
@@ -683,10 +717,13 @@ def objective_selection():
         return objectives2, objtype
     elif ("3" in objective):
         objtype=3
-        return objectives3, objtype
+        return (objectives3_bpack if OBJECTIVE_SET == 'bpack' else objectives3), objtype
     elif ("4" in objective):
         objtype=4
         return objectives4, objtype
+    elif ("5" in objective) and OBJECTIVE_SET == 'bpack':
+        objtype=5
+        return objectives5_bpack, objtype
     else:
         raise Exception("Invalid objective selection")
 

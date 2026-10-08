@@ -66,6 +66,9 @@ class Options(dict):
         model_inla_buffer = None # With model_kern='INLA', the width of the buffer added around the lattice against the boundary effect (cells growing by 1.2); None for twice model_lengthscale[1], the largest range
         model_inla_nsamples = 128 # With model_kern='INLA', the number of posterior samples of the Rao-Blackwellized estimator of the predictive variances
         model_inla_nu = None # With model_kern='INLA', the smoothness nu of the Matern field: exact if nu + d/2 is an integer (nu = 1, 2, 3 in 2D; 0.5, 1.5, 2.5 in 3D), otherwise the parsimonious approximation of R-INLA; None for nu = 2 - d/2 (1 in 2D, 0.5 in 3D)
+        model_inla_initial_lengthscale = None # With model_kern='INLA', per-dimension initial length scales (linear scale, clipped to model_lengthscale[0:2]); None for model_lengthscale[2] in every dimension
+        model_lbfgs_maxiter = None # Model_George: the maximum number of L-BFGS iterations (None for 1000; 0 evaluates the model at its initial hyperparameters only, e.g. for a prediction at trained hyperparameters)
+        model_inla_sphere = None # With model_kern='INLA' and 3D inputs on the unit sphere, the SPDE on the sphere (the spherical meshes of R-INLA) instead of the tensor lattice: the number of subdivisions of the icosahedral mesh (10 4^k + 2 nodes: 6 -> 40962, 7 -> 163842, 8 -> 655362, 9 -> 2621442); one length scale in chordal units (model_isotropic is implied), model_inla_nu an integer (1, 2 or 3; None for 1)
         # LCM ranges are shared by the George, GPy, and custom LCM models.
         model_lcm_noisevariance = [math.exp(-6), math.exp(-5), math.exp(-6)]
         model_lcm_B = [math.exp(-10), math.exp(6), 1.0]
@@ -100,6 +103,7 @@ class Options(dict):
         model_mcmc_nchain = 2 # number of MCMC chains 
         model_mcmc_maxiter = 500 # max number of samples per chain
         model_mcmc_max_time = None # if set, stop the MCMC sampling once it has run for this many seconds
+        model_mcmc_reject_indefinite = True # In MCMC and MALA, reject a proposal whose covariance matrix did not factor as positive definite: the hierarchical compression has broken down there and the likelihood it returns is meaningless
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR
         model_hodlrtol_abs = 1e-10 # Absolute compression tolerance of HODLR

@@ -35,10 +35,25 @@ OPTIMIZER=${OPTIMIZER:-gradient}
 NOISEVAR=${NOISEVAR:-}
 LENGTHSCALE=${LENGTHSCALE:-}
 USE_GPU=${USE_GPU:-0}
-H2_OPTS=${H2_OPTS:-}
-TOL_COMP=${TOL_COMP:-1e-11} # H2 compression tolerance
+if [ "${FORMAT:-7}" = 1 ]; then
+    H2_OPTS=${H2_OPTS:-}
+else
+    # without H2_XRR_factor/h2_lazy_schur/h2_use_sketch the GPU box path stays off
+    H2_OPTS=${H2_OPTS:---H2_XRR_factor 1 --h2_lazy_schur 2 --h2_use_sketch 2}
+fi
+FORMAT=${FORMAT:-7}  # 7: H2 (--H2_use_gpu on GPU); 1: HODLR (--HODLR_use_gpu on GPU, BACA construction)
+# Compression tolerance and H2 ID proxy. H2 on GPU: tol 1e-10 with h2_id_proxy 2 (the settings that
+# reach acc_mvp ~1e-10; proxy 0 stalls near 1e-8 whatever the tolerance). HODLR: tol 1e-10.
+if [ "$FORMAT" = 1 ]; then
+    TOL_COMP=${TOL_COMP:-1e-10}
+elif [ "${USE_GPU:-0}" = 1 ]; then
+    TOL_COMP=${TOL_COMP:-1e-10}; ID_PROXY=${ID_PROXY:-2}
+else
+    TOL_COMP=${TOL_COMP:-1e-11}
+fi
 # 3D trees need a reduction threshold of at least 8
-REDUCTION_THRESHOLD=${REDUCTION_THRESHOLD:-$([ "$OBJTYPE" = 3 -o "$OBJTYPE" = 5 ] && echo 8 || echo 4)}
+# the H2 tree branches 2^d ways per level: 8 in 3D, 4 in 2D, 2 in 1D (objective 6)
+REDUCTION_THRESHOLD=${REDUCTION_THRESHOLD:-$([ "$OBJTYPE" = 3 -o "$OBJTYPE" = 5 ] && echo 8 || { [ "$OBJTYPE" = 6 ] && echo 2 || echo 4; })}
 
 DEMO_DIR=${SLURM_SUBMIT_DIR:-$PWD}
 cd $DEMO_DIR/../../
@@ -56,10 +71,11 @@ if [ "$USE_GPU" = 1 ]; then
     THREADS_PER_RANK=$((128 / RANKS_PER_NODE))
     NODE_VAL=$(( (nmpi + RANKS_PER_NODE - 1) / RANKS_PER_NODE ))
 else
-    NTH=8 # number of OMP threads
+    NTH=${NTH:-8} # number of OMP threads
     CORES_PER_NODE=128
     THREADS_PER_RANK=`expr $NTH \* 2`
     NODE_VAL=`expr $nmpi \* $NTH / $CORES_PER_NODE`
+    [ "$NODE_VAL" -lt 1 ] && NODE_VAL=1   # a few ranks still need a whole node
 fi
 export OMP_NUM_THREADS=$NTH
 #################################################
@@ -74,6 +90,10 @@ export PYTHONPATH=$SUPERLU_PYTHON_LIB_PATH:$PYTHONPATH
 
 #ButterflyPACK settings:
 #################################################
+# run_env.sh does not put the repository on the path, so python would import the GPTune installed
+# in site-packages, which lags behind this working tree.  Prepending the repository makes a run use
+# the code that is checked out here; the installed copy is left alone for other sessions.
+export PYTHONPATH=$GPTUNEROOT:$PYTHONPATH
 export BPACK_PYTHON_LIB_PATH=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/$([ "$USE_GPU" = 1 ] && echo build_gpu || echo build)/lib/
 export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
 export BPACK_SEQUENTIAL_OPENBLAS=$CFS/m2957/lib/lib/PrgEnv-gnu/OpenBLAS_sequential/build/install/lib/libopenblas.so.0
@@ -111,53 +131,64 @@ cd $RUN_DIR
 for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
-echo "case=$CASE optimizer=$OPTIMIZER noisevariance=${NOISEVAR:-default} lengthscale=${LENGTHSCALE:-default} NS=$NS objtype=$OBJTYPE isotropic=$ISOTROPIC scaled_geometry=$SCALED h2_unstructured=$H2_UNSTRUCTURED nodes=$NODE_VAL nmpi=$nmpi threads=$NTH use_gpu=$USE_GPU tol_comp=$TOL_COMP h2_opts=$H2_OPTS"
+echo "format=$FORMAT tol_comp=$TOL_COMP id_proxy=${ID_PROXY:-0} case=$CASE optimizer=$OPTIMIZER noisevariance=${NOISEVAR:-default} lengthscale=${LENGTHSCALE:-default} NS=$NS objtype=$OBJTYPE isotropic=$ISOTROPIC scaled_geometry=$SCALED h2_unstructured=$H2_UNSTRUCTURED nodes=$NODE_VAL nmpi=$nmpi threads=$NTH use_gpu=$USE_GPU tol_comp=$TOL_COMP h2_opts=$H2_OPTS"
 git -C $GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK log --oneline -1
 
 
-####### H2 workers (sequential BLAS inside the OpenMP-threaded H2 code)
-format=7
+####### butterflypack workers (sequential BLAS inside the OpenMP-threaded H2/HODLR code)
+format=$FORMAT
 SRUN_ARGS=(-N ${NODE_VAL} -n $nmpi -c ${THREADS_PER_RANK} --cpu_bind=cores)
 WORKER_ENV=(env LD_PRELOAD="$BPACK_SEQUENTIAL_OPENBLAS${LD_PRELOAD:+:$LD_PRELOAD}" OPENBLAS_NUM_THREADS=1)
 GPU_WRAP=()
 H2_GPU_OPTS=""
 if [ "$USE_GPU" = 1 ]; then
     module load cudatoolkit craype-accel-nvidia80 >/dev/null 2>&1
-    export LD_LIBRARY_PATH=/global/cfs/cdirs/m2957/lib/magma_master/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/global/cfs/cdirs/m2957/lib/magma_v2.10.0/lib:$LD_LIBRARY_PATH
     SRUN_ARGS+=(--ntasks-per-node=$RANKS_PER_NODE --gpus-per-node=4)
     # CUDA-aware MPI for the GPU backend, only in the workers: mpi4py initializes MPI before
     # butterflypack is loaded, so the GPU transport layer of Cray MPICH is preloaded
     WORKER_ENV=(env LD_PRELOAD="$CRAY_MPICH_ROOTDIR/gtl/lib/libmpi_gtl_cuda.so:$BPACK_SEQUENTIAL_OPENBLAS${LD_PRELOAD:+:$LD_PRELOAD}"
                 OPENBLAS_NUM_THREADS=1 MPICH_GPU_SUPPORT_ENABLED=1 MPICH_ASYNC_PROGRESS=1
-                H2_GPU_HEAP_GB=${H2_GPU_HEAP_GB:-$( [ $(( (RANKS_PER_NODE + 3) / 4 )) -ge 4 ] && echo 6 || echo $(( 32 / ((RANKS_PER_NODE + 3) / 4) )) )}
-                H2_GPU_MATVEC=${H2_GPU_MATVEC:-0} H2_GPU_KEEP_OPERATORS=${H2_GPU_KEEP_OPERATORS:-1})
-    # (the H2 device heap of a rank, H2_GPU_HEAP_GB: 32 GiB of its 40 GB A100 over the ranks sharing it, but
-    #  6 GiB with 4 or more ranks per GPU, whose CUDA contexts and MAGMA workspaces also need room)
-    # (the multiplies by the compression-only dK/dtheta operators run on the host, H2_GPU_MATVEC=0: with 65
-    #  right-hand sides the device matvec was 1.3-4.5x slower at N=102,400 and up to 25x at N=16,384; the
-    #  factorization of K keeps its device solve data while those operators are built, H2_GPU_KEEP_OPERATORS=1)
+                ${BPACK_GPU_HEAP_FRACTION:+BPACK_GPU_HEAP_FRACTION=$BPACK_GPU_HEAP_FRACTION}
+                ${BPACK_GPU_EXCHANGE_MB:+BPACK_GPU_EXCHANGE_MB=$BPACK_GPU_EXCHANGE_MB}
+                ${BPACK_CHECK:+BPACK_CHECK=$BPACK_CHECK})
+    # (device memory: BPACK_GPU_HEAP_FRACTION, default 0.85 of the free memory, split by the library
+    #  among the ranks sharing a GPU; BPACK_GPU_EXCHANGE_MB for the MPI arena; doc/environment_variables.md.
+    #  The earlier H2_GPU_HEAP_GB / H2_GPU_MATVEC / H2_GPU_KEEP_OPERATORS of this script are gone.)
     # each rank sees one GPU of its node
     GPU_WRAP=(bash -c 'export CUDA_VISIBLE_DEVICES=$((SLURM_LOCALID % ${SLURM_GPUS_ON_NODE:-4})); exec "$@"' h2)
-    H2_GPU_OPTS="--H2_use_gpu 1"
+    if [ "$format" = 1 ]; then H2_GPU_OPTS="--HODLR_use_gpu 1"; else H2_GPU_OPTS="--H2_use_gpu 1"; fi
 fi
-srun "${SRUN_ARGS[@]}" "${WORKER_ENV[@]}" "${GPU_WRAP[@]}" \
-    python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option --xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy 0 --baca_batch 32 --h2_id_radius 2 --nmin_leaf 64 --errsol 0 --verbosity 0 --h2_unstructured ${H2_UNSTRUCTURED} ${H2_OPTS} ${H2_GPU_OPTS} \
-    > worker${LOG_SUFFIX}.log 2>&1 &
-WORKER_PID=$!
+if [ "$format" = 1 ]; then
+    WORKER_OPTS=(--xyzsort 1 --format 1 --sym 1 --IR_HODLR 10 --tol_comp ${TOL_COMP} --jitter_factor 0 --lrlevel 0 --reclr_leaf 5 --baca_batch 16 --nmin_leaf 128 --errsol 0 --verbosity 0 --knn ${KNN:-20})
+else
+    WORKER_OPTS=(--xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy ${ID_PROXY:-0} --baca_batch 32 --h2_id_radius 2 --nmin_leaf 64 --errsol 0 --verbosity 0 --h2_unstructured ${H2_UNSTRUCTURED})
+fi
+IFS=';' read -ra OPT_STEPS <<< "$OPTIMIZER"
+for OPT_STEP in "${OPT_STEPS[@]}"; do
+    STEP_TAG=$([ ${#OPT_STEPS[@]} -gt 1 ] && echo "_$(echo "$OPT_STEP" | sed 's/finite difference/fd/g; s/gradient/grad/g; s/,/-/g')")
+    for fid in $(seq 0 "$MAX_ID_FILE"); do rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"; done
+    srun "${SRUN_ARGS[@]}" "${WORKER_ENV[@]}" "${GPU_WRAP[@]}" \
+        python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option "${WORKER_OPTS[@]}" ${H2_OPTS} ${H2_GPU_OPTS} \
+        > worker${LOG_SUFFIX}${STEP_TAG}.log 2>&1 &
+    WORKER_PID=$!
 
-python -u $DEMO_DIR/model_comparison_updated_bpack.py -format $format -objtype $OBJTYPE -NS $NS -isotropic $ISOTROPIC -bpack_scaled_geometry $SCALED -optimizer "$OPTIMIZER" ${NOISEVAR:+-noisevariance $NOISEVAR} ${LENGTHSCALE:+-lengthscale $LENGTHSCALE} > driver${LOG_SUFFIX}.log 2>&1 &
-DRIVER_PID=$!
-# the driver would wait forever for workers that have exited, so stop it in that case
-while kill -0 $DRIVER_PID 2>/dev/null; do
-    if ! kill -0 $WORKER_PID 2>/dev/null; then
-        echo "butterflypack workers exited before the driver finished; see worker${LOG_SUFFIX}.log"
-        kill $DRIVER_PID
-        break
-    fi
-    sleep 10
+    python -u $DEMO_DIR/model_comparison_updated_bpack.py -format $format -objtype $OBJTYPE -NS $NS -isotropic $ISOTROPIC -bpack_scaled_geometry $SCALED -optimizer "$OPT_STEP" ${NOISEVAR:+-noisevariance $NOISEVAR} ${LENGTHSCALE:+-lengthscale $LENGTHSCALE} > driver${LOG_SUFFIX}${STEP_TAG}.log 2>&1 &
+    DRIVER_PID=$!
+    # the driver would wait forever for workers that have exited, so stop it in that case
+    while kill -0 $DRIVER_PID 2>/dev/null; do
+        if ! kill -0 $WORKER_PID 2>/dev/null; then
+            echo "butterflypack workers exited before the driver finished (step: $OPT_STEP); see worker${LOG_SUFFIX}${STEP_TAG}.log"
+            kill $DRIVER_PID
+            break
+        fi
+        sleep 10
+    done
+    wait $DRIVER_PID
+    echo "step '$OPT_STEP' driver exit code: $?"
+    python -c "from dPy_BPACK_wrapper import *; bpack_terminate()" 2>/dev/null
+    sleep 2
+    kill $WORKER_PID 2>/dev/null
+    wait
 done
-wait $DRIVER_PID
-echo "driver exit code: $?"
-python -c "from dPy_BPACK_wrapper import *; bpack_terminate()"
-wait
 rm -rf $SHM_DIR

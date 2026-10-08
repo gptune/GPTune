@@ -221,7 +221,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 import plot_training_results
 if GP_KERNEL == 'INLA':
     plot_training_results.MODEL_LABEL = 'INLA/SPDE GP (george + SuperLU)'
-REPLAY_POINTS = 20 # history entries replayed for the test metrics of a training (evenly spaced, including the last)
+REPLAY_POINTS = int(os.environ.get('GP_REPLAY_POINTS', 20)) # history entries replayed for the test metrics of a training (evenly spaced, including the last; GP_REPLAY_POINTS=2: the first and the last only, for expensive models)
 
 
 def training_test_metrics(modeler, gt, obj_func, ntest, seed=2026, batch=250, max_replay=REPLAY_POINTS):

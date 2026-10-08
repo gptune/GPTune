@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument('-lengthscale', type=float, nargs=3, default=None, help='Minimum, maximum, and initial length scale (linear scale); default: the GPTune default')
     parser.add_argument('-plot_points', type=int, default=400, help='Approximate number of test points in the 2D/3D prediction plots (one butterflypack solve per point)')
     parser.add_argument('-optimizer', type=str, default='gradient', help='Comma-separated hyperparameter optimizers for the butterflypack model, run one after the other: gradient, finite difference, mcmc, mala')
-    parser.add_argument('-objtype', type=int, default=0, help='Objective function 1, 2, 3, 4 (anisotropic 2D), or 5 (anisotropic 3D); 0 asks interactively')
+    parser.add_argument('-objtype', type=int, default=0, help='Objective function 1, 2, 3, 4 (anisotropic 2D), 5 (anisotropic 3D), or 6 (1D Schwefel); 0 asks interactively')
     parser.add_argument('-NS', type=int, default=102401, help='Number of samples (the model is built with NS-1 samples)')
     parser.add_argument('-isotropic', type=int, default=1, help='Whether to use one shared length scale for all dimensions')
     parser.add_argument('-bpack_scaled_geometry', type=int, default=0, help='Whether to divide each dimension of the points passed to butterflypack by its length scale (use with -isotropic 0 and --h2_unstructured 1 for H2)')
@@ -156,9 +156,22 @@ def objectives5(point):
     return [y]
 
 
+def schwefel1_raw(x1):
+    """The Schwefel function in 1D on [0,1], mapped to its usual domain [-500, 500]."""
+    z1 = -500.0 + 1000.0 * x1
+    return 418.9829 - z1 * np.sin(np.sqrt(abs(z1)))
+
+
+def objectives6(point):
+    # 1D Schwefel, normalized like the 2D one of model_comparison_updated_superlu.py: many local
+    # minima of a short length scale, which makes the GP's length scale small and its matrix hard
+    x = point["x"]
+    return [schwefel1_raw(x) / 418.9829 - 1.0]
+
+
 def predict_aug(modeler, gt, point,tid,objtype):   # point is the orginal space
 
-    if(objtype==1):
+    if(objtype==1 or objtype==6):
         x =point['x']
         x = [x]
     elif(objtype==2 or objtype==4):
@@ -230,7 +243,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     x1 = Real(0., 1., transform="normalize", name="x1")
     x2 = Real(0., 1., transform="normalize", name="x2")
     x3 = Real(0., 1., transform="normalize", name="x3")  
-    if(objtype==1):
+    if(objtype==1 or objtype==6):
         parameter_space = Space([x])    
     elif(objtype==2 or objtype==4):
         parameter_space = Space([x1,x2])    
@@ -394,7 +407,12 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
             print('    Popt ', data.P[tid][np.argmin(data.O[tid])], 'Oopt ', min(data.O[tid])[0], 'nth ', np.argmin(data.O[tid]))
 
         if len(getattr(modeler[0], 'train_history', [])) > 0:
-            rows, predictions = training_test_metrics(modeler[0], gt, obj_func, NTEST, batch=250 if NS_input <= 400001 else 100)
+            # training_test_metrics draws its test points from the parameter space alone, but
+            # objectives1 also needs the task variable t, so the task of the replayed model (the GP
+            # is trained on one task) is put back into every point.  The other objectives ignore it.
+            task_point = {gt.problem.IS[k].name: gt.data.I[0][k] for k in range(gt.problem.DI)}
+            replay_func = lambda point: obj_func(dict(task_point, **point))
+            rows, predictions = training_test_metrics(modeler[0], gt, replay_func, NTEST, batch=250 if NS_input <= 400001 else 100)
             write_training_metrics(rows, 'training_metrics_%s.csv' % run_tag)
             np.savez('test_predictions_%s.npz' % run_tag, **predictions)
             if hasattr(modeler[0], 'mcmc_chains'):
@@ -408,7 +426,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                             popt=data.P[0][np.argmin(data.O[0])], oopt=float(min(data.O[0])[0]))
 
 
-        if objtype==1 and plotgp==True:
+        if (objtype==1 or objtype==6) and plotgp==True:
             # fig = plt.figure(figsize=[12.8, 9.6])
             for tid in range(len(data.I)):
                 x = np.arange(0., 1., 0.01)
@@ -424,7 +442,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                     P_orig=[x[i]]
                     kwargs = {parameter_space[k].name: P_orig[k] for k in range(len(parameter_space))}
                     kwargs.update(kwargst)
-                    y[i]=objectives1(kwargs)
+                    y[i]=obj_func(kwargs)
                     if(TUNER_NAME=='GPTune'):
                         (y_mean[i],var) = predict_aug(modeler, gt, kwargs,tid,objtype)
                         y_std[i]=np.sqrt(var)
@@ -667,7 +685,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
 def objective_selection():
     # return objectives1, 1
     objtype = parse_args().objtype
-    objective = str(objtype) if objtype > 0 else input("What Objective Function would you like to use (1, 2, 3, 4, or 5)")
+    objective = str(objtype) if objtype > 0 else input("What Objective Function would you like to use (1, 2, 3, 4, 5, or 6)")
     if ("1" in objective):
         objtype=1
         return objectives1, objtype
@@ -683,6 +701,9 @@ def objective_selection():
     elif ("5" in objective):
         objtype=5
         return objectives5, objtype
+    elif ("6" in objective):
+        objtype=6
+        return objectives6, objtype
     else:
         raise Exception("Invalid objective selection")
 
