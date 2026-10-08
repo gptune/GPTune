@@ -765,7 +765,10 @@ def plotting(objective, objtype, bpackonly=False):
         'finite difference': (model_time_george_bpack_finite_difference, model_time_per_likelihoodeval_george_bpack_finite_difference, search_time_george_bpack_finite_difference, model_iterations_bpack_finite_difference),
         'mcmc': (model_time_george_bpack_mcmc, model_time_per_likelihoodeval_george_bpack_mcmc, search_time_george_bpack_mcmc, model_iterations_bpack_mcmc),
     }
-    plot_training_results.MODEL_LABEL = 'H2 GP (george + ButterflyPACK, %s kernel)' % ('isotropic' if parse_args().isotropic else 'anisotropic')
+    # format 1 is HODLR and 7 is H2, so the title said H2 for the HODLR runs too
+    plot_training_results.MODEL_LABEL = '%s GP (george + ButterflyPACK, %s kernel)' % (
+        'HODLR' if parse_args().format == 1 else 'H2',
+        'isotropic' if parse_args().isotropic else 'anisotropic')
     
     for elem in NS:
 
