@@ -1951,7 +1951,7 @@ class Model_George(Model):
                 params = np.asarray(params)
                 return np.exp(params[0]), np.exp(params[1]), np.sqrt(np.exp(params[2:]))
         else:
-            if kernel_type == 'RBF' or kernel_type == 'Matern32' or kernel_type == 'Matern52':
+            if kernel_type in ('RBF', 'Matern32', 'Matern52', 'Exp'):
             
                 log_noisevariance = params[0]
                 log_amplitude_squared = params[1]
@@ -2112,10 +2112,10 @@ class Model_George(Model):
         else:
             input_dim = len(data.P[0][0])
             if isotropic and kwargs['model_kern'] not in (
-                    'RBF', 'Matern32', 'Matern52', 'INLA'):
+                    'RBF', 'Matern32', 'Matern52', 'Exp', 'INLA'):
                 raise ValueError(
                     "model_isotropic is supported only for single-task "
-                    "RBF, Matern32, Matern52, and INLA kernels")
+                    "RBF, Matern32, Matern52, Exp, and INLA kernels")
             noisevariance_range = self._linear_hyperparameter_range(
                 kwargs, 'model_noisevariance',
                 [np.exp(-15), np.exp(-10), 5e-6])
@@ -2125,20 +2125,38 @@ class Model_George(Model):
                 kwargs, 'model_lengthscale',
                 [np.exp(-11.5), np.exp(1), 1.0])
             lengthscale_count = 1 if isotropic else input_dim
+            # per-dimension [minimum, maximum, initial] length scales (e.g. space-time inputs), replacing
+            # model_lengthscale dimension by dimension (anisotropic models only)
+            lengthscale_dims = kwargs.get('model_lengthscale_dims')
+            if lengthscale_dims is not None:
+                lengthscale_dims = np.asarray(lengthscale_dims, dtype=float)
+                if isotropic or lengthscale_dims.shape != (input_dim, 3):
+                    raise ValueError(
+                        "model_lengthscale_dims needs one [minimum, maximum, initial] triplet per input "
+                        "dimension (%d) and an anisotropic model" % input_dim)
+                if (np.any(lengthscale_dims[:, 0] <= 0) or np.any(lengthscale_dims[:, 0] > lengthscale_dims[:, 2])
+                        or np.any(lengthscale_dims[:, 2] > lengthscale_dims[:, 1])):
+                    raise ValueError("model_lengthscale_dims: each triplet needs 0 < minimum <= initial <= maximum")
+                lengthscale_initial = list(lengthscale_dims[:, 2])
+            else:
+                lengthscale_initial = [lengthscale_range[2]] * lengthscale_count
             if isotropic:
                 metric_initial = lengthscale_range[2] ** 2
             else:
-                metric_initial = np.full(
-                    input_dim, lengthscale_range[2] ** 2)
+                metric_initial = np.asarray(lengthscale_initial) ** 2
             noisevariance_bounds = tuple(np.log(noisevariance_range[:2]))
             amplitude_bounds = tuple(
                 np.log(np.asarray(amplitude_range[:2]) / input_dim))
             lengthscale_bounds = tuple(2.0 * np.log(lengthscale_range[:2]))
+            if lengthscale_dims is not None:
+                lengthscale_bounds_list = [tuple(2.0 * np.log(b[:2])) for b in lengthscale_dims]
+            else:
+                lengthscale_bounds_list = [lengthscale_bounds] * lengthscale_count
 
             if kwargs['model_kern'] == 'RBF':
                 intialguess = (
                     [noisevariance_range[2], amplitude_range[2]]
-                    + [lengthscale_range[2]] * lengthscale_count
+                    + list(lengthscale_initial)
                 )
                 K = george.kernels.ExpSquaredKernel(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[1]
@@ -2146,7 +2164,7 @@ class Model_George(Model):
             elif kwargs['model_kern'] == 'Matern32':
                 intialguess = (
                     [noisevariance_range[2], amplitude_range[2]]
-                    + [lengthscale_range[2]] * lengthscale_count
+                    + list(lengthscale_initial)
                 )
                 K = george.kernels.Matern32Kernel(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[1]
@@ -2154,16 +2172,25 @@ class Model_George(Model):
             elif kwargs['model_kern'] == 'Matern52':
                 intialguess = (
                     [noisevariance_range[2], amplitude_range[2]]
-                    + [lengthscale_range[2]] * lengthscale_count
+                    + list(lengthscale_initial)
                 )
                 K = george.kernels.Matern52Kernel(metric=metric_initial, ndim=input_dim)
+                amplitude = intialguess[1]
+                K *= amplitude
+            elif kwargs['model_kern'] == 'Exp':
+                # the exponential kernel exp(-r), Matern with nu = 1/2
+                intialguess = (
+                    [noisevariance_range[2], amplitude_range[2]]
+                    + list(lengthscale_initial)
+                )
+                K = george.kernels.ExpKernel(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude
             elif kwargs['model_kern'] == 'INLA':
                 # SPDE Matern field on a lattice, see george/inla.py; the amplitude is its marginal variance
                 intialguess = (
                     [noisevariance_range[2], amplitude_range[2]]
-                    + [lengthscale_range[2]] * lengthscale_count
+                    + list(lengthscale_initial)
                 )
                 # per-dimension initial length scales (e.g. a prediction at trained hyperparameters), within the bounds
                 if kwargs.get('model_inla_initial_lengthscale') is not None:
@@ -2294,12 +2321,16 @@ class Model_George(Model):
                 spacing = self.M.spacing
                 if isotropic:
                     spacing = np.array([np.max(spacing)])
-                lengthscale_min = np.maximum(lengthscale_range[0], 2 * spacing)
-                if np.any(lengthscale_min >= lengthscale_range[1]):
-                    raise ValueError("model_lengthscale[1] must be larger than twice the INLA lattice spacing %s" % (2 * spacing))
+                if lengthscale_dims is not None:
+                    lengthscale_lower, lengthscale_upper = lengthscale_dims[:, 0], lengthscale_dims[:, 1]
+                else:
+                    lengthscale_lower, lengthscale_upper = lengthscale_range[0], np.full(len(spacing), lengthscale_range[1])
+                lengthscale_min = np.maximum(lengthscale_lower, 2 * spacing)
+                if np.any(lengthscale_min >= lengthscale_upper):
+                    raise ValueError("the length-scale maxima must be larger than twice the INLA lattice spacing %s" % (2 * spacing))
                 bounds = (
                     [noisevariance_bounds, tuple(np.log(amplitude_range[:2]))]
-                    + [(2.0 * np.log(lmin), 2.0 * np.log(lengthscale_range[1])) for lmin in lengthscale_min]
+                    + [(2.0 * np.log(lmin), 2.0 * np.log(lmax)) for lmin, lmax in zip(lengthscale_min, lengthscale_upper)]
                 )
                 p0 = np.clip(self.M.get_parameter_vector(), [b[0] for b in bounds], [b[1] for b in bounds])
                 self.M.set_parameter_vector(p0)
@@ -2318,7 +2349,7 @@ class Model_George(Model):
                 
                 bounds = (
                     [noisevariance_bounds, amplitude_bounds]
-                    + [lengthscale_bounds] * lengthscale_count
+                    + lengthscale_bounds_list
                 )
         
         
@@ -2602,10 +2633,10 @@ class Model_George(Model):
             input_dim = points.shape[1] if points.ndim > 1 else 1
             kernel_type = modeling_options['model_kern']
             if isotropic and kernel_type not in (
-                    'RBF', 'Matern32', 'Matern52'):
+                    'RBF', 'Matern32', 'Matern52', 'Exp'):
                 raise ValueError(
                     "model_isotropic is supported only for single-task "
-                    "RBF, Matern32, and Matern52 kernels")
+                    "RBF, Matern32, Matern52, and Exp kernels")
             if modeling_options['model_kern'] == 'RBF':
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
                 metric = self._george_metric(
@@ -2627,6 +2658,13 @@ class Model_George(Model):
                 K = george.kernels.Matern52Kernel(metric=metric, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude  
+            elif modeling_options['model_kern'] == 'Exp':
+                intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
+                metric = self._george_metric(
+                    intialguess[2:], input_dim, isotropic)
+                K = george.kernels.ExpKernel(metric=metric, ndim=input_dim)
+                amplitude = intialguess[1]
+                K *= amplitude
             elif modeling_options['model_kern'] == 'WendlandC2':
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["rc"] + hyperparameters["variance"]  + hyperparameters["lengthscale"]
                 log_rc=np.log(intialguess[1])
