@@ -2055,6 +2055,7 @@ class Model_George(Model):
                     'nprobe': int(kwargs.get('model_grad_nprobe', 64)),
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
+                    'bpack_s_op': int(kwargs.get('model_bpack_s_op', True)),
                 }                
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
 
@@ -2259,6 +2260,7 @@ class Model_George(Model):
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
                     'bpack_scaled_geometry': int(kwargs.get('model_bpack_scaled_geometry', False)),
+                    'bpack_s_op': int(kwargs.get('model_bpack_s_op', True)),
                     'debug': int(kwargs['debug']),
                     'sym': 0,
                 }
@@ -2623,6 +2625,7 @@ class Model_George(Model):
                     'nprobe': int(kwargs.get('model_grad_nprobe', 64)),
                     'model_sparse': int(kwargs['model_sparse']),
                     'model_bpack': int(kwargs['model_bpack']),
+                    'bpack_s_op': int(kwargs.get('model_bpack_s_op', True)),
                 }                   
                 self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
 

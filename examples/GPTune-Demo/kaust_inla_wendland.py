@@ -40,7 +40,11 @@ The environment selects the runs (run_kaust_gpu.sbatch runs this driver with the
                                 mesh of the SPDE on the unit sphere, 3D inputs on the sphere; nu an integer,
                                 default 1)
                       h2:       kern (RBF, Exp, Matern32 or Matern52, default RBF; all have GPU entry
-                                evaluators; Exp is exp(-r), Matern with nu = 1/2)
+                                evaluators; Exp is exp(-r), Matern with nu = 1/2), scaled=1 (build butterflypack's
+                                cluster tree on the inputs divided by the current length scales, so its cubic boxes
+                                are cubes in correlation lengths; needs the workers' --h2_unstructured 1),
+                                sop=0 (no absolute floor on the H2 rank rule: H2_s_op off, see Model_George's
+                                model_bpack_s_op, on by default)
                       any:      noisemin (the lower bound of the noise variance); iso=1 (one length scale for
                                 all the dimensions: h2 and inla)
   GP_OPTIMIZERS     default "gradient,finite difference" (also "mcmc", "mala")
@@ -143,7 +147,9 @@ def model_options(kind, settings, optimizer, ntrain, history_file, lbfgs_times):
         # the dense RBF, Matern-3/2 or Matern-5/2 kernel (kern; all three have GPU entry evaluators in george) in
         # butterflypack's H2 format, with the compression settings of the workers (run_spatial_h2_gpu.sbatch); one
         # length scale per dimension unless iso=1
-        options.update(model_bpack=True, model_kern=settings.get('kern', 'RBF'), model_isotropic=settings.get('iso', 0) == 1)
+        options.update(model_bpack=True, model_kern=settings.get('kern', 'RBF'), model_isotropic=settings.get('iso', 0) == 1,
+                       model_bpack_scaled_geometry=settings.get('scaled', 0) == 1,
+                       model_bpack_s_op=settings.get('sop', 1) != 0)
     elif kind == 'wendland':
         # about 78 neighbours per sample by default: the cutoff of model_comparison_updated_superlu.py
         options.update(model_sparse=True, model_kern='WendlandC2', model_wendland_base=settings.get('base', 'Matern32'),

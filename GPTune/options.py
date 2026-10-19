@@ -95,6 +95,7 @@ class Options(dict):
         model_grad_nprobe = 64 # Number of random probe vectors for the trace terms of the log-likelihood gradient with sparse george kernels (model_sparse and model_grad) and with model_kern='INLA'
         model_history_file = None # If set, the george model training appends one line per L-BFGS iteration (time, evaluations, -loglikelihood, hyperparameters) to this CSV file
         model_bpack = False # Whether to use solvers from butterflypack or not
+        model_bpack_s_op = True # With model_bpack (H2 format), give each butterflypack matrix an absolute floor on its ID rank rule (H2_s_op, butterflypack 159c4c5): min(yerr^2), i.e. the noise variance, for the factorization of K, and the largest entry for each compression-only derivative of K, so blocks negligible next to the matrix get rank 0; False: the relative rule only
         model_bpack_scaled_geometry = False # With model_bpack, divide each dimension of the points passed to butterflypack by the current kernel length scale (single-task, non-isotropic kernels; the H2 format then needs --h2_unstructured 1 in the butterflypack worker)
         model_mcmc = False # Whether to use Fully BAYESIAN (MCMC) instead of FREQUENTIST (LBFGS)
         model_mcmc_sampler = 'Ensemble_emcee' # 'Ensemble_emcee': the ensemble sampling from emcee, 'MetropolisHastings': adaptive random-walk Metropolis, 'MALA': Metropolis-adjusted Langevin preconditioned with the Fisher information (needs model_grad)

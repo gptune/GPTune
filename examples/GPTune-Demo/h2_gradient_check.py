@@ -25,6 +25,10 @@ Environment:
   GC_NPROBES       Hutchinson probe counts, comma separated (default 64,256)
   GC_DENSE_MAX     largest size with the dense reference (default 20000)
   GC_FD            1 (default) for the central differences, 0 to skip them
+  GC_SCALED        1 to build butterflypack's cluster tree on the inputs divided by the length scales
+                   (george's bpack_scaled_geometry; needs H2_UNSTRUCTURED=1), default 0
+  GC_S_OP          1 (default) for the absolute floor on the H2 rank rule (george's bpack_s_op: H2_s_op the
+                   noise variance for K, the largest entry for each derivative), 0 for the relative rule only
 At x0 the solve is also checked: r^T K^-1 r and the residual ||K a - r|| / ||r|| (K applied with the
 compressed operator) for a from a single-column solve (as GP.log_likelihood's dot_solve) and from the
 multi-column solve [r, U] of GP.grad_log_likelihood (U: the 64 fixed Rademacher probes).
@@ -46,13 +50,14 @@ KERNELS = {'RBF': george.kernels.ExpSquaredKernel, 'Exp': george.kernels.ExpKern
 JITTER = 1e-10  # Model_George's model_jitter, passed as yerr
 
 
-def make_gp(x, kern, noise, amplitude, lengthscale, bpack, nprobe):
+def make_gp(x, kern, noise, amplitude, lengthscale, bpack, nprobe, scaled=0, s_op=1):
     """A george GP as Model_George builds it (anisotropic metric, kernel times amplitude, white noise fitted)."""
     ndim = x.shape[1]
     kernel = KERNELS[kern](metric=np.asarray(lengthscale, dtype=float) ** 2, ndim=ndim)
     kernel *= amplitude
     solver_kwargs = {'verbose': 0, 'compute_grad': 1, 'nprobe': int(nprobe), 'model_sparse': 0,
-                     'model_bpack': int(bpack), 'bpack_scaled_geometry': 0, 'debug': 0, 'sym': 0}
+                     'model_bpack': int(bpack), 'bpack_scaled_geometry': int(scaled) if bpack else 0,
+                     'bpack_s_op': int(s_op), 'debug': 0, 'sym': 0}
     gp = george.GP(kernel=kernel, white_noise=np.log(noise), fit_white_noise=True, solver=BasicSolver,
                    **solver_kwargs)
     gp.compute(x, None, yerr=JITTER)
@@ -73,6 +78,8 @@ def main():
     h = float(os.environ.get('GC_H', 1e-3))
     nprobes = [int(v) for v in os.environ.get('GC_NPROBES', '64,256').split(',')]
     dense_max = int(os.environ.get('GC_DENSE_MAX', 20000))
+    scaled = int(os.environ.get('GC_SCALED', 0))
+    s_op = int(os.environ.get('GC_S_OP', 1))
     out = os.environ.get('GC_OUT', os.path.join(os.environ.get('GP_OUTPUT_DIR', '.'), 'gradient_check.json'))
 
     z = np.load(data)
@@ -80,8 +87,10 @@ def main():
     ndim = xall.shape[1]
     ls = [float(v) for v in os.environ.get('GC_LENGTHSCALE', '0.01').split()]
     lengthscale = ls * ndim if len(ls) == 1 else ls
-    print("GC data %s (%d points, %d dims), kernel %s, x0: noise %g amplitude %g length scales %s, h %g, probes %s"
-          % (data, len(yall), ndim, kern, noise, amplitude, lengthscale, h, nprobes), flush=True)
+    print("GC data %s (%d points, %d dims), kernel %s, x0: noise %g amplitude %g length scales %s, h %g, probes %s, "
+          "scaled geometry %d, H2_s_op %d" % (data, len(yall), ndim, kern, noise, amplitude, lengthscale, h, nprobes, scaled,
+                                              s_op),
+          flush=True)
     results = []
     for n in sizes:
         if n > len(yall):
@@ -90,7 +99,7 @@ def main():
         x, y = xall[keep], yall[keep] - np.mean(yall[keep])
         row = {'n': n}
         t0 = time.time()
-        gp = make_gp(x, kern, noise, amplitude, lengthscale, True, nprobes[0])
+        gp = make_gp(x, kern, noise, amplitude, lengthscale, True, nprobes[0], scaled, s_op)
         p0 = gp.get_parameter_vector().copy()
         names = gp.get_parameter_names()
         row['names'], row['x0'] = list(names), p0.tolist()
