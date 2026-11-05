@@ -1825,26 +1825,38 @@ class Model_George(Model):
         L-BFGS-B on the negative log-likelihood, with the analytic gradient if model_grad and 3-point
         finite differences otherwise. Every iteration is recorded in self.train_history (see
         TrainingHistory; the CSV file is model_history_file). Iteration 0 is the initial guess.
+
+        With model_lbfgs_normalize (default True), L-BFGS-B sees the negative log-likelihood and its
+        gradient divided by the number of observations N. With every hyperparameter bounded, its first
+        step goes all the way to the generalized Cauchy point of the model with the identity Hessian,
+        x - g projected on the box, which for a gradient of order N is a corner of the box; divided by N,
+        the gradient is of order 1 and the first step stays near the initial guess. gtol then reads as
+        |g| < gtol N on the unscaled gradient. The history, the printed values and the returned fun are
+        the unscaled negative log-likelihood.
         """
         history = TrainingHistory(len(p0), "L-BFGS iteration", kwargs['verbose'], kwargs.get('model_history_file', None))
         self.train_history = history.entries
+        scale = 1.0 / np.ravel(self.y).size if kwargs.get('model_lbfgs_normalize', True) else 1.0
 
         def fun(x):
             history.nfev += 1
             f = self.nll(x)
             if history.nfev == 1:
                 history.record(x, f)
-            return f
+            return f * scale
 
         def grad(x):
             history.ngev += 1
-            return self.grad_nll(x)
+            return self.grad_nll(x) * scale
 
         def callback(intermediate_result):
-            history.record(intermediate_result.x, intermediate_result.fun)
+            history.record(intermediate_result.x, intermediate_result.fun / scale)
 
         jac = grad if kwargs['model_grad'] == True else '3-point'
         resopt = op.minimize(fun, p0, jac=jac, method="L-BFGS-B", bounds=bounds, tol=None, callback=callback, options=lbfgs_options)
+        resopt.fun = resopt.fun / scale
+        if getattr(resopt, 'jac', None) is not None:
+            resopt.jac = resopt.jac / scale
         return resopt, history.nfev
 
     def sample_posterior(self, initial_state, bounds, **kwargs):

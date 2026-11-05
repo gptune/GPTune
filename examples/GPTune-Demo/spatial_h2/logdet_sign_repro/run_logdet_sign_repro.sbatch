@@ -28,7 +28,7 @@ THREADS_PER_RANK=$((128 / RANKS_PER_NODE))
 export OMP_NUM_THREADS=$((64 / RANKS_PER_NODE))
 
 # the runtime environment of the GPTune H2 runs (run_env.sh, Perlmutter, Cray MPICH + GNU)
-module load python/3.13 PrgEnv-gnu gcc-native/14 cray-libsci/26.03.0 cray-mpich/9.1.0 >/dev/null 2>&1
+module load python/3.13-26.8.1 PrgEnv-gnu gcc-native/14 cray-libsci/26.03.0 cray-mpich/9.1.0 >/dev/null 2>&1
 module load cudatoolkit craype-accel-nvidia80 >/dev/null 2>&1
 export PYTHONPATH=$BPACK_DIR/build_gpu/lib:${PYTHONUSERBASE}/lib/python3.13/site-packages  # (mpi4py from the user site)
 export BPACK_PYTHON_LIB_PATH=$BPACK_DIR/build_gpu/lib

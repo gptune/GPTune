@@ -405,7 +405,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-craympich-gnu' ]; then
 	LIBSCI_VERSION=26.03.0
 	MPICH_VERSION=9.1.0
     CUDA_VERSION=13.2
-    module load python/$PY_VERSION
+    module load python/$PY_VERSION-26.8.1  # (pinned: the user site with george, mpi4py and pybind11 is built for 26.8.1; the default is now 26.11.0)
 	module load PrgEnv-gnu
 	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
@@ -438,7 +438,7 @@ elif [ $ModuleEnv = 'perlmutter-gpu-openmpi-gnu' ]; then
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
     CUDA_VERSION=11.7
-    module load python/$PY_VERSION
+    module load python/$PY_VERSION-26.8.1  # (pinned: the user site with george, mpi4py and pybind11 is built for 26.8.1; the default is now 26.11.0)
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -476,7 +476,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-openmpi-gnu' ]; then
     # PY_TIME=2021.11
     GCC_VERSION=11.2.0
     OPENMPI_VERSION=5.0.3
-    module load python/$PY_VERSION
+    module load python/$PY_VERSION-26.8.1  # (pinned: the user site with george, mpi4py and pybind11 is built for 26.8.1; the default is now 26.11.0)
 	module use /global/common/software/m3169/perlmutter/modulefiles
 	export CRAYPE_LINK_TYPE=dynamic
     module load PrgEnv-gnu
@@ -513,7 +513,7 @@ elif [ $ModuleEnv = 'perlmutter-milan-craympich-gnu' ]; then
 	GCC_VERSION=14
 	LIBSCI_VERSION=26.03.0
 	MPICH_VERSION=9.1.0
-    module load python/$PY_VERSION
+    module load python/$PY_VERSION-26.8.1  # (pinned: the user site with george, mpi4py and pybind11 is built for 26.8.1; the default is now 26.11.0)
 	module load PrgEnv-gnu
 	module load gcc-native/${GCC_VERSION}
 	module load cray-libsci/${LIBSCI_VERSION}
