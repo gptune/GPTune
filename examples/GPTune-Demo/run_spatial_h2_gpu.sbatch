@@ -54,7 +54,9 @@ export OMP_NUM_THREADS=$NTH
 # pdbridge is imported by the driver (for its sparse models), not used by the h2 runs
 export SUPERLU_PYTHON_LIB_PATH=$GPTUNEROOT/examples/SuperLU_DIST/superlu_dist/build/lib/PYTHON/
 export PYTHONPATH=$SUPERLU_PYTHON_LIB_PATH:$PYTHONPATH
-export BPACK_PYTHON_LIB_PATH=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/build_gpu/lib/
+# BPACK_DIR: the ButterflyPACK checkout (or staged build) whose build_gpu/lib is used
+BPACK_DIR=${BPACK_DIR:-$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK}
+export BPACK_PYTHON_LIB_PATH=$BPACK_DIR/build_gpu/lib/
 export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
 export BPACK_SEQUENTIAL_OPENBLAS=$CFS/m2957/lib/lib/PrgEnv-gnu/OpenBLAS_sequential/build/install/lib/libopenblas.so.0
 if [ ! -r "$BPACK_SEQUENTIAL_OPENBLAS" ]; then
@@ -71,7 +73,7 @@ export MAX_ID_FILE=10
 mkdir -p $RESULTS_DIR
 cd $RESULTS_DIR
 echo "driver=$DRIVER_SCRIPT GP_MODELS=$GP_MODELS GP_OPTIMIZERS=$GP_OPTIMIZERS GP_DATASET=${GP_DATASET:-} KAUST_DATA=${KAUST_DATA:-} format=7 tol_comp=$TOL_COMP id_proxy=$ID_PROXY h2_unstructured=$H2_UNSTRUCTURED nmin_leaf=${NMIN_LEAF:-64} h2_opts=$H2_OPTS nodes=$NODE_VAL nmpi=$nmpi threads=$NTH results=$RESULTS_DIR"
-git -C $GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK log --oneline -1
+git -C $BPACK_DIR log --oneline -1 2>/dev/null || echo "ButterflyPACK build $BPACK_DIR (not a git checkout)"
 
 module load cudatoolkit craype-accel-nvidia80 >/dev/null 2>&1
 export LD_LIBRARY_PATH=/global/cfs/cdirs/m2957/lib/magma_v2.10.0/lib:$LD_LIBRARY_PATH

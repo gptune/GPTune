@@ -16,7 +16,7 @@
 #    list of gradient, "finite difference", mcmc, mala, e.g. OPTIMIZER="gradient,finite difference,mcmc,mala")
 #   (results directory under h2_unstructured_cmp: RUN_NAME=<name>; default: built from the settings)
 #   (GPU nodes: USE_GPU=1 [RANKS_PER_NODE=<n>, default 4], with the GPU build in build_gpu and
-#    --H2_use_gpu 1; submit with sbatch -C gpu --gpus-per-node=4 -N <nodes>)
+#    --H2_use_gpu 1; submit with sbatch -A m4293_g -C gpu --gpus-per-node=4 -N <nodes>)
 #   (extra butterflypack options: H2_OPTS="...", e.g. "--H2_XRR_factor 1 --h2_lazy_schur 2 --h2_use_sketch 2")
 #   (H2 compression tolerance: TOL_COMP=<tol>, default 1e-11)
 #   (noise variance range: NOISEVAR="<min> <max> <initial>", linear scale; default: the GPTune default)
@@ -34,12 +34,20 @@ OBJTYPE=${3:-2}
 OPTIMIZER=${OPTIMIZER:-gradient}
 NOISEVAR=${NOISEVAR:-}
 LENGTHSCALE=${LENGTHSCALE:-}
+VERBOSITY=${VERBOSITY:-0}  # 1 makes the workers log rankmax_of_level per build, which is the
+                          # only way to see the H2 construction ranks (its init_compute counter
+                          # stays at zero); the logs grow a lot, so keep it off for production runs
 USE_GPU=${USE_GPU:-0}
 if [ "${FORMAT:-7}" = 1 ]; then
     H2_OPTS=${H2_OPTS:-}
 else
     # without H2_XRR_factor/h2_lazy_schur/h2_use_sketch the GPU box path stays off
     H2_OPTS=${H2_OPTS:---H2_XRR_factor 1 --h2_lazy_schur 2 --h2_use_sketch 2}
+    # H2_COMPRESS=1 turns on H2_compress_factors: nvCOMP compression of the factors kept on
+    # the device, which is what lets more boxes share a GPU.  It makes the factorization
+    # lossy within tol_comp, so it stays off unless asked for and earlier runs keep their
+    # settings.  GPU only; the CPU build has no nvCOMP.
+    [ "${USE_GPU:-0}" = 1 ] && [ "${H2_COMPRESS:-0}" = 1 ] && H2_OPTS="$H2_OPTS --H2_compress_factors 1"
 fi
 FORMAT=${FORMAT:-7}  # 7: H2 (--H2_use_gpu on GPU); 1: HODLR (--HODLR_use_gpu on GPU, BACA construction)
 # Compression tolerance and H2 ID proxy. H2 on GPU: tol 1e-10 with h2_id_proxy 2 (the settings that
@@ -131,7 +139,7 @@ cd $RUN_DIR
 for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
-echo "format=$FORMAT tol_comp=$TOL_COMP id_proxy=${ID_PROXY:-0} case=$CASE optimizer=$OPTIMIZER noisevariance=${NOISEVAR:-default} lengthscale=${LENGTHSCALE:-default} NS=$NS objtype=$OBJTYPE isotropic=$ISOTROPIC scaled_geometry=$SCALED h2_unstructured=$H2_UNSTRUCTURED nodes=$NODE_VAL nmpi=$nmpi threads=$NTH use_gpu=$USE_GPU tol_comp=$TOL_COMP h2_opts=$H2_OPTS"
+echo "format=$FORMAT tol_comp=$TOL_COMP id_proxy=${ID_PROXY:-0} case=$CASE optimizer=$OPTIMIZER noisevariance=${NOISEVAR:-default} lengthscale=${LENGTHSCALE:-default} NS=$NS objtype=$OBJTYPE isotropic=$ISOTROPIC scaled_geometry=$SCALED h2_unstructured=$H2_UNSTRUCTURED nodes=$NODE_VAL nmpi=$nmpi threads=$NTH use_gpu=$USE_GPU verbosity=$VERBOSITY compress=${H2_COMPRESS:-0} tol_comp=$TOL_COMP h2_opts=$H2_OPTS"
 git -C $GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK log --oneline -1
 
 
@@ -143,7 +151,8 @@ GPU_WRAP=()
 H2_GPU_OPTS=""
 if [ "$USE_GPU" = 1 ]; then
     module load cudatoolkit craype-accel-nvidia80 >/dev/null 2>&1
-    export LD_LIBRARY_PATH=/global/cfs/cdirs/m2957/lib/magma_v2.10.0/lib:$LD_LIBRARY_PATH
+    # nvCOMP as well as MAGMA: the H2 GPU build links it for H2_compress_factors
+    export LD_LIBRARY_PATH=/global/cfs/cdirs/m2957/lib/magma_v2.10.0/lib:/global/cfs/cdirs/m2957/lib/lib/PrgEnv-gnu/nvcomp-linux-x86_64-5.3.0.16_cuda13-archive/lib:$LD_LIBRARY_PATH
     SRUN_ARGS+=(--ntasks-per-node=$RANKS_PER_NODE --gpus-per-node=4)
     # CUDA-aware MPI for the GPU backend, only in the workers: mpi4py initializes MPI before
     # butterflypack is loaded, so the GPU transport layer of Cray MPICH is preloaded
@@ -160,13 +169,17 @@ if [ "$USE_GPU" = 1 ]; then
     if [ "$format" = 1 ]; then H2_GPU_OPTS="--HODLR_use_gpu 1"; else H2_GPU_OPTS="--H2_use_gpu 1"; fi
 fi
 if [ "$format" = 1 ]; then
-    WORKER_OPTS=(--xyzsort 1 --format 1 --sym 1 --IR_HODLR 10 --tol_comp ${TOL_COMP} --jitter_factor 0 --lrlevel 0 --reclr_leaf 5 --baca_batch 16 --nmin_leaf 128 --errsol 0 --verbosity 0 --knn ${KNN:-20})
+    WORKER_OPTS=(--xyzsort 1 --format 1 --sym 1 --IR_HODLR 10 --tol_comp ${TOL_COMP} --jitter_factor 0 --lrlevel 0 --reclr_leaf 5 --baca_batch 16 --nmin_leaf 128 --errsol 0 --verbosity ${VERBOSITY:-0} --knn ${KNN:-20})
 else
-    WORKER_OPTS=(--xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy ${ID_PROXY:-0} --baca_batch 32 --h2_id_radius 2 --nmin_leaf 64 --errsol 0 --verbosity 0 --h2_unstructured ${H2_UNSTRUCTURED})
+    WORKER_OPTS=(--xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy ${ID_PROXY:-0} --baca_batch 32 --h2_id_radius 2 --nmin_leaf 64 --errsol 0 --verbosity ${VERBOSITY:-0} --h2_unstructured ${H2_UNSTRUCTURED})
 fi
 IFS=';' read -ra OPT_STEPS <<< "$OPTIMIZER"
 for OPT_STEP in "${OPT_STEPS[@]}"; do
-    STEP_TAG=$([ ${#OPT_STEPS[@]} -gt 1 ] && echo "_$(echo "$OPT_STEP" | sed 's/finite difference/fd/g; s/gradient/grad/g; s/,/-/g')")
+    # Always tag the logs with the step, even for a run of a single optimizer.  Without it
+    # such a run writes driver_N<N>.log, which collides with another optimizer at the same
+    # N in the same directory and leaves the logs that do survive not saying which step
+    # they came from.
+    STEP_TAG="_$(echo "$OPT_STEP" | sed 's/finite difference/fd/g; s/gradient/grad/g; s/,/-/g')"
     for fid in $(seq 0 "$MAX_ID_FILE"); do rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"; done
     srun "${SRUN_ARGS[@]}" "${WORKER_ENV[@]}" "${GPU_WRAP[@]}" \
         python -u ${BPACK_PYTHON_LIB_PATH}/dPy_BPACK_worker.py -option "${WORKER_OPTS[@]}" ${H2_OPTS} ${H2_GPU_OPTS} \

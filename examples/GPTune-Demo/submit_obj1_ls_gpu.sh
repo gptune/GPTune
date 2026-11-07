@@ -31,7 +31,7 @@ try() { # id runname NS fmt hours
     if [ "$used" -ge "$MAXJOBS" ]; then echo "$id: holding ($used of $MAXJOBS gpu_premium slots used)"; return; fi
     out=$(env USE_GPU=1 FORMAT=$fmt NMPI=8 RANKS_PER_NODE=4 KNN=0 "OPTIMIZER=$OPT" "LENGTHSCALE=$LS" \
         RUN_NAME=$rn \
-        sbatch -C gpu --gpus-per-node=4 -N 2 -q premium -t ${hours}:00:00 test_GP_h2_unstructured.sh iso $ns 1 2>&1 | tail -1)
+        sbatch -A m4293_g -C gpu --gpus-per-node=4 -N 2 -q premium -t ${hours}:00:00 test_GP_h2_unstructured.sh iso $ns 1 2>&1 | tail -1)
     echo "$id: $out"
     echo "$out" | grep -q "Submitted" && echo "$out" | grep -o "[0-9]*$" > h2_unstructured_cmp/.sub_$id
 }

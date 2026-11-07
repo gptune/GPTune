@@ -86,6 +86,11 @@ def collect(directories, objtype):
     return runs
 
 
+def present(value):
+    """A value a panel can draw: a run cut short before a phase ran records None for it."""
+    return value is not None and value == value   # the second test rejects NaN
+
+
 def legend_handles(runs):
     """One handle per optimizer (its colour) and one per format present (its style and marker)."""
     from matplotlib.lines import Line2D
@@ -129,7 +134,11 @@ def main():
                 series = runs.get((fmt, device), {}).get(optimizer, {})
                 if not series:
                     continue
-                counts = sorted(series)
+                # a phase that never ran has no time, so that N is left out of this panel
+                # rather than drawn at a made-up value
+                counts = [n for n in sorted(series) if present(series[n][key])]
+                if not counts:
+                    continue
                 ax.loglog(counts, [series[n][key] for n in counts], style, color=color,
                           marker=marker, markersize=5, linewidth=1.6)
         ax.set_title(panel_title, fontsize=fontsize + 1)
@@ -150,8 +159,9 @@ def main():
             series = runs.get((fmt, device), {}).get(optimizer, {})
             for n in sorted(series):
                 s = series[n]
-                print("%-13s %-18s N=%-8d model %9.1f s  search %7.1f s  %8.2f s/eval  %4d evals"
-                      % (fmt_label, optimizer, n, s["time_model"], s["time_search"],
+                print("%-13s %-18s N=%-8d model %9.1f s  search %7s s  %8.2f s/eval  %4d evals"
+                      % (fmt_label, optimizer, n, s["time_model"],
+                         "%.1f" % s["time_search"] if present(s["time_search"]) else "-",
                          s["time_per_eval"], s["iterations"]))
 
 

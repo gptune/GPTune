@@ -16,7 +16,7 @@ try() { # id runname case obj NS nmpi rpn nodes hours format optimizer
     local used=$(squeue -u $USER -h -o "%q" 2>/dev/null | grep -cx gpu_premium)
     if [ "$used" -ge "${MAXJOBS:-4}" ]; then echo "$id: holding ($used of ${MAXJOBS:-4} gpu_premium slots used)"; return; fi
     out=$(env USE_GPU=1 FORMAT=$fmt NMPI=$nmpi RANKS_PER_NODE=$rpn "OPTIMIZER=$opt" "NOISEVAR=$NV" "LENGTHSCALE=$LS" RUN_NAME=$rn \
-        sbatch -C gpu --gpus-per-node=4 -N $nodes -q premium -t $hours:00:00 test_GP_h2_unstructured.sh $case $ns $obj 2>&1 | tail -1)
+        sbatch -A m4293_g -C gpu --gpus-per-node=4 -N $nodes -q premium -t $hours:00:00 test_GP_h2_unstructured.sh $case $ns $obj 2>&1 | tail -1)
     echo "$id: $out"
     echo "$out" | grep -q "Submitted" && echo "$out" | grep -o "[0-9]*$" > h2_unstructured_cmp/.sub_$id
 }
@@ -59,3 +59,7 @@ bash "$(dirname "$0")/submit_obj1_cpu.sh"
 bash "$(dirname "$0")/submit_obj1_ls_cpu.sh"
 bash "$(dirname "$0")/submit_obj1_ls_gpu.sh"
 bash "$(dirname "$0")/submit_obj1_ls_large.sh"
+bash "$(dirname "$0")/submit_obj2_rank.sh"
+bash "$(dirname "$0")/submit_obj1_ls_large2.sh"
+bash "$(dirname "$0")/submit_3d_400k.sh"
+bash "$(dirname "$0")/submit_3d_matched.sh"
