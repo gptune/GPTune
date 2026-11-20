@@ -106,6 +106,13 @@ class Options(dict):
         model_mcmc_nchain = 2 # number of MCMC chains 
         model_mcmc_maxiter = 500 # max number of samples per chain
         model_mcmc_max_time = None # if set, stop the MCMC sampling once it has run for this many seconds
+        model_mcmc_convergence = 'stagnation' # when the MCMC sampling (MetropolisHastings, MALA, emcee) has converged and stops; it keeps the best sample (MAP) as the hyperparameters. 'stagnation': once the best log posterior has improved by less than model_mcmc_stagnation_tol over the last model_mcmc_stagnation_window steps and the best sample of every chain is within model_mcmc_agreement_tol of it, from step max(model_mcmc_burnin, model_mcmc_stagnation_window) on (the chains have found the optimum); 'rhat': once every Gelman-Rubin R-hat is below model_mcmc_rhat_threshold (the chains sample the posterior; far more steps, see model_mcmc_discard_fraction). Either way at most model_mcmc_maxiter steps, model_mcmc_max_time seconds, or until model_mcmc_target_nll
+        model_mcmc_stagnation_window = 50 # steps per chain over which the best sample must have stopped improving (model_mcmc_convergence 'stagnation')
+        model_mcmc_stagnation_tol = 1.0 # nats: the best log posterior has stagnated once it improves by less than this over the window. Absolute, since around the mode the log posterior of the samples fluctuates by about (number of hyperparameters)/2 whatever the number of data points
+        model_mcmc_agreement_tol = 5.0 # nats: the best sample of every chain must be within this of the overall best before the sampling stops on stagnation
+        model_mcmc_discard_fraction = 0.0 # model_mcmc_convergence 'rhat': the Gelman-Rubin convergence test (every 100 steps from step 200 on) also leaves out this fraction of each chain so far, e.g. 0.5: the second half only, and when > 0 splits what is kept of each chain in two halves compared as separate chains (split R-hat), so that a chain still drifting toward the mode fails it; 0: only the first model_mcmc_burnin samples, unsplit
+        model_mcmc_rhat_threshold = 1.5 # model_mcmc_convergence 'rhat': the chains have converged once every R-hat is below this (1.1 is the usual criterion)
+        model_mcmc_target_nll = None # if set, stop the MCMC sampling once the best sample's -loglikelihood is at or below this (e.g. that of an L-BFGS fit plus a tolerance)
         model_mcmc_reject_indefinite = True # In MCMC and MALA, reject a proposal whose covariance matrix did not factor as positive definite: the hierarchical compression has broken down there and the likelihood it returns is meaningless
         model_hodlrleaf = 100 # Leafsize of HODLR
         model_hodlrtol = 1e-1 # Compression tolerance of HODLR

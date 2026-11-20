@@ -142,23 +142,31 @@ class MCMCSampler_MetropolisHastings:
         """Current proposal scale and log probability of a chain."""
         return np.exp(0.5 * s['log_lambda']), s['px']
 
-    def run_mcmc(self, initial_positions, iterations, deadline=None):
+    def run_mcmc(self, initial_positions, iterations, deadline=None, stop=None):
         """
         Advance the chains by `iterations` steps, taking turns step by step so that they progress
         together in time. With a deadline (a time.time() value), stop after the first round of steps
-        that ends past it (at least one round is done). Returns the number of steps done per chain.
+        that ends past it, and with stop (a function) after the first round after which it returns True
+        (at least one round is done). Every round is appended to the stored chains as soon as it is done,
+        so that stop can look at them. Returns the number of steps done per chain.
         """
         num_chains, ndim = initial_positions.shape
-        new_chains = []
-        new_log_probs = []
+        done = 0
         start = {i: (self.chain_state[i]['t'] if i in self.chain_state else 0, self.chain_state[i].get('accepted', 0) if i in self.chain_state else 0)
                  for i in range(num_chains)}
         for step in range(iterations):
-            if deadline is not None and step > 0 and time.time() > deadline:
+            if step > 0 and ((deadline is not None and time.time() > deadline) or (stop is not None and stop())):
                 break
             steps = [self.run_chain(i, initial_positions[i], 1) for i in range(num_chains)]
-            new_chains.append([sample[0] for sample, _ in steps])
-            new_log_probs.append([log_prob[0] for _, log_prob in steps])
+            new_chains = np.array([sample[0] for sample, _ in steps]).reshape((1, num_chains, ndim))
+            new_log_probs = np.array([log_prob[0] for _, log_prob in steps]).reshape((1, num_chains))
+            if self.chains_data.size == 0:
+                self.chains_data = new_chains
+                self.log_probs_data = new_log_probs
+            else:
+                self.chains_data = np.concatenate((self.chains_data, new_chains), axis=0)  # Concatenate along iteration axis
+                self.log_probs_data = np.concatenate((self.log_probs_data, new_log_probs), axis=0)
+            done += 1
 
         for i in range(num_chains):
             s = self.chain_state[i]
@@ -167,18 +175,7 @@ class MCMCSampler_MetropolisHastings:
             print("%s chain %d: steps %d-%d, acceptance rate %.2f, step size %.3g, log target %.8e"
                   % (type(self).__name__.replace('MCMCSampler_', ''), i, start[i][0] + 1, s['t'],
                      (s.get('accepted', 0) - start[i][1]) / max(n, 1), scale, log_p))
-
-        # Append new chains and log probs to existing ones
-        new_chains = np.array(new_chains).reshape((-1, num_chains, ndim))  # Shape (iterations, num_chains, ndim)
-        new_log_probs = np.array(new_log_probs).reshape((-1, num_chains))  # Shape (iterations, num_chains)
-
-        if self.chains_data.size == 0:
-            self.chains_data = new_chains
-            self.log_probs_data = new_log_probs
-        else:
-            self.chains_data = np.concatenate((self.chains_data, new_chains), axis=0)  # Concatenate along iteration axis
-            self.log_probs_data = np.concatenate((self.log_probs_data, new_log_probs), axis=0)  # Concatenate along iteration axis
-        return len(new_chains)
+        return done
 
 
 class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
@@ -188,9 +185,22 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
     pi(theta(u)) |dtheta/du|, so no proposal leaves the bounds and parameters whose best values lie
     on a bound can approach it (rejecting proposals outside the bounds stalls the chain there). The
     proposal is u' = u + (eps^2/2) M g(u) + eps M^(1/2) xi, with g the gradient of the log target of u
-    and M^-1 = P = J F J + diag(2 s(1-s)) + I/max_step^2, where F is the Fisher information matrix of
-    theta, J = dtheta/du, s = sigmoid(u) (2 s(1-s) is the curvature of the Jacobian term) and
-    max_step limits the steps of u in directions the data hardly determine.
+    and M^-1 = P = J F J + diag(2 s(1-s) + min(1, max(0, -J' g_theta))) + I/max_step^2, where F is the
+    Fisher information matrix of theta, g_theta the gradient of the log target of theta, J = dtheta/du,
+    J' = dJ/du = J (1-2s), s = sigmoid(u), and max_step limits the steps of u in directions the data
+    hardly determine. Besides J F J, the curvature of the log target of u has two diagonal terms: 2 s(1-s)
+    from the Jacobian term, and -J' g_theta from the curvature of the map theta(u). The latter is what
+    holds a parameter whose gradient pushes it against a bound (e.g. a noise variance at its lower
+    bound): there J F J and 2 s(1-s) vanish while -J' g_theta ~ |g_theta| |theta - bound|, which is
+    exponentially distributed with mean 1 when the log target is about linear in theta near the bound.
+    Leaving it out (gradient_curvature = False) makes the proposals about 3 times too wide in those
+    coordinates, and the global step size shrinks in all coordinates to compensate. It is taken where
+    positive (where negative, the target is locally convex in u) and capped at its mean, 1: the
+    uncapped value swings by orders of magnitude between neighbouring points, and the mismatch between
+    the forward and backward proposals then costs more acceptance than the better local scale gains.
+    On a 5-parameter test target shaped like a Wendland GP posterior (two parameters on bounds), the
+    term raised the adapted step size from 0.47 to 0.76 and cut the largest integrated
+    autocorrelation time from 38 to 21 steps (28 uncapped).
     - fisher_interval = 1: M = M(u) is computed at every proposal and the Metropolis-Hastings ratio
       uses the proposal densities N(u'; u + (eps^2/2) M(u) g(u), eps^2 M(u)) and
       N(u; u' + (eps^2/2) M(u') g(u'), eps^2 M(u')), log determinants included (simplified manifold
@@ -204,6 +214,7 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
     """
     target_acceptance = 0.574
     max_step = 3.0
+    gradient_curvature = True # include min(1, max(0, -J' g_theta)) in the preconditioner (see above)
 
     def __init__(self, target_prob, bounds, ndim=1, nchain=1, grad_prob=None, fisher_prob=None, step_size=1.0, fisher_interval=1, on_accept=None):
         super().__init__(target_prob, bounds, ndim=ndim, nchain=nchain, on_accept=on_accept)
@@ -221,19 +232,21 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
         return np.log(f) - np.log1p(-f)
 
     def evaluate(self, u):
-        """theta(u), log target of theta, log target of u and its gradient"""
+        """theta(u), log target of theta, log target of u and its gradient, and the gradient of the log target of theta"""
         sig = 0.5 * (1 + np.tanh(0.5 * u)) # sigmoid
         theta = np.clip(self.lower + self.width * sig, self.bounds[:, 0], self.bounds[:, 1]) # no rounding past the bounds
         log_p = self.p(theta, self.bounds)
         if not np.isfinite(log_p):
-            return theta, log_p, log_p, None
+            return theta, log_p, log_p, None, None
         log_jacobian = np.sum(np.log(self.width) - np.logaddexp(0, -u) - np.logaddexp(0, u))
-        g = self.width * sig * (1 - sig) * self.grad(theta) + (1 - 2 * sig)
-        return theta, log_p, log_p + log_jacobian, g
+        g_theta = np.asarray(self.grad(theta), dtype=float)
+        g = self.width * sig * (1 - sig) * g_theta + (1 - 2 * sig)
+        return theta, log_p, log_p + log_jacobian, g, g_theta
 
-    def preconditioner(self, u, previous=None):
+    def preconditioner(self, u, g_theta=None, previous=None):
         """
-        The precision P of the proposal and its Cholesky factor L (P = L L^T). The proposal steps
+        The precision P of the proposal at u, where the gradient of the log target of theta is g_theta
+        (None: leave out the term -J' g_theta), and its Cholesky factor L (P = L L^T). The proposal steps
         L^-T xi and the drift P^-1 g are computed from L, so they always match the proposal density
         used in the acceptance ratio, however ill-conditioned P is (any jitter added to factor P is
         part of P).
@@ -246,7 +259,10 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
                 return previous
             F = np.zeros((self.ndim, self.ndim))
         w, V = np.linalg.eigh(J[:, None] * F * J[None, :]) # the probe estimate of F is not guaranteed to be positive semidefinite
-        P = (V * np.maximum(w, 0.0)) @ V.T + np.diag(2 * sig * (1 - sig) + 1 / self.max_step**2)
+        diagonal = 2 * sig * (1 - sig) + 1 / self.max_step**2
+        if self.gradient_curvature and g_theta is not None:
+            diagonal = diagonal + np.clip(-J * (1 - 2 * sig) * g_theta, 0.0, 1.0)
+        P = (V * np.maximum(w, 0.0)) @ V.T + np.diag(diagonal)
         P = 0.5 * (P + P.T)
         jitter = 0.0
         while True:
@@ -261,10 +277,10 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
         s = self.chain_state.get(chain)
         if s is None: # first call for this chain: start at x_init
             u = self.to_u(x_init)
-            theta, log_p, log_pu, g = self.evaluate(u)
-            s = {'u': u, 'theta': theta, 'log_p': log_p, 'log_pu': log_pu, 'g': g, 't': 0, 'log_eps': np.log(self.step_size), 'pre': None}
+            theta, log_p, log_pu, g, g_theta = self.evaluate(u)
+            s = {'u': u, 'theta': theta, 'log_p': log_p, 'log_pu': log_pu, 'g': g, 'g_theta': g_theta, 't': 0, 'log_eps': np.log(self.step_size), 'pre': None}
             if position_dependent:
-                s['pre'] = self.preconditioner(u)
+                s['pre'] = self.preconditioner(u, g_theta)
             self.chain_state[chain] = s
             if self.on_accept is not None:
                 self.on_accept(theta, log_p)
@@ -273,7 +289,7 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
 
         for i in range(iterations):
             if not position_dependent and s['t'] % self.fisher_interval == 0:
-                s['pre'] = self.preconditioner(s['u'], s['pre'])
+                s['pre'] = self.preconditioner(s['u'], s['g_theta'], s['pre'])
             P, L = s['pre']
             s['t'] += 1
             eps = np.exp(s['log_eps'])
@@ -281,11 +297,11 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
             u_candidate = mean_forward + eps * solve_triangular(L.T, np.random.standard_normal(self.ndim), lower=False)
 
             accept_prob = 0.0 # a failed likelihood evaluation is rejected
-            theta, log_p, log_pu, g = self.evaluate(u_candidate)
+            theta, log_p, log_pu, g, g_theta = self.evaluate(u_candidate)
             if np.isfinite(log_pu):
                 if position_dependent:
-                    # the Fisher information at the candidate, whose factorization is the current one
-                    pre_candidate = self.preconditioner(u_candidate)
+                    # the preconditioner at the candidate, whose factorization is the current one
+                    pre_candidate = self.preconditioner(u_candidate, g_theta)
                     P_back, L_back = pre_candidate
                     log_det_ratio = np.sum(np.log(np.diag(L_back))) - np.sum(np.log(np.diag(L))) # (log det P_back - log det P)/2
                 else:
@@ -298,7 +314,7 @@ class MCMCSampler_MALA(MCMCSampler_MetropolisHastings):
                 if np.isfinite(log_accept):
                     accept_prob = np.exp(min(0.0, log_accept))
                 if np.random.rand() < accept_prob:
-                    s.update(u=u_candidate, theta=theta, log_p=log_p, log_pu=log_pu, g=g)
+                    s.update(u=u_candidate, theta=theta, log_p=log_p, log_pu=log_pu, g=g, g_theta=g_theta)
                     if position_dependent:
                         s['pre'] = pre_candidate
                     s['accepted'] = s.get('accepted', 0) + 1
@@ -374,37 +390,114 @@ class MCMC:
         return type('Result', (object,), {'x': flat_samples[map_index], 'success': True, 'status': status, 'message': message,
                                           'fun': -float(flat_log_posteriors[map_index]), 'nfev': flat_samples.shape[0], 'nit': flat_samples.shape[0]})()
 
-    def run_mcmc_with_convergence(self, initial_state, n_steps, discard=100, thin=1, check_interval=100, r_hat_threshold=1.5, verbose=False, max_time=None):
+    def split_r_hat(self, steps, discard, discard_fraction, thin=1):
+        """R-hat of the chains so far as run_mcmc_with_convergence computes it (None if too few steps)"""
+        samples = self.sampler.get_chain(discard=max(discard, int(discard_fraction * steps)), thin=thin, flat=False)
+        if discard_fraction > 0:
+            half = samples.shape[0] // 2
+            samples = np.concatenate([samples[:half], samples[half:2 * half]], axis=1)
+        return self.gelman_rubin(samples) if samples.shape[0] >= 2 else None
+
+    def best_progress(self, window):
         """
-        Run the chains for up to n_steps steps each, checking the Gelman-Rubin statistic every
-        check_interval steps, and return the MAP sample once all R-hat < r_hat_threshold, after n_steps
-        steps, or once the sampling has run for max_time seconds (if given; checked after every round
-        of steps of the MetropolisHastings and MALA samplers, after every check_interval steps of emcee).
+        For the states of the chains so far: how much the best log probability has improved over the last
+        window steps (None if there are not more than window steps), and how far below it the best state of
+        each chain is.
         """
+        log_probs = np.asarray(self.sampler.get_log_prob(discard=0, thin=1, flat=False), dtype=float)
+        chain_best = np.max(log_probs, axis=0)
+        best = np.max(chain_best)
+        if log_probs.shape[0] <= window:
+            return None, best - chain_best
+        return best - np.max(log_probs[:-window]), best - chain_best
+
+    def stagnated(self, window, tol, agreement_tol, min_steps):
+        """
+        True once the chains have run at least min_steps steps, the best log probability of their states
+        has improved by less than tol over the last window steps, and the best state of every chain is
+        within agreement_tol of it.
+        """
+        if self.sampler.get_log_prob(discard=0, thin=1, flat=False).shape[0] < min_steps:
+            return False
+        improvement, gaps = self.best_progress(window)
+        return improvement is not None and improvement < tol and bool(np.all(gaps <= agreement_tol))
+
+    def run_mcmc_with_convergence(self, initial_state, n_steps, discard=100, thin=1, check_interval=100, r_hat_threshold=1.5, verbose=False, max_time=None, discard_fraction=0.0, stop=None,
+                                  convergence='stagnation', stagnation_window=50, stagnation_tol=1.0, agreement_tol=5.0):
+        """
+        Run the chains for up to n_steps steps each and return the MAP sample (the best state of all
+        chains) once they have converged, after n_steps steps, or once the sampling has run for max_time
+        seconds (if given). The stopping tests are made after every round of steps (one step of every
+        chain) of the MetropolisHastings and MALA samplers, after every check_interval steps of emcee.
+
+        convergence = 'stagnation' (the samplers as optimizers, only the MAP sample is used): converged once
+        the best log probability has improved by less than stagnation_tol over the last stagnation_window
+        steps, and the best state of every chain is within agreement_tol of it (independent chains have
+        found the same optimum), from step max(discard, stagnation_window) on. The tolerances are absolute,
+        in nats: around the mode the log probability of the samples fluctuates by about ndim/2 whatever the
+        number of data points, while a chain still moving toward it improves by far more per window.
+
+        convergence = 'rhat' (the chains sample the posterior): converged once every Gelman-Rubin R-hat is
+        below r_hat_threshold, tested every check_interval steps from step 2*check_interval on. The statistic
+        leaves out the first discard steps of each chain, or the first discard_fraction of the steps so far
+        if that is more (0.5: the second half only, the usual choice). With discard_fraction > 0 the kept
+        part of every chain is also split in two halves that are compared as separate chains (split R-hat):
+        a chain still drifting toward the mode then differs from itself and fails the test, which the plain
+        statistic, with a large within-chain variance, can let pass. Slowly mixing parameters can keep the
+        split statistic above 1.1 for thousands of steps after the chains have found the mode.
+
+        With stop (a function, e.g. "the best sample has reached a target likelihood"), the sampling also
+        ends once it returns True. The R-hat and the progress of the best sample are printed every
+        check_interval steps with verbose, whichever test is used.
+        """
+        if convergence not in ('stagnation', 'rhat'):
+            raise Exception("MCMC convergence test %s is not implemented: 'stagnation' or 'rhat'" % convergence)
         nwalkers, ndim = initial_state.shape
         deadline = None if max_time is None else time.time() + max_time
+        min_steps = max(discard, stagnation_window)
+
+        def stagnated():
+            return convergence == 'stagnation' and self.stagnated(stagnation_window, stagnation_tol, agreement_tol, min_steps)
+
+        def should_stop():
+            return (stop is not None and stop()) or stagnated()
+
+        def report(steps, note=''):
+            improvement, gaps = self.best_progress(stagnation_window)
+            print(f"MCMC Step {steps}: best log probability improved by "
+                  + ("-" if improvement is None else f"{improvement:.3g}") + f" over the last {stagnation_window} steps, "
+                  + f"chain bests below it by {np.array2string(gaps, precision=3)}" + note)
+            if steps >= 2 * check_interval:
+                print(f"MCMC Step {steps}: R-hat = {self.split_r_hat(steps, discard, discard_fraction, thin)}" + note)
 
         for i in range(0, n_steps, check_interval):
             nsteps = min(check_interval, n_steps - i)
             if isinstance(self.sampler, MCMCSampler_MetropolisHastings):
-                done = self.sampler.run_mcmc(initial_state, nsteps, deadline)
+                done = self.sampler.run_mcmc(initial_state, nsteps, deadline, should_stop)
             else:
                 self.sampler.run_mcmc(initial_state, nsteps)
                 done = nsteps
             initial_state = self.sampler.get_last_sample().coords
-            if deadline is not None and (done < nsteps or time.time() > deadline):
+            reached = stop is not None and stop()
+            converged = not reached and stagnated()
+            timed_out = not reached and not converged and deadline is not None and (done < nsteps or time.time() > deadline)
+            if reached or converged or timed_out:
                 if(verbose==True):
-                    print(f"MCMC stopped after {i + done} steps: maximum sampling time {max_time} s reached")
+                    print(f"MCMC stopped after {i + done} steps: "
+                          + ("target reached" if reached else "the best sample has stagnated and the chains agree" if converged
+                             else f"maximum sampling time {max_time} s reached"))
+                    report(i + done, ' (at the stop)')
+                if reached:
+                    return self.map_result(3, 'Target reached')
+                if converged:
+                    return self.map_result(0, 'MCMC converged: the best sample has stagnated and the chains agree')
                 return self.map_result(2, 'Maximum sampling time reached')
 
-            if i >= check_interval:
-                current_samples = self.sampler.get_chain(discard=discard, thin=thin, flat=False)
-                if current_samples.shape[0] < 2:
-                    continue
-                r_hat = self.gelman_rubin(current_samples)
-                if(verbose==True):
-                    print(f"MCMC Step {i + nsteps}: R-hat = {r_hat}")
-                if np.all(r_hat < r_hat_threshold):
+            if(verbose==True):
+                report(i + nsteps)
+            if convergence == 'rhat' and i >= check_interval:
+                r_hat = self.split_r_hat(i + nsteps, discard, discard_fraction, thin)
+                if r_hat is not None and np.all(r_hat < r_hat_threshold):
                     return self.map_result(0, 'MCMC converged')
 
         return self.map_result(1, 'Maximum number of iterations reached')

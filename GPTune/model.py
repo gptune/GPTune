@@ -1865,12 +1865,15 @@ class Model_George(Model):
         best sample so far (the best state the chains have been in, not the best proposal: MALA can
         reject a proposal better than the current state) is recorded in self.train_history (see
         TrainingHistory; the CSV file is model_history_file) every time it improves, with its
-        -loglikelihood, and once more at the end of the sampling.
+        -loglikelihood, and once more at the end of the sampling. With model_mcmc_target_nll, the sampling
+        ends once the -loglikelihood of the best sample is at or below it.
         """
         ndim = initial_state.shape[1]
         history = TrainingHistory(ndim, "MCMC best sample", kwargs['verbose'], kwargs.get('model_history_file', None))
         self.train_history = history.entries
         best_log_posterior = [-np.inf]
+        target_nll = kwargs.get('model_mcmc_target_nll', None)
+        target_reached = [False]
         # the MetropolisHastings and MALA samplers report the states of the chains; for emcee every evaluated point is used
         report_states = kwargs['model_mcmc_sampler'] in ('MetropolisHastings', 'MALA')
 
@@ -1879,6 +1882,11 @@ class Model_George(Model):
             if log_posterior > best_log_posterior[0]:
                 best_log_posterior[0] = log_posterior
                 history.record(x, self.last_nll)
+                if target_nll is not None and self.last_nll <= target_nll:
+                    if not target_reached[0]:
+                        print("MCMC best sample -loglikelihood %.6f reached the target %.6f after %d evaluations"
+                              % (self.last_nll, target_nll, history.nfev), flush=True)
+                    target_reached[0] = True
 
         # A proposal whose covariance matrix did not factor as positive definite is rejected: the
         # hierarchical compression has broken down there, so the likelihood it returns is
@@ -1919,7 +1927,15 @@ class Model_George(Model):
 
         mcmc = MCMC(target, bounds=bounds, ndim=ndim, nchain=initial_state.shape[0], mcmcsampler=kwargs['model_mcmc_sampler'], **sampler_options)
         resopt = mcmc.run_mcmc_with_convergence(initial_state, n_steps=kwargs['model_mcmc_maxiter'], discard=kwargs['model_mcmc_burnin'], verbose=kwargs['verbose'],
-                                                max_time=kwargs.get('model_mcmc_max_time', None))
+                                                max_time=kwargs.get('model_mcmc_max_time', None),
+                                                discard_fraction=kwargs.get('model_mcmc_discard_fraction', 0.0),
+                                                r_hat_threshold=kwargs.get('model_mcmc_rhat_threshold', 1.5),
+                                                stop=None if target_nll is None else (lambda: target_reached[0]),
+                                                convergence=kwargs.get('model_mcmc_convergence', 'stagnation'),
+                                                stagnation_window=kwargs.get('model_mcmc_stagnation_window', 50),
+                                                stagnation_tol=kwargs.get('model_mcmc_stagnation_tol', 1.0),
+                                                agreement_tol=kwargs.get('model_mcmc_agreement_tol', 5.0))
+        print("MCMC: %s" % resopt.message, flush=True)
         # the chains (steps, chains, parameters) and their log posteriors, for analysis after the training
         self.mcmc_chains = mcmc.sampler.get_chain()
         self.mcmc_log_posteriors = mcmc.sampler.get_log_prob()
