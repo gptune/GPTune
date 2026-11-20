@@ -423,7 +423,36 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
         # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
         lbfgs_files = [os.path.join(OUTPUT_DIR, 'training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o)) for o in ('gradient', 'finite_difference')]
-        if all(os.path.exists(f) for f in lbfgs_files):
+        if os.environ.get('GP_MCMC_UNCAPPED') == '1':
+            # no time limit: up to GP_MCMC_MAXITER steps per chain, stopping once converged. GP_MCMC_CONVERGENCE
+            # 'stagnation' (GPTune's default): the best sample has improved by less than 1 nat over the last 50 steps
+            # and every chain's best is within 5 nats of it; 'rhat': the split Gelman-Rubin statistic over the second
+            # half of the chains is below 1.1 (checked every 100 steps from step 200 on)
+            options['model_mcmc_maxiter'] = int(os.environ.get('GP_MCMC_MAXITER', '1000'))
+            options['model_mcmc_convergence'] = os.environ.get('GP_MCMC_CONVERGENCE', 'stagnation')
+            if options['model_mcmc_convergence'] == 'rhat':
+                options['model_mcmc_discard_fraction'] = 0.5
+                options['model_mcmc_rhat_threshold'] = 1.1
+                print("MCMC sampling without a time limit: at most %d steps per chain, split R-hat < 1.1 over the second half" % options['model_mcmc_maxiter'])
+            else:
+                print("MCMC sampling without a time limit: at most %d steps per chain, until the best sample improves by < %g nats over %d steps and every chain's best is within %g nats of it"
+                      % (options['model_mcmc_maxiter'], options['model_mcmc_stagnation_tol'], options['model_mcmc_stagnation_window'], options['model_mcmc_agreement_tol']))
+            # only a safety stop before the job's wall time (GP_MCMC_MAXTIME seconds of sampling, set by
+            # submit_mala_uncapped.sh), so that a run that has not converged still writes its results
+            if os.environ.get('GP_MCMC_MAXTIME'):
+                options['model_mcmc_max_time'] = float(os.environ['GP_MCMC_MAXTIME'])
+                print("Sampling time limit: %.0f s" % options['model_mcmc_max_time'])
+            if os.environ.get('GP_MCMC_TARGET_RUN'):
+                # stop once the best sample's -loglikelihood is within GP_MCMC_TARGET_RTOL (relative) of that of
+                # an L-BFGS run (its run_stats file); R-hat is then only printed, not used to stop
+                import json
+                reference = json.load(open(os.environ['GP_MCMC_TARGET_RUN']))['final_nll']
+                rtol = float(os.environ.get('GP_MCMC_TARGET_RTOL', '0.02'))
+                options['model_mcmc_target_nll'] = reference + rtol * abs(reference)
+                options['model_mcmc_rhat_threshold'] = 0.0
+                print("Sampling stops at -loglikelihood <= %.6f: within %g%% of %.6f (%s)"
+                      % (options['model_mcmc_target_nll'], 100 * rtol, reference, os.environ['GP_MCMC_TARGET_RUN']))
+        elif all(os.path.exists(f) for f in lbfgs_files):
             lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
             options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
             options['model_mcmc_maxiter'] = 1000000
@@ -486,6 +515,7 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
                 np.savez(os.path.join(OUTPUT_DIR, 'mcmc_chains_%s.npz' % run_tag), chains=modeler[0].mcmc_chains, log_posteriors=modeler[0].mcmc_log_posteriors)
             write_run_stats(os.path.join(OUTPUT_DIR, 'run_stats_%s.json' % run_tag), objective=objtype, N=NS_input - 1, optimizer=optimizer, kernel=options['model_kern'],
                             cutoff=options['model_cutoff'], mcmc_max_time=options['model_mcmc_max_time'] if optimizer in ("mcmc", "mala") else None,
+                            mcmc_convergence=options['model_mcmc_convergence'] if optimizer in ("mcmc", "mala") else None,
                             slurm_job_id=os.environ.get('SLURM_JOB_ID'), date=time.strftime('%Y-%m-%d %H:%M:%S'), stats=stats,
                             final_hyperparameters=modeler[0].M.get_parameter_vector(), final_nll=rows[-1]['nll'],
                             popt=data.P[0][np.argmin(data.O[0])], oopt=float(min(data.O[0])[0]))

@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
-#SBATCH --account=m2957
-#SBATCH -q regular
+#SBATCH --account=m5449
+#SBATCH -q premium
 #SBATCH -N 4
 #SBATCH --constraint=cpu
 #SBATCH -t 04:00:00
@@ -16,7 +16,7 @@
 #    list of gradient, "finite difference", mcmc, mala, e.g. OPTIMIZER="gradient,finite difference,mcmc,mala")
 #   (results directory under h2_unstructured_cmp: RUN_NAME=<name>; default: built from the settings)
 #   (GPU nodes: USE_GPU=1 [RANKS_PER_NODE=<n>, default 4], with the GPU build in build_gpu and
-#    --H2_use_gpu 1; submit with sbatch -A m4293_g -C gpu --gpus-per-node=4 -N <nodes>)
+#    --H2_use_gpu 1; submit with sbatch -A m5449_g -C gpu --gpus-per-node=4 -N <nodes>)
 #   (extra butterflypack options: H2_OPTS="...", e.g. "--H2_XRR_factor 1 --h2_lazy_schur 2 --h2_use_sketch 2")
 #   (H2 compression tolerance: TOL_COMP=<tol>, default 1e-11)
 #   (noise variance range: NOISEVAR="<min> <max> <initial>", linear scale; default: the GPTune default)
@@ -102,7 +102,10 @@ export PYTHONPATH=$SUPERLU_PYTHON_LIB_PATH:$PYTHONPATH
 # in site-packages, which lags behind this working tree.  Prepending the repository makes a run use
 # the code that is checked out here; the installed copy is left alone for other sessions.
 export PYTHONPATH=$GPTUNEROOT:$PYTHONPATH
-export BPACK_PYTHON_LIB_PATH=$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK/$([ "$USE_GPU" = 1 ] && echo build_gpu || echo build)/lib/
+# BPACK_DIR: the ButterflyPACK checkout (or a worktree staged at one commit, e.g. ButterflyPACK_<hash>)
+# whose build or build_gpu is used; the default is the main checkout
+BPACK_DIR=${BPACK_DIR:-$GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK}
+export BPACK_PYTHON_LIB_PATH=$BPACK_DIR/$([ "$USE_GPU" = 1 ] && echo build_gpu || echo build)/lib/
 export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
 export BPACK_SEQUENTIAL_OPENBLAS=$CFS/m2957/lib/lib/PrgEnv-gnu/OpenBLAS_sequential/build/install/lib/libopenblas.so.0
 if [ ! -r "$BPACK_SEQUENTIAL_OPENBLAS" ]; then
@@ -140,7 +143,8 @@ for fid in $(seq 0 "$MAX_ID_FILE"); do
     rm -rf "$CONTROL_FILE.$fid" "$DATA_FILE.$fid" "$RESULT_FILE.$fid"
 done
 echo "format=$FORMAT tol_comp=$TOL_COMP id_proxy=${ID_PROXY:-0} case=$CASE optimizer=$OPTIMIZER noisevariance=${NOISEVAR:-default} lengthscale=${LENGTHSCALE:-default} NS=$NS objtype=$OBJTYPE isotropic=$ISOTROPIC scaled_geometry=$SCALED h2_unstructured=$H2_UNSTRUCTURED nodes=$NODE_VAL nmpi=$nmpi threads=$NTH use_gpu=$USE_GPU verbosity=$VERBOSITY compress=${H2_COMPRESS:-0} tol_comp=$TOL_COMP h2_opts=$H2_OPTS"
-git -C $GPTUNEROOT/examples/ButterflyPACK/ButterflyPACK log --oneline -1
+echo "ButterflyPACK: $BPACK_PYTHON_LIB_PATH  H2_REGION_IMBALANCE=${H2_REGION_IMBALANCE:-default}"
+git -C $BPACK_DIR log --oneline -1
 
 
 ####### butterflypack workers (sequential BLAS inside the OpenMP-threaded H2/HODLR code)
@@ -171,7 +175,10 @@ fi
 if [ "$format" = 1 ]; then
     WORKER_OPTS=(--xyzsort 1 --format 1 --sym 1 --IR_HODLR 10 --tol_comp ${TOL_COMP} --jitter_factor 0 --lrlevel 0 --reclr_leaf 5 --baca_batch 16 --nmin_leaf 128 --errsol 0 --verbosity ${VERBOSITY:-0} --knn ${KNN:-20})
 else
-    WORKER_OPTS=(--xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy ${ID_PROXY:-0} --baca_batch 32 --h2_id_radius 2 --nmin_leaf 64 --errsol 0 --verbosity ${VERBOSITY:-0} --h2_unstructured ${H2_UNSTRUCTURED})
+    # NMIN_LEAF (H2): with --h2_unstructured 1 the depth grows while the occupied leaves average
+    # >= nmin_leaf points, so in 3D (8 children a level) a leaf can end up with up to ~8 nmin_leaf
+    # points, and the GPU near blocks are capped at 512 columns: 3D runs on scaled coordinates use 32
+    WORKER_OPTS=(--xyzsort 0 --format ${format} --sym 1 --reduction_threshold ${REDUCTION_THRESHOLD} --tol_comp ${TOL_COMP} --h2_id_proxy ${ID_PROXY:-0} --baca_batch 32 --h2_id_radius 2 --nmin_leaf ${NMIN_LEAF:-64} --errsol 0 --verbosity ${VERBOSITY:-0} --h2_unstructured ${H2_UNSTRUCTURED})
 fi
 IFS=';' read -ra OPT_STEPS <<< "$OPTIMIZER"
 for OPT_STEP in "${OPT_STEPS[@]}"; do

@@ -8,7 +8,7 @@ try() { # name case objtype nmpi nodes
     local name=$1 case=$2 obj=$3 nmpi=$4 nodes=$5
     [ -e h2_unstructured_cmp/.submitted_$name ] && { echo "$name: already submitted (job $(cat h2_unstructured_cmp/.submitted_$name))"; return; }
     env USE_GPU=1 FORMAT=1 NMPI=$nmpi RANKS_PER_NODE=4 "OPTIMIZER=$OPTS" "NOISEVAR=$NV" "LENGTHSCALE=$LS" RUN_NAME=$name \
-        sbatch -A m4293_g -C gpu --gpus-per-node=4 -N $nodes -q premium -t 04:00:00 --job-name=GPTune_H2_unstr \
+        sbatch -A m5449_g -C gpu --gpus-per-node=4 -N $nodes -q premium -t 04:00:00 --job-name=GPTune_H2_unstr \
         test_GP_h2_unstructured.sh $case 100001 $obj > /tmp/sub_$name.out 2>&1
     cat /tmp/sub_$name.out | sed "s/^/$name: /" | tail -1
     grep -q "Submitted batch job" /tmp/sub_$name.out && grep -o "[0-9]*$" /tmp/sub_$name.out > h2_unstructured_cmp/.submitted_$name

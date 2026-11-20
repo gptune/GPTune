@@ -33,7 +33,7 @@ try() { # id runname case objtype NS hours
     if [ "$used" -ge "$MAXJOBS" ]; then echo "$id: holding ($used of $MAXJOBS gpu_premium slots used)"; return; fi
     out=$(env USE_GPU=1 FORMAT=7 NMPI=8 RANKS_PER_NODE=2 H2_COMPRESS=1 "OPTIMIZER=gradient;finite difference" \
         "LENGTHSCALE=$LS" RUN_NAME=$rn \
-        sbatch -A m4293_g -C "gpu&hbm40g" --gpus-per-node=4 -N 4 -q premium -t ${hours}:00:00 \
+        sbatch -A m5449_g -C "gpu&hbm40g" --gpus-per-node=4 -N 4 -q premium -t ${hours}:00:00 \
         test_GP_h2_unstructured.sh $case $ns $obj 2>&1 | tail -1)
     echo "$id: $out"
     echo "$out" | grep -q "Submitted" && echo "$out" | grep -o "[0-9]*$" > h2_unstructured_cmp/.sub_$id

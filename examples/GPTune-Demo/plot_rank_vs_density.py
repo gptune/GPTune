@@ -7,9 +7,9 @@ The x axis is N * l^d, the expected number of points in a box one length scale w
 scale on its own carries the units of the domain and says nothing by itself, while N * l^d is
 dimensionless, and it is what the rank of a block turns out to follow.  In 1D it is N * l.
 
-Every build of a run gives one point, and the plot is that scatter alone.  The driver log records the george hyperparameter vector
-before each build, the worker log the ranks of the same builds in the same order, so the two are
-read together.  Two ranks are available:
+Every build of a run (one H2 or HODLR matrix of K, constructed and factored at one hyperparameter value;
+see k_builds) gives one point, and the plot is that scatter alone.  The worker log holds everything: the
+kernel of every matrix it builds, then its ranks and accuracy.  Two ranks are available:
 
   factorisation (maxrank from d_py_bpack_factor)  both formats report it, so it is the one that
                                                   compares them
@@ -20,8 +20,8 @@ read together.  Two ranks are available:
     python plot_rank_vs_density.py --objtype 1 [--kind factor|construct] [--title T]
                                    [--output F.pdf] <run dir> [<run dir> ...]
 
-A run directory holds the driver_N*.log and worker_N*.log pairs of one format; which format it is
-comes from the options the worker echoes, so the directory names do not matter.
+A run directory holds the worker_N*.log files of one format; which format it is comes from the options
+the worker echoes, so the directory names do not matter.
 """
 import argparse
 import glob
@@ -41,57 +41,57 @@ RC = {'font.size': 11, 'axes.titlesize': 12, 'axes.labelsize': 11,
 FORMATS = {1: ('HODLR', 'tab:blue', 'o'), 7: ('H2', 'tab:red', 'X')}
 
 
-def builds_of(driver_log):
-    """[(hyperparameters, seconds)] in the order the run built them."""
-    out, pending = [], None
-    for line in open(driver_log, errors="replace"):
-        m = re.match(r"\[(.*?)\] george hyperparameters", line)
-        if m:
-            pending = [float(v) for v in m.group(1).split()]
-        m = re.match(r"Time spent in compress and invert K: ([0-9.]+)", line)
-        if m and pending is not None:
-            out.append((pending, float(m.group(1))))
-            pending = None
-    return out
+def k_builds(worker_log, kind="factor"):
+    """(format, [(N * l^d, rank, relative matrix-vector error)]) for every build in a worker log, in order.
 
-
-def ranks_of(worker_log, kind):
-    """[rank] for every matrix the worker reported, in order, and the format it was built with."""
+    A build is one H2 or HODLR matrix of the covariance K, constructed and factored at the hyperparameters
+    of one likelihood evaluation. The worker prints the george kernel of every matrix it builds, and a
+    gradient evaluation also builds the derivative matrices dK/dtheta_j right after K; these are compressed
+    but not factored, and are not builds. H2 checks K with 'H2_CheckError(quick)' and each derivative matrix
+    with 'H2_CheckError(compression quick)'; HODLR factors only K. Each build is read whole from the stretch
+    of the log between its kernel and the next, so its length scale, rank and error cannot be mismatched."""
     text = open(worker_log, errors="replace").read()
     fmt = 1 if re.search(r"'--format', '1'", text) else 7 if re.search(r"'--format', '7'", text) else None
-    if kind == "factor":
-        ranks = [int(m.group(1)) for m in re.finditer(r"maxrank from d_py_bpack_factor:\s*(\d+)", text)]
-    else:
-        ranks = [max(int(v) for v in m.group(1).split())
-                 for m in re.finditer(r"rankmax_of_level:((?:\s+\d+)+)", text)]
-    return ranks, fmt
+    n = int(re.search(r"_N(\d+)", os.path.basename(worker_log)).group(1))
+    out = []
+    for seg in text.split("'kernel': ")[1:]:
+        if fmt == 7:
+            m = re.search(r"H2_CheckError\(quick\):[^\n]*?acc_mvp:\s*([0-9.eE+-]+)[\s\S]*?maxrank from d_py_bpack_factor:\s*(\d+)", seg)
+            if not m:
+                continue
+            error, rank = float(m.group(1)), int(m.group(2))
+        else:
+            r = re.search(r"maxrank from d_py_bpack_factor:\s*(\d+)", seg)
+            if not r:
+                continue
+            a = re.search(r"BPACK_CheckError\(mvp\):.*acc:\s*([0-9.eE+-]+)", seg)
+            error, rank = (float(a.group(1)) if a else float("nan")), int(r.group(1))
+        if kind == "construct":
+            levels = [max(int(v) for v in m.group(1).split()) for m in re.finditer(r"rankmax_of_level:((?:\s+\d+)+)", seg)]
+            rank = max(levels) if levels else 0
+        # george's metric is l^2 per dimension, printed as one value with ndim (isotropic) or an array
+        mm = re.search(r"metric=Metric\((?:array\(\[([^\]]*)\]\)|([0-9.eE+-]+), ndim=(\d+))", seg)
+        if mm.group(1) is not None:
+            metric = [float(v) for v in mm.group(1).split(",")]
+        else:
+            metric = [float(mm.group(2))] * int(mm.group(3))
+        # N l^d with l the geometric mean of the length scales (what sets the volume of a correlated
+        # neighbourhood); with the scaled-coordinate tree the worker sees the scaled metric instead
+        out.append((n * math.exp(0.5 * sum(math.log(v) for v in metric)), rank, error))
+    return fmt, out
 
 
-def collect(directories, objtype, kind):
-    """{format: [(N * l^d, rank)]} over every build of every run in the directories."""
+def collect(directories, objtype, kind, keep=None):
+    """{format: [(N * l^d, rank)]} over every build (see k_builds) of every run in the directories; keep(worker
+    log path), if given, selects the runs."""
     points = defaultdict(list)
     for directory in directories:
-        for driver_log in sorted(glob.glob(os.path.join(directory, "driver_N*.log"))):
-            worker_log = driver_log.replace("/driver_N", "/worker_N")
-            if not os.path.exists(worker_log):
+        for worker_log in sorted(glob.glob(os.path.join(directory, "worker_N*.log"))):
+            if keep is not None and not keep(worker_log):
                 continue
-            n = int(re.search(r"_N(\d+)", os.path.basename(driver_log)).group(1))
-            builds = builds_of(driver_log)
-            ranks, fmt = ranks_of(worker_log, kind)
-            if not builds or not ranks or fmt is None:
-                continue
-            per = max(len(ranks) // len(builds), 1)   # matrices reported per build
-            for i, (hyper, _) in enumerate(builds):
-                window = ranks[i * per:(i + 1) * per]
-                if not window:
-                    continue
-                metrics = hyper[3:]                   # one entry per length scale
-                # an isotropic kernel has a single length scale; an anisotropic one is summarised
-                # by the geometric mean, which is what sets the volume of a correlated neighbourhood
-                lengthscale = math.exp(sum(metrics) / (2.0 * len(metrics)))
-                density = n * lengthscale ** len(metrics)
-                if density > 0:
-                    points[fmt].append((density, max(window)))
+            fmt, builds = k_builds(worker_log, kind)
+            if fmt is not None:
+                points[fmt] += [(density, rank) for density, rank, _ in builds if density > 0]
     return points
 
 

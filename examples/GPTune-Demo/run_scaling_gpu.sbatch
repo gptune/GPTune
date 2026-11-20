@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=m2957
+#SBATCH --account=m5449
 #SBATCH --constraint=gpu
 #SBATCH --qos=premium
 #SBATCH --nodes=4

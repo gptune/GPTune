@@ -49,6 +49,14 @@ export MPICH_GPU_SUPPORT_ENABLED=0
 #################################################
 export BPACK_PYTHON_LIB_PATH=$GPTUNE_ROOT/examples/ButterflyPACK/ButterflyPACK/build/lib/
 export PYTHONPATH=$BPACK_PYTHON_LIB_PATH:$PYTHONPATH
+# GPTune itself: run_env.sh leaves only $PYTHONUSERBASE's site-packages on PYTHONPATH, whose GPTune package is
+# an installed snapshot (model.py and options.py of 7 Oct 2026). GPTUNE_FROM_REPO=1 imports this repository's
+# GPTune instead (as test_GP_h2_unstructured.sh always does); it is the default for the uncapped MCMC/MALA
+# runs (GP_MCMC_UNCAPPED=1), whose convergence options (model_mcmc_convergence, model_mcmc_target_nll,
+# model_mcmc_discard_fraction, ...) and MALA preconditioner the snapshot does not have.
+if [ "${GPTUNE_FROM_REPO:-${GP_MCMC_UNCAPPED:-0}}" = 1 ]; then
+    export PYTHONPATH=$GPTUNE_ROOT:$PYTHONPATH
+fi
 #################################################
 
 echo "JOB=$SLURM_JOB_ID NODES=$SLURM_JOB_NODELIST OBJ_CHOICE=$OBJ_CHOICE"
