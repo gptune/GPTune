@@ -166,13 +166,18 @@ def training_metrics(directory, N, optimizer):
 
 
 def figure_history(out_dir, png):
-    """-log likelihood, test RMSE and test CRPS against the training time, Wendland and INLA at ~100k."""
-    models = [("Wendland, $N$ = 100,000", HERE, 100000, False, "-"),
-              ("INLA, $N$ = 102,400", os.path.join(HERE, "inla_vs_wendland", "59033221", "inla"), 102400, True, ":")]
+    """-log likelihood, test RMSE and test CRPS against the training time, Wendland and INLA at ~100k.
+    Both MALA curves are uncapped runs with the default stagnation stop: Wendland = the 100k run of Table III
+    (tab:wend_opt, job 61694865), INLA = the MALA row of Table IV (tab:schwefel_opt, job 61707211), 40 replayed
+    history entries each; the other curves are the runs in HERE and inla_vs_wendland/59033221/inla."""
+    models = [("Wendland, $N$ = 100,000", HERE, 100000, False, "-",
+               {"mala": os.path.join(HERE, "scaling_obj4_mala_stagnation")}),
+              ("INLA, $N$ = 102,400", os.path.join(HERE, "inla_vs_wendland", "59033221", "inla"), 102400, True, ":",
+               {"mala": os.path.join(HERE, "inla_vs_wendland", "mala_stagnation", "inla")})]
     fig, axes = plt.subplots(1, 3, figsize=(7.0, 2.35))
-    for label, directory, N, hollow, linestyle in models:
+    for label, directory, N, hollow, linestyle, run_dirs in models:
         for optimizer in OPTIMIZERS:
-            rows = training_metrics(directory, N, optimizer)
+            rows = training_metrics(run_dirs.get(optimizer, directory), N, optimizer)
             sampler = optimizer in ("mcmc", "mala")
             style = line_style(optimizer, hollow=hollow, linestyle=linestyle)
             style.update(markersize=2.6, linewidth=1.0)
@@ -251,13 +256,15 @@ def two_row_format_legend(ax):
 
 
 def table_runs(rows, objtype, fmt):
-    """{optimizer: {N: stats}} for rows of Table IX (tab:h2gpu), given as [(run directory, [N, ...])]: each N
-    from the directory named with it, and only the run_stats files directly in the directory (failed
-    attempts were moved to its subdirectories)"""
+    """{optimizer: {N: stats}} for rows of Table IX (tab:h2gpu), given as [(run directory, [N, ...])] or
+    [(run directory, [N, ...], optimizers to leave out)]: each N from the directory named with it, and only the
+    run_stats files directly in the directory (failed attempts were moved to its subdirectories)"""
     runs = {}
-    for directory, counts in rows:
+    for directory, counts, *skip in rows:
         found = run_stats([os.path.join(CMP, directory)], objtype, fmt=fmt, recursive=False)
         for optimizer, series in found.items():
+            if skip and optimizer in skip[0]:
+                continue
             for n in counts:
                 if n in series:
                     runs.setdefault(optimizer, {})[n] = series[n]
@@ -283,7 +290,10 @@ def figure_h2_hodlr_gpu_2d(out_dir, png):
                [("scal_h2gpu_2d_iso", [100000, 200000, 400000, 800000, 1600000])],
                [("scal_hodlrgpu_2d_iso", [100000, 200000])], ["100k", "200k", "400k", "800k", "1.6M"]),
               ("(b) anisotropic kernel", 4,
-               [("scal_h2gpu_2d_aniso_scaled", [100000, 200000, 1600000]),
+               # (1.6M without gradient L-BFGS: its derivative compression for the long length scale took
+               #  151 s per evaluation (median) against 1.4 s at 200k, a ButterflyPACK slowdown, 20 Nov 2026)
+               [("scal_h2gpu_2d_aniso_scaled", [100000, 200000]),
+                ("scal_h2gpu_2d_aniso_scaled", [1600000], ("gradient",)),
                 ("scal_h2gpu_2d_aniso", [400000, 800000])],
                [("scal_hodlrgpu_2d_aniso_scaled", [100000, 200000])],
                ["100k", "200k", "400k\u2020", "800k\u2020", "1.6M"])]
@@ -302,9 +312,10 @@ def figure_h2_hodlr_gpu_2d(out_dir, png):
 
 def figure_h2_hodlr_gpu_3d(out_dir, png):
     """Time per likelihood evaluation of H2 and HODLR on GPUs, the 3D anisotropic rows of Table IX
-    (objective 5): HODLR at 25k only, H2 at 100k and 400k (1d3d6d1, submit_h2_large.sh) and, from the earlier
-    raw-coordinate run, 200k."""
-    h2 = table_runs([("scal_h2gpu_3d_aniso_scaled", [100000, 400000]), ("scal_h2gpu_3d_aniso", [200000])], 5, 7)
+    (objective 5): HODLR at 25k only, H2 at 50k (1d3d6d1, submit_aniso_scaled.sh) when present, 100k, 400k
+    (1d3d6d1, submit_h2_large.sh) and, from the earlier raw-coordinate run, 200k."""
+    h2 = table_runs([("scal_h2gpu_3d_aniso_scaled", [50000, 100000, 400000]), ("scal_h2gpu_3d_aniso", [200000])],
+                    5, 7)
     hodlr = table_runs([("scal_hodlrgpu_3d_aniso_scaled", [25000])], 5, 1)
     fig, ax = plt.subplots(figsize=(3.45, 2.55))
     draw_series(ax, hodlr, "time_per_eval", hollow=True, linestyle="--")

@@ -426,17 +426,25 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         if os.environ.get('GP_MCMC_UNCAPPED') == '1':
             # no time limit: up to GP_MCMC_MAXITER steps per chain, stopping once converged. GP_MCMC_CONVERGENCE
             # 'stagnation' (GPTune's default): the best sample has improved by less than 1 nat over the last 50 steps
-            # and every chain's best is within 5 nats of it; 'rhat': the split Gelman-Rubin statistic over the second
-            # half of the chains is below 1.1 (checked every 100 steps from step 200 on)
+            # (and every chain's best is within 5 nats of it for MCMC, not for MALA: GPTune's default 'auto';
+            # GP_MCMC_AGREEMENT_TOL sets the tolerance, 'none' turns the test off);
+            # 'rhat': the split Gelman-Rubin statistic over the second half of the chains is below 1.1 (checked
+            # every 100 steps from step 200 on)
             options['model_mcmc_maxiter'] = int(os.environ.get('GP_MCMC_MAXITER', '1000'))
             options['model_mcmc_convergence'] = os.environ.get('GP_MCMC_CONVERGENCE', 'stagnation')
+            if os.environ.get('GP_MCMC_AGREEMENT_TOL'):
+                tol = os.environ['GP_MCMC_AGREEMENT_TOL']
+                options['model_mcmc_agreement_tol'] = None if tol.lower() == 'none' else tol if tol == 'auto' else float(tol)
             if options['model_mcmc_convergence'] == 'rhat':
                 options['model_mcmc_discard_fraction'] = 0.5
                 options['model_mcmc_rhat_threshold'] = 1.1
                 print("MCMC sampling without a time limit: at most %d steps per chain, split R-hat < 1.1 over the second half" % options['model_mcmc_maxiter'])
             else:
-                print("MCMC sampling without a time limit: at most %d steps per chain, until the best sample improves by < %g nats over %d steps and every chain's best is within %g nats of it"
-                      % (options['model_mcmc_maxiter'], options['model_mcmc_stagnation_tol'], options['model_mcmc_stagnation_window'], options['model_mcmc_agreement_tol']))
+                agreement = options['model_mcmc_agreement_tol']
+                print("MCMC sampling without a time limit: at most %d steps per chain, until the best sample improves by < %g nats over %d steps%s"
+                      % (options['model_mcmc_maxiter'], options['model_mcmc_stagnation_tol'], options['model_mcmc_stagnation_window'],
+                         "" if agreement is None else " and every chain's best is within 5 nats of it (MCMC only)" if agreement == 'auto'
+                         else " and every chain's best is within %g nats of it" % agreement))
             # only a safety stop before the job's wall time (GP_MCMC_MAXTIME seconds of sampling, set by
             # submit_mala_uncapped.sh), so that a run that has not converged still writes its results
             if os.environ.get('GP_MCMC_MAXTIME'):

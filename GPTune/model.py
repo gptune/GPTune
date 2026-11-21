@@ -1898,7 +1898,9 @@ class Model_George(Model):
         rejected = [0]
 
         def indefinite():
-            return (getattr(self.M.solver, 'log_determinant_sign', 1.0) <= 0
+            # (a GP without a george solver, the INLA model, factors a precision matrix that is positive
+            # definite by construction: only the finiteness test applies)
+            return (getattr(getattr(self.M, 'solver', None), 'log_determinant_sign', 1.0) <= 0
                     or not np.isfinite(self.last_nll))
 
         def target(x, bounds=None):
@@ -1934,7 +1936,7 @@ class Model_George(Model):
                                                 convergence=kwargs.get('model_mcmc_convergence', 'stagnation'),
                                                 stagnation_window=kwargs.get('model_mcmc_stagnation_window', 50),
                                                 stagnation_tol=kwargs.get('model_mcmc_stagnation_tol', 1.0),
-                                                agreement_tol=kwargs.get('model_mcmc_agreement_tol', 5.0))
+                                                agreement_tol=kwargs.get('model_mcmc_agreement_tol', 'auto'))
         print("MCMC: %s" % resopt.message, flush=True)
         # the chains (steps, chains, parameters) and their log posteriors, for analysis after the training
         self.mcmc_chains = mcmc.sampler.get_chain()

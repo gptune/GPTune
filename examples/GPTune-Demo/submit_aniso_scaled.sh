@@ -53,6 +53,11 @@ submit_all() {
     #  isotropic start (50 * 4096 > 200001) and, in a simulation over a 12^3 grid of l, overflows the 512-point
     #  leaf cap at the same corners as 32 (315 of 1728, against 396 for 64).)
     try h2_3da_s_N200k     scal_h2gpu_3d_aniso_scaled      5   200001  8    2   4     6 7   "$ALL"  50   8
+    # (50k, added 20 Nov 2026 for the 3D GPU scaling figure: the 100k layout and settings. nmin_leaf 32 gives
+    #  the same 4 base levels as at 100k (round(50001^(1/3)) = 37 against 3*2^4 = 48), so the leaves hold
+    #  about half the points of the 100k ones. Submitted on 1d3d6d1, as the 400k run of submit_h2_large.sh:
+    #  BPACK_DIR=$PWD/../ButterflyPACK/ButterflyPACK_1d3d6d1 ONLY=h2_3da_s_N50k bash submit_aniso_scaled.sh --loop)
+    try h2_3da_s_N50k      scal_h2gpu_3d_aniso_scaled      5   50001   8    4   2     4 7   "$ALL"  32   8
 }
 submit_all
 if [ "$1" = "--loop" ]; then

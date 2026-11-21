@@ -414,16 +414,17 @@ class MCMC:
     def stagnated(self, window, tol, agreement_tol, min_steps):
         """
         True once the chains have run at least min_steps steps, the best log probability of their states
-        has improved by less than tol over the last window steps, and the best state of every chain is
-        within agreement_tol of it.
+        has improved by less than tol over the last window steps, and, unless agreement_tol is None, the
+        best state of every chain is within agreement_tol of it.
         """
         if self.sampler.get_log_prob(discard=0, thin=1, flat=False).shape[0] < min_steps:
             return False
         improvement, gaps = self.best_progress(window)
-        return improvement is not None and improvement < tol and bool(np.all(gaps <= agreement_tol))
+        return (improvement is not None and improvement < tol
+                and (agreement_tol is None or bool(np.all(gaps <= agreement_tol))))
 
     def run_mcmc_with_convergence(self, initial_state, n_steps, discard=100, thin=1, check_interval=100, r_hat_threshold=1.5, verbose=False, max_time=None, discard_fraction=0.0, stop=None,
-                                  convergence='stagnation', stagnation_window=50, stagnation_tol=1.0, agreement_tol=5.0):
+                                  convergence='stagnation', stagnation_window=50, stagnation_tol=1.0, agreement_tol='auto'):
         """
         Run the chains for up to n_steps steps each and return the MAP sample (the best state of all
         chains) once they have converged, after n_steps steps, or once the sampling has run for max_time
@@ -432,10 +433,15 @@ class MCMC:
 
         convergence = 'stagnation' (the samplers as optimizers, only the MAP sample is used): converged once
         the best log probability has improved by less than stagnation_tol over the last stagnation_window
-        steps, and the best state of every chain is within agreement_tol of it (independent chains have
-        found the same optimum), from step max(discard, stagnation_window) on. The tolerances are absolute,
-        in nats: around the mode the log probability of the samples fluctuates by about ndim/2 whatever the
-        number of data points, while a chain still moving toward it improves by far more per window.
+        steps, from step max(discard, stagnation_window) on. With agreement_tol (nats; None: off), the best
+        state of every chain must also be within agreement_tol of it (independent chains have found the same
+        optimum). 'auto' (default): off for MALA, 5 nats for the other samplers. MALA's drift improves the
+        best sample steadily until it reaches the optimum, and waiting for the slowest chain's transient took
+        2.6-6x as long as finding the optimum in the Wendland GP runs (N = 100k, 200k); a random walk improves
+        in bursts with plateaus longer than the window, and without the agreement test it stopped 5% short of
+        the optimum there (step 133 of 2,327). The tolerances are absolute, in nats:
+        around the mode the log probability of the samples fluctuates by about ndim/2 whatever the number of
+        data points, while a chain still moving toward it improves by far more per window.
 
         convergence = 'rhat' (the chains sample the posterior): converged once every Gelman-Rubin R-hat is
         below r_hat_threshold, tested every check_interval steps from step 2*check_interval on. The statistic
@@ -455,9 +461,13 @@ class MCMC:
         nwalkers, ndim = initial_state.shape
         deadline = None if max_time is None else time.time() + max_time
         min_steps = max(discard, stagnation_window)
+        if agreement_tol == 'auto':
+            agreement_tol = None if isinstance(self.sampler, MCMCSampler_MALA) else 5.0
 
         def stagnated():
             return convergence == 'stagnation' and self.stagnated(stagnation_window, stagnation_tol, agreement_tol, min_steps)
+
+        stagnation_message = "the best sample has stagnated" + ("" if agreement_tol is None else " and the chains agree")
 
         def should_stop():
             return (stop is not None and stop()) or stagnated()
@@ -484,13 +494,13 @@ class MCMC:
             if reached or converged or timed_out:
                 if(verbose==True):
                     print(f"MCMC stopped after {i + done} steps: "
-                          + ("target reached" if reached else "the best sample has stagnated and the chains agree" if converged
+                          + ("target reached" if reached else stagnation_message if converged
                              else f"maximum sampling time {max_time} s reached"))
                     report(i + done, ' (at the stop)')
                 if reached:
                     return self.map_result(3, 'Target reached')
                 if converged:
-                    return self.map_result(0, 'MCMC converged: the best sample has stagnated and the chains agree')
+                    return self.map_result(0, 'MCMC converged: ' + stagnation_message)
                 return self.map_result(2, 'Maximum sampling time reached')
 
             if(verbose==True):
