@@ -41,8 +41,9 @@ RC = {'font.size': 11, 'axes.titlesize': 12, 'axes.labelsize': 11,
 FORMATS = {1: ('HODLR', 'tab:blue', 'o'), 7: ('H2', 'tab:red', 'X')}
 
 
-def k_builds(worker_log, kind="factor"):
-    """(format, [(N * l^d, rank, relative matrix-vector error)]) for every build in a worker log, in order.
+def k_builds(worker_log, kind="factor", kernel=False):
+    """(format, [(N * l^d, rank, relative matrix-vector error)]) for every build in a worker log, in order;
+    with kernel=True each tuple also has the build's (log constant, [metric per dimension], noise standard deviation).
 
     A build is one H2 or HODLR matrix of the covariance K, constructed and factored at the hyperparameters
     of one likelihood evaluation. The worker prints the george kernel of every matrix it builds, and a
@@ -77,7 +78,13 @@ def k_builds(worker_log, kind="factor"):
             metric = [float(mm.group(2))] * int(mm.group(3))
         # N l^d with l the geometric mean of the length scales (what sets the volume of a correlated
         # neighbourhood); with the scaled-coordinate tree the worker sees the scaled metric instead
-        out.append((n * math.exp(0.5 * sum(math.log(v) for v in metric)), rank, error))
+        build = (n * math.exp(0.5 * sum(math.log(v) for v in metric)), rank, error)
+        if kernel:
+            constant = re.search(r"log_constant=([0-9.eE+-]+)", seg)
+            yerr = re.search(r"'yerr': array\(\[\s*([0-9.eE+-]+)", seg)
+            build += ((float(constant.group(1)) if constant else None, metric,
+                       float(yerr.group(1)) if yerr else None),)
+        out.append(build)
     return fmt, out
 
 
