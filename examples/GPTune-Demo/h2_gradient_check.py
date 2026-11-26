@@ -17,7 +17,7 @@ directory) collects them after each size.
 Environment:
   GC_DATA          npz with xtrain, ytrain (default the rough Matern-1/2 field on the KAUST 2023 dataset-2 design)
   GC_SIZES         subsample sizes, comma separated (default 10000,20000,50000,100000,200000,400000)
-  GC_KERN          RBF, Exp, Matern32 or Matern52 (default Exp)
+  GC_KERN          RBF, Exp, Matern32, Matern52, Matern1 or Matern2 (default Exp; Matern1 and Matern2: nu = 1 and nu = 2)
   GC_NOISE         noise variance at x0 (default 0.05)
   GC_AMPLITUDE     kernel variance at x0 (default 1.0)
   GC_LENGTHSCALE   length scale(s) at x0, one value or one per dimension (default 0.01)
@@ -46,7 +46,8 @@ george.__path__.insert(0, os.path.join(GPTUNE_ROOT, 'george/src/george'))
 from george.solvers import BasicSolver
 
 KERNELS = {'RBF': george.kernels.ExpSquaredKernel, 'Exp': george.kernels.ExpKernel,
-           'Matern32': george.kernels.Matern32Kernel, 'Matern52': george.kernels.Matern52Kernel}
+           'Matern32': george.kernels.Matern32Kernel, 'Matern52': george.kernels.Matern52Kernel,
+           'Matern1': george.kernels.Matern1Kernel, 'Matern2': george.kernels.Matern2Kernel}
 JITTER = 1e-10  # Model_George's model_jitter, passed as yerr
 
 

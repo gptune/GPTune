@@ -39,14 +39,17 @@ The environment selects the runs (run_kaust_gpu.sbatch runs this driver with the
                                 twice the largest length-scale maximum); sphere (the subdivision level of the icosahedral
                                 mesh of the SPDE on the unit sphere, 3D inputs on the sphere; nu an integer,
                                 default 1)
-                      h2:       kern (RBF, Exp, Matern32 or Matern52, default RBF; all have GPU entry
-                                evaluators; Exp is exp(-r), Matern with nu = 1/2), scaled=1 (build butterflypack's
+                      h2:       kern (RBF, Exp, Matern32, Matern52, Matern1 or Matern2, default RBF; all have GPU
+                                entry evaluators; Exp is exp(-r), Matern with nu = 1/2; Matern1 and Matern2 are the
+                                Matern kernels with nu = 1 and nu = 2, the smoothness of the INLA models with alpha = 2
+                                and 3 in 2D and on the sphere), scaled=1 (build butterflypack's
                                 cluster tree on the inputs divided by the current length scales, so its cubic boxes
                                 are cubes in correlation lengths; needs the workers' --h2_unstructured 1),
                                 sop=0 (no absolute floor on the H2 rank rule: H2_s_op off, see Model_George's
                                 model_bpack_s_op, on by default)
                       any:      noisemin (the lower bound of the noise variance); iso=1 (one length scale for
-                                all the dimensions: h2 and inla)
+                                all the dimensions: h2 and inla); norm=0 (L-BFGS-B on the unscaled negative
+                                log-likelihood: model_lbfgs_normalize off, as in the runs before 19 Oct 2026)
   GP_OPTIMIZERS     default "gradient,finite difference" (also "mcmc", "mala")
   GP_DATASET        the name of the dataset in the file names (default kaust_2b1)
   GP_NOISE, GP_AMPLITUDE, GP_LENGTHSCALE
@@ -76,6 +79,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
+from scipy import special
 from scipy.stats import norm
 from sklearn.neighbors import BallTree
 
@@ -166,6 +170,8 @@ def model_options(kind, settings, optimizer, ntrain, history_file, lbfgs_times):
             options.update(model_inla_sphere=int(settings['sphere']), model_inla_nu=settings.get('nu', 1.0), model_isotropic=True)
     else:
         raise ValueError("unknown model %s" % kind)
+    if settings.get('norm', 1) == 0:
+        options.update(model_lbfgs_normalize=False)
     if optimizer == 'gradient':
         options.update(model_mcmc=False, model_grad=True, model_grad_nprobe=64)
     elif optimizer == 'finite difference':
@@ -221,14 +227,33 @@ def _matern52_profile(d2):
     return np.multiply(1.0 + a + a * a / 3.0, np.exp(-a), out=d2)
 
 
+def _matern1_profile(d2):
+    # z K1(z), z = sqrt(2 r^2); 1 at r = 0
+    z = np.sqrt(2.0 * d2)
+    with np.errstate(invalid='ignore', over='ignore'):
+        v = z * special.k1(z)
+    d2[...] = np.where(z > 0, v, 1.0)
+    return d2
+
+
+def _matern2_profile(d2):
+    # z^2/2 K2(z) = z^2/2 K0(z) + z K1(z), z = sqrt(4 r^2); 1 at r = 0
+    z = np.sqrt(4.0 * d2)
+    with np.errstate(invalid='ignore', over='ignore'):
+        v = 0.5 * z * z * special.k0(z) + z * special.k1(z)
+    d2[...] = np.where(z > 0, v, 1.0)
+    return d2
+
+
 KERNEL_PROFILES = {'ExpSquaredKernel': _rbf_profile, 'ExpKernel': _exp_profile, 'Matern32Kernel': _matern32_profile,
-                   'Matern52Kernel': _matern52_profile}
+                   'Matern52Kernel': _matern52_profile, 'Matern1Kernel': _matern1_profile,
+                   'Matern2Kernel': _matern2_profile}
 
 
 def kernel_mean(model, xtest, threads=32):
     """
     The predictive means of an h2 model (a constant times an axis-aligned ExpSquaredKernel, ExpKernel,
-    Matern32Kernel or Matern52Kernel) at xtest (without the training mean): K(xtest, X) alpha, alpha = K^-1 y solved with the model's
+    Matern32Kernel, Matern52Kernel, Matern1Kernel or Matern2Kernel) at xtest (without the training mean): K(xtest, X) alpha, alpha = K^-1 y solved with the model's
     solver, with the dense cross-covariance formed by blocks of MEAN_CHUNK testing locations in threads.
     """
     gp = model.M
@@ -378,7 +403,8 @@ def main():
             if kind == 'inla':
                 nu = settings.get('nu', 1.0 if 'sphere' in settings else 1.5)
             elif kind == 'h2':
-                nu = {'Exp': 0.5, 'Matern32': 1.5, 'Matern52': 2.5}.get(settings.get('kern', 'RBF'), np.inf)
+                nu = {'Exp': 0.5, 'Matern32': 1.5, 'Matern52': 2.5, 'Matern1': 1.0,
+                      'Matern2': 2.0}.get(settings.get('kern', 'RBF'), np.inf)
             else:
                 nu = {'Matern32': 1.5, 'Matern52': 2.5}.get(settings.get('base', 'Matern32'), np.inf)
             lengthscale = np.array(hyperparameters['lengthscale'], dtype=float)

@@ -26,6 +26,8 @@ The environment selects the runs (run_heaton_gpu.sbatch runs this driver with th
   HEATON_WINDOW   "NLON NLAT": only the first NLON x NLAT nodes of the lattice (for quick tests)
   HEATON_INLA_NU  the smoothness nu of the INLA Matern field (default 1; 0.5 is the exponential covariance
                   of the SPDE entry of the paper, approximated as by R-INLA)
+  HEATON_H2_KERN  the kernel of the h2 model: RBF (default), Exp, Matern32, Matern52, Matern1 or Matern2 (the
+                  Matern kernels with nu = 1 and nu = 2, the smoothness of the INLA model with nu = 1 and 2)
   HEATON_WENDLAND_CUTOFF  the largest Wendland support radius (normalized units), which sets the sparsity of
                   the covariance matrix (default: about 78 neighbours per sample, 0.0154 for the full data; the
                   test cells of the satellite data are within 0.0154 of a training cell for 68% of them, within
@@ -112,11 +114,12 @@ def model_options(model_name, optimizer, ntrain, shape, history_file, lbfgs_time
                    model_lengthscale=[1e-3, 1.0, 0.05], model_random_seed=0, verbose=True, debug=False,
                    model_history_file=history_file)
     if model_name == 'h2':
-        # the dense RBF kernel (the kernel of the GPU entry evaluator of george) in butterflypack's H2 format, with
+        # the dense RBF kernel (or HEATON_H2_KERN; all have GPU entry evaluators in george) in butterflypack's H2 format, with
         # the compression settings of the workers (run_spatial_h2_gpu.sbatch); the smallest length scale is the
         # floor of the INLA model (2 lattice spacings, 1 / 499 along the longitudes): the first L-BFGS step can
         # go to the bound, where the H2 compressions of the derivative operators are slow
-        options.update(model_bpack=True, model_kern='RBF', model_isotropic=False, model_lengthscale=[4e-3, 1.0, 0.05])
+        options.update(model_bpack=True, model_kern=os.environ.get('HEATON_H2_KERN', 'RBF'), model_isotropic=False,
+                       model_lengthscale=[4e-3, 1.0, 0.05])
     elif model_name == 'wendland':
         options.update(model_sparse=True, model_kern='WendlandC2', model_cutoff=wendland_cutoff(ntrain))
     elif model_name == 'inla':

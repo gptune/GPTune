@@ -54,7 +54,7 @@ class Options(dict):
 
         """ Options for the modeling phase """
         model_class = 'Model_LCM' # Supported sample algorithms: 'Model_GPy_LCM' -- LCM from GPy, 'Model_LCM' -- LCM with fast and parallel inversion, 'Model_DGP' -- deep Gaussian process
-        model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52', 'WendlandC2'; 'Exp' (single-task Model_George) is exp(-r), Matern with nu = 1/2; 'INLA' (single-task Model_George, 2D and 3D) is the SPDE Matern field (smoothness 1 in 2D, 1/2 in 3D) on a lattice, see george/inla.py
+        model_kern = 'RBF' # Supported kernels in 'Model_GPy_LCM' model class option -- 'RBF', 'Exponential' or 'Matern12', 'Matern32', 'Matern52', 'WendlandC2'; 'Exp' (single-task Model_George) is exp(-r), Matern with nu = 1/2; 'Matern1' and 'Matern2' (single-task Model_George) are the Matern kernels with nu = 1 and nu = 2; 'INLA' (single-task Model_George, 2D and 3D) is the SPDE Matern field (smoothness 1 in 2D, 1/2 in 3D) on a lattice, see george/inla.py
         model_isotropic = False # Use one shared length scale for all input dimensions in single-task Model_George RBF/Matern kernels
         # Single-task ranges are linear-scale [minimum, maximum, initial] values.
         model_noisevariance = [math.exp(-15), math.exp(-10), 5e-6]

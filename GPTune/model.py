@@ -1991,7 +1991,7 @@ class Model_George(Model):
                 params = np.asarray(params)
                 return np.exp(params[0]), np.exp(params[1]), np.sqrt(np.exp(params[2:]))
         else:
-            if kernel_type in ('RBF', 'Matern32', 'Matern52', 'Exp'):
+            if kernel_type in ('RBF', 'Matern32', 'Matern52', 'Exp', 'Matern1', 'Matern2'):
             
                 log_noisevariance = params[0]
                 log_amplitude_squared = params[1]
@@ -2153,10 +2153,10 @@ class Model_George(Model):
         else:
             input_dim = len(data.P[0][0])
             if isotropic and kwargs['model_kern'] not in (
-                    'RBF', 'Matern32', 'Matern52', 'Exp', 'INLA'):
+                    'RBF', 'Matern32', 'Matern52', 'Exp', 'Matern1', 'Matern2', 'INLA'):
                 raise ValueError(
                     "model_isotropic is supported only for single-task "
-                    "RBF, Matern32, Matern52, Exp, and INLA kernels")
+                    "RBF, Matern32, Matern52, Exp, Matern1, Matern2, and INLA kernels")
             noisevariance_range = self._linear_hyperparameter_range(
                 kwargs, 'model_noisevariance',
                 [np.exp(-15), np.exp(-10), 5e-6])
@@ -2216,6 +2216,17 @@ class Model_George(Model):
                     + list(lengthscale_initial)
                 )
                 K = george.kernels.Matern52Kernel(metric=metric_initial, ndim=input_dim)
+                amplitude = intialguess[1]
+                K *= amplitude
+            elif kwargs['model_kern'] in ('Matern1', 'Matern2'):
+                # the Matern kernels with nu = 1 and nu = 2 (z^nu K_nu(z), the Bessel function of george/bessel.h),
+                # the covariances of the SPDE (INLA) models with alpha = 2 and 3 in 2D and on the sphere
+                intialguess = (
+                    [noisevariance_range[2], amplitude_range[2]]
+                    + list(lengthscale_initial)
+                )
+                kernel_class = george.kernels.Matern1Kernel if kwargs['model_kern'] == 'Matern1' else george.kernels.Matern2Kernel
+                K = kernel_class(metric=metric_initial, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude
             elif kwargs['model_kern'] == 'Exp':
@@ -2680,10 +2691,10 @@ class Model_George(Model):
             input_dim = points.shape[1] if points.ndim > 1 else 1
             kernel_type = modeling_options['model_kern']
             if isotropic and kernel_type not in (
-                    'RBF', 'Matern32', 'Matern52', 'Exp'):
+                    'RBF', 'Matern32', 'Matern52', 'Exp', 'Matern1', 'Matern2'):
                 raise ValueError(
                     "model_isotropic is supported only for single-task "
-                    "RBF, Matern32, Matern52, and Exp kernels")
+                    "RBF, Matern32, Matern52, Exp, Matern1, and Matern2 kernels")
             if modeling_options['model_kern'] == 'RBF':
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
                 metric = self._george_metric(
@@ -2705,6 +2716,14 @@ class Model_George(Model):
                 K = george.kernels.Matern52Kernel(metric=metric, ndim=input_dim)
                 amplitude = intialguess[1]
                 K *= amplitude  
+            elif modeling_options['model_kern'] in ('Matern1', 'Matern2'):
+                intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
+                metric = self._george_metric(
+                    intialguess[2:], input_dim, isotropic)
+                kernel_class = george.kernels.Matern1Kernel if modeling_options['model_kern'] == 'Matern1' else george.kernels.Matern2Kernel
+                K = kernel_class(metric=metric, ndim=input_dim)
+                amplitude = intialguess[1]
+                K *= amplitude
             elif modeling_options['model_kern'] == 'Exp':
                 intialguess = hyperparameters["noise_variance"] + hyperparameters["variance"] + hyperparameters["lengthscale"]
                 metric = self._george_metric(
