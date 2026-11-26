@@ -1454,6 +1454,16 @@ class Model_George(Model):
         return bool(value)
 
     @staticmethod
+    def _george_mean(value, y):
+        """The constant prior mean of a single-task george GP from the option model_mean: None (the zero mean),
+        'sample' (the sample mean of the training outputs y, which the INLA model always subtracts) or a number."""
+        if value is None:
+            return None
+        if isinstance(value, str) and value.strip().lower() == 'sample':
+            return float(np.mean(y))
+        return float(value)
+
+    @staticmethod
     def _wendland_base(name):
         """The george kernel class of the base kernel tapered by the Wendland C2 function."""
         import george
@@ -2247,6 +2257,8 @@ class Model_George(Model):
             else:
                 raise Exception("TODO: IMPLEMENT OTHER KERNELS")
 
+            # the constant prior mean (model_mean; None: zero)
+            george_mean = self._george_mean(kwargs.get('model_mean', None), data.O[0])
             if kwargs['model_kern'] == 'INLA':
                 if kwargs['model_hodlr'] or kwargs['model_bpack']:
                     raise ValueError("model_kern='INLA' factors its precision matrix with SuperLU_DIST: "
@@ -2281,7 +2293,7 @@ class Model_George(Model):
                     'model_bpack': 0,
                     'seed': seed,
                 }
-                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, mean=george_mean, solver=george.solvers.HODLRSolver,**kwargs_variable)
             else:
                 kwargs_variable = {
                     'verbose': int(kwargs['verbose']), 
@@ -2294,7 +2306,7 @@ class Model_George(Model):
                     'debug': int(kwargs['debug']),
                     'sym': 0,
                 }
-                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver,**kwargs_variable)
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, mean=george_mean, solver=george.solvers.BasicSolver,**kwargs_variable)
             x = copy.deepcopy(data.P[0])
             self.y = copy.deepcopy(data.O[0])
 
@@ -2497,6 +2509,8 @@ class Model_George(Model):
             else:
                 modeling_options["model_hodlr"] = "no"
             modeling_options["multitask"] = "no"
+            if kwargs['model_kern'] != 'INLA':
+                modeling_options["model_mean"] = george_mean
             if kwargs['model_kern'] == 'WendlandC2':
                 modeling_options["model_wendland_base"] = kwargs.get('model_wendland_base', 'RBF')
             if kwargs['model_kern'] == 'INLA':
@@ -2738,9 +2752,9 @@ class Model_George(Model):
                     'tol': kwargs['model_hodlrtol'],
                     'seed': 42
                 }
-                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.HODLRSolver,**kwargs_variable)
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, mean=modeling_options.get('model_mean', None), solver=george.solvers.HODLRSolver,**kwargs_variable)
             else:
-                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, solver=george.solvers.BasicSolver)                
+                self.M = george.GP(kernel=K, white_noise=np.log(intialguess[0]), fit_white_noise=True, mean=modeling_options.get('model_mean', None), solver=george.solvers.BasicSolver)
         return
 
 class Model_DGP(Model):

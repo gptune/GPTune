@@ -351,7 +351,25 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         # if both L-BFGS trainings at this N have been run, the sampling stops (instead of after
         # model_mcmc_maxiter steps) once it has run for 3 times the shorter of their training times
         lbfgs_files = ['training_iterations_obj%d_N%d_%s.csv' % (objtype, NS_input - 1, o) for o in ('gradient', 'finite_difference')]
-        if all(os.path.exists(f) for f in lbfgs_files):
+        if os.environ.get('GP_MCMC_UNCAPPED') == '1':
+            # no time limit (as GP_MCMC_UNCAPPED in model_comparison_updated_superlu.py): up to GP_MCMC_MAXITER
+            # steps per chain, stopping by GPTune's default test (model_mcmc_convergence='stagnation'): the best
+            # sample has improved by less than 1 nat over the last 50 steps, and for MCMC (not MALA) every
+            # chain's best is within 5 nats of it (model_mcmc_agreement_tol='auto'). GP_MCMC_AGREEMENT_TOL sets
+            # the tolerance for both, 'none' turns the test off: with H2 a state whose inexact solve gives a
+            # spurious likelihood can become a best sample that nothing improves on, and the agreement test is
+            # then what keeps the sampling from stopping on it (2D anisotropic N=1.6M MCMC, 20 Nov 2026).
+            # GP_MCMC_MAXTIME (seconds of sampling) is only a safety stop before the job's wall time.
+            options['model_mcmc_maxiter'] = int(os.environ.get('GP_MCMC_MAXITER', '1000'))
+            options['model_mcmc_convergence'] = os.environ.get('GP_MCMC_CONVERGENCE', 'stagnation')
+            if os.environ.get('GP_MCMC_AGREEMENT_TOL'):
+                tol = os.environ['GP_MCMC_AGREEMENT_TOL']
+                options['model_mcmc_agreement_tol'] = None if tol.lower() == 'none' else tol if tol == 'auto' else float(tol)
+            if os.environ.get('GP_MCMC_MAXTIME'):
+                options['model_mcmc_max_time'] = float(os.environ['GP_MCMC_MAXTIME'])
+            print("MCMC sampling without the 3x L-BFGS cap: at most %d steps per chain, convergence test %s (agreement tolerance %s), sampling time limit %s s"
+                  % (options['model_mcmc_maxiter'], options['model_mcmc_convergence'], options.get('model_mcmc_agreement_tol'), options.get('model_mcmc_max_time')))
+        elif all(os.path.exists(f) for f in lbfgs_files):
             lbfgs_times = [np.atleast_1d(np.genfromtxt(f, delimiter=',', names=True))['time'][-1] for f in lbfgs_files]
             options['model_mcmc_max_time'] = 3 * min(lbfgs_times)
             options['model_mcmc_maxiter'] = 1000000

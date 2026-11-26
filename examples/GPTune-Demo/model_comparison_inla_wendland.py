@@ -407,6 +407,10 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
     if os.environ.get('GP_AMPLITUDE'):
         options['model_amplitude'] = [float(v) for v in os.environ['GP_AMPLITUDE'].split()]
     options['model_isotropic'] = os.environ.get('GP_ISOTROPIC', '0') == '1'
+    # the constant prior mean of the george models (Wendland): GP_MEAN=sample for the sample mean of the
+    # training outputs, as the INLA model always uses; unset for the zero mean
+    if os.environ.get('GP_MEAN'):
+        options['model_mean'] = os.environ['GP_MEAN']
     if(modelhodlr==True):
         options['model_hodlr'] = True
         options['model_hodlrleaf'] = 200
@@ -420,8 +424,19 @@ def model_runtime(model, obj_func, NS_input,objtype,optimizer,plotgp,modelhodlr=
         options['model_sparse'] = True
         options['model_kern'] = 'WendlandC2'
 
-        # about 78 neighbours per point: the cutoff shrinks like 1/sqrt(N), 0.0158 at N=100k (0.005 at N=1M)
-        options['model_cutoff'] = 0.0158 * np.sqrt(100000 / (NS_input - 1))
+        # about 78 neighbours per point: in 2D the cutoff shrinks like 1/sqrt(N), 0.0158 at N=100k (0.005 at
+        # N=1M); in other dimensions the radius of the ball holding 78 points of a uniform sample of [0,1]^d,
+        # (78 / (N V_d))^(1/d) with V_d the volume of the unit ball (3D: 0.0571 at 100k, 0.0285 at 800k).
+        # GP_WENDLAND_CUTOFF sets it directly.
+        dimension = objective_dimension(objtype)
+        if os.environ.get('GP_WENDLAND_CUTOFF'):
+            options['model_cutoff'] = float(os.environ['GP_WENDLAND_CUTOFF'])
+        elif dimension == 2:
+            options['model_cutoff'] = 0.0158 * np.sqrt(100000 / (NS_input - 1))
+        else:
+            from scipy.special import gamma as gamma_function
+            unit_ball = np.pi ** (dimension / 2) / gamma_function(dimension / 2 + 1)
+            options['model_cutoff'] = (78.0 / ((NS_input - 1) * unit_ball)) ** (1.0 / dimension)
 
         print("SPARSE CONFIG: N=%d cutoff=%g" % 
               (NS_input - 1,options['model_cutoff']))

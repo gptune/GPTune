@@ -62,6 +62,7 @@ class Options(dict):
         model_lengthscale = [math.exp(-11.5), math.exp(1), 1.0]
         model_lengthscale_dims = None # Per-dimension [minimum, maximum, initial] length scales (linear scale), one triplet per input dimension, replacing model_lengthscale for anisotropic single-task george models (RBF, Exp, Matern32, Matern52, INLA); None for model_lengthscale in every dimension
         model_cutoff = [math.exp(-23), 0.1, 0.025]
+        model_mean = None # Single-task george models other than INLA: the constant prior mean; None for zero, 'sample' for the sample mean of the training outputs (which the INLA model always subtracts), or a number
         model_wendland_base = 'RBF' # With model_kern='WendlandC2', the kernel tapered by the Wendland C2 function: 'RBF', 'Matern32' or 'Matern52'
         model_inla_shape = None # With model_kern='INLA', the number of lattice nodes per dimension (an int or a list) covering [0,1]^d; None if the inputs are on an evenly spaced lattice, which is then used
         model_inla_buffer = None # With model_kern='INLA', the width of the buffer added around the lattice against the boundary effect (cells growing by 1.2); None for twice model_lengthscale[1], the largest range
